@@ -92,7 +92,9 @@
     --gold:#D4A359;
     --line:rgba(18,16,14,0.08);
     --line-strong:rgba(18,16,14,0.16);
-    --radius:4px;
+    /* 로고의 Squircle(ㅁ) 곡률에 맞춘 최적의 보더 라운딩 시스템 */
+    --radius:12px;
+    --radius-sm:6px;
     --ease:cubic-bezier(0.16, 1, 0.3, 1);
   }
   *{box-sizing:border-box;}
@@ -130,7 +132,7 @@
   .reveal-stagger.in > *:nth-child(5){transition-delay:.36s;}
   .reveal-stagger.in > *:nth-child(6){transition-delay:.44s;}
 
-  /* ---------- HEADER ---------- */
+  /* ---------- HEADER (로고 반영) ---------- */
   header{
     position:sticky; top:0; z-index:50;
     background:rgba(250,246,239,0.85);
@@ -139,18 +141,18 @@
   }
   .nav{
     display:flex;align-items:center;justify-content:space-between;
-    padding:20px 40px;max-width:1280px;margin:0 auto;
+    padding:16px 40px;max-width:1280px;margin:0 auto;
   }
   .logo{
-    font-family:'Noto Serif KR',serif;font-size:22px;font-weight:700;
-    letter-spacing:-0.02em;display:flex;align-items:center;gap:12px;
+    display:flex;align-items:center;
   }
-  .logo .badge{
-    width:38px;height:38px;background:var(--forest);
-    display:flex;align-items:center;justify-content:center;flex-shrink:0;
-    border-radius:2px;
+  /* 정식 로고 이미지 비율 세팅 */
+  .logo-img{
+    height:36px;
+    width:auto;
+    object-fit:contain;
+    filter: brightness(0.1); /* 스티키 헤더가 밝으므로 블랙 가독성 확보, 만약 투명 블랙 로고면 제거 가능 */
   }
-  .logo .badge svg{width:20px;height:20px;}
   .navlinks{display:flex;gap:40px;font-size:14.5px;font-weight:600;color:var(--ink-soft);}
   .navlinks a{position:relative;padding:6px 0;transition:color .3s;}
   .navlinks a::after{
@@ -163,7 +165,7 @@
   .btn{
     display:inline-flex;align-items:center;gap:12px;
     background:var(--copper);color:#fff;
-    padding:14px 28px;border-radius:var(--radius);
+    padding:14px 28px;border-radius:var(--radius-sm);
     font-size:14.5px;font-weight:700;letter-spacing:.02em;
     border:1px solid var(--copper);
     cursor:pointer;transition:all .3s var(--ease);
@@ -173,11 +175,11 @@
   .btn svg{transition:transform .3s var(--ease);}
   .btn:hover svg{transform:translateX(4px);}
   
-  .btn-forest{background:var(--forest);border-color:var(--forest);box-shadow:0 6px 18px -6px rgba(26,48,38,0.35);}
+  .btn-forest{background:var(--forest);border-color:var(--forest);box-shadow:0 6px 18px -6px rgba(26,48,38,0.35);border-radius:var(--radius-sm);}
   .btn-forest:hover{background:var(--forest-deep);border-color:var(--forest-deep);box-shadow:0 10px 24px -8px rgba(13,22,18,0.5);}
 
   .btn-ghost{
-    background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3);box-shadow:none;
+    background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3);box-shadow:none;border-radius:var(--radius-sm);
   }
   .btn-ghost:hover{background:#fff;color:var(--forest-deep);border-color:#fff;}
   
@@ -193,8 +195,8 @@
     border-bottom:1px solid var(--line);
   }
 
-  /* ---------- HERO ---------- */
-  .hero{position:relative;overflow:hidden;padding:100px 0 130px;background:var(--forest-deep);color:#fff;}
+  /* ---------- HERO (원목 텍스처 무드 반영) ---------- */
+  .hero{position:relative;overflow:hidden;padding:110px 0 140px;background:var(--forest-deep);color:#fff;}
   .hero-grain{
     position:absolute;inset:0;z-index:0;
     background-image: repeating-linear-gradient(115deg,
@@ -206,7 +208,7 @@
   .eyebrow{
     display:flex;align-items:center;gap:12px;
     font-size:14.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
-    color:var(--gold);margin-bottom:28px;
+    color:var(--gold);margin-bottom:24px;
   }
   .eyebrow::before{content:'';width:36px;height:2px;background:var(--gold);display:inline-block;}
   .hero h1{
@@ -216,15 +218,17 @@
   }
   .hero h1 em{font-style:normal;color:var(--gold);position:relative;display:inline-block;}
   .hero h1 em::after{content:'';position:absolute;left:0;bottom:8px;width:100%;height:4px;background:rgba(214,163,89,0.3);}
+  
+  /* 공식 슬로건 폰트 연출 스타일링 */
   .tagline{
-    font-family:'Noto Serif KR',serif;font-style:italic;font-size:23px;
-    color:var(--gold);margin:0 0 24px;letter-spacing:.02em;
+    font-family:'Noto Serif KR',serif;font-weight:400;font-size:24px;
+    color:rgba(255,255,255,0.9);margin:0 0 20px;letter-spacing:0.08em;
   }
-  .hero p.lede{font-size:17.5px;color:rgba(255,255,255,0.75);max-width:44ch;margin:0 0 44px;line-height:1.85;}
+  .hero p.lede{font-size:17.5px;color:rgba(255,255,255,0.72);max-width:44ch;margin:0 0 44px;line-height:1.85;}
 
   .hero-visual{position:relative;}
   .hero-frame{
-    position:relative;border-radius:4px;overflow:hidden;
+    position:relative;border-radius:var(--radius);overflow:hidden;
     aspect-ratio:4/5;box-shadow: 0 45px 90px -20px rgba(0,0,0,0.65);
   }
   .hero-frame img{
@@ -437,7 +441,7 @@
   .kakao-btn{
     display:flex;justify-content:center;width:100%;
     background:#FEE500;color:#391B1B;border-color:#FEE500;
-    font-weight:800;padding:18px;font-size:15px;border-radius:var(--radius);
+    font-weight:800;padding:18px;font-size:15px;border-radius:var(--radius-sm);
   }
   .kakao-btn:hover{background:#F5D900;border-color:#F5D900;box-shadow:0 15px 30px -8px rgba(254,229,0,0.6);transform:translateY(-3px);}
   .kakao-btn-outline{
@@ -508,26 +512,23 @@
   .toon-social{display:flex;flex-wrap:wrap;gap:14px;}
   .toon-social a{
     display:inline-flex;align-items:center;gap:12px;
-    padding:16px 28px;font-size:14.5px;font-weight:700;border-radius:var(--radius);
+    padding:16px 28px;font-size:14.5px;font-weight:700;border-radius:var(--radius-sm);
     border:1px solid rgba(255,255,255,0.22);color:#fff;
     transition:all .3s var(--ease);
   }
   .toon-social a:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.5);transform:translateY(-3px);}
   .toon-social a span.handle{color:rgba(246,241,231,0.55);font-weight:400;margin-left:4px;}
 
-  /* ---------- FOOTER ---------- */
+  /* ---------- FOOTER (로고 반영) ---------- */
   footer{padding:80px 0 48px;background:var(--forest-deep);border-top:1px solid rgba(255,255,255,0.06);}
   .footer-brand{display:flex;flex-direction:column;align-items:center;gap:18px;margin-bottom:48px;}
-  .footer-mark{
-    width:50px;height:50px;border:1px solid rgba(246,241,231,0.2);
-    display:flex;align-items:center;justify-content:center;border-radius:4px;
+  .footer-logo-img{
+    height:42px;
+    width:auto;
+    object-fit:contain;
+    filter: brightness(1.2); /* 하단 백그라운드가 어두우므로 화이트 투명 상태 최적화 */
   }
-  .footer-mark svg{width:24px;height:24px;}
-  .footer-wordmark{
-    font-family:'Noto Serif KR',serif;font-size:26px;font-weight:800;
-    letter-spacing:-0.01em;color:#F6F1E7;
-  }
-  .footer-tagline{font-family:'Noto Serif KR',serif;font-style:italic;font-size:14.5px;color:rgba(246,241,231,0.5);}
+  .footer-tagline{font-family:'Noto Serif KR',serif;font-style:italic;font-size:14.5px;color:rgba(246,241,231,0.5);margin-top:4px;}
   .footer-inner{
     display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px;
     padding-top:36px;border-top:1px solid rgba(246,241,231,0.1);
@@ -549,7 +550,7 @@
     .hero-inner{grid-template-columns:1fr;gap:64px;}
     .hero-badge{left:16px;bottom:-24px;padding:20px 26px;}
     .hero-badge b{font-size:32px;}
-    section{padding:100px 0;}
+    section{padding:80px 0;}
     .process-list{grid-template-columns:repeat(2,1fr);row-gap:48px;}
     .process-list::before{display:none;}
     .review-grid{grid-template-columns:1fr;}
@@ -580,14 +581,8 @@
 <header>
   <div class="nav">
     <a class="logo" href="#top">
-      <span class="badge" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="5.5" width="18" height="3" rx="1.4" fill="#F6F1E7"/>
-          <rect x="3" y="10.5" width="18" height="3" rx="1.4" fill="#E4C98A"/>
-          <rect x="3" y="15.5" width="18" height="3" rx="1.4" fill="#F6F1E7" opacity="0.55"/>
-        </svg>
-      </span>
-      청인마루
+      <!-- 정식 초성 워드마크 파일 연동 매칭 -->
+      <img src="images/logo.png" alt="청인마루 로고" class="logo-img">
     </a>
     <nav class="navlinks">
       <a href="#about">소개</a>
@@ -894,14 +889,8 @@
 <footer>
   <div class="wrap">
     <div class="footer-brand">
-      <span class="footer-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="5.5" width="18" height="3" rx="1.4" fill="#F6F1E7"/>
-          <rect x="3" y="10.5" width="18" height="3" rx="1.4" fill="#E4C98A"/>
-          <rect x="3" y="15.5" width="18" height="3" rx="1.4" fill="#F6F1E7" opacity="0.55"/>
-        </svg>
-      </span>
-      <span class="footer-wordmark">청인마루</span>
+      <!-- 정식 초성 워드마크 파일 연동 매칭 -->
+      <img src="images/logo.png" alt="청인마루 로고" class="footer-logo-img">
       <span class="footer-tagline">공간의 위로가 되다</span>
     </div>
     <div class="footer-inner">

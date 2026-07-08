@@ -91,8 +91,8 @@
     --forest-deep:#0D1612;
     --gold:#D4A359;
     --line:rgba(18,16,14,0.08);
-    --line-strong:rgba(18,16,14,0.18);
-    --radius:6px;
+    --line-strong:rgba(18,16,14,0.16);
+    --radius:4px;
     --ease:cubic-bezier(0.16, 1, 0.3, 1);
   }
   *{box-sizing:border-box;}
@@ -109,7 +109,7 @@
   }
   body::before{
     content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
-    opacity:.03;mix-blend-mode:multiply;
+    opacity:.025;mix-blend-mode:multiply;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   h1,h2,h3,.serif{font-family:'Noto Serif KR', serif;}
@@ -117,21 +117,18 @@
   img{max-width:100%;display:block;}
   .wrap{max-width:1280px;margin:0 auto;padding:0 40px;}
   ::selection{background:var(--copper);color:#fff;}
-  @media (prefers-reduced-motion: reduce){
-    *{animation:none !important;transition:none !important;}
-  }
 
   /* ---------- scroll reveal ---------- */
-  .reveal{opacity:0;transform:translateY(40px);transition:opacity 1.2s var(--ease), transform 1.2s var(--ease);}
+  .reveal{opacity:0;transform:translateY(35px);transition:opacity 1s var(--ease), transform 1s var(--ease);}
   .reveal.in{opacity:1;transform:translateY(0);}
-  .reveal-stagger > *{opacity:0;transform:translateY(30px);transition:opacity 0.9s var(--ease), transform 0.9s var(--ease);}
+  .reveal-stagger > *{opacity:0;transform:translateY(25px);transition:opacity 0.8s var(--ease), transform 0.8s var(--ease);}
   .reveal-stagger.in > *{opacity:1;transform:translateY(0);}
-  .reveal-stagger.in > *:nth-child(1){transition-delay:.05s;}
-  .reveal-stagger.in > *:nth-child(2){transition-delay:.15s;}
-  .reveal-stagger.in > *:nth-child(3){transition-delay:.25s;}
-  .reveal-stagger.in > *:nth-child(4){transition-delay:.35s;}
-  .reveal-stagger.in > *:nth-child(5){transition-delay:.45s;}
-  .reveal-stagger.in > *:nth-child(6){transition-delay:.55s;}
+  .reveal-stagger.in > *:nth-child(1){transition-delay:.04s;}
+  .reveal-stagger.in > *:nth-child(2){transition-delay:.12s;}
+  .reveal-stagger.in > *:nth-child(3){transition-delay:.20s;}
+  .reveal-stagger.in > *:nth-child(4){transition-delay:.28s;}
+  .reveal-stagger.in > *:nth-child(5){transition-delay:.36s;}
+  .reveal-stagger.in > *:nth-child(6){transition-delay:.44s;}
 
   /* ---------- HEADER ---------- */
   header{
@@ -142,18 +139,18 @@
   }
   .nav{
     display:flex;align-items:center;justify-content:space-between;
-    padding:22px 40px;max-width:1280px;margin:0 auto;
+    padding:20px 40px;max-width:1280px;margin:0 auto;
   }
   .logo{
     font-family:'Noto Serif KR',serif;font-size:22px;font-weight:700;
     letter-spacing:-0.02em;display:flex;align-items:center;gap:12px;
   }
   .logo .badge{
-    width:40px;height:40px;background:var(--forest);
+    width:38px;height:38px;background:var(--forest);
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
-    border-radius:4px;
+    border-radius:2px;
   }
-  .logo .badge svg{width:22px;height:22px;}
+  .logo .badge svg{width:20px;height:20px;}
   .navlinks{display:flex;gap:40px;font-size:14.5px;font-weight:600;color:var(--ink-soft);}
   .navlinks a{position:relative;padding:6px 0;transition:color .3s;}
   .navlinks a::after{
@@ -166,19 +163,18 @@
   .btn{
     display:inline-flex;align-items:center;gap:12px;
     background:var(--copper);color:#fff;
-    padding:15px 32px;border-radius:var(--radius);
+    padding:14px 28px;border-radius:var(--radius);
     font-size:14.5px;font-weight:700;letter-spacing:.02em;
     border:1px solid var(--copper);
     cursor:pointer;transition:all .3s var(--ease);
-    box-shadow:0 6px 20px -6px rgba(200,106,40,0.4);
+    box-shadow:0 6px 18px -6px rgba(200,106,40,0.35);
   }
-  .btn:hover{background:var(--copper-deep);border-color:var(--copper-deep);transform:translateY(-3px);box-shadow:0 12px 28px -8px rgba(143,67,17,0.5);}
-  .btn:active{transform:translateY(-1px);}
+  .btn:hover{background:var(--copper-deep);border-color:var(--copper-deep);transform:translateY(-2px);box-shadow:0 10px 24px -8px rgba(143,67,17,0.45);}
   .btn svg{transition:transform .3s var(--ease);}
-  .btn:hover svg{transform:translateX(5px);}
+  .btn:hover svg{transform:translateX(4px);}
   
-  .btn-forest{background:var(--forest);border-color:var(--forest);box-shadow:0 6px 20px -6px rgba(26,48,38,0.4);}
-  .btn-forest:hover{background:var(--forest-deep);border-color:var(--forest-deep);box-shadow:0 12px 28px -8px rgba(13,22,18,0.6);}
+  .btn-forest{background:var(--forest);border-color:var(--forest);box-shadow:0 6px 18px -6px rgba(26,48,38,0.35);}
+  .btn-forest:hover{background:var(--forest-deep);border-color:var(--forest-deep);box-shadow:0 10px 24px -8px rgba(13,22,18,0.5);}
 
   .btn-ghost{
     background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3);box-shadow:none;
@@ -197,45 +193,43 @@
     border-bottom:1px solid var(--line);
   }
 
-  /* ---------- HERO (과감한 다크 디자인 변형) ---------- */
-  .hero{position:relative;overflow:hidden;padding:120px 0 160px;background:var(--forest-deep);color:#fff;}
+  /* ---------- HERO ---------- */
+  .hero{position:relative;overflow:hidden;padding:100px 0 130px;background:var(--forest-deep);color:#fff;}
   .hero-grain{
     position:absolute;inset:0;z-index:0;
     background-image: repeating-linear-gradient(115deg,
-      rgba(212,163,89,0.04) 0px, rgba(212,163,89,0.04) 2px,
+      rgba(212,163,89,0.03) 0px, rgba(212,163,89,0.03) 2px,
       transparent 2px, transparent 140px);
     transform: skewY(-2.5deg) scale(1.2);
   }
   .hero-inner{position:relative;z-index:1;display:grid;grid-template-columns:1.15fr 0.85fr;gap:80px;align-items:center;}
   .eyebrow{
     display:flex;align-items:center;gap:12px;
-    font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--gold);margin-bottom:32px;
+    font-size:14.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:28px;
   }
   .eyebrow::before{content:'';width:36px;height:2px;background:var(--gold);display:inline-block;}
   .hero h1{
-    font-size:clamp(44px,6vw,82px);
-    font-weight:700;line-height:1.18;letter-spacing:-0.03em;
-    margin:0 0 36px;color:#fff;
+    font-size:clamp(42px,5.8vw,78px);
+    font-weight:700;line-height:1.2;letter-spacing:-0.03em;
+    margin:0 0 32px;color:#fff;
   }
   .hero h1 em{font-style:normal;color:var(--gold);position:relative;display:inline-block;}
   .hero h1 em::after{content:'';position:absolute;left:0;bottom:8px;width:100%;height:4px;background:rgba(214,163,89,0.3);}
   .tagline{
-    font-family:'Noto Serif KR',serif;font-style:italic;font-size:24px;
+    font-family:'Noto Serif KR',serif;font-style:italic;font-size:23px;
     color:var(--gold);margin:0 0 24px;letter-spacing:.02em;
   }
-  .hero p.lede{font-size:18px;color:rgba(255,255,255,0.75);max-width:44ch;margin:0 0 48px;line-height:1.85;}
+  .hero p.lede{font-size:17.5px;color:rgba(255,255,255,0.75);max-width:44ch;margin:0 0 44px;line-height:1.85;}
 
   .hero-visual{position:relative;}
   .hero-frame{
     position:relative;border-radius:4px;overflow:hidden;
-    aspect-ratio:4/5;
-    box-shadow: 0 50px 100px -20px rgba(0,0,0,0.7);
+    aspect-ratio:4/5;box-shadow: 0 45px 90px -20px rgba(0,0,0,0.65);
   }
   .hero-frame img{
     width:100%;height:100%;object-fit:cover;display:block;
-    filter:brightness(0.95) contrast(1.03);
-    transition:transform 0.6s var(--ease);
+    filter:brightness(0.95) contrast(1.03);transition:transform 0.6s var(--ease);
   }
   .hero-frame:hover img{transform:scale(1.04);}
   .hero-frame::after{
@@ -249,42 +243,41 @@
   .hero-frame .tag span{display:block;font-size:12px;opacity:.75;margin-top:4px;}
   .hero-badge{
     position:absolute;left:-40px;bottom:60px;z-index:3;
-    background:var(--copper);color:#fff;padding:26px 32px;
-    box-shadow:0 30px 60px -15px rgba(200,106,40,0.5);
+    background:var(--copper);color:#fff;padding:24px 30px;
+    box-shadow:0 24px 50px -15px rgba(200,106,40,0.45);
     max-width:210px;border-radius:2px;
   }
   .hero-badge b{
-    display:block;font-family:'Noto Serif KR',serif;font-size:40px;font-weight:800;
+    display:block;font-family:'Noto Serif KR',serif;font-size:38px;font-weight:800;
     color:#fff;line-height:1;margin-bottom:6px;letter-spacing:-0.02em;
   }
   .hero-badge span{font-size:13px;color:rgba(255,255,255,0.85);letter-spacing:.02em;line-height:1.4;}
 
-  /* ---------- SECTION GENERIC ---------- */
-  section{padding:160px 0;}
-  .section-head{max-width:720px;margin:0 0 72px;}
+  /* ---------- SECTION GENERIC (여백 타이트하게 조정) ---------- */
+  section{padding:100px 0;}
+  .section-head{max-width:720px;margin:0 0 52px;}
   .section-head .k{
     display:flex;align-items:center;gap:12px;
-    font-size:13px;font-weight:700;color:var(--copper);
-    letter-spacing:.2em;text-transform:uppercase;margin:0 0 20px;
+    font-size:14.5px;font-weight:700;color:var(--copper);
+    letter-spacing:.22em;text-transform:uppercase;margin:0 0 16px;
   }
   .section-head .k::before{content:'';width:32px;height:2px;background:var(--copper);display:inline-block;}
-  .section-head h2{font-size:clamp(32px,4vw,48px);margin:0 0 24px;line-height:1.32;font-weight:700;letter-spacing:-0.02em;}
-  .section-head p{color:var(--ink-soft);font-size:16.5px;line-height:1.8;}
+  .section-head h2{font-size:clamp(32px,3.8vw,46px);margin:0 0 20px;line-height:1.32;font-weight:700;letter-spacing:-0.02em;}
+  .section-head p{color:var(--ink-soft);font-size:16px;line-height:1.75;}
 
   /* ---------- PARTNER BRANDS ---------- */
   .brand-grid{
     display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
-    background:transparent;border:none;
   }
   .brand-card{
     --bc:var(--copper);
     background:#fff;padding:40px 32px;border-radius:var(--radius);
     position:relative;overflow:hidden;
-    box-shadow:0 4px 20px rgba(18,16,14,0.03);
-    border:1px solid rgba(18,16,14,0.05);
+    box-shadow:0 4px 20px rgba(18,16,14,0.02);
+    border:1px solid rgba(18,16,14,0.04);
     transition:all .4s var(--ease);
   }
-  .brand-card:hover{transform:translateY(-8px);box-shadow:0 30px 60px -15px rgba(18,16,14,0.12);border-color:transparent;}
+  .brand-card:hover{transform:translateY(-6px);box-shadow:0 24px 48px -15px rgba(18,16,14,0.1);border-color:transparent;}
   .brand-card::after{
     content:'';position:absolute;top:0;left:0;right:0;height:4px;
     background:var(--bc);transform:scaleX(0);transform-origin:left;
@@ -316,52 +309,56 @@
   .brand-links a:hover{color:var(--bc);padding-left:6px;}
   .brand-links a:hover .arrow{opacity:1;transform:translateX(0);}
 
-  /* ---------- ABOUT ---------- */
+  /* ---------- ABOUT (완벽한 우측 공간 분할 및 균형감 확보) ---------- */
   .about{background:var(--surface);position:relative;overflow:hidden;}
-  .about-copy p{color:var(--ink-soft);margin:0 0 22px;font-size:16.5px;max-width:64ch;line-height:1.85;}
-  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:64px;border-top:2px solid var(--line-strong);}
-  .stat{padding:36px 32px 0 0;border-right:1px solid var(--line-strong);}
+  .about-grid{
+    display:grid;grid-template-columns:1.05fr 0.95fr;gap:64px;align-items:start;
+  }
+  .about-copy p{color:var(--ink-soft);margin:0 0 22px;font-size:16.5px;line-height:1.85;}
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:20px;border-top:2px solid var(--line-strong);}
+  .stat{padding:28px 20px 0 0;border-right:1px solid var(--line-strong);}
   .stat:last-child{border-right:none;}
-  .stat b{display:block;font-size:56px;font-family:'Noto Serif KR',serif;font-weight:800;color:var(--copper-deep);letter-spacing:-0.03em;line-height:1;margin-bottom:10px;}
-  .stat span{font-size:14.5px;color:var(--ink-soft);font-weight:600;}
+  .stat b{display:block;font-size:48px;font-family:'Noto Serif KR',serif;font-weight:800;color:var(--copper-deep);letter-spacing:-0.03em;line-height:1;margin-bottom:8px;}
+  .stat span{font-size:14px;color:var(--ink-soft);font-weight:600;}
   .clients-note{
-    margin-top:56px;padding:32px 40px;background:var(--bg);
-    border-left:4px solid var(--copper);border-radius:0 var(--radius) var(--radius) 0;
+    margin-top:36px;padding:32px;background:#fff;
+    border-left:4px solid var(--forest);border-radius:0 var(--radius) var(--radius) 0;
     box-shadow:0 15px 35px -15px rgba(18,16,14,0.05);
   }
-  .clients-note b{display:block;font-size:13px;color:var(--copper-deep);margin-bottom:12px;letter-spacing:.1em;text-transform:uppercase;}
-  .clients-note p{margin:0;font-size:16.5px;color:var(--ink);font-weight:700;}
+  .clients-note b{display:block;font-size:13.5px;color:var(--forest);font-weight:700;margin-bottom:10px;letter-spacing:.1em;text-transform:uppercase;}
+  .clients-note p{margin:0;font-size:15.5px;color:var(--ink);font-weight:600;line-height:1.6;}
 
-  /* ---------- SERVICES ---------- */
-  .service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;background:transparent;border:none;}
+  /* ---------- SERVICES (마우스 오버 시 완벽한 색상 반전 구현) ---------- */
+  .service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
   .service-card{
-    --sc:var(--copper);
-    background:#fff;border-radius:var(--radius);
-    padding:48px 40px;transition:all .4s var(--ease);
+    --sc:var(--copper);background:#fff;border-radius:var(--radius);
+    padding:44px 36px;transition:all .4s var(--ease);
     position:relative;overflow:hidden;
-    box-shadow:0 4px 20px rgba(18,16,14,0.03);
-    border:1px solid rgba(18,16,14,0.05);
+    box-shadow:0 4px 25px rgba(18,16,14,0.02);
+    border:1px solid rgba(18,16,14,0.04);
   }
-  .service-card::after{
-    content:'';position:absolute;top:0;left:0;right:0;height:4px;
-    background:var(--sc);transform:scaleX(0);transform-origin:left;
-    transition:transform .4s var(--ease);
+  /* 마우스 오버 시 각 칸의 테마 색상으로 대담하게 전체 백그라운드 변경 */
+  .service-card:hover{
+    background:var(--sc);border-color:var(--sc);
+    transform:translateY(-8px);
+    box-shadow:0 24px 48px -12px color-mix(in srgb, var(--sc) 40%, transparent);
   }
-  .service-card:hover::after{transform:scaleX(1);}
-  .service-card:hover{transform:translateY(-8px);box-shadow:0 30px 60px -15px rgba(18,16,14,0.1);border-color:transparent;}
-  .service-card:hover .num{color:color-mix(in srgb, var(--sc) 15%, transparent);transform:translateY(-6px);}
   .service-swatch{
-    width:20px;height:20px;border-radius:50%;background:var(--sc);
+    width:18px;height:18px;border-radius:50%;background:var(--sc);
     position:relative;z-index:1;margin-bottom:24px;
-    box-shadow:0 6px 14px -2px rgba(0,0,0,0.15);
+    box-shadow:0 4px 10px -2px rgba(0,0,0,0.12);transition:all .4s var(--ease);
   }
+  .service-card:hover .service-swatch{background:#fff;box-shadow:none;}
   .service-card .num{
-    font-family:'Noto Serif KR',serif;font-size:64px;color:rgba(18,16,14,0.04);font-weight:800;
+    font-family:'Noto Serif KR',serif;font-size:60px;color:rgba(18,16,14,0.04);font-weight:800;
     display:block;line-height:1;margin-bottom:12px;letter-spacing:-0.02em;
     transition:all .4s var(--ease);
   }
-  .service-card h3{font-size:20px;margin:0 0 16px;font-weight:700;position:relative;z-index:1;}
-  .service-card p{font-size:15px;color:var(--ink-soft);margin:0;line-height:1.75;position:relative;z-index:1;}
+  .service-card:hover .num{color:rgba(255,255,255,0.12);transform:translateY(-4px);}
+  .service-card h3{font-size:20px;margin:0 0 14px;font-weight:700;transition:all .4s var(--ease);}
+  .service-card:hover h3{color:#fff;}
+  .service-card p{font-size:15px;color:var(--ink-soft);margin:0;line-height:1.75;transition:all .4s var(--ease);}
+  .service-card:hover p{color:rgba(255,255,255,0.85);}
 
   /* ---------- PROCESS ---------- */
   .process-list{display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative;}
@@ -376,8 +373,7 @@
     border:2px solid var(--line-strong);display:flex;align-items:center;justify-content:center;
     font-family:'Noto Serif KR',serif;font-weight:800;font-size:18px;color:var(--ink-soft);
     margin-bottom:28px;position:relative;z-index:1;
-    transition:all .4s var(--ease);
-    box-shadow:0 4px 10px rgba(0,0,0,0.02);
+    transition:all .4s var(--ease);box-shadow:0 4px 10px rgba(0,0,0,0.02);
   }
   .step:hover .circle{background:var(--sc);border-color:var(--sc);color:#fff;transform:scale(1.1);box-shadow:0 10px 24px -6px var(--sc);}
   .step .badge-tag{
@@ -389,7 +385,7 @@
 
   /* ---------- REVIEWS ---------- */
   .reviews{background:var(--surface);}
-  .review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;background:transparent;border:none;}
+  .review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
   .review-card{background:#fff;padding:44px 40px;border-radius:var(--radius);box-shadow:0 4px 20px rgba(18,16,14,0.02);transition:all .3s var(--ease);}
   .review-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px -10px rgba(18,16,14,0.08);}
   .review-card .stars{color:var(--gold);font-size:15px;margin-bottom:24px;letter-spacing:3px;}
@@ -397,12 +393,11 @@
   .review-card .who{font-size:13px;color:var(--ink-faint);letter-spacing:.02em;font-weight:600;}
 
   /* ---------- PORTFOLIO ---------- */
-  .portfolio-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:48px;}
+  .portfolio-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:44px;}
   .filter-btn{
     background:#fff;border:1px solid rgba(18,16,14,0.1);
     padding:11px 24px;border-radius:40px;font-size:14px;font-weight:600;color:var(--ink-soft);
-    cursor:pointer;transition:all .3s var(--ease);
-    box-shadow:0 4px 10px rgba(0,0,0,0.02);
+    cursor:pointer;transition:all .3s var(--ease);box-shadow:0 4px 10px rgba(0,0,0,0.02);
   }
   .filter-btn:hover{border-color:var(--ink);color:var(--ink);}
   .filter-btn.active{background:var(--forest);color:#fff;border-color:var(--forest);box-shadow:0 6px 16px -4px rgba(26,48,38,0.4);}
@@ -410,17 +405,13 @@
   .portfolio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;}
   .portfolio-card{
     overflow:hidden;background:#fff;border-radius:var(--radius);
-    border:1px solid rgba(18,16,14,0.05);
-    transition:all .4s var(--ease);
+    border:1px solid rgba(18,16,14,0.05);transition:all .4s var(--ease);
   }
   .portfolio-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 40px 70px -15px rgba(18,16,14,0.15);
-    border-color: transparent;
+    transform: translateY(-8px);box-shadow: 0 35px 65px -15px rgba(18,16,14,0.14);border-color: transparent;
   }
   .portfolio-thumb{
     aspect-ratio:4/3;position:relative;overflow:hidden;background-color:#EFE4D2;
-    transition:all 0.4s var(--ease);
   }
   .portfolio-thumb .pill{
     position:absolute;top:20px;left:20px;background:rgba(255,255,255,0.96);
@@ -433,7 +424,7 @@
   .portfolio-card:hover .portfolio-info h3{color:var(--copper);}
   .portfolio-info p{font-size:14.5px;color:var(--ink-soft);margin:0;}
   .portfolio-empty{color:var(--ink-soft);font-size:16px;padding:80px 0;text-align:center;grid-column:span 3;}
-  .portfolio-more{text-align:center;margin-top:72px;}
+  .portfolio-more{text-align:center;margin-top:64px;}
 
   /* ---------- CONTACT ---------- */
   .contact{background:var(--surface);}
@@ -487,7 +478,7 @@
   /* ---------- TOON SECTION ---------- */
   .toon-section{
     background:var(--forest-deep);color:#F6F1E7;
-    position:relative;overflow:hidden;padding:140px 0;
+    position:relative;overflow:hidden;padding:120px 0;
   }
   .toon-section::before{
     content:'';position:absolute;inset:0;
@@ -504,7 +495,7 @@
   .toon-figure img{position:relative;z-index:1;width:240px;filter:drop-shadow(0 30px 50px rgba(0,0,0,0.5));}
   .toon-copy .k{
     display:flex;align-items:center;gap:12px;
-    font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+    font-size:14.5px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
     color:#E4C98A;margin:0 0 20px;
   }
   .toon-copy .k::before{content:'';width:32px;height:2px;background:#E4C98A;display:inline-block;}
@@ -550,6 +541,7 @@
   @media (max-width:1024px){
     .wrap{padding:0 32px;}
     .hero-inner{gap:48px;}
+    .about-grid{grid-template-columns:1fr;gap:40px;}
     .service-grid, .brand-grid{grid-template-columns:repeat(2,1fr);gap:16px;}
     .portfolio-grid{grid-template-columns:repeat(2,1fr);gap:24px;}
   }
@@ -558,7 +550,7 @@
     .hero-inner{grid-template-columns:1fr;gap:64px;}
     .hero-badge{left:16px;bottom:-24px;padding:20px 26px;}
     .hero-badge b{font-size:32px;}
-    section{padding:100px 0;}
+    section{padding:80px 0;}
     .process-list{grid-template-columns:repeat(2,1fr);row-gap:48px;}
     .process-list::before{display:none;}
     .review-grid{grid-template-columns:1fr;}
@@ -667,20 +659,22 @@
 
   <!-- ABOUT -->
   <section class="about reveal" id="about">
-    <div class="wrap">
-      <div class="about-copy" style="max-width:680px;">
+    <div class="wrap about-grid">
+      <div class="about-copy">
         <p class="section-head k" style="margin-bottom:16px;">ABOUT</p>
-        <h2 style="font-size:clamp(28px,3.5vw,40px);margin:0 0 24px;font-weight:700;letter-spacing:-0.02em;line-height:1.35;">한 평의 바닥에도<br>사는 사람의 시간이 담깁니다</h2>
-        <p>청인마루는 인천을 기반으로 수도권과 전국 현장을 시공해온 마루 시공 전문 컨설팅입니다. <b>동화·구정·한솔·노바·네스트·수입원목마루</b> 등 국내외 유수 브랜드를 대표하는 <b>마루시공전문직영총판</b>으로, 자재 선정부터 실측, 시공까지 한 팀이 끝까지 책임지는 방식으로 일합니다.</p>
-        <p>브랜드 캐릭터 <b>마루니</b>와 <b>루루</b>가 상담 과정과 시공 팁을 쉽고 친근하게 안내해드려요.</p>
+        <h2 style="font-size:clamp(30px,3.8vw,44px); margin:0 0 24px; font-weight:700; letter-spacing:-0.02em; line-height:1.32;">한 평의 바닥에도<br>사는 사람의 가치가 담깁니다</h2>
+        <p>공간의 완성도는 가장 마지막에 닿는 마감의 차이에서 결정됩니다. 청인마루는 단순히 자재를 깔아내는 시공을 넘어, 공간 전체의 해학적 미학과 사는 사람의 라이프스타일을 고려한 **하이엔드 바닥재 마스터 클래스**를 지향합니다.</p>
+        <p>인천 송도 본사 커스텀 쇼룸을 중심으로 수도권 전역의 주거 및 상업 공간을 책임져 왔으며, 자재 큐레이션부터 현장 정밀 실측, 전담 직영 시공팀 빌딩까지 완벽한 원스톱 관리 시스템을 통해 오차 없는 최상의 바닥을 완성합니다.</p>
+      </div>
+      <div>
         <div class="stat-row">
           <div class="stat"><b>20+</b><span>년 시공 경력</span></div>
           <div class="stat"><b>20,000+</b><span>누적 시공 건수</span></div>
-          <div class="stat"><b>다수</b><span>공공·방송 시공 실적</span></div>
+          <div class="stat"><b>최고</b><span>직영 기술 컨설팅</span></div>
         </div>
         <div class="clients-note">
-          <b>주요 시공 실적</b>
-          <p>인천공항 · 시립박물관 · 독립기념관 · 드라마 세트장 등 공공·상업 현장 다수 시공</p>
+          <b>랜드마크 및 공공기관 시공 실적</b>
+          <p>인천국제공항 · 시립박물관 · 독립기념관 · 방송국 드라마 메트장 등 완성도와 안정성이 요구되는 국가적·대형 상업 공간의 마루 마감 직접 총괄</p>
         </div>
       </div>
     </div>
@@ -794,36 +788,6 @@
           <p>“꼼꼼한 실측과 정직한 견적 덕분에 안심하고 맡길 수 있었습니다.”</p>
           <div class="who">경기 부천 · 상가 사무실</div>
         </div>
-        <div class="review-card">
-          <div class="stars">★★★★★</div>
-          <p>“이사 날짜가 촉박했는데 일정을 맞춰주셔서 정말 감사했어요. 강마루 색도 집이랑 잘 어울려서 만족스럽습니다.”</p>
-          <div class="who">인천 청라 · 신축 빌라 24평</div>
-        </div>
-        <div class="review-card">
-          <div class="stars">★★★★★</div>
-          <p>“아이가 있어서 소음이랑 냄새가 제일 걱정이었는데, 시공 당일 환기며 마감 처리까지 꼼꼼하게 신경써주셨어요.”</p>
-          <div class="who">서울 강서 · 아파트 29평</div>
-        </div>
-        <div class="review-card">
-          <div class="stars">★★★★★</div>
-          <p>“벽과 마루를 같은 톤으로 시공했더니 공간이 훨씬 넓어 보이고 고급스러워졌어요. 상담하실 때 추천해주신 조합이 정말 신의 한 수였습니다.”</p>
-          <div class="who">인천 서해구 · 34평</div>
-        </div>
-        <div class="review-card">
-          <div class="stars">★★★★★</div>
-          <p>“미네랄마루가 처음엔 생소했는데, 장단점을 자세히 설명해주셔서 안심하고 선택했어요. 여름철 습기에도 끄떡없네요.”</p>
-          <div class="who">인천 남동구 · 아파트 32평</div>
-        </div>
-        <div class="review-card">
-          <div class="stars">★★★★★</div>
-          <p>“세 군데 정도 견적을 받아봤는데, 여기만 항목별로 하나하나 정리해서 보여주셨어요. 이래서 다들 여기 추천하는구나 싶었습니다.”</p>
-          <div class="who">서울 마곡 · 오피스텔</div>
-        </div>
-        <div class="review-card">
-          <div class="stars">★★★★★</div>
-          <p>“오래된 마루 들뜸 때문에 고생했는데, 원인부터 짚어주시고 재발 안 하게 꼼꼼히 시공해주셨어요.”</p>
-          <div class="who">경기 부천 · 단독주택</div>
-        </div>
       </div>
     </div>
   </section>
@@ -869,24 +833,20 @@
     </div>
   </section>
 
-  <!-- MARUTOON -->
+  <!-- TOON BANNER (마루아빠 브이로그 중심) -->
   <section class="toon-section reveal" id="marutoon">
     <div class="wrap toon-grid">
       <div class="toon-figure">
-        <img src="images/mascot/bye.png" alt="다음에 또 만나요! 마루니와 루루">
+        <img src="images/mascot/bye.png" alt="마루아빠 시공 브이로그">
       </div>
       <div class="toon-copy">
-        <p class="k">MARUTOON</p>
-        <h2>마루니 & 루루의 《마루툰》</h2>
-        <p>시공 현장의 웃픈 순간들을 마루니와 루루가 4컷 만화로 전해드려요. 시공 브이로그는 유튜브 '마루아빠' 채널에서 만나보실 수 있어요.</p>
+        <p class="k">MEDIA</p>
+        <h2>정직한 현장 기록, 유튜브 《마루아빠》</h2>
+        <p>현장의 생생한 마루 시공 브이로그와 유익한 인테리어 팁을 유튜브 채널에서 확인해 보세요. 인스타그램 공식 계정을 통해서도 다양한 시공 레이아웃과 자재 트렌드를 실시간으로 전해드립니다.</p>
         <div class="toon-tags">
-          <span>#마루툰</span><span>#마루니와루루</span><span>#시공툰</span><span>#인테리어툰</span>
+          <span>#마루아빠</span><span>#시공브이로그</span><span>#인테리어팁</span><span>#송도인테리어</span>
         </div>
         <div class="toon-social">
-          <a href="https://www.instagram.com/cheongin_maru_" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-            마루툰 보러가기 <span class="handle">@cheongin_maru_</span>
-          </a>
           <a href="https://www.youtube.com/@wonmigood" target="_blank" rel="noopener">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor" stroke="none"/></svg>
             유튜브 마루아빠 <span class="handle">@wonmigood</span>
@@ -949,9 +909,6 @@
     { category:"미네랄마루", title:"인천 청라 신축 아파트", desc:"친환경 미네랄마루 32평 전체 시공", color:"#B98456" },
     { category:"벽장재", title:"서울 강서 카페", desc:"벽장재 시공으로 공간 톤 통일", color:"#6B5641" },
     { category:"타일형강마루", title:"경기 부천 상가", desc:"타일 패턴 강마루로 매장 시공", color:"#D9C8AE" },
-    { category:"원목마루", title:"인천 송도 펜트하우스", desc:"수입원목마루 전체 시공", color:"#7A4A22" },
-    { category:"우드형강마루", title:"서울 마곡 오피스텔", desc:"우드형 강마루 전체 시공", color:"#BD8749" },
-    { category:"미네랄마루", title:"인천 남동구 아파트", desc:"미네랄마루 부분 시공", color:"#A8916F" },
   ];
 
   const portfolioGrid = document.getElementById('portfolioGrid');

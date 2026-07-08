@@ -43,7 +43,9 @@
   "areaServed": ["인천광역시", "서울특별시", "경기도"],
   "sameAs": [
     "https://www.instagram.com/cheonginmaru",
-    "https://www.threads.com/@cheonginmaru"
+    "https://www.instagram.com/cheongin_maru_",
+    "https://www.threads.com/@cheonginmaru",
+    "https://www.youtube.com/@wonmigood"
   ],
   "openingHoursSpecification": {
     "@type": "OpeningHoursSpecification",
@@ -150,7 +152,7 @@
     width:38px;height:38px;background:var(--forest-deep);
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
   }
-  .logo .badge img{width:24px;height:24px;object-fit:contain;}
+  .logo .badge svg{width:20px;height:20px;}
   .logo .mark{
     width:8px;height:8px;background:var(--copper);display:inline-block;
     transform:rotate(45deg);
@@ -275,30 +277,52 @@
   .section-head h2{font-size:clamp(28px,3.4vw,40px);margin:0 0 16px;line-height:1.38;font-weight:600;letter-spacing:-0.01em;}
   .section-head p{color:var(--ink-soft);font-size:15.5px;margin:0;}
 
-  /* ---------- PARTNER MARQUEE ---------- */
-  .marquee-band{
-    background:var(--surface);overflow:hidden;padding:22px 0;
-    border-top:1px solid var(--line-strong);border-bottom:1px solid var(--line-strong);
+  /* ---------- PARTNER BRANDS ---------- */
+  .brand-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--line-strong);border:1px solid var(--line-strong);
   }
-  .marquee-track{
-    display:flex;width:max-content;
-    animation:marquee 32s linear infinite;
+  .brand-card{
+    --bc:var(--copper);
+    background:var(--bg);padding:32px 26px;
+    position:relative;overflow:hidden;
+    transition:background .35s var(--ease);
   }
-  .marquee-band:hover .marquee-track{animation-play-state:paused;}
-  .marquee-track a{
-    font-family:'Noto Serif KR',serif;font-size:20px;color:var(--ink-faint);
-    white-space:nowrap;padding:0 36px;display:flex;align-items:center;gap:36px;
-    flex-shrink:0;transition:color .2s var(--ease);
+  .brand-card:hover{background:color-mix(in srgb, var(--bc) 7%, var(--bg));}
+  .brand-card::after{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:var(--bc);transform:scaleX(0);transform-origin:left;
+    transition:transform .35s var(--ease);
   }
-  .marquee-track a:hover{color:var(--copper-deep);}
-  .marquee-track a::after{content:'—';color:var(--copper);opacity:.45;margin-left:36px;}
-  @keyframes marquee{
-    from{transform:translateX(0);}
-    to{transform:translateX(-50%);}
+  .brand-card:hover::after{transform:scaleX(1);}
+  .brand-card .ghost{
+    position:absolute;top:-6px;right:10px;z-index:0;pointer-events:none;
+    font-family:'Noto Serif KR',serif;font-size:76px;font-weight:700;line-height:1;
+    color:rgba(27,23,18,0.05);
+    transition:color .35s var(--ease), transform .35s var(--ease);
   }
-  @media (prefers-reduced-motion: reduce){
-    .marquee-track{animation:none;}
+  .brand-card:hover .ghost{color:color-mix(in srgb, var(--bc) 24%, transparent);transform:translateY(-3px);}
+  .brand-card h3{
+    position:relative;z-index:1;
+    font-family:'Noto Serif KR',serif;font-size:19px;margin:0 0 18px;font-weight:700;color:var(--ink);
+    letter-spacing:-0.01em;
   }
+  .brand-links{position:relative;z-index:1;display:flex;flex-direction:column;}
+  .brand-links a{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    font-size:13px;color:var(--ink-soft);
+    padding:9px 0;border-top:1px solid var(--line);
+    transition:color .2s var(--ease), padding-left .25s var(--ease);
+  }
+  .brand-links a:first-child{border-top:none;}
+  .brand-links a .arrow{
+    color:var(--bc);opacity:0;transform:translateX(-4px);
+    transition:opacity .25s var(--ease), transform .25s var(--ease);
+    font-size:12px;
+  }
+  .brand-links a:hover{color:var(--bc);padding-left:4px;}
+  .brand-links a:hover .arrow{opacity:1;transform:translateX(0);}
+  .brand-links .empty{font-size:13px;color:var(--ink-faint);opacity:.5;padding:9px 0;}
 
   /* ---------- ABOUT ---------- */
   .about{background:var(--surface);position:relative;}
@@ -318,12 +342,24 @@
   /* ---------- SERVICES ---------- */
   .service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-strong);border:1px solid var(--line-strong);}
   .service-card{
+    --sc:var(--copper);
     background:var(--bg);
     padding:38px 30px;transition:background .3s var(--ease);
     position:relative;overflow:hidden;
   }
-  .service-card:hover{background:var(--surface);}
-  .service-card:hover .num{color:rgba(173,90,40,0.22);transform:translateX(-2px);}
+  .service-card::after{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:var(--sc);transform:scaleX(0);transform-origin:left;
+    transition:transform .35s var(--ease);
+  }
+  .service-card:hover::after{transform:scaleX(1);}
+  .service-card:hover{background:color-mix(in srgb, var(--sc) 6%, var(--bg));}
+  .service-card:hover .num{color:color-mix(in srgb, var(--sc) 24%, transparent);transform:translateX(-2px);}
+  .service-swatch{
+    width:15px;height:15px;border-radius:4px;background:var(--sc);
+    position:relative;z-index:1;margin-bottom:16px;
+    box-shadow:0 3px 8px -2px rgba(0,0,0,0.25);
+  }
   .service-card .num{
     font-family:'Noto Serif KR',serif;font-size:64px;color:rgba(27,23,18,0.07);font-weight:700;
     display:block;line-height:1;margin-bottom:8px;letter-spacing:-0.02em;
@@ -335,16 +371,23 @@
   /* ---------- PROCESS ---------- */
   .process-list{display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative;}
   .process-list::before{
-    content:'';position:absolute;top:23px;left:0;right:0;height:1px;background:var(--line-strong);
+    content:'';position:absolute;top:23px;left:0;right:0;height:2px;
+    background:linear-gradient(90deg, #AD5A28, #8B6F47, #4F7A6B, #2F4A3E);
+    opacity:0.35;
   }
-  .step{position:relative;padding-right:20px;}
+  .step{position:relative;padding-right:20px;--sc:var(--copper);}
   .step .circle{
     width:46px;height:46px;border-radius:50%;background:var(--bg);
-    border:1px solid var(--line-strong);display:flex;align-items:center;justify-content:center;
-    font-family:'Noto Serif KR',serif;font-weight:700;font-size:16px;color:var(--copper-deep);
-    margin-bottom:22px;position:relative;z-index:1;transition:border-color .3s, color .3s;
+    border:2px solid var(--sc);display:flex;align-items:center;justify-content:center;
+    font-family:'Noto Serif KR',serif;font-weight:700;font-size:16px;color:var(--sc);
+    margin-bottom:22px;position:relative;z-index:1;
+    transition:background .3s var(--ease), color .3s var(--ease), transform .25s var(--ease);
   }
-  .step:hover .circle{border-color:var(--copper);background:var(--copper);color:#fff;}
+  .step:hover .circle{background:var(--sc);color:#fff;transform:scale(1.06);}
+  .step .badge-tag{
+    display:inline-block;font-size:11px;font-weight:700;color:var(--sc);
+    letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;
+  }
   .step h3{font-size:16px;margin:0 0 10px;font-weight:600;}
   .step p{font-size:14px;color:var(--ink-soft);margin:0;max-width:26ch;}
 
@@ -397,9 +440,34 @@
   .kakao-btn{
     display:flex;justify-content:center;width:100%;
     background:#FEE500;color:#391B1B;border-color:#FEE500;
-    margin-bottom:18px;font-weight:700;
+    margin-bottom:0;font-weight:700;
   }
   .kakao-btn:hover{background:#F5D900;box-shadow:0 10px 24px -10px rgba(254,229,0,0.5);}
+  .kakao-btn-outline{
+    background:transparent;color:#391B1B;border:1px solid #391B1B;
+  }
+  .kakao-btn-outline:hover{background:rgba(57,27,27,0.06);box-shadow:none;}
+
+  .kakao-panel{
+    background:#FEE500;
+    padding:48px 40px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+  }
+  .kakao-panel::before{
+    content:'';position:absolute;inset:0;
+    background-image: repeating-linear-gradient(135deg, rgba(57,27,27,0.04) 0 1px, transparent 1px 28px);
+  }
+  .kakao-panel-icon{
+    position:relative;z-index:1;
+    width:64px;height:64px;border-radius:50%;background:#391B1B0f;
+    display:flex;align-items:center;justify-content:center;margin-bottom:20px;
+    background:rgba(57,27,27,0.08);
+  }
+  .kakao-panel h3{position:relative;z-index:1;font-size:20px;margin:0 0 12px;color:#391B1B;font-weight:700;}
+  .kakao-panel p{position:relative;z-index:1;font-size:14px;color:#5C4A2E;margin:0 0 28px;line-height:1.7;}
+  .kakao-panel-btns{position:relative;z-index:1;display:flex;flex-direction:column;gap:12px;width:100%;max-width:280px;}
+  .kakao-panel-id{position:relative;z-index:1;margin-top:20px;font-size:13px;color:#7A6338;letter-spacing:.02em;}
   form{display:flex;flex-direction:column;gap:16px;}
   label{font-size:12.5px;font-weight:700;color:var(--ink-soft);letter-spacing:.03em;margin-bottom:-10px;text-transform:uppercase;}
   input,textarea{
@@ -425,32 +493,61 @@
 
   /* ---------- MARUTOON (closing banner, last section) ---------- */
   .toon-section{
-    background:var(--forest-deep);color:#F6F1E7;text-align:center;
+    background:var(--forest-deep);color:#F6F1E7;
     position:relative;overflow:hidden;
   }
   .toon-section::before{
     content:'';position:absolute;inset:0;
-    background:radial-gradient(ellipse at 50% 0%, rgba(230,190,120,0.08), transparent 60%);
+    background:radial-gradient(ellipse at 20% 30%, rgba(230,190,120,0.09), transparent 55%);
   }
-  .toon-inner{position:relative;z-index:1;max-width:640px;margin:0 auto;}
-  .toon-inner .k{
-    display:inline-flex;align-items:center;gap:10px;justify-content:center;
+  .toon-grid{
+    position:relative;z-index:1;
+    display:grid;grid-template-columns:260px 1fr;gap:56px;align-items:center;
+  }
+  .toon-figure{
+    display:flex;justify-content:center;align-items:center;
+    position:relative;
+  }
+  .toon-figure::before{
+    content:'';position:absolute;width:220px;height:220px;border-radius:50%;
+    background:radial-gradient(circle, rgba(230,190,120,0.14), transparent 70%);
+  }
+  .toon-figure img{position:relative;z-index:1;width:200px;filter:drop-shadow(0 20px 32px rgba(0,0,0,0.4));}
+  .toon-copy .k{
+    display:flex;align-items:center;gap:10px;
     font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
-    color:#E4C98A;margin:0 0 20px;width:100%;
+    color:#E4C98A;margin:0 0 18px;
   }
-  .toon-inner .k::before, .toon-inner .k::after{content:'';width:24px;height:1px;background:#E4C98A;}
-  .toon-inner h2{font-size:clamp(26px,3.2vw,36px);margin:0 0 18px;color:#fff;font-weight:600;letter-spacing:-0.01em;}
-  .toon-inner p{color:rgba(246,241,231,0.72);font-size:15.5px;margin:0 0 30px;}
-  .toon-tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 32px;}
+  .toon-copy .k::before{content:'';width:24px;height:1px;background:#E4C98A;display:inline-block;}
+  .toon-copy h2{font-size:clamp(26px,3.2vw,36px);margin:0 0 16px;color:#fff;font-weight:600;letter-spacing:-0.01em;}
+  .toon-copy p{color:rgba(246,241,231,0.72);font-size:15.5px;margin:0 0 24px;max-width:52ch;}
+  .toon-tags{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 28px;}
   .toon-tags span{
     border:1px solid rgba(255,255,255,0.18);
     padding:6px 14px;font-size:12.5px;color:rgba(246,241,231,0.75);
   }
+  .toon-social{display:flex;flex-wrap:wrap;gap:12px;}
+  .toon-social a{
+    display:inline-flex;align-items:center;gap:9px;
+    padding:12px 20px;font-size:13.5px;font-weight:600;
+    border:1px solid rgba(255,255,255,0.22);color:#fff;
+    transition:background .25s var(--ease), border-color .25s var(--ease), transform .2s var(--ease);
+  }
+  .toon-social a:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.4);transform:translateY(-2px);}
+  .toon-social a span.handle{color:rgba(246,241,231,0.55);font-weight:400;}
 
   footer{padding:56px 0 40px;background:var(--forest-deep);}
-  .footer-brand{display:flex;flex-direction:column;align-items:center;gap:18px;margin-bottom:36px;}
-  .footer-brand img{height:34px;width:auto;object-fit:contain;}
-  .footer-brand span{font-family:'Noto Serif KR',serif;font-style:italic;font-size:13.5px;color:rgba(246,241,231,0.6);}
+  .footer-brand{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:36px;}
+  .footer-mark{
+    width:44px;height:44px;border:1px solid rgba(246,241,231,0.18);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .footer-mark svg{width:24px;height:24px;}
+  .footer-wordmark{
+    font-family:'Noto Serif KR',serif;font-size:22px;font-weight:700;
+    letter-spacing:-0.01em;color:#F6F1E7;
+  }
+  .footer-tagline{font-family:'Noto Serif KR',serif;font-style:italic;font-size:13.5px;color:rgba(246,241,231,0.55);}
   .footer-inner{
     display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;
     padding-top:28px;border-top:1px solid rgba(246,241,231,0.12);
@@ -467,6 +564,7 @@
     .hero-badge b{font-size:22px;}
     section{padding:76px 0;}
     .service-grid{grid-template-columns:repeat(2,1fr);}
+    .brand-grid{grid-template-columns:repeat(2,1fr);}
     .portfolio-grid{grid-template-columns:repeat(2,1fr);gap:18px;}
     .process-list{grid-template-columns:repeat(2,1fr);row-gap:36px;}
     .process-list::before{display:none;}
@@ -475,6 +573,11 @@
     .stat{border-right:none;border-bottom:1px solid var(--line);padding:0 0 18px;}
     .stat:last-child{border-bottom:none;padding-bottom:0;}
     .contact-grid{grid-template-columns:1fr;gap:40px;}
+    .toon-grid{grid-template-columns:1fr;text-align:center;gap:28px;}
+    .toon-copy .k{justify-content:center;}
+    .toon-copy p{margin-left:auto;margin-right:auto;}
+    .toon-tags{justify-content:center;}
+    .toon-social{justify-content:center;}
     .navlinks{display:none;}
     .mobile-toggle{display:block;}
   }
@@ -484,20 +587,31 @@
 
 <header>
   <div class="nav">
-    <a class="logo" href="#top"><span class="badge"><img src="images/logo.png" alt="청인마루 로고"></span>청인마루</a>
+    <a class="logo" href="#top">
+      <span class="badge" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="5.5" width="18" height="3" rx="1.4" fill="#F6F1E7"/>
+          <rect x="3" y="10.5" width="18" height="3" rx="1.4" fill="#E4C98A"/>
+          <rect x="3" y="15.5" width="18" height="3" rx="1.4" fill="#F6F1E7" opacity="0.55"/>
+        </svg>
+      </span>
+      청인마루
+    </a>
     <nav class="navlinks">
       <a href="#about">소개</a>
+      <a href="#brands">브랜드</a>
       <a href="#services">시공서비스</a>
       <a href="#process">시공과정</a>
       <a href="#portfolio">시공사례</a>
       <a href="#reviews">고객후기</a>
       <a href="#contact">문의하기</a>
     </nav>
-    <a href="http://pf.kakao.com/_xkcwEn" target="_blank" rel="noopener" class="btn">무료 견적 상담</a>
+    <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="btn">무료 견적 상담</a>
     <button class="mobile-toggle" id="mobileToggle" aria-label="메뉴 열기" aria-expanded="false">☰</button>
   </div>
   <nav class="mobile-menu" id="mobileMenu">
     <a href="#about">소개</a>
+    <a href="#brands">브랜드</a>
     <a href="#services">시공서비스</a>
     <a href="#process">시공과정</a>
     <a href="#portfolio">시공사례</a>
@@ -518,7 +632,7 @@
         <h1>당신의 하루가 닿는<br>바닥까지, <em>정성</em>으로 마감합니다.</h1>
         <p class="lede">청인마루는 원목마루부터 강마루, 미네랄마루, 데코타일·장판, 벽장재까지 — 마루 시공 전 과정을 책임지는 전문 컨설팅입니다.</p>
         <div class="hero-ctas">
-          <a href="http://pf.kakao.com/_xkcwEn" target="_blank" rel="noopener" class="btn">
+          <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="btn">
             무료 현장 상담 신청
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
@@ -538,25 +652,17 @@
     </div>
   </section>
 
-  <!-- PARTNER MARQUEE -->
-  <div class="marquee-band" aria-label="파트너 브랜드: 동화, 구정, 한솔, 노바, 네스트, 수입원목마루, 장판·데코타일·기타">
-    <div class="marquee-track">
-      <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener">동화</a>
-      <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener">구정</a>
-      <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener">한솔</a>
-      <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener">노바</a>
-      <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener">네스트</a>
-      <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener">수입원목마루</a>
-      <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener">장판·데코타일·기타</a>
-      <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener">동화</a>
-      <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener">구정</a>
-      <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener">한솔</a>
-      <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener">노바</a>
-      <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener">네스트</a>
-      <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener">수입원목마루</a>
-      <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener">장판·데코타일·기타</a>
+  <!-- PARTNER BRANDS -->
+  <section id="brands">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="k">PARTNER BRANDS</p>
+        <h2>함께하는 브랜드</h2>
+        <p>동화·구정·한솔·노바·네스트·이건 등 국내외 유수 브랜드를 대표하는 마루시공전문직영총판입니다. 브랜드별 제품소개·시공사례를 확인해보세요.</p>
+      </div>
+      <div class="brand-grid reveal-stagger reveal" id="brandGrid"></div>
     </div>
-  </div>
+  </section>
 
   <!-- ABOUT -->
   <section class="about reveal" id="about">
@@ -588,32 +694,38 @@
         <p>공간과 예산에 맞는 마루 시공을 제안해드립니다.</p>
       </div>
       <div class="service-grid reveal-stagger reveal">
-        <div class="service-card">
+        <div class="service-card" style="--sc:#8B5E34">
+          <span class="service-swatch" aria-hidden="true"></span>
           <span class="num">01</span>
           <h3>원목마루 시공</h3>
           <p>자연 그대로의 질감을 살린 원목마루로 공간에 깊이를 더합니다.</p>
         </div>
-        <div class="service-card">
+        <div class="service-card" style="--sc:#A99878">
+          <span class="service-swatch" aria-hidden="true"></span>
           <span class="num">02</span>
           <h3>타일형 강마루</h3>
           <p>타일 패턴의 정갈한 느낌을 살린 강마루로 공간을 깔끔하게 마감합니다.</p>
         </div>
-        <div class="service-card">
+        <div class="service-card" style="--sc:#C99456">
+          <span class="service-swatch" aria-hidden="true"></span>
           <span class="num">03</span>
           <h3>우드형 강마루</h3>
           <p>넓은 원목 판재 느낌을 그대로 살린 우드형 강마루 시공입니다.</p>
         </div>
-        <div class="service-card">
+        <div class="service-card" style="--sc:#5F7A62">
+          <span class="service-swatch" aria-hidden="true"></span>
           <span class="num">04</span>
           <h3>미네랄마루 시공</h3>
           <p>친환경 소재로 습기와 온도 변화에 강한 미네랄마루 시공입니다.</p>
         </div>
-        <div class="service-card">
+        <div class="service-card" style="--sc:#5A5652">
+          <span class="service-swatch" aria-hidden="true"></span>
           <span class="num">05</span>
           <h3>강화마루·데코타일·장판</h3>
           <p>내구성 좋은 강화마루부터 습기에 강한 데코타일·장판까지, 공간과 예산에 맞게 시공합니다.</p>
         </div>
-        <div class="service-card">
+        <div class="service-card" style="--sc:#8C6B5C">
+          <span class="service-swatch" aria-hidden="true"></span>
           <span class="num">06</span>
           <h3>벽장재 시공</h3>
           <p>바닥과 어울리는 벽장재 시공으로 공간 전체의 톤을 맞춥니다.</p>
@@ -631,10 +743,10 @@
         <p>상담 신청부터 시공 완료까지, 네 단계로 진행됩니다.</p>
       </div>
       <div class="process-list reveal-stagger reveal">
-        <div class="step"><div class="circle">1</div><h3>상담 신청</h3><p>전화·온라인으로 원하는 공간과 예산을 알려주세요.</p></div>
-        <div class="step"><div class="circle">2</div><h3>현장 실측</h3><p>전문 담당자가 방문해 정확한 면적과 상태를 확인합니다.</p></div>
-        <div class="step"><div class="circle">3</div><h3>견적 확인</h3><p>자재와 시공비를 투명하게 안내해드립니다.</p></div>
-        <div class="step"><div class="circle">4</div><h3>시공 진행</h3><p>숙련된 기술진이 일정에 맞춰 꼼꼼하게 시공합니다.</p></div>
+        <div class="step" style="--sc:#AD5A28"><div class="circle">1</div><span class="badge-tag">STEP 01</span><h3>상담 신청 · 방문전 예상견적</h3><p>전화나 카카오톡으로 공간 정보만 알려주시면, 방문 전에 예상 견적부터 먼저 확인하실 수 있어요.</p></div>
+        <div class="step" style="--sc:#8B6F47"><div class="circle">2</div><span class="badge-tag">STEP 02</span><h3>현장 실측</h3><p>전문 담당자가 방문해 정확한 면적과 상태를 확인합니다.</p></div>
+        <div class="step" style="--sc:#4F7A6B"><div class="circle">3</div><span class="badge-tag">STEP 03</span><h3>견적 확인</h3><p>실측 결과에 맞춰 자재와 시공비를 투명하게 안내해드립니다.</p></div>
+        <div class="step" style="--sc:#2F4A3E"><div class="circle">4</div><span class="badge-tag">STEP 04</span><h3>시공 진행</h3><p>숙련된 기술진이 일정에 맞춰 꼼꼼하게 시공합니다.</p></div>
       </div>
     </div>
   </section>
@@ -694,8 +806,23 @@
         </div>
         <div class="review-card">
           <div class="stars">★★★★★</div>
-          <p>“매장 리뉴얼로 데코타일 시공 맡겼는데, 영업 마치고 야간에 작업해주셔서 매출 손실 없이 진행할 수 있었습니다.”</p>
-          <div class="who">인천 연수구 · 상가 매장</div>
+          <p>“벽과 마루를 같은 톤으로 시공했더니 공간이 훨씬 넓어 보이고 고급스러워졌어요. 상담하실 때 추천해주신 조합이 정말 신의 한 수였습니다.”</p>
+          <div class="who">인천 서해구 · 34평</div>
+        </div>
+        <div class="review-card">
+          <div class="stars">★★★★★</div>
+          <p>“미네랄마루가 처음엔 생소했는데, 장단점을 자세히 설명해주셔서 안심하고 선택했어요. 여름철 습기에도 끄떡없네요.”</p>
+          <div class="who">인천 남동구 · 아파트 32평</div>
+        </div>
+        <div class="review-card">
+          <div class="stars">★★★★★</div>
+          <p>“세 군데 정도 견적을 받아봤는데, 여기만 항목별로 하나하나 정리해서 보여주셨어요. 이래서 다들 여기 추천하는구나 싶었습니다.”</p>
+          <div class="who">서울 마곡 · 오피스텔</div>
+        </div>
+        <div class="review-card">
+          <div class="stars">★★★★★</div>
+          <p>“오래된 마루 들뜸 때문에 고생했는데, 원인부터 짚어주시고 재발 안 하게 꼼꼼히 시공해주셨어요.”</p>
+          <div class="who">경기 부천 · 단독주택</div>
         </div>
       </div>
     </div>
@@ -708,49 +835,68 @@
         <div class="section-head" style="margin-bottom:32px;">
           <p class="k">CONTACT</p>
           <h2>무료 견적 상담 신청</h2>
-          <p>공간 정보를 남겨주시면 담당자가 순차적으로 연락드립니다.</p>
+          <p>카카오톡 채널로 편하게 문의 남겨주시면 담당자가 순차적으로 답변드립니다.</p>
         </div>
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:2px;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:28px;">
           <img src="images/mascot/caution.png" alt="주의하세요! 방문예약 필수" class="mascot-sticker">
           <p style="font-size:13.5px;color:var(--copper-deep);font-weight:600;margin:0;">방문 상담은 반드시 사전 예약 후 가능합니다!</p>
         </div>
-        <a href="http://pf.kakao.com/_xkcwEn" target="_blank" rel="noopener" class="btn kakao-btn" style="margin-top:16px;">
-          카카오톡 채널로 1:1 상담하기
-        </a>
         <div class="info-card">
           <div class="info-row"><b>전화</b><span>032-210-6268</span></div>
           <div class="info-row"><b>주소</b><span>인천광역시 연수구 송도미래로 30, E동 1505호</span></div>
           <div class="info-row"><b>운영시간</b><span>평일 10:00 - 17:00 · 방문예약 필수 / 주말 예약제</span></div>
           <div class="info-row"><b>시공사례</b><span><a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener" style="color:var(--forest);font-weight:700;">네이버 블로그 '청인마루'</a>에서 더 많은 사례를 확인하세요</span></div>
-          <div class="info-row"><b>SNS</b><span>인스타그램·Threads @cheonginmaru</span></div>
+          <div class="info-row"><b>SNS</b><span>인스타그램·Threads @cheonginmaru · 유튜브 '마루아빠'</span></div>
         </div>
       </div>
-      <form class="reveal" onsubmit="event.preventDefault(); alert('상담 신청이 접수되었습니다. (데모 폼입니다 — 실제 발송을 위해서는 서버 연동이 필요합니다)');">
-        <label for="name">이름</label>
-        <input id="name" type="text" placeholder="홍길동" required>
-        <label for="phone">연락처</label>
-        <input id="phone" type="tel" placeholder="010-0000-0000" required>
-        <label for="area">시공 희망 지역/면적</label>
-        <input id="area" type="text" placeholder="예) 인천 송도, 34평">
-        <label for="msg">문의 내용</label>
-        <textarea id="msg" placeholder="원하시는 마루 종류, 일정 등을 남겨주세요."></textarea>
-        <button type="submit" class="btn" style="justify-content:center;margin-top:8px;">상담 신청하기</button>
-        <p class="form-note">현재는 데모 폼입니다. 실제 접수를 위해서는 이메일 전송 또는 폼 연동 서비스(구글폼, 채널톡 등) 연결이 필요합니다.</p>
-      </form>
+
+      <div class="kakao-panel reveal">
+        <div class="kakao-panel-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="#391B1B"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.86 5.34 4.66 6.77-.2.75-.73 2.73-.83 3.15-.13.53.19.52.4.38.17-.11 2.68-1.82 3.77-2.56.64.09 1.3.14 1.98.14 5.52 0 10-3.58 10-8s-4.48-8-9.98-8z"/></svg>
+        </div>
+        <h3>카카오톡 채널</h3>
+        <p>버튼 하나로 청인마루와 바로 연결돼요.<br>사진도 편하게 보내주시고, 편하신 시간에 답변드릴게요.</p>
+        <div class="kakao-panel-btns">
+          <a href="https://pf.kakao.com/_xkcwEn" target="_blank" rel="noopener" class="btn kakao-btn">
+            채널 홈 보기
+          </a>
+          <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="btn kakao-btn kakao-btn-outline">
+            바로 채팅하기
+          </a>
+        </div>
+        <span class="kakao-panel-id">@cheonginmaru</span>
+      </div>
     </div>
   </section>
 
-  <!-- MARUTOON (moved to last, no images) -->
+  <!-- MARUTOON (moved to last) -->
   <section class="toon-section reveal" id="marutoon">
-    <div class="wrap toon-inner">
-      <img src="images/mascot/bye.png" alt="다음에 또 만나요! 마루니와 루루" style="width:220px;margin:0 auto 8px;filter:drop-shadow(0 16px 28px rgba(0,0,0,0.4));">
-      <p class="k">MARUTOON</p>
-      <h2>마루니 & 루루의 《마루툰》</h2>
-      <p>시공 현장의 웃픈 순간들을 마루니와 루루가 4컷 만화로 전해드려요. 인스타그램·Threads에서 매 화 새로 올라옵니다.</p>
-      <div class="toon-tags">
-        <span>#마루툰</span><span>#마루니와루루</span><span>#시공툰</span><span>#인테리어툰</span>
+    <div class="wrap toon-grid">
+      <div class="toon-figure">
+        <img src="images/mascot/bye.png" alt="다음에 또 만나요! 마루니와 루루">
       </div>
-      <a href="https://www.instagram.com/cheonginmaru" target="_blank" rel="noopener" class="btn btn-line">인스타그램에서 마루툰 보기</a>
+      <div class="toon-copy">
+        <p class="k">MARUTOON</p>
+        <h2>마루니 & 루루의 《마루툰》</h2>
+        <p>시공 현장의 웃픈 순간들을 마루니와 루루가 4컷 만화로 전해드려요. 시공 브이로그는 유튜브 '마루아빠' 채널에서 만나보실 수 있어요.</p>
+        <div class="toon-tags">
+          <span>#마루툰</span><span>#마루니와루루</span><span>#시공툰</span><span>#인테리어툰</span>
+        </div>
+        <div class="toon-social">
+          <a href="https://www.instagram.com/cheongin_maru_" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            마루툰 보러가기 <span class="handle">@cheongin_maru_</span>
+          </a>
+          <a href="https://www.youtube.com/@wonmigood" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor" stroke="none"/></svg>
+            유튜브 마루아빠 <span class="handle">@wonmigood</span>
+          </a>
+          <a href="https://www.instagram.com/cheonginmaru" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            공식 인스타그램 <span class="handle">@cheonginmaru</span>
+          </a>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -759,8 +905,15 @@
 <footer>
   <div class="wrap">
     <div class="footer-brand">
-      <img src="images/logo.png" alt="청인마루 로고">
-      <span>공간의 위로가 되다</span>
+      <span class="footer-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="5.5" width="18" height="3" rx="1.4" fill="#F6F1E7"/>
+          <rect x="3" y="10.5" width="18" height="3" rx="1.4" fill="#E4C98A"/>
+          <rect x="3" y="15.5" width="18" height="3" rx="1.4" fill="#F6F1E7" opacity="0.55"/>
+        </svg>
+      </span>
+      <span class="footer-wordmark">청인마루</span>
+      <span class="footer-tagline">공간의 위로가 되다</span>
     </div>
     <div class="footer-inner">
       <p>© 2026 청인마루. All rights reserved.</p>
@@ -852,6 +1005,54 @@
 
   renderFilters();
   renderPortfolio();
+
+  /* =========================================================
+     브랜드별 블로그 카테고리 링크 목록입니다.
+     새 브랜드를 추가하거나 링크를 바꾸려면 아래 배열만 수정하면 됩니다.
+     - name: 브랜드명
+     - links: { label: 표시될 이름, url: 네이버 블로그 카테고리 주소 }
+       (해당 브랜드에 없는 항목은 그냥 빼면 됩니다)
+  ========================================================= */
+  const brandBase = "https://blog.naver.com/PostList.naver?blogId=chonginmaru&from=postList&categoryNo=";
+  const brands = [
+    { name:"동화자연마루", color:"#2F7A4B", links:[
+      { label:"제품소개", no:28 }, { label:"시공사례", no:77 }, { label:"벽장재", no:80 }
+    ]},
+    { name:"노바마루", color:"#1A1A1A", links:[
+      { label:"제품소개", no:37 }, { label:"시공사례", no:78 }
+    ]},
+    { name:"한솔홈데코", color:"#2E5C9A", links:[
+      { label:"제품소개", no:84 }, { label:"시공사례", no:83 }, { label:"벽장재", no:90 }
+    ]},
+    { name:"구정마루", color:"#E07B1E", links:[
+      { label:"제품소개", no:27 }, { label:"시공사례", no:76 }
+    ]},
+    { name:"네스트", color:"#2F7A4B", links:[
+      { label:"제품소개", no:86 }, { label:"시공사례", no:85 }, { label:"벽장재", no:89 }
+    ]},
+    { name:"이건", links:[
+      { label:"시공사례", no:93 }
+    ]},
+    { name:"수입원목마루(성원외)", links:[
+      { label:"제품소개", no:95 }, { label:"시공사례", no:81 }
+    ]},
+    { name:"데코타일·장판 외 기타", links:[
+      { label:"시공사례", no:87 }
+    ]},
+  ];
+
+  const brandGrid = document.getElementById('brandGrid');
+  if(brandGrid){
+    brandGrid.innerHTML = brands.map(b => `
+      <div class="brand-card"${b.color ? ` style="--bc:${b.color}"` : ''}>
+        <span class="ghost" aria-hidden="true">${b.name.charAt(0)}</span>
+        <h3>${b.name}</h3>
+        <div class="brand-links">
+          ${b.links.map(l => `<a href="${brandBase}${l.no}" target="_blank" rel="noopener">${l.label}<span class="arrow">→</span></a>`).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
 
   /* scroll reveal */
   const revealEls = document.querySelectorAll('.reveal');

@@ -218,11 +218,16 @@
   }
   .eyebrow::before{content:'';width:36px;height:2px;background:var(--gold);display:inline-block;}
   .hero h1{
-    font-size:clamp(40px,5.4vw,72px);
-    font-weight:700;line-height:1.32;letter-spacing:-0.03em;
+    font-size:clamp(38px,5.4vw,76px);
+    font-weight:800;line-height:1.28;letter-spacing:-0.03em;
     margin:0 0 32px;color:#fff;
     text-shadow:0 8px 30px rgba(0,0,0,0.35);
     animation:heroIn .9s var(--ease) .18s both;
+  }
+  .hero h1 .h1-lead{
+    display:block;font-size:0.46em;font-weight:500;letter-spacing:0.01em;
+    color:rgba(255,255,255,0.72);margin-bottom:14px;
+    font-family:'Pretendard', sans-serif;
   }
   .hero h1 em{
     font-style:normal;color:var(--gold);position:relative;display:inline-block;
@@ -643,6 +648,7 @@
   @media (max-width:920px){
     .hero{padding:80px 0 100px;}
     .hero-inner{grid-template-columns:1fr;gap:64px;}
+    .hero h1{font-size:clamp(30px,9vw,44px);}
     .hero-badge{padding:16px 20px;margin-top:16px;}
     .hero-badge b{font-size:26px;}
     .hero-dots{bottom:20px;}
@@ -715,11 +721,11 @@
     <div class="wrap hero-inner">
       <div>
         <span class="eyebrow">시공경력 20년+ · 누적 2만 건 이상</span>
-        <h1>당신의 공간, 한 걸음마다<br><em>정성</em>을 더합니다.</h1>
+        <h1><span class="h1-lead">당신의 소중한 공간,</span>한 걸음마다<br><em>정성</em>을 더합니다.</h1>
         <p class="lede">청인마루는 원목마루부터 강마루, 미네랄마루, 데코타일·장판, 벽장재까지 — 마루 시공 전 과정을 책임지는 전문 컨설팅입니다.</p>
         <div class="hero-ctas">
           <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="btn">
-            빠는 견적 문의
+            빠른 견적 문의
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
           <a href="#services" class="btn btn-ghost">시공 서비스 보기</a>
@@ -982,6 +988,8 @@
 
     사진마다 다른 캡션을 넣고 싶으면 아래 HERO_SLIDE_CAPTIONS 에서
     번호에 맞는 문구를 적어주세요. 값이 없는 번호는 기본 문구가 뜹니다.
+    (※ 각 줄 끝에 쉼표(,) 빠지지 않도록 주의하세요 — 하나라도 빠지면
+    슬라이드뿐 아니라 포트폴리오·후기 등 페이지 전체 기능이 멈춥니다.)
   */
   const HERO_SLIDE_MAX = 30;
   const HERO_SLIDE_INTERVAL = 4500; // ms
@@ -990,12 +998,12 @@
     1: { title:"우드형 강마루 시공", sub:"노바_블랙라벨_클래식월넛" },
     2: { title:"포인트 코너", sub:"동화_진테라_코너 마감" },
     3: { title:"강화 단독주택", sub:"한솔 타일형 강마루 800각_마테라베이지" },
-    4: { title:"입주 아파트 34평 벽과 바닥 통일", sub:"동화_시그니월_이모션블랑/ 진그란데스퀘어_이모션블랑" },
+    4: { title:"입주 아파트 34평 벽과 바닥 통일", sub:"동화_시그니월_이모션블랑 / 진그란데스퀘어_이모션블랑" },
     5: { title:"포인트 월", sub:"동화_시그니월_사하라라이트" },
     6: { title:"서울 아파트 34평", sub:"구정_마뷸러스젠-젠틀판타지" },
     7: { title:"오산 단독주택 미네랄마루 시공", sub:"네스트_미네랄마루_아크로" },
-    8: { title:"벽장재 시공", sub:"동화_시그니월_이모션블랑" }
-    9: { title:"단독주택 원목마루", sub:"노바_원목마루_제스티" }
+    8: { title:"벽장재 시공", sub:"동화_시그니월_이모션블랑" },
+    9: { title:"단독주택 원목마루", sub:"노바_원목마루_제스티" },
     10: { title:"벽장재 시공", sub:"한솔_콜렉트월_페이퍼화이트" }
   };
 

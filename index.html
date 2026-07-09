@@ -149,7 +149,7 @@
   }
   /* 정식 로고 이미지 비율 세팅 */
   .logo-img{
-    height:36px;
+    height:52px;
     width:auto;
     object-fit:contain;
     filter: brightness(0.1); /* 스티키 헤더가 밝으므로 블랙 가독성 확보, 만약 투명 블랙 로고면 제거 가능 */
@@ -598,14 +598,11 @@
   }
   .footer-logo-img{
     position:relative;z-index:1;
-    height:96px;
+    height:160px;
     width:auto;
     object-fit:contain;
     filter: brightness(1.2) drop-shadow(0 8px 22px rgba(230,190,120,0.3)); /* 하단 백그라운드가 어두우므로 화이트 투명 상태 최적화 */
   }
-  .footer-tagline-row{display:flex;align-items:center;gap:14px;}
-  .footer-tagline-row .line{width:28px;height:1px;background:rgba(230,190,120,0.35);}
-  .footer-tagline{font-family:'Noto Serif KR',serif;font-style:italic;font-size:14.5px;color:rgba(246,241,231,0.55);letter-spacing:.04em;}
   .footer-inner{
     display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px;
     padding-top:36px;border-top:1px solid rgba(246,241,231,0.1);
@@ -934,11 +931,6 @@
       <!-- 정식 초성 워드마크 파일 연동 매칭 -->
       <div class="footer-logo-wrap">
         <img src="images/logo.png" alt="청인마루 로고" class="footer-logo-img">
-      </div>
-      <div class="footer-tagline-row">
-        <span class="line"></span>
-        <span class="footer-tagline">공간의 위로가 되다</span>
-        <span class="line"></span>
       </div>
     </div>
     <div class="footer-inner">

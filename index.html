@@ -589,19 +589,19 @@
   .footer-brand{display:flex;flex-direction:column;align-items:center;gap:20px;margin-bottom:48px;position:relative;}
   .footer-logo-wrap{
     position:relative;display:flex;align-items:center;justify-content:center;
-    padding:20px 36px;
+    padding:12px 60px;
   }
   .footer-logo-wrap::before{
-    content:'';position:absolute;inset:0;
-    background:radial-gradient(ellipse at center, rgba(230,190,120,0.14), transparent 72%);
+    content:'';position:absolute;inset:-20px;
+    background:radial-gradient(ellipse at center, rgba(230,190,120,0.18), transparent 70%);
     pointer-events:none;
   }
   .footer-logo-img{
     position:relative;z-index:1;
-    height:46px;
+    height:96px;
     width:auto;
     object-fit:contain;
-    filter: brightness(1.2) drop-shadow(0 6px 18px rgba(230,190,120,0.25)); /* 하단 백그라운드가 어두우므로 화이트 투명 상태 최적화 */
+    filter: brightness(1.2) drop-shadow(0 8px 22px rgba(230,190,120,0.3)); /* 하단 백그라운드가 어두우므로 화이트 투명 상태 최적화 */
   }
   .footer-tagline-row{display:flex;align-items:center;gap:14px;}
   .footer-tagline-row .line{width:28px;height:1px;background:rgba(230,190,120,0.35);}

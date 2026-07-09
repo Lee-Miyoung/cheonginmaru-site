@@ -272,16 +272,17 @@
   }
   .hero-dot.active{width:22px;border-radius:5px;background:var(--gold);}
   .hero-badge{
-    position:absolute;left:-40px;bottom:60px;z-index:3;
-    background:var(--copper);color:#fff;padding:24px 30px;
-    box-shadow:0 24px 50px -15px rgba(200,106,40,0.45);
-    max-width:210px;border-radius:2px;
+    display:flex;align-items:center;gap:16px;
+    background:var(--copper);color:#fff;
+    padding:20px 28px;margin-top:20px;
+    box-shadow:0 20px 40px -18px rgba(200,106,40,0.5);
+    border-radius:var(--radius-sm);
   }
   .hero-badge b{
-    display:block;font-family:'Noto Serif KR',serif;font-size:38px;font-weight:800;
-    color:#fff;line-height:1;margin-bottom:6px;letter-spacing:-0.02em;
+    font-family:'Noto Serif KR',serif;font-size:32px;font-weight:800;
+    color:#fff;line-height:1;letter-spacing:-0.02em;flex-shrink:0;
   }
-  .hero-badge span{font-size:13px;color:rgba(255,255,255,0.85);letter-spacing:.02em;line-height:1.4;}
+  .hero-badge span{font-size:13.5px;color:rgba(255,255,255,0.9);letter-spacing:.02em;line-height:1.4;}
 
   /* ---------- SECTION GENERIC (여백 타이트하게 조정) ---------- */
   section{padding:100px 0;}
@@ -642,9 +643,9 @@
   @media (max-width:920px){
     .hero{padding:80px 0 100px;}
     .hero-inner{grid-template-columns:1fr;gap:64px;}
-    .hero-badge{left:16px;bottom:-24px;padding:20px 26px;}
+    .hero-badge{padding:16px 20px;margin-top:16px;}
+    .hero-badge b{font-size:26px;}
     .hero-dots{bottom:20px;}
-    .hero-badge b{font-size:32px;}
     section{padding:80px 0;}
     .process-list{grid-template-columns:repeat(2,1fr);row-gap:48px;}
     .process-list::before{display:none;}
@@ -660,8 +661,10 @@
     .toon-tags{justify-content:center;}
     .toon-social{grid-template-columns:1fr;max-width:420px;margin:0 auto;}
     .navlinks{display:none;}
-    .mobile-toggle{display:block;}
-    .nav{padding:18px 32px;}
+    .mobile-toggle{display:block;font-size:30px;}
+    .nav{padding:8px 20px;}
+    .logo-img{height:118px;}
+    .nav .btn{padding:11px 18px;font-size:13px;}
     .mobile-menu{padding:12px 32px 24px;}
     .mascot-sticker{width:88px;}
   }
@@ -726,7 +729,7 @@
         <div class="hero-frame" id="heroFrame">
           <div id="heroSlideContainer"></div>
           <div class="hero-dots" id="heroDots"></div>
-          <div class="tag">시공 현장<span>다양한 공간의 마루 시공 사례</span></div>
+          <div class="tag" id="heroTag">시공 현장<span id="heroTagSub">다양한 공간의 마루 시공 사례</span></div>
         </div>
         <div class="hero-badge">
           <b>20+</b>
@@ -970,19 +973,35 @@
 <script>
   /*
     ============================================================
-    히어로 이미지 슬라이드쇼 — 최대 10장까지 자동 인식
+    히어로 이미지 슬라이드쇼 — 최대 30장까지 자동 인식
     ============================================================
-    images/hero-1.jpg ~ images/hero-10.jpg 중 실제로 존재하는 파일만
+    images/hero-1.jpg ~ images/hero-30.jpg 중 실제로 존재하는 파일만
     자동으로 감지해서 슬라이드에 넣습니다. 사진을 늘리고 싶으면
     images 폴더에 hero-3.jpg, hero-4.jpg ... 처럼 순서대로 파일만
     추가로 올리면 됩니다. 코드는 다시 안 건드리셔도 됩니다.
+
+    사진마다 다른 캡션을 넣고 싶으면 아래 HERO_SLIDE_CAPTIONS 에서
+    번호에 맞는 문구를 적어주세요. 값이 없는 번호는 기본 문구가 뜹니다.
   */
-  const HERO_SLIDE_MAX = 10;
+  const HERO_SLIDE_MAX = 30;
   const HERO_SLIDE_INTERVAL = 4500; // ms
+  const HERO_DEFAULT_CAPTION = { title:"시공 현장", sub:"다양한 공간의 마루 시공 사례" };
+  const HERO_SLIDE_CAPTIONS = {
+    1: { title:"거실 시공", sub:"우드타일 톤 마루 시공" },
+    2: { title:"포인트 코너", sub:"통유리 코너 마감" },
+    3: { title:"거실 통창", sub:"타일 시공 · 전망 인테리어" },
+    4: { title:"붙박이장 디테일", sub:"곡선 하부 마감 시공" },
+    5: { title:"간접조명 시공", sub:"타일 마감 · 몰딩 라인" },
+    6: { title:"홈오피스 공간", sub:"데코타일 시공" },
+    7: { title:"포인트 월", sub:"복도 타일 시공" },
+    8: { title:"계단 복도", sub:"통유리 난간 · 타일 시공" }
+  };
 
   (function initHeroSlideshow(){
     const container = document.getElementById('heroSlideContainer');
     const dotsWrap = document.getElementById('heroDots');
+    const tagTitle = document.getElementById('heroTag');
+    const tagSub = document.getElementById('heroTagSub');
     if(!container || !dotsWrap) return;
 
     const found = [];
@@ -1002,6 +1021,14 @@
       testImg.src = `images/hero-${i}.jpg`;
     }
 
+    function updateCaption(order){
+      const cap = HERO_SLIDE_CAPTIONS[order] || HERO_DEFAULT_CAPTION;
+      if(tagTitle && tagSub){
+        tagTitle.childNodes[0].textContent = cap.title;
+        tagSub.textContent = cap.sub;
+      }
+    }
+
     function buildSlideshow(){
       found.sort((a,b)=>a.order-b.order);
       if(found.length === 0) return;
@@ -1019,12 +1046,15 @@
       let current = 0;
       let timer = null;
 
+      updateCaption(found[0].order);
+
       function goTo(idx){
         slideEls[current].classList.remove('active');
         if(dotEls[current]) dotEls[current].classList.remove('active');
         current = idx;
         slideEls[current].classList.add('active');
         if(dotEls[current]) dotEls[current].classList.add('active');
+        updateCaption(found[current].order);
       }
 
       function startTimer(){

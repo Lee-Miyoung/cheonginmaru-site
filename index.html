@@ -206,26 +206,41 @@
     transform: skewY(-2.5deg) scale(1.2);
   }
   .hero-inner{position:relative;z-index:1;display:grid;grid-template-columns:1.15fr 0.85fr;gap:80px;align-items:center;}
+  @keyframes heroIn{
+    from{opacity:0;transform:translateY(18px);}
+    to{opacity:1;transform:translateY(0);}
+  }
   .eyebrow{
     display:flex;align-items:center;gap:12px;
     font-size:14.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
     color:var(--gold);margin-bottom:24px;
+    animation:heroIn .8s var(--ease) both;
   }
   .eyebrow::before{content:'';width:36px;height:2px;background:var(--gold);display:inline-block;}
   .hero h1{
-    font-size:clamp(42px,5.8vw,78px);
-    font-weight:700;line-height:1.2;letter-spacing:-0.03em;
+    font-size:clamp(40px,5.4vw,72px);
+    font-weight:700;line-height:1.32;letter-spacing:-0.03em;
     margin:0 0 32px;color:#fff;
+    text-shadow:0 8px 30px rgba(0,0,0,0.35);
+    animation:heroIn .9s var(--ease) .18s both;
   }
-  .hero h1 em{font-style:normal;color:var(--gold);position:relative;display:inline-block;}
-  .hero h1 em::after{content:'';position:absolute;left:0;bottom:8px;width:100%;height:4px;background:rgba(214,163,89,0.3);}
+  .hero h1 em{
+    font-style:normal;color:var(--gold);position:relative;display:inline-block;
+  }
+  .hero h1 em::after{
+    content:'';position:absolute;left:-2px;right:-2px;bottom:6px;height:5px;
+    background:linear-gradient(90deg, rgba(214,163,89,0.55), rgba(214,163,89,0.15));
+    border-radius:3px;
+  }
   
   /* 공식 슬로건 폰트 연출 스타일링 */
   .tagline{
     font-family:'Noto Serif KR',serif;font-weight:400;font-size:24px;
     color:rgba(255,255,255,0.9);margin:0 0 20px;letter-spacing:0.08em;
+    animation:heroIn .8s var(--ease) .06s both;
   }
-  .hero p.lede{font-size:17.5px;color:rgba(255,255,255,0.72);max-width:44ch;margin:0 0 44px;line-height:1.85;}
+  .hero p.lede{font-size:17.5px;color:rgba(255,255,255,0.72);max-width:44ch;margin:0 0 44px;line-height:1.85;animation:heroIn .8s var(--ease) .32s both;}
+  .hero-ctas{animation:heroIn .8s var(--ease) .44s both;}
 
   .hero-visual{position:relative;}
   .hero-frame{
@@ -678,7 +693,7 @@
       <div>
         <span class="eyebrow">시공경력 20년+ · 누적 2만 건 이상</span>
         <p class="tagline">공간의 위로가 되다</p>
-        <h1>당신의 하루가 닿는<br>바닥까지, <em>정성</em>으로 마감합니다.</h1>
+        <h1>당신의 공간, 한 걸음마다<br><em>정성</em>을 더합니다.</h1>
         <p class="lede">청인마루는 원목마루부터 강마루, 미네랄마루, 데코타일·장판, 벽장재까지 — 마루 시공 전 과정을 책임지는 전문 컨설팅입니다.</p>
         <div class="hero-ctas">
           <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="btn">
@@ -1074,9 +1089,9 @@
       videoUrl: null
     },
     {
-      text:"이사 날짜가 촉박했는데 일정을 맞춰주셔서 정말 감사했어요. 강마루 색도 집이랑 잘 어울려서 만족스럽습니다.",
-      who:"인천 청라 · 신축 빌라 24평",
-      videoUrl: "https://www.youtube.com/watch?v=여기에_영상ID"
+      text:"이사 날짜가 촉박했는데 일정을 맞춰주셔서 정말 감사했어요. 강마루가 안 미끄러워서 그런지 우리집 반려견도 편하게 뛰어다니고 좋아하네요.",
+      who:"경기 시흥 · 아파트 24평",
+      videoUrl: "https://www.youtube.com/shorts/M_TDpA4O5t4"
     },
     {
       text:"아이가 있어서 소음이랑 냄새가 제일 걱정이었는데, 시공 당일 환기며 마감 처리까지 꼼꼼하게 신경써주셨어요.",
@@ -1086,7 +1101,7 @@
     {
       text:"벽과 마루를 같은 톤으로 시공했더니 공간이 훨씬 넓어 보이고 고급스러워졌어요. 상담하실 때 추천해주신 조합이 정말 신의 한 수였습니다.",
       who:"인천 서구 · 34평",
-      videoUrl: "https://youtube.com/shorts/mp7-eaoEG4w?si=wSQb-jR3hIvicBVa"
+      videoUrl: "https://www.youtube.com/shorts/mp7-eaoEG4w"
     },
     {
       text:"미네랄마루가 처음엔 생소했는데, 장단점을 자세히 설명해주셔서 안심하고 선택했어요. 여름철 습기에도 끄떡없네요.",

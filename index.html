@@ -454,15 +454,17 @@
   .info-row span{font-size:15.5px;color:var(--ink-soft);line-height:1.65;}
   
   .kakao-btn{
-    display:flex;justify-content:center;width:100%;
-    background:#FEE500;color:#391B1B;border-color:#FEE500;
-    font-weight:800;padding:18px;font-size:15px;border-radius:var(--radius-sm);
+    display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+    background:var(--forest-deep);color:#fff;border-color:var(--forest-deep);
+    font-weight:800;padding:18px;font-size:15.5px;border-radius:var(--radius-sm);
+    box-shadow:0 14px 28px -10px rgba(13,22,18,0.45);
   }
-  .kakao-btn:hover{background:#F5D900;border-color:#F5D900;box-shadow:0 15px 30px -8px rgba(254,229,0,0.6);transform:translateY(-3px);}
+  .kakao-btn:hover{background:#050907;border-color:#050907;box-shadow:0 18px 34px -8px rgba(13,22,18,0.55);transform:translateY(-3px);}
   .kakao-btn-outline{
-    background:transparent;color:#391B1B;border:2px solid #391B1B;
+    background:rgba(57,27,27,0.06);color:#391B1B;border:2px solid rgba(57,27,27,0.35);
+    box-shadow:none;font-weight:700;
   }
-  .kakao-btn-outline:hover{background:#391B1B;color:#fff;}
+  .kakao-btn-outline:hover{background:#391B1B;border-color:#391B1B;color:#fff;box-shadow:0 14px 28px -10px rgba(57,27,27,0.4);}
 
   .kakao-panel{
     background:#FEE500;border-radius:var(--radius);
@@ -475,15 +477,37 @@
     content:'';position:absolute;inset:0;
     background-image: repeating-linear-gradient(135deg, rgba(57,27,27,0.03) 0 1px, transparent 1px 36px);
   }
-  .kakao-panel-icon{
-    position:relative;z-index:1;width:72px;height:72px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;margin-bottom:28px;
-    background:rgba(57,27,27,0.07);
+  .kakao-panel::after{
+    content:'';position:absolute;width:280px;height:280px;border-radius:50%;
+    background:radial-gradient(circle, rgba(57,27,27,0.06), transparent 70%);
+    top:-110px;right:-90px;pointer-events:none;
   }
-  .kakao-panel h3{position:relative;z-index:1;font-size:24px;margin:0 0 16px;color:#391B1B;font-weight:800;}
+  .kakao-panel-badge{
+    position:relative;z-index:1;display:inline-flex;align-items:center;gap:8px;
+    background:rgba(57,27,27,0.08);color:#391B1B;
+    font-size:12.5px;font-weight:800;letter-spacing:.03em;
+    padding:8px 18px;border-radius:30px;margin-bottom:24px;
+  }
+  .kakao-panel-badge::before{
+    content:'';width:7px;height:7px;border-radius:50%;background:#2F7A4B;
+    box-shadow:0 0 0 3px rgba(47,122,75,0.25);
+  }
+  .kakao-panel-icon{
+    position:relative;z-index:1;width:76px;height:76px;border-radius:24px;
+    display:flex;align-items:center;justify-content:center;margin-bottom:26px;
+    background:#391B1B;box-shadow:0 16px 32px -12px rgba(57,27,27,0.5);
+    transform:rotate(-4deg);
+  }
+  .kakao-panel h3{position:relative;z-index:1;font-size:26px;margin:0 0 16px;color:#391B1B;font-weight:800;letter-spacing:-0.02em;}
   .kakao-panel p{position:relative;z-index:1;font-size:15.5px;color:#5C4A2E;margin:0 0 36px;line-height:1.8;}
   .kakao-panel-btns{position:relative;z-index:1;display:flex;flex-direction:column;gap:14px;width:100%;max-width:320px;}
-  .kakao-panel-id{position:relative;z-index:1;margin-top:28px;font-size:14px;color:#7A6338;letter-spacing:.05em;font-weight:700;}
+  .kakao-panel-id{
+    position:relative;z-index:1;margin-top:28px;
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:14.5px;color:#391B1B;letter-spacing:.02em;font-weight:800;
+    padding:10px 22px;border-radius:30px;background:rgba(255,255,255,0.55);
+    border:1px solid rgba(57,27,27,0.12);
+  }
 
   /* ---------- MASCOT STICKERS ---------- */
   .mascot-sticker{
@@ -524,15 +548,26 @@
     border:1px solid rgba(255,255,255,0.18);
     padding:8px 20px;border-radius:30px;font-size:13.5px;color:rgba(246,241,231,0.85);
   }
-  .toon-social{display:flex;flex-wrap:wrap;gap:14px;}
+  .toon-social{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
   .toon-social a{
-    display:inline-flex;align-items:center;gap:12px;
-    padding:16px 28px;font-size:14.5px;font-weight:700;border-radius:var(--radius-sm);
-    border:1px solid rgba(255,255,255,0.22);color:#fff;
+    --mc:#fff;
+    display:flex;align-items:center;gap:16px;
+    padding:18px 22px;border-radius:var(--radius);
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1);color:#fff;
     transition:all .3s var(--ease);
   }
-  .toon-social a:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.5);transform:translateY(-3px);}
-  .toon-social a span.handle{color:rgba(246,241,231,0.55);font-weight:400;margin-left:4px;}
+  .toon-social a:hover{background:rgba(255,255,255,0.08);border-color:var(--mc);transform:translateY(-4px);box-shadow:0 16px 32px -14px rgba(0,0,0,0.5);}
+  .toon-social .media-icon{
+    flex-shrink:0;width:44px;height:44px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--mc);color:#fff;
+    transition:transform .3s var(--ease);
+  }
+  .toon-social a:hover .media-icon{transform:scale(1.08) rotate(-4deg);}
+  .toon-social .media-text{display:flex;flex-direction:column;gap:3px;text-align:left;}
+  .toon-social .media-text b{font-size:14.5px;font-weight:700;}
+  .toon-social .media-text span.handle{color:rgba(246,241,231,0.5);font-weight:500;font-size:13px;margin-left:0;}
 
   /* ---------- FOOTER (로고 반영) ---------- */
   footer{padding:80px 0 48px;background:var(--forest-deep);border-top:1px solid rgba(255,255,255,0.06);}
@@ -578,7 +613,7 @@
     .toon-copy .k{justify-content:center;}
     .toon-copy p{margin-left:auto;margin-right:auto;}
     .toon-tags{justify-content:center;}
-    .toon-social{justify-content:center;}
+    .toon-social{grid-template-columns:1fr;max-width:420px;margin:0 auto;}
     .navlinks{display:none;}
     .mobile-toggle{display:block;}
     .nav{padding:18px 32px;}
@@ -808,20 +843,21 @@
       </div>
 
       <div class="kakao-panel reveal">
+        <span class="kakao-panel-badge">평일 10:00~17:00 실시간 상담</span>
         <div class="kakao-panel-icon">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="#391B1B"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.86 5.34 4.66 6.77-.2.75-.73 2.73-.83 3.15-.13.53.19.52.4.38.17-.11 2.68-1.82 3.77-2.56.64.09 1.3.14 1.98.14 5.52 0 10-3.58 10-8s-4.48-8-9.98-8z"/></svg>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="#FEE500"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.86 5.34 4.66 6.77-.2.75-.73 2.73-.83 3.15-.13.53.19.52.4.38.17-.11 2.68-1.82 3.77-2.56.64.09 1.3.14 1.98.14 5.52 0 10-3.58 10-8s-4.48-8-9.98-8z"/></svg>
         </div>
         <h3>카카오톡 채널</h3>
         <p>버튼 하나로 청인마루와 바로 연결돼요.<br>사진도 편하게 보내주시고, 편하신 시간에 답변드릴게요.</p>
         <div class="kakao-panel-btns">
-          <a href="https://pf.kakao.com/_xkcwEn" target="_blank" rel="noopener" class="btn kakao-btn">
-            채널 홈 보기
-          </a>
-          <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="btn kakao-btn kakao-btn-outline">
+          <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="btn kakao-btn">
             바로 채팅하기
           </a>
+          <a href="https://pf.kakao.com/_xkcwEn" target="_blank" rel="noopener" class="btn kakao-btn kakao-btn-outline">
+            채널 홈 보기
+          </a>
         </div>
-        <span class="kakao-panel-id">@cheonginmaru</span>
+        <span class="kakao-panel-id">청인마루</span>
       </div>
     </div>
   </section>
@@ -840,17 +876,23 @@
           <span>#마루아빠</span><span>#시공브이로그</span><span>#인테리어팁</span><span>#송도인테리어</span><span>#마루니루루</span>
         </div>
         <div class="toon-social">
-          <a href="https://www.youtube.com/@wonmigood" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor" stroke="none"/></svg>
-            유튜브 마루아빠 <span class="handle">@wonmigood</span>
+          <a href="https://www.youtube.com/@wonmigood" target="_blank" rel="noopener" style="--mc:#FF0000">
+            <span class="media-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor" stroke="none"/></svg>
+            </span>
+            <span class="media-text"><b>유튜브 마루아빠</b><span class="handle">@wonmigood</span></span>
           </a>
-          <a href="https://www.instagram.com/cheonginmaru" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-            공식 인스타그램 <span class="handle">@cheonginmaru</span>
+          <a href="https://www.instagram.com/cheonginmaru" target="_blank" rel="noopener" style="--mc:#DD2A7B">
+            <span class="media-icon" style="background:linear-gradient(135deg,#F58529,#FEDA77,#DD2A7B,#8134AF,#515BD4);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            </span>
+            <span class="media-text"><b>공식 인스타그램</b><span class="handle">@cheonginmaru</span></span>
           </a>
-          <a href="https://www.instagram.com/cheongin_maru_" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-            마루니 루루 시공에피소드 <span class="handle">@cheongin_maru_</span>
+          <a href="https://www.instagram.com/cheongin_maru_" target="_blank" rel="noopener" style="--mc:#C86A28">
+            <span class="media-icon" style="background:linear-gradient(135deg,#E4C98A,#C86A28);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            </span>
+            <span class="media-text"><b>마루니 루루 시공에피소드</b><span class="handle">@cheongin_maru_</span></span>
           </a>
         </div>
       </div>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>청인마루 | 인천 마루·강마루·원목마루·벽장재 시공 전문업체 (20년 경력)</title>
 <meta name="description" content="인천 연수구 송도 청인마루. 동화·구정·한솔·노바·네스트·수입원목마루 등을 대표하는 마루시공전문직영총판. 원목마루, 강마루, 미네랄마루, 강화마루, 데코타일·장판, 벽장재 시공 20년 경력·누적 2만 건 이상. 인천공항·시립박물관·독립기념관 등 공공기관 시공 실적. 방문상담 예약제.">
-<meta name="keywords" content="인천 마루시공, 송도 마루시공, 마루시공전문직영총판, 강마루, 원목마루, 미네랄마루, 강화마루, 데코타일, 장판시공, 벽장재, 동화마루, 구정마루, 한솔마루, 노바마루, 청인마루">
+<meta name="keywords" content="인천 마루시공, 송도 마루시공, 마루시공전문직영총판, 강마루, 원목마루, 미네랄마루, 강화마루, 데코타일, 장판시공, 벽장재, 동화마루, 구정마루, 한솔마루, 노바마루,청인마루">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://cheonginmaru.com/">
 
@@ -532,7 +532,7 @@
     background:linear-gradient(180deg, rgba(13,22,18,0) 55%, rgba(13,22,18,0.55) 100%);
   }
   .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:20px;border-top:2px solid var(--line-strong);}
-  .stat{padding:28px 20px 0 0;border-right:1px solid var(--line-strong);position:relative;}
+  .stat(padding:28px 20px 0 0;border-right:1px solid var(--line-strong);position:relative;)
   .stat:last-child{border-right:none;}
   .stat::before{
     content:'';position:absolute;top:-2px;left:0;width:32px;height:2px;background:var(--copper);
@@ -1056,63 +1056,88 @@
     .toon-tags{justify-content:center;}
     .toon-social{grid-template-columns:1fr;max-width:420px;margin:0 auto;}
     .navlinks{display:none;}
-    .mobile-toggle{display:block;font-size:30px;}
     
     /* ============================================================
-       [수석 디자이너 대수술] 모바일 상단 바 하이엔드 레이아웃 리빌딩
+       [수석 디자이너 대수술] 모바일 상단 바 프리미엄 2단 아키텍처 리빌딩
        ============================================================ */
     .nav {
-      padding: 12px 14px !important; /* 가용 가로면적을 극한으로 넓힘 */
+      display: grid !important;
+      grid-template-columns: 1fr auto !important;
+      grid-template-rows: auto auto !important;
+      row-gap: 14px !important;
+      padding: 16px 20px !important;
     }
     
-    /* 1. 로고 방어막 가동 및 시원하게 크기 상향 고정 (압착 전면 차단) */
+    /* 1. 로고 방어막 완전 가동 및 시각 크기 획기적 상향 (64px) */
     .logo {
+      grid-column: 1 !important;
+      grid-row: 1 !important;
+      display: flex !important;
+      align-items: center !important;
       flex-shrink: 0 !important;
     }
     .logo-img {
-      height: 52px !important; 
+      height: 64px !important; /* 모바일 전용 로고 선명도 확보형 웅장한 높이 지정 */
       width: auto !important;
-      max-width: 120px !important;
-      filter: brightness(0.1) !important;
+      max-width: 130px !important;
+      filter: brightness(0.08) !important; /* 고급스러운 프렌치 블랙 조율 */
       flex-shrink: 0 !important;
     }
     
-    /* 2. 상단 우측 버튼 필드 영역 정렬 조율 */
+    /* 2. 햄버거 메뉴 버튼 단독 정렬 */
+    .mobile-toggle {
+      display: block !important;
+      grid-column: 2 !important;
+      grid-row: 1 !important;
+      align-self: center !important;
+      font-size: 32px !important;
+      color: var(--ink) !important;
+      padding: 4px !important;
+      line-height: 1 !important;
+    }
+    
+    /* 3. 우측 버튼 영역을 하단 독립 배너 레이어로 완전 분리격리 */
     .header-btns {
-      display: flex !important;
-      align-items: center !important;
-      gap: 0 !important;
-      margin-left: auto !important;
-      margin-right: 8px !important;
+      grid-column: 1 / span 2 !important;
+      grid-row: 2 !important;
+      width: 100% !important;
+      margin: 0 !important;
+      display: block !important;
       flex-shrink: 0 !important;
     }
     .pc-text { display: none !important; }
     .mo-text { display: inline !important; }
 
-    /* 3. 요청 반영: 카카오톡 버튼 모바일 헤더에서 완전 영구 삭제 */
+    /* 요청 완벽 반영: 카카오톡 버튼 모바일 상단 바에서 흔적 없이 영구 완전 삭제 */
     .header-btns .btn-consult {
       display: none !important;
     }
 
-    /* 4. 요청 반영: 긴 텍스트 복원 및 럭셔리 부티크 스타일 태그 디자인 세팅 */
+    /* 요청 완벽 반영: 긴 문장 원형 그대로 100% 보존하면서 하이엔드 자재 포트폴리오 배너 스타일로 커스텀 */
     .header-btns .btn-outline-copper {
-      display: inline-flex !important;
-      padding: 8px 14px !important;
-      font-size: 11px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 100% !important;
+      padding: 12px 16px !important;
+      font-size: 13.5px !important;
       font-weight: 700 !important;
       letter-spacing: -0.02em !important;
-      border-radius: 6px !important;
-      border: 1px solid var(--copper) !important;
-      background: rgba(200, 106, 40, 0.03) !important; /* 연한 크림빛 구리 가조 보정 */
-      color: var(--copper) !important;
-      white-space: nowrap !important;
-      box-shadow: 0 2px 6px rgba(200,106,40,0.05) !important;
+      border-radius: 8px !important;
+      border: none !important;
+      background: var(--forest) !important; /* 럭셔리 총판 하우스 무드의 깊은 포레스트 컬러 매칭 */
+      color: #FAF7F2 !important;
+      box-shadow: var(--shadow-sm) !important;
+      transition: background 0.2s var(--ease) !important;
     }
-    
-    /* 마우스 대신 손가락 터치 순간 미세 하이라이트 애니메이션 피드백 */
+    .header-btns .btn-outline-copper::after {
+      content: ' →' !important;
+      color: var(--gold) !important;
+      font-weight: 800 !important;
+      margin-left: 4px !important;
+    }
     .header-btns .btn-outline-copper:active {
-      background: var(--copper) !important;
-      color: #fff !important;
+      background: var(--forest-deep) !important;
     }
 
     .mobile-menu{padding:12px 32px 24px;}
@@ -1181,7 +1206,6 @@
       <a href="#contact">문의하기</a>
     </nav>
     <div class="header-btns">
-      <!-- [텍스트 치환] 요청하신 명확한 풀 보이스 비즈니스 명칭 적용 -->
       <a href="#partner-apply" class="btn btn-outline-copper">
         <span class="pc-text">건축·인테리어 업체 전용 협력문의</span>
         <span class="mo-text">건축 인테리어 업체 협력문의</span>

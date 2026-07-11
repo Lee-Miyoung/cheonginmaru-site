@@ -331,19 +331,41 @@
     font-family:'Noto Serif KR',serif;font-size:21px;margin:0 0 24px;font-weight:700;color:var(--ink);
   }
   .brand-links{position:relative;z-index:1;display:flex;flex-direction:column;}
-  .brand-links a{
+  .brand-links .brand-toggle{
     display:flex;align-items:center;justify-content:space-between;gap:12px;
     font-size:14px;color:var(--ink-soft);font-weight:500;
     padding:12px 0;border-top:1px solid rgba(18,16,14,0.06);
     transition:all .25s var(--ease);
+    background:none;border-left:none;border-right:none;border-bottom:none;
+    width:100%;text-align:left;cursor:pointer;font-family:inherit;
   }
-  .brand-links a:first-child{border-top:none;}
-  .brand-links a .arrow{
+  .brand-links .brand-toggle:first-child{border-top:none;}
+  .brand-links .brand-toggle .arrow{
     color:var(--bc);opacity:0;transform:translateX(-8px);
-    transition:all .25s var(--ease);font-size:13px;
+    transition:all .25s var(--ease);font-size:13px;flex-shrink:0;
   }
-  .brand-links a:hover{color:var(--bc);padding-left:6px;}
-  .brand-links a:hover .arrow{opacity:1;transform:translateX(0);}
+  .brand-links .brand-toggle:hover{color:var(--bc);padding-left:6px;}
+  .brand-links .brand-toggle:hover .arrow{opacity:1;transform:translateX(0);}
+  .brand-links .brand-toggle .chev{
+    flex-shrink:0;transition:transform .3s var(--ease);color:rgba(18,16,14,0.3);
+  }
+  .brand-links .brand-toggle.open .chev{transform:rotate(180deg);}
+  .brand-sublist{
+    max-height:0;overflow:hidden;
+    transition:max-height .35s var(--ease);
+  }
+  .brand-sublist.open{max-height:400px;overflow-y:auto;}
+  .brand-sublist a{
+    display:flex;align-items:center;gap:8px;
+    font-size:12.5px;color:var(--ink-faint);
+    padding:8px 0 8px 14px;line-height:1.5;
+    border-left:2px solid rgba(18,16,14,0.08);
+    transition:all .2s var(--ease);
+  }
+  .brand-sublist a:hover{color:var(--bc);border-left-color:var(--bc);padding-left:18px;}
+  .brand-sublist .sub-empty{
+    font-size:12.5px;color:var(--ink-faint);padding:8px 0 8px 14px;font-style:italic;
+  }
 
   /* ---------- ABOUT ---------- */
   .about{background:var(--surface);position:relative;overflow:hidden;}
@@ -411,6 +433,15 @@
     transition:all .4s var(--ease);box-shadow:0 4px 10px rgba(0,0,0,0.02);
   }
   .step:hover .circle{background:var(--sc);border-color:var(--sc);color:#fff;transform:scale(1.1);box-shadow:0 10px 24px -6px var(--sc);}
+  .step-character{
+    position:absolute;top:-16px;left:36px;z-index:2;
+    width:54px;height:54px;border-radius:50%;overflow:hidden;
+    border:3px solid var(--bg);box-shadow:0 8px 18px -6px rgba(18,16,14,0.25);
+    background:#fff;transform:rotate(-6deg);
+    transition:transform .3s var(--ease);
+  }
+  .step:hover .step-character{transform:rotate(0deg) scale(1.06);}
+  .step-character img{width:100%;height:100%;object-fit:cover;display:block;}
   .step .badge-tag{
     display:inline-block;font-size:11px;font-weight:700;color:var(--sc);
     letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;
@@ -430,9 +461,11 @@
   
   .portfolio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;}
   .portfolio-card{
+    display:block;
     overflow:hidden;background:#fff;border-radius:var(--radius);
     border:1px solid rgba(18,16,14,0.05);transition:all .4s var(--ease);
   }
+  a.portfolio-card{cursor:pointer;}
   .portfolio-card:hover {
     transform: translateY(-8px);box-shadow: 0 35px 65px -15px rgba(18,16,14,0.14);border-color: transparent;
   }
@@ -440,8 +473,17 @@
     aspect-ratio:4/3;position:relative;overflow:hidden;background-color:#EFE4D2;
   }
   .portfolio-thumb img{
-    width:100%;height:100%;object-fit:cover;
+    width:100%;height:100%;object-fit:cover;transition:transform .5s var(--ease);
   }
+  .portfolio-card:hover .portfolio-thumb img{transform:scale(1.06);}
+  .portfolio-view{
+    position:absolute;left:20px;bottom:20px;z-index:2;
+    background:rgba(13,22,18,0.82);color:#fff;
+    font-size:12px;font-weight:700;padding:8px 16px;border-radius:30px;
+    opacity:0;transform:translateY(8px);
+    transition:all .3s var(--ease);
+  }
+  .portfolio-card:hover .portfolio-view{opacity:1;transform:translateY(0);}
   .portfolio-loading{color:var(--ink-soft);font-size:15px;padding:80px 0;text-align:center;grid-column:span 3;}
   .portfolio-thumb .pill{
     position:absolute;top:20px;left:20px;background:rgba(255,255,255,0.96);
@@ -838,10 +880,10 @@
         <p>상담 신청부터 시공 완료까지, 네 단계로 진행됩니다.</p>
       </div>
       <div class="process-list reveal-stagger reveal">
-        <div class="step" style="--sc:#AD5A28"><div class="circle">1</div><span class="badge-tag">STEP 01</span><h3>상담 신청 · 방문전 예상견적</h3><p>전화나 카카오톡으로 공간 정보만 알려주시면, 방문 전에 예상 견적부터 먼저 확인하실 수 있어요.</p></div>
-        <div class="step" style="--sc:#8B6F47"><div class="circle">2</div><span class="badge-tag">STEP 02</span><h3>현장 실측</h3><p>전문 담당자가 방문해 정확한 면적과 상태를 확인합니다.</p></div>
-        <div class="step" style="--sc:#4F7A6B"><div class="circle">3</div><span class="badge-tag">STEP 03</span><h3>견적 확인</h3><p>실측 결과에 맞춰 자재와 시공비를 투명하게 안내해드립니다.</p></div>
-        <div class="step" style="--sc:#2F4A3E"><div class="circle">4</div><span class="badge-tag">STEP 04</span><h3>시공 진행</h3><p>숙련된 기술진이 일정에 맞춰 꼼꼼하게 시공합니다.</p></div>
+        <div class="step" style="--sc:#AD5A28"><div class="circle">1</div><div class="step-character"><img src="images/mascot/step-1.png" alt="" onerror="this.parentElement.style.display='none'"></div><span class="badge-tag">STEP 01</span><h3>상담 신청 · 방문전 예상견적</h3><p>전화나 카카오톡으로 공간 정보만 알려주시면, 방문 전에 예상 견적부터 먼저 확인하실 수 있어요.</p></div>
+        <div class="step" style="--sc:#8B6F47"><div class="circle">2</div><div class="step-character"><img src="images/mascot/step-2.png" alt="" onerror="this.parentElement.style.display='none'"></div><span class="badge-tag">STEP 02</span><h3>현장 실측</h3><p>전문 담당자가 방문해 정확한 면적과 상태를 확인합니다.</p></div>
+        <div class="step" style="--sc:#4F7A6B"><div class="circle">3</div><div class="step-character"><img src="images/mascot/step-3.png" alt="" onerror="this.parentElement.style.display='none'"></div><span class="badge-tag">STEP 03</span><h3>견적 확인</h3><p>실측 결과에 맞춰 자재와 시공비를 투명하게 안내해드립니다.</p></div>
+        <div class="step" style="--sc:#2F4A3E"><div class="circle">4</div><div class="step-character"><img src="images/mascot/step-4.png" alt="" onerror="this.parentElement.style.display='none'"></div><span class="badge-tag">STEP 04</span><h3>시공 진행</h3><p>숙련된 기술진이 일정에 맞춰 꼼꼼하게 시공합니다.</p></div>
       </div>
     </div>
   </section>
@@ -1172,18 +1214,23 @@
       portfolioGrid.innerHTML = '<p class="portfolio-empty">아직 등록된 시공 사례가 없습니다.</p>';
       return;
     }
-    portfolioGrid.innerHTML = items.map(i=>`
-      <div class="portfolio-card">
+    portfolioGrid.innerHTML = items.map(i=>{
+      const tag = i.link ? 'a' : 'div';
+      const attrs = i.link ? ` href="${i.link}" target="_blank" rel="noopener"` : '';
+      return `
+      <${tag} class="portfolio-card"${attrs}>
         <div class="portfolio-thumb" ${i.image ? '' : `style="background-color:${i.color || '#C99456'}"`}>
           ${i.image ? `<img src="images/portfolio/${i.image}" alt="${i.title}" loading="lazy">` : ''}
           <span class="pill">${i.category}</span>
+          ${i.link ? `<span class="portfolio-view">전체 사진 보기 →</span>` : ''}
         </div>
         <div class="portfolio-info">
           <h3>${i.title}</h3>
           <p>${i.desc}</p>
         </div>
-      </div>
-    `).join('');
+      </${tag}>
+    `;
+    }).join('');
   }
 
   function loadPortfolioFromSheet(){
@@ -1203,7 +1250,8 @@
             category: (r['카테고리']||'').trim(),
             title: (r['제목']||'').trim(),
             desc: (r['설명']||'').trim(),
-            image: (r['사진파일명']||'').trim()
+            image: (r['사진파일명']||'').trim(),
+            link: (r['링크']||'').trim()
           }))
           .filter(r => r.title);
         portfolioItems = rows.length ? rows : FALLBACK_PORTFOLIO_ITEMS;
@@ -1318,18 +1366,110 @@
     ]},
   ];
 
-  const brandGrid = document.getElementById('brandGrid');
-  if(brandGrid){
-    brandGrid.innerHTML = brands.map(b => `
+  /*
+    ============================================================
+    브랜드 카드 게시글 목록 — 구글 시트 연동
+    ============================================================
+    아래 BRAND_POSTS_SHEET_CSV_URL 자리에 구글 시트 "웹에 게시" CSV 링크를 넣으면,
+    "제품소개"/"시공사례"/"벽장재"를 눌렀을 때 그 안에 개별 게시글 목록이
+    아코디언으로 펼쳐집니다.
+
+    시트에는 아래 4개 열(제목 줄, 순서 고정)이 있어야 합니다:
+      브랜드 | 구분 | 게시글제목 | 링크
+    - 브랜드: 위 brands 배열의 name과 정확히 똑같이 입력 (예: 동화자연마루)
+    - 구분: 제품소개 / 시공사례 / 벽장재 중 하나, 정확히 똑같이 입력
+    - 게시글제목: 목록에 보일 글 제목
+    - 링크: 그 게시글의 네이버 블로그 URL
+
+    링크를 넣기 전까지는 누르면 기존처럼 네이버 블로그 카테고리 페이지로
+    바로 이동합니다 (지금과 동일하게 작동).
+  */
+  const BRAND_POSTS_SHEET_CSV_URL = ""; // 여기에 구글 시트 CSV 링크를 붙여넣으세요
+
+  let brandPosts = {}; // key: "브랜드명|구분" -> [{title, url}, ...]
+
+  function brandPostsKey(brand, label){ return `${brand}|${label}`; }
+
+  function renderBrandGrid(){
+    const brandGrid = document.getElementById('brandGrid');
+    if(!brandGrid) return;
+    brandGrid.innerHTML = brands.map((b, bi) => `
       <div class="brand-card"${b.color ? ` style="--bc:${b.color}"` : ''}>
         <span class="ghost" aria-hidden="true">${b.name.charAt(0)}</span>
         <h3>${b.name}</h3>
         <div class="brand-links">
-          ${b.links.map(l => `<a href="${brandBase}${l.no}" target="_blank" rel="noopener">${l.label}<span class="arrow">→</span></a>`).join('')}
+          ${b.links.map((l, li) => {
+            const key = brandPostsKey(b.name, l.label);
+            const posts = brandPosts[key];
+            const fallbackUrl = `${brandBase}${l.no}`;
+            const uid = `bl-${bi}-${li}`;
+            return `
+              <button type="button" class="brand-toggle" data-uid="${uid}" data-fallback="${fallbackUrl}">
+                ${l.label}
+                <span style="display:flex;align-items:center;gap:8px;">
+                  <span class="arrow">→</span>
+                  <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+                </span>
+              </button>
+              <div class="brand-sublist" id="${uid}">
+                ${posts && posts.length
+                  ? posts.map(p => `<a href="${p.url}" target="_blank" rel="noopener">${p.title}</a>`).join('')
+                  : `<span class="sub-empty">등록된 게시글 목록이 없습니다. 아래 버튼으로 블로그에서 확인하세요.</span><a href="${fallbackUrl}" target="_blank" rel="noopener">→ 네이버 블로그에서 전체 보기</a>`
+                }
+              </div>
+            `;
+          }).join('')}
         </div>
       </div>
     `).join('');
+
+    brandGrid.querySelectorAll('.brand-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const uid = btn.dataset.uid;
+        const panel = document.getElementById(uid);
+        const key = btn.dataset.uid;
+        const hasData = panel && panel.querySelector('a, .sub-empty');
+        if(!panel) return;
+        const isOpen = panel.classList.contains('open');
+        // 같은 카드 안 다른 패널은 닫고 이것만 토글 (선택사항: 전체 독립 토글로 두고 싶으면 이 두 줄 제거)
+        panel.classList.toggle('open');
+        btn.classList.toggle('open');
+      });
+    });
   }
+
+  function loadBrandPostsFromSheet(){
+    if(!BRAND_POSTS_SHEET_CSV_URL){
+      renderBrandGrid();
+      return;
+    }
+    Papa.parse(BRAND_POSTS_SHEET_CSV_URL, {
+      download:true,
+      header:true,
+      skipEmptyLines:true,
+      complete: function(results){
+        const map = {};
+        results.data.forEach(r => {
+          const brand = (r['브랜드']||'').trim();
+          const label = (r['구분']||'').trim();
+          const title = (r['게시글제목']||'').trim();
+          const url = (r['링크']||'').trim();
+          if(!brand || !label || !title || !url) return;
+          const key = brandPostsKey(brand, label);
+          if(!map[key]) map[key] = [];
+          map[key].push({ title, url });
+        });
+        brandPosts = map;
+        renderBrandGrid();
+      },
+      error: function(){
+        renderBrandGrid();
+      }
+    });
+  }
+
+  loadBrandPostsFromSheet();
+
 
   /* scroll reveal */
   const revealEls = document.querySelectorAll('.reveal');

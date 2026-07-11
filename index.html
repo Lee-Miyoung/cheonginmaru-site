@@ -146,10 +146,29 @@
   }
   .logo{
     display:flex;align-items:center;
+    position:relative;
+  }
+  .logo::after{
+    content:'';position:absolute;
+    top:50%;left:0;
+    width:70px;height:70px;
+    transform:translateY(-50%) scale(0.5);
+    background:radial-gradient(circle, rgba(214,163,89,0.55), transparent 72%);
+    border-radius:50%;
+    opacity:0;pointer-events:none;z-index:0;
+    animation:logoGlow 1.3s ease-out both;
+  }
+  @keyframes logoGlow{
+    0%{opacity:0;transform:translateY(-50%) scale(0.4);}
+    35%{opacity:1;transform:translateY(-50%) scale(1.3);}
+    100%{opacity:0;transform:translateY(-50%) scale(2.1);}
   }
   @keyframes logoIn{
-    from{opacity:0;transform:scale(0.75) translateY(-6px);}
-    to{opacity:1;transform:scale(1) translateY(0);}
+    0%{opacity:0;transform:scale(0.35) rotate(-12deg);filter:blur(3px);}
+    55%{opacity:1;transform:scale(1.15) rotate(3deg);filter:blur(0);}
+    75%{transform:scale(0.95) rotate(-1.5deg);}
+    90%{transform:scale(1.02) rotate(0.5deg);}
+    100%{transform:scale(1) rotate(0deg);}
   }
   /* 정식 로고 이미지 비율 세팅 - 화면 너비에 비례해 커짐 */
   .logo-img{
@@ -157,7 +176,9 @@
     width:auto;
     object-fit:contain;
     filter: brightness(0.1); /* 스티키 헤더가 밝으므로 블랙 가독성 확보, 만약 투명 블랙 로고면 제거 가능 */
-    animation:logoIn .7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    position:relative;z-index:1;
+    animation:logoIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    transform-origin:left center;
   }
   .navlinks{display:flex;gap:32px;font-size:14.5px;font-weight:600;color:var(--ink-soft);}
   .navlinks a{position:relative;padding:6px 0;transition:color .3s;}
@@ -209,6 +230,37 @@
       rgba(212,163,89,0.03) 0px, rgba(212,163,89,0.03) 2px,
       transparent 2px, transparent 140px);
     transform: skewY(-2.5deg) scale(1.2);
+  }
+  .hero-orb{
+    position:absolute;border-radius:50%;z-index:0;pointer-events:none;
+    background:radial-gradient(circle, rgba(214,163,89,0.4), transparent 70%);
+    filter:blur(10px);
+  }
+  .hero-orb-1{
+    width:520px;height:520px;top:-160px;left:-120px;
+    animation:orbBreathe1 11s ease-in-out infinite;
+  }
+  .hero-orb-2{
+    width:420px;height:420px;bottom:-180px;right:-100px;
+    background:radial-gradient(circle, rgba(200,106,40,0.32), transparent 70%);
+    animation:orbBreathe2 14s ease-in-out infinite;
+  }
+  .hero-orb-3{
+    width:280px;height:280px;top:35%;right:8%;
+    background:radial-gradient(circle, rgba(214,163,89,0.22), transparent 70%);
+    animation:orbBreathe3 9s ease-in-out infinite;
+  }
+  @keyframes orbBreathe1{
+    0%,100%{transform:scale(1) translate(0,0);opacity:0.7;}
+    50%{transform:scale(1.15) translate(30px,20px);opacity:1;}
+  }
+  @keyframes orbBreathe2{
+    0%,100%{transform:scale(1) translate(0,0);opacity:0.6;}
+    50%{transform:scale(1.2) translate(-25px,-15px);opacity:0.95;}
+  }
+  @keyframes orbBreathe3{
+    0%,100%{transform:scale(0.9);opacity:0.4;}
+    50%{transform:scale(1.1);opacity:0.75;}
   }
   .hero-inner{position:relative;z-index:1;display:grid;grid-template-columns:1.15fr 0.85fr;gap:80px;align-items:center;}
   @keyframes heroIn{
@@ -374,13 +426,43 @@
 
   /* ---------- ABOUT ---------- */
   .about{background:var(--surface);position:relative;overflow:hidden;}
+  .about::before{
+    content:'청';position:absolute;top:-60px;right:-20px;z-index:0;
+    font-family:'Noto Serif KR',serif;font-size:340px;font-weight:900;line-height:1;
+    color:rgba(18,16,14,0.035);pointer-events:none;
+  }
   .about-grid{
+    position:relative;z-index:1;
     display:grid;grid-template-columns:1.05fr 0.95fr;gap:64px;align-items:start;
   }
+  .about-copy .k-line{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+  .about-copy .k-line span{
+    font-size:14.5px;font-weight:700;color:var(--copper);letter-spacing:.22em;text-transform:uppercase;
+  }
+  .about-copy .k-line::before{content:'';width:32px;height:2px;background:var(--copper);display:inline-block;}
   .about-copy p{color:var(--ink-soft);margin:0 0 22px;font-size:16.5px;line-height:1.85;}
+  .about-photo{
+    position:relative;border-radius:var(--radius);overflow:hidden;
+    aspect-ratio:4/3;margin-bottom:28px;
+    box-shadow:0 30px 60px -20px rgba(18,16,14,0.2);
+  }
+  .about-photo img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s var(--ease);}
+  .about-photo:hover img{transform:scale(1.06);}
+  .about-photo .photo-tag{
+    position:absolute;left:18px;bottom:18px;z-index:2;color:#fff;
+    font-size:13px;font-weight:700;letter-spacing:.03em;
+    text-shadow:0 2px 8px rgba(0,0,0,0.4);
+  }
+  .about-photo::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(13,22,18,0) 55%, rgba(13,22,18,0.55) 100%);
+  }
   .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:20px;border-top:2px solid var(--line-strong);}
-  .stat{padding:28px 20px 0 0;border-right:1px solid var(--line-strong);}
+  .stat{padding:28px 20px 0 0;border-right:1px solid var(--line-strong);position:relative;}
   .stat:last-child{border-right:none;}
+  .stat::before{
+    content:'';position:absolute;top:-2px;left:0;width:32px;height:2px;background:var(--copper);
+  }
   .stat b{display:block;font-size:44px;font-family:'Noto Serif KR',serif;font-weight:800;color:var(--copper-deep);letter-spacing:-0.03em;line-height:1;margin-bottom:8px;}
   .stat span{font-size:14px;color:var(--ink-soft);font-weight:600;}
   .clients-note{
@@ -456,10 +538,10 @@
   .step-character img{height:100%;width:auto;object-fit:contain;display:block;}
   .step-visual .circle{
     position:absolute;left:20px;bottom:-22px;z-index:2;
-    width:52px;height:52px;border-radius:50%;background:#fff;
-    border:3px solid var(--bg);display:flex;align-items:center;justify-content:center;
-    font-family:'Noto Serif KR',serif;font-weight:800;font-size:19px;color:var(--sc);
-    box-shadow:0 6px 14px -4px rgba(18,16,14,0.2);
+    width:52px;height:52px;border-radius:50%;background:var(--sc);
+    border:3px solid #fff;display:flex;align-items:center;justify-content:center;
+    font-family:'Noto Serif KR',serif;font-weight:800;font-size:19px;color:#fff;
+    box-shadow:0 8px 16px -4px var(--sc);
   }
   .step-body{padding:36px 28px 32px;}
   .step .badge-tag{
@@ -779,6 +861,9 @@
   <!-- HERO -->
   <section class="hero">
     <div class="hero-grain" aria-hidden="true"></div>
+    <div class="hero-orb hero-orb-1" aria-hidden="true"></div>
+    <div class="hero-orb hero-orb-2" aria-hidden="true"></div>
+    <div class="hero-orb hero-orb-3" aria-hidden="true"></div>
     <div class="wrap hero-inner">
       <div>
         <span class="eyebrow">시공경력 20년+ · 누적 2만 건 이상</span>
@@ -822,12 +907,16 @@
   <section class="about reveal" id="about">
     <div class="wrap about-grid">
       <div class="about-copy">
-        <p class="section-head k" style="margin-bottom:16px;">ABOUT</p>
+        <p class="k-line"><span>ABOUT</span></p>
         <h2 style="font-size:clamp(30px,3.8vw,44px); margin:0 0 24px; font-weight:700; letter-spacing:-0.02em; line-height:1.32;">한 평의 바닥에도<br>사는 사람의 가치가 담깁니다</h2>
         <p><b>공간의 완성도는 가장 마지막에 닿는 마감의 차이에서 결정됩니다.</b> 청인마루는 단순히 자재를 깔아내는 시공을 넘어, <b>공간 전체의 조화와 사는 사람의 라이프스타일을 고려한 맞춤형 시공</b>을 지향합니다.</p>
         <p><b>인천 송도 전시장을 기반으로</b> 수도권 전역의 주거 및 상업 공간을 신뢰감 있게 시공해 왔으며, <b>자재 추천부터 현장 정밀 실측, 철저한 책임 시공 관리까지</b> 투명한 원스톱 시스템을 통해 <b>오차 없는 바닥을 완성</b>합니다.</p>
       </div>
       <div>
+        <div class="about-photo">
+          <img src="images/hero-3.jpg" alt="청인마루 시공 현장" onerror="this.parentElement.style.display='none'">
+          <span class="photo-tag">시공 현장 스냅</span>
+        </div>
         <div class="stat-row">
           <div class="stat"><b>20+</b><span>년 시공 경력</span></div>
           <div class="stat"><b>20,000+</b><span>누적 시공 건수</span></div>

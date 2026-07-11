@@ -150,7 +150,7 @@
   .logo{
     display:flex;align-items:center;
     position:relative;
-    flex-shrink: 0;
+    flex-shrink: 0 !important;
   }
   .logo::after{
     content:'';position:absolute;
@@ -170,14 +170,14 @@
     100%{transform:scale(1) rotate(0deg);}
   }
   .logo-img{
-    height:clamp(68px, 11vw, 120px);
+    height:clamp(85px, 9vw, 125px); /* PC 기본 스케일 감도 상향 조정 */
     width:auto;
     object-fit:contain;
     filter: brightness(0.1);
     position:relative;z-index:1;
     animation:logoIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     transform-origin:left center;
-    flex-shrink: 0;
+    flex-shrink: 0 !important;
   }
   .navlinks{display:flex;gap:26px;font-size:14.5px;font-weight:700;color:var(--ink);}
   .navlinks a{position:relative;padding:6px 0;transition:color .3s;}
@@ -197,9 +197,12 @@
     cursor:pointer;transition:all .3s var(--ease);
     box-shadow:0 6px 18px -6px rgba(200,106,40,0.35);
   }
-  .btn:hover{background:var(--copper-deep);border-color:var(--copper-deep);transform:translateY(-2px);box-shadow:0 10px 24px -8px rgba(143,67,17,0.45);}
-  .btn svg{transition:transform .3s var(--ease);}
-  .btn:hover svg{transform:translateX(4px);}
+  
+  /* [버그 수정] 터치스크린 디바이스(아이패드 등)에서 호버 효과가 고착되는 현상을 차단하기 위해 마우스 환경 전용 쿼리로 전격 분리격리 */
+  @media (hover: hover) {
+    .btn:hover{background:var(--copper-deep);border-color:var(--copper-deep);transform:translateY(-2px);box-shadow:0 10px 24px -8px rgba(143,67,17,0.45);}
+    .btn-outline-copper:hover{background:var(--copper) !important;color:#fff !important;transform:translateY(-2px);box-shadow:0 8px 18px -6px rgba(200,106,40,0.4);}
+  }
   
   .btn-forest{background:var(--forest);border-color:var(--forest);box-shadow:0 6px 18px -6px rgba(26,48,38,0.35);border-radius:var(--radius-sm);}
   .btn-forest:hover{background:var(--forest-deep);border-color:var(--forest-deep);box-shadow:0 10px 24px -8px rgba(13,22,18,0.5);}
@@ -211,10 +214,9 @@
 
   .header-btns{display:flex;align-items:center;gap:10px;}
   .btn-outline-copper{
-    background:transparent;color:var(--copper);border:1px solid var(--copper);
+    background:transparent !important;color:var(--copper) !important;border:1px solid var(--copper) !important;
     box-shadow:none;padding:14px 28px;font-size:14.5px;
   }
-  .btn-outline-copper:hover{background:var(--copper);color:#fff;transform:translateY(-2px);box-shadow:0 8px 18px -6px rgba(200,106,40,0.4);}
 
   .mobile-toggle{display:none;background:none;border:none;font-size:26px;cursor:pointer;color:var(--ink);}
   .mobile-menu{
@@ -532,7 +534,7 @@
     background:linear-gradient(180deg, rgba(13,22,18,0) 55%, rgba(13,22,18,0.55) 100%);
   }
   .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:20px;border-top:2px solid var(--line-strong);}
-  .stat(padding:28px 20px 0 0;border-right:1px solid var(--line-strong);position:relative;)
+  .stat{padding:28px 20px 0 0;border-right:1px solid var(--line-strong);position:relative;}
   .stat:last-child{border-right:none;}
   .stat::before{
     content:'';position:absolute;top:-2px;left:0;width:32px;height:2px;background:var(--copper);
@@ -1021,15 +1023,13 @@
   .footer-links{display:flex;gap:32px;font-size:14px;color:rgba(246,241,231,0.7);font-weight:600;}
   .footer-links a:hover{color:#E4C98A;}
 
-  /* ---------- RESPONSIVE ---------- */
+  /* ---------- RESPONSIVE (아이패드 통합 고도화 빌드) ---------- */
   @media (max-width:1024px){
     .wrap{padding:0 32px;}
     .hero-inner{gap:48px;}
     .about-grid{grid-template-columns:1fr;gap:40px;}
     .service-grid, .brand-grid{grid-template-columns:repeat(2,1fr);gap:16px;}
     .portfolio-grid{grid-template-columns:repeat(2,1fr);gap:24px;}
-  }
-  @media (max-width:920px){
     .hero{padding:80px 0 100px;}
     .hero-inner{grid-template-columns:1fr;gap:64px;}
     .hero h1{font-size:clamp(30px,9vw,44px);}
@@ -1058,17 +1058,17 @@
     .navlinks{display:none;}
     
     /* ============================================================
-       [수석 디자이너 대수술] 모바일 상단 바 프리미엄 2단 아키텍처 리빌딩
+       [태블릿/모바일 통합 마스터 빌드] 아이패드 정밀 맞춤 레이아웃 리밸런싱
        ============================================================ */
     .nav {
       display: grid !important;
       grid-template-columns: 1fr auto !important;
       grid-template-rows: auto auto !important;
-      row-gap: 14px !important;
+      row-gap: 16px !important;
       padding: 16px 20px !important;
     }
     
-    /* 1. 로고 방어막 완전 가동 및 시각 크기 획기적 상향 (64px) */
+    /* 로고 영역 크기를 하이엔드 럭셔리 스케일(84px)로 대폭 상향 고정 보호 */
     .logo {
       grid-column: 1 !important;
       grid-row: 1 !important;
@@ -1077,26 +1077,24 @@
       flex-shrink: 0 !important;
     }
     .logo-img {
-      height: 64px !important; /* 모바일 전용 로고 선명도 확보형 웅장한 높이 지정 */
+      height: 84px !important; /* 모바일 및 아이패드 화면에서 압도적 가시성 확보 */
       width: auto !important;
-      max-width: 130px !important;
-      filter: brightness(0.08) !important; /* 고급스러운 프렌치 블랙 조율 */
+      max-width: 150px !important;
+      filter: brightness(0.08) !important;
       flex-shrink: 0 !important;
     }
     
-    /* 2. 햄버거 메뉴 버튼 단독 정렬 */
     .mobile-toggle {
       display: block !important;
       grid-column: 2 !important;
       grid-row: 1 !important;
       align-self: center !important;
-      font-size: 32px !important;
+      font-size: 34px !important;
       color: var(--ink) !important;
       padding: 4px !important;
       line-height: 1 !important;
     }
     
-    /* 3. 우측 버튼 영역을 하단 독립 배너 레이어로 완전 분리격리 */
     .header-btns {
       grid-column: 1 / span 2 !important;
       grid-row: 2 !important;
@@ -1108,27 +1106,26 @@
     .pc-text { display: none !important; }
     .mo-text { display: inline !important; }
 
-    /* 요청 완벽 반영: 카카오톡 버튼 모바일 상단 바에서 흔적 없이 영구 완전 삭제 */
+    /* 불필요한 카카오톡 버튼 상단 바 제거 유지 */
     .header-btns .btn-consult {
       display: none !important;
     }
 
-    /* 요청 완벽 반영: 긴 문장 원형 그대로 100% 보존하면서 하이엔드 자재 포트폴리오 배너 스타일로 커스텀 */
+    /* 긴 명칭 복원 배너 단추 스타일 강화 */
     .header-btns .btn-outline-copper {
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       width: 100% !important;
-      padding: 12px 16px !important;
-      font-size: 13.5px !important;
+      padding: 14px 16px !important;
+      font-size: 14px !important;
       font-weight: 700 !important;
       letter-spacing: -0.02em !important;
       border-radius: 8px !important;
       border: none !important;
-      background: var(--forest) !important; /* 럭셔리 총판 하우스 무드의 깊은 포레스트 컬러 매칭 */
+      background: var(--forest) !important; 
       color: #FAF7F2 !important;
       box-shadow: var(--shadow-sm) !important;
-      transition: background 0.2s var(--ease) !important;
     }
     .header-btns .btn-outline-copper::after {
       content: ' →' !important;

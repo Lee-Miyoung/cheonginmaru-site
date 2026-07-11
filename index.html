@@ -1926,8 +1926,11 @@
 
   /*
     고객 후기 데이터
-    - videoUrl 이 있으면 카드에 "고객 인터뷰 영상 보기" 버튼이 자동으로 표시됩니다.
+    - videoUrl 이 있으면 카드에 영상 버튼이 자동으로 표시됩니다.
     - 영상이 없는 후기는 videoUrl: null 로 두면 됩니다.
+    - videoLabel 로 버튼 문구를 지정할 수 있어요.
+      · 정식 인터뷰 영상이면: videoLabel: "고객 인터뷰 영상 보기"
+      · 쇼츠(짧은 영상)면: videoLabel 을 비워두거나 생략 → 자동으로 "관련 영상 보기"로 표시됩니다.
     - 새 후기를 추가할 때는 이 배열 맨 아래에 객체를 하나 더 추가하면 됩니다.
   */
   const reviewItems = [
@@ -1949,7 +1952,8 @@
     {
       text:"이사 날짜가 촉박했는데 일정을 맞춰주셔서 정말 감사했어요. 강마루가 안 미끄러워서 그런지 우리집 반려견도 편하게 뛰어다니고 좋아하네요.",
       who:"경기 시흥 · 아파트 24평",
-      videoUrl: "https://www.youtube.com/shorts/M_TDpA4O5t4"
+      videoUrl: "https://www.youtube.com/shorts/M_TDpA4O5t4",
+      videoLabel: "고객 인터뷰 영상 보기"
     },
     {
       text:"아이가 있어서 소음이랑 냄새가 제일 걱정이었는데, 시공 당일 환기며 마감 처리까지 꼼꼼하게 신경써주셨어요.",
@@ -1959,7 +1963,8 @@
     {
       text:"벽과 마루를 같은 톤으로 시공했더니 공간이 훨씬 넓어 보이고 고급스러워졌어요. 상담하실 때 추천해주신 조합이 정말 신의 한 수였습니다.",
       who:"인천 서구 · 34평",
-      videoUrl: "https://www.youtube.com/shorts/mp7-eaoEG4w"
+      videoUrl: "https://www.youtube.com/shorts/mp7-eaoEG4w",
+      videoLabel: "고객 인터뷰 영상 보기"
     },
     {
       text:"미네랄마루가 처음엔 생소했는데, 장단점을 자세히 설명해주셔서 안심하고 선택했어요. 여름철 습기에도 끄떡없네요.",
@@ -1988,7 +1993,7 @@
         ${r.videoUrl ? `
           <a href="${r.videoUrl}" target="_blank" rel="noopener" class="video-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor" stroke="none"/></svg>
-            고객 인터뷰 영상 보기
+            ${r.videoLabel || '관련 영상 보기'}
           </a>` : ``}
       </div>
     `).join('');

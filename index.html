@@ -147,12 +147,17 @@
   .logo{
     display:flex;align-items:center;
   }
+  @keyframes logoIn{
+    from{opacity:0;transform:scale(0.75) translateY(-6px);}
+    to{opacity:1;transform:scale(1) translateY(0);}
+  }
   /* 정식 로고 이미지 비율 세팅 - 화면 너비에 비례해 커짐 */
   .logo-img{
-    height:clamp(56px, 9vw, 100px);
+    height:clamp(68px, 11vw, 120px);
     width:auto;
     object-fit:contain;
     filter: brightness(0.1); /* 스티키 헤더가 밝으므로 블랙 가독성 확보, 만약 투명 블랙 로고면 제거 가능 */
+    animation:logoIn .7s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   .navlinks{display:flex;gap:32px;font-size:14.5px;font-weight:600;color:var(--ink-soft);}
   .navlinks a{position:relative;padding:6px 0;transition:color .3s;}
@@ -725,7 +730,7 @@
     .navlinks{display:none;}
     .mobile-toggle{display:block;font-size:30px;}
     .nav{padding:8px 20px;}
-    .logo-img{height:clamp(90px, 26vw, 140px);}
+    .logo-img{height:clamp(100px, 28vw, 150px);}
     .nav .btn{padding:11px 18px;font-size:13px;}
     .mobile-menu{padding:12px 32px 24px;}
     .mascot-sticker{width:88px;}

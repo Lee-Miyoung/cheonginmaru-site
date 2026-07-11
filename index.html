@@ -180,7 +180,7 @@
     animation:logoIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     transform-origin:left center;
   }
-  .navlinks{display:flex;gap:32px;font-size:14.5px;font-weight:600;color:var(--ink-soft);}
+  .navlinks{display:flex;gap:26px;font-size:14px;font-weight:600;color:var(--ink-soft);}
   .navlinks a{position:relative;padding:6px 0;transition:color .3s;}
   .navlinks a::after{
     content:'';position:absolute;left:0;right:100%;bottom:0;height:2px;background:var(--copper);
@@ -209,7 +209,14 @@
     background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3);box-shadow:none;border-radius:var(--radius-sm);
   }
   .btn-ghost:hover{background:#fff;color:var(--forest-deep);border-color:#fff;}
-  
+
+  .header-btns{display:flex;align-items:center;gap:10px;}
+  .btn-outline-copper{
+    background:transparent;color:var(--copper);border:1.5px solid var(--copper);
+    box-shadow:none;padding:12px 22px;font-size:13.5px;
+  }
+  .btn-outline-copper:hover{background:var(--copper);color:#fff;transform:translateY(-2px);box-shadow:0 8px 18px -6px rgba(200,106,40,0.4);}
+
   .mobile-toggle{display:none;background:none;border:none;font-size:26px;cursor:pointer;color:var(--ink);}
   .mobile-menu{
     display:none;flex-direction:column;gap:2px;
@@ -217,10 +224,39 @@
     padding:12px 40px 24px;
   }
   .mobile-menu.open{display:flex;}
-  .mobile-menu a{
+  .mobile-menu > a{
     padding:16px 4px;font-size:16px;font-weight:600;color:var(--ink-soft);
     border-bottom:1px solid var(--line);
   }
+  .mobile-menu-row{
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);
+  }
+  .mobile-menu-row .mm-main-link{
+    flex:1;padding:16px 4px;font-size:16px;font-weight:600;color:var(--ink-soft);
+  }
+  .mm-chev-btn{
+    background:none;border:none;padding:16px 8px;cursor:pointer;
+    color:var(--ink-faint);display:flex;align-items:center;justify-content:center;
+  }
+  .mm-chev-btn svg{transition:transform .3s var(--ease);}
+  .mm-chev-btn.open svg{transform:rotate(180deg);}
+  .mobile-submenu{
+    max-height:0;overflow:hidden;
+    transition:max-height .35s var(--ease);
+    background:rgba(18,16,14,0.02);
+  }
+  .mobile-submenu.open{max-height:600px;}
+  .mobile-submenu a{
+    display:block;padding:13px 4px 13px 22px;font-size:14.5px;font-weight:500;
+    color:var(--ink-faint);border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .mobile-submenu a::before{
+    content:'';position:absolute;left:4px;top:50%;transform:translateY(-50%);
+    width:5px;height:5px;border-radius:50%;background:var(--copper);opacity:0.5;
+  }
+  .mobile-submenu a:last-child{border-bottom:none;}
 
   /* ---------- HERO (원목 텍스처 무드 반영) ---------- */
   .hero{position:relative;overflow:hidden;padding:110px 0 140px;background:var(--forest-deep);color:#fff;}
@@ -268,30 +304,40 @@
     to{opacity:1;transform:translateY(0);}
   }
   .eyebrow{
-    display:flex;align-items:center;gap:12px;
-    font-size:14.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
-    color:var(--gold);margin-bottom:24px;
+    display:flex;align-items:center;gap:14px;
+    font-size:13.5px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:26px;
     animation:heroIn .8s var(--ease) both;
   }
-  .eyebrow::before{content:'';width:36px;height:2px;background:var(--gold);display:inline-block;}
+  .eyebrow::before{content:'';width:44px;height:1px;background:linear-gradient(90deg, transparent, var(--gold));display:inline-block;}
   .hero h1{
     font-size:clamp(38px,5.4vw,76px);
     font-weight:800;line-height:1.28;letter-spacing:-0.03em;
-    margin:0 0 32px;color:#fff;
-    text-shadow:0 8px 30px rgba(0,0,0,0.35);
+    margin:0 0 32px;
+    background:linear-gradient(160deg, #fff 20%, #f3e6d0 70%, #e8d2ac 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 8px 26px rgba(0,0,0,0.4));
     animation:heroIn .9s var(--ease) .18s both;
   }
   .hero h1 .h1-lead{
-    display:block;font-size:0.46em;font-weight:500;letter-spacing:0.01em;
-    color:rgba(255,255,255,0.72);margin-bottom:14px;
-    font-family:'Pretendard', sans-serif;
+    display:block;font-size:0.42em;font-weight:400;font-style:italic;letter-spacing:0.01em;
+    background:none;-webkit-text-fill-color:rgba(255,255,255,0.68);color:rgba(255,255,255,0.68);
+    margin-bottom:16px;
+    font-family:'Noto Serif KR', serif;
   }
   .hero h1 em{
-    font-style:normal;color:var(--gold);position:relative;display:inline-block;
+    font-style:normal;position:relative;display:inline-block;
+    background:linear-gradient(160deg, #F3D9A8 10%, var(--gold) 60%, #B8863F 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .hero h1 em::before{
+    content:'';position:absolute;left:-8px;right:-8px;top:-10px;bottom:-6px;z-index:-1;
+    background:radial-gradient(ellipse at center, rgba(214,163,89,0.14), transparent 75%);
+    filter:blur(3px);
   }
   .hero h1 em::after{
     content:'';position:absolute;left:-2px;right:-2px;bottom:6px;height:5px;
-    background:linear-gradient(90deg, rgba(214,163,89,0.55), rgba(214,163,89,0.15));
+    background:linear-gradient(90deg, rgba(214,163,89,0.65), rgba(214,163,89,0.1));
     border-radius:3px;
   }
   
@@ -388,6 +434,13 @@
     font-family:'Noto Serif KR',serif;font-size:21px;margin:0 0 24px;font-weight:700;color:var(--ink);
   }
   .brand-links{position:relative;z-index:1;display:flex;flex-direction:column;}
+  .brand-catalog-btn{
+    position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:8px;
+    margin-top:16px;padding:11px;border-radius:var(--radius-sm);
+    background:var(--bc);color:#fff;font-size:13px;font-weight:700;
+    transition:all .25s var(--ease);
+  }
+  .brand-catalog-btn:hover{filter:brightness(0.9);transform:translateY(-2px);}
   .brand-links .brand-toggle{
     display:flex;align-items:center;justify-content:space-between;gap:12px;
     font-size:14px;color:var(--ink-soft);font-weight:500;
@@ -420,9 +473,6 @@
     transition:all .2s var(--ease);
   }
   .brand-sublist a:hover{color:var(--bc);border-left-color:var(--bc);padding-left:18px;}
-  .brand-sublist .sub-empty{
-    font-size:12.5px;color:var(--ink-faint);padding:8px 0 8px 14px;font-style:italic;
-  }
 
   /* ---------- ABOUT ---------- */
   .about{background:var(--surface);position:relative;overflow:hidden;}
@@ -472,37 +522,117 @@
   }
   .clients-note b{display:block;font-size:13.5px;color:var(--forest);font-weight:700;margin-bottom:10px;letter-spacing:.1em;text-transform:uppercase;}
   .clients-note p{margin:0;font-size:15.5px;color:var(--ink);font-weight:600;line-height:1.6;}
+  .partners-card{
+    margin-top:20px;padding:36px;
+    background:linear-gradient(155deg, #fff 0%, var(--surface) 130%);
+    border-radius:var(--radius);
+    border:1px solid rgba(18,16,14,0.05);
+    box-shadow:0 20px 45px -20px rgba(18,16,14,0.1);
+    position:relative;overflow:hidden;
+  }
+  .partners-card::before{
+    content:'업';position:absolute;top:-20px;right:-30px;z-index:0;
+    font-family:'Noto Serif KR',serif;font-size:120px;font-weight:900;line-height:1;
+    color:rgba(18,16,14,0.03);pointer-events:none;
+  }
+  .partners-eyebrow{
+    position:relative;z-index:1;
+    display:flex;align-items:center;gap:10px;
+    font-size:12px;font-weight:800;color:var(--copper);
+    letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px;
+  }
+  .partners-eyebrow::before{content:'';width:22px;height:2px;background:var(--copper);display:inline-block;}
+  .partners-card h4{
+    position:relative;z-index:1;
+    font-family:'Noto Serif KR',serif;font-size:22px;font-weight:800;color:var(--ink);
+    margin:0 0 14px;
+  }
+  .partners-intro{position:relative;z-index:1;margin:0 0 26px;font-size:14.5px;color:var(--ink-soft);line-height:1.75;max-width:52ch;}
+  .partners-group{position:relative;z-index:1;margin-bottom:22px;}
+  .partners-group:last-child{margin-bottom:0;}
+  .partners-label{
+    display:flex;align-items:center;gap:8px;
+    font-size:12.5px;font-weight:700;color:var(--ink-faint);
+    letter-spacing:.06em;margin-bottom:14px;
+  }
+  .partners-label svg{color:var(--copper);flex-shrink:0;}
+  .partners-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .partner-chip{
+    display:flex;align-items:center;gap:10px;
+    padding:11px 14px;border-radius:12px;
+    background:#fff;border:1px solid rgba(18,16,14,0.06);
+    font-size:13px;font-weight:600;color:var(--ink-soft);
+    transition:all .25s var(--ease);
+  }
+  .partner-chip:hover{
+    border-color:var(--copper);transform:translateY(-3px);
+    box-shadow:0 10px 20px -8px rgba(200,106,40,0.3);color:var(--copper-deep);
+  }
+  .partner-avatar{
+    flex-shrink:0;width:28px;height:28px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:color-mix(in srgb, var(--copper) 14%, #fff);
+    color:var(--copper-deep);font-family:'Noto Serif KR',serif;font-weight:800;font-size:13px;
+    transition:all .25s var(--ease);
+  }
+  .partner-chip:hover .partner-avatar{background:var(--copper);color:#fff;}
+  .partners-apply-link{
+    position:relative;z-index:1;display:inline-flex;align-items:center;gap:6px;
+    margin-top:24px;font-size:13.5px;font-weight:700;color:var(--copper-deep);
+    padding-top:20px;border-top:1px solid rgba(18,16,14,0.06);width:100%;
+    transition:gap .25s var(--ease);
+  }
+  .partners-apply-link:hover{gap:10px;}
 
   /* ---------- SERVICES ---------- */
-  .service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  .service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(18,16,14,0.06);border-radius:var(--radius);overflow:hidden;box-shadow:0 4px 30px rgba(18,16,14,0.03);}
   .service-card{
-    --sc:var(--copper);background:#fff;border-radius:var(--radius);
-    padding:44px 36px;transition:all .4s var(--ease);
+    --sc:var(--copper);background:#fff;
+    padding:46px 38px;transition:all .5s var(--ease);
     position:relative;overflow:hidden;
-    box-shadow:0 4px 25px rgba(18,16,14,0.02);
-    border:1px solid rgba(18,16,14,0.04);
   }
+  .service-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:var(--sc);transform:scaleX(0);transform-origin:left;
+    transition:transform .5s var(--ease);
+  }
+  .service-card:hover::before{transform:scaleX(1);}
   .service-card:hover{
-    background:var(--sc);border-color:var(--sc);
-    transform:translateY(-8px);
-    box-shadow:0 24px 48px -12px color-mix(in srgb, var(--sc) 40%, transparent);
+    background:var(--sc);
+    z-index:2;
+    box-shadow:0 30px 60px -16px color-mix(in srgb, var(--sc) 45%, transparent);
   }
-  .service-swatch{
-    width:18px;height:18px;border-radius:50%;background:var(--sc);
-    position:relative;z-index:1;margin-bottom:24px;
-    box-shadow:0 4px 10px -2px rgba(0,0,0,0.12);transition:all .4s var(--ease);
+  .service-icon{
+    width:48px;height:48px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:color-mix(in srgb, var(--sc) 12%, transparent);
+    color:var(--sc);margin-bottom:22px;
+    transition:all .45s var(--ease);
   }
-  .service-card:hover .service-swatch{background:#fff;box-shadow:none;}
+  .service-card:hover .service-icon{background:rgba(255,255,255,0.16);color:#fff;transform:rotate(-8deg) scale(1.08);}
   .service-card .num{
-    font-family:'Noto Serif KR',serif;font-size:60px;color:rgba(18,16,14,0.08);font-weight:800;
-    display:block;line-height:1;margin-bottom:12px;letter-spacing:-0.02em;
+    font-family:'Noto Serif KR',serif;font-size:13px;color:var(--ink-faint);font-weight:600;
+    letter-spacing:.14em;
+    display:block;margin-bottom:10px;
     transition:all .4s var(--ease);
   }
-  .service-card:hover .num{color:rgba(255,255,255,0.35);transform:translateY(-4px);}
-  .service-card h3{font-size:20px;margin:0 0 14px;font-weight:700;transition:all .4s var(--ease);}
+  .service-card:hover .num{color:rgba(255,255,255,0.65);}
+  .service-card h3{
+    font-size:21px;margin:0 0 16px;font-weight:700;line-height:1.3;
+    position:relative;display:inline-block;
+    transition:all .4s var(--ease);
+  }
+  .service-card h3::after{
+    content:'';position:absolute;left:0;bottom:-4px;width:100%;height:2px;
+    background:currentColor;transform:scaleX(0);transform-origin:left;
+    transition:transform .45s var(--ease);opacity:0.3;
+  }
+  .service-card:hover h3::after{transform:scaleX(1);}
   .service-card:hover h3{color:#fff;}
-  .service-card p{font-size:15px;color:var(--ink-soft);margin:0;line-height:1.75;transition:all .4s var(--ease);}
-  .service-card:hover p{color:rgba(255,255,255,0.85);}
+  .service-card p{font-size:15.5px;color:var(--ink-soft);margin:14px 0 0;line-height:1.8;letter-spacing:-0.01em;transition:all .4s var(--ease);}
+  .service-card p b{font-weight:700;color:var(--ink);transition:all .4s var(--ease);}
+  .service-card:hover p{color:rgba(255,255,255,0.88);}
+  .service-card:hover p b{color:#fff;}
 
   /* ---------- PROCESS ---------- */
   .process-list{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;position:relative;}
@@ -692,6 +822,82 @@
   }
   .mascot-sticker:hover{transform:rotate(0deg) scale(1.06);}
 
+  /* ---------- PARTNER APPLY ---------- */
+  .partner-apply-section{background:var(--surface);}
+  .partner-apply-notice{
+    display:flex;align-items:flex-start;gap:14px;
+    background:#fff;border-radius:var(--radius);
+    padding:22px 26px;margin-bottom:40px;
+    border:1px solid rgba(18,16,14,0.06);
+    box-shadow:0 10px 30px -18px rgba(18,16,14,0.08);
+  }
+  .partner-apply-notice svg{color:var(--copper);margin-top:2px;}
+  .partner-apply-notice p{margin:0;font-size:15px;color:var(--ink-soft);line-height:1.7;}
+  .partner-apply-notice b{color:var(--ink);}
+  .partner-apply-notice a{color:var(--copper-deep);font-weight:700;text-decoration:underline;text-underline-offset:2px;}
+
+  .partner-kakao-cta{
+    display:flex;align-items:center;gap:18px;
+    background:#FEE500;border-radius:var(--radius);
+    padding:24px 28px;margin-bottom:32px;max-width:720px;
+    box-shadow:0 20px 45px -22px rgba(254,229,0,0.6);
+    transition:all .3s var(--ease);
+  }
+  .partner-kakao-cta:hover{transform:translateY(-3px);box-shadow:0 26px 50px -20px rgba(254,229,0,0.75);}
+  .partner-kakao-icon{
+    flex-shrink:0;width:52px;height:52px;border-radius:14px;
+    background:rgba(57,27,27,0.08);display:flex;align-items:center;justify-content:center;
+  }
+  .partner-kakao-text{flex:1;display:flex;flex-direction:column;gap:4px;}
+  .partner-kakao-text b{font-size:16.5px;color:#391B1B;font-weight:800;}
+  .partner-kakao-text span{font-size:13px;color:#5C4A2E;}
+  .partner-kakao-arrow{font-size:20px;color:#391B1B;font-weight:700;flex-shrink:0;}
+  .partner-form-divider{
+    display:flex;align-items:center;gap:16px;
+    max-width:720px;margin:0 0 28px;
+    font-size:13px;color:var(--ink-faint);font-weight:600;
+  }
+  .partner-form-divider::before,.partner-form-divider::after{
+    content:'';flex:1;height:1px;background:rgba(18,16,14,0.1);
+  }
+  .partner-form{
+    background:#fff;border-radius:var(--radius);padding:44px;
+    border:1px solid rgba(18,16,14,0.06);
+    box-shadow:0 20px 50px -25px rgba(18,16,14,0.1);
+    max-width:720px;
+  }
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+  .form-field{margin-bottom:20px;}
+  .form-field:last-of-type{margin-bottom:0;}
+  .form-field label{
+    display:block;font-size:13.5px;font-weight:700;color:var(--ink);
+    margin-bottom:8px;letter-spacing:.01em;
+  }
+  .form-optional{font-weight:400;color:var(--ink-faint);}
+  .form-field input[type="text"],
+  .form-field input[type="tel"],
+  .form-field textarea{
+    width:100%;padding:13px 16px;border-radius:var(--radius-sm);
+    border:1px solid var(--line-strong);background:var(--bg);
+    font-family:inherit;font-size:14.5px;color:var(--ink);
+    transition:all .25s var(--ease);
+  }
+  .form-field input:focus,
+  .form-field textarea:focus{
+    outline:none;border-color:var(--copper);background:#fff;
+    box-shadow:0 0 0 3px rgba(200,106,40,0.12);
+  }
+  .form-field textarea{resize:vertical;line-height:1.6;}
+  .form-field input[type="file"]{
+    width:100%;padding:11px 14px;border-radius:var(--radius-sm);
+    border:1px dashed var(--line-strong);background:var(--bg);
+    font-size:13.5px;color:var(--ink-soft);cursor:pointer;
+  }
+  .partner-submit-btn{width:100%;justify-content:center;margin-top:8px;}
+  .partner-form-status{margin:14px 0 0;font-size:14px;text-align:center;min-height:20px;}
+  .partner-form-status.success{color:var(--forest);font-weight:700;}
+  .partner-form-status.error{color:#B23A2E;font-weight:700;}
+
   /* ---------- MEDIA SECTION ---------- */
   .toon-section{
     background:var(--forest-deep);color:#F6F1E7;
@@ -800,9 +1006,15 @@
     .process-list{grid-template-columns:repeat(2,1fr);gap:20px;}
     .review-grid{grid-template-columns:1fr;}
     .stat-row{grid-template-columns:1fr;gap:24px;}
+    .partners-grid{grid-template-columns:repeat(2,1fr);}
     .stat{border-right:none;border-bottom:1px solid var(--line-strong);padding:0 0 20px;}
     .stat:last-child{border-bottom:none;padding-bottom:0;}
     .contact-grid{grid-template-columns:1fr;gap:56px;}
+    .form-grid{grid-template-columns:1fr;gap:0;}
+    .partner-form{padding:28px 22px;}
+    .partner-apply-notice{flex-direction:column;gap:8px;}
+    .partner-kakao-cta{padding:18px 20px;gap:12px;}
+    .partner-kakao-text span{display:none;}
     .toon-grid{grid-template-columns:1fr;text-align:center;gap:40px;}
     .toon-figure img{width:260px;}
     .toon-copy .k{justify-content:center;}
@@ -812,8 +1024,10 @@
     .navlinks{display:none;}
     .mobile-toggle{display:block;font-size:30px;}
     .nav{padding:8px 20px;}
-    .logo-img{height:clamp(100px, 28vw, 150px);}
-    .nav .btn{padding:11px 18px;font-size:13px;}
+    .logo-img{height:clamp(76px, 22vw, 150px);}
+    .nav .btn{padding:10px 14px;font-size:12px;}
+    .header-btns{gap:6px;flex-wrap:nowrap;}
+    .btn-outline-copper{padding:10px 12px;}
     .mobile-menu{padding:12px 32px 24px;}
     .mascot-sticker{width:88px;}
   }
@@ -841,17 +1055,59 @@
       <a href="#marutoon">미디어</a>
       <a href="#contact">문의하기</a>
     </nav>
-    <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="btn">무료 견적 상담</a>
+    <div class="header-btns">
+      <a href="#partner-apply" class="btn btn-outline-copper">건축·인테리어 협력문의</a>
+      <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="btn">무료 견적 상담</a>
+    </div>
     <button class="mobile-toggle" id="mobileToggle" aria-label="메뉴 열기" aria-expanded="false">☰</button>
   </div>
   <nav class="mobile-menu" id="mobileMenu">
     <a href="#about">소개</a>
-    <a href="#brands">브랜드</a>
-    <a href="#services">시공서비스</a>
+    <div class="mobile-menu-row">
+      <a href="#brands" class="mm-main-link">브랜드</a>
+      <button type="button" class="mm-chev-btn" data-target="mm-sub-brands" aria-label="브랜드 목록 펼치기">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+    <div class="mobile-submenu" id="mm-sub-brands">
+      <a href="#brand-1">동화자연마루</a>
+      <a href="#brand-2">노바마루</a>
+      <a href="#brand-3">한솔홈데코</a>
+      <a href="#brand-4">구정마루</a>
+      <a href="#brand-5">네스트</a>
+      <a href="#brand-6">이건</a>
+      <a href="#brand-7">수입원목마루(성원외)</a>
+      <a href="#brand-8">데코타일·장판 외 기타</a>
+    </div>
+    <div class="mobile-menu-row">
+      <a href="#services" class="mm-main-link">시공서비스</a>
+      <button type="button" class="mm-chev-btn" data-target="mm-sub-services" aria-label="시공서비스 목록 펼치기">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+    <div class="mobile-submenu" id="mm-sub-services">
+      <a href="#svc-1">원목마루 시공</a>
+      <a href="#svc-2">타일형 강마루</a>
+      <a href="#svc-3">우드형 강마루</a>
+      <a href="#svc-4">미네랄마루·돌마루 시공</a>
+      <a href="#svc-5">강화마루·데코타일·장판</a>
+      <a href="#svc-6">벽장재 시공</a>
+    </div>
     <a href="#process">시공과정</a>
     <a href="#portfolio">시공사례</a>
     <a href="#reviews">고객후기</a>
-    <a href="#marutoon">미디어</a>
+    <div class="mobile-menu-row">
+      <a href="#marutoon" class="mm-main-link">미디어</a>
+      <button type="button" class="mm-chev-btn" data-target="mm-sub-media" aria-label="미디어 목록 펼치기">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+    <div class="mobile-submenu" id="mm-sub-media">
+      <a href="https://www.youtube.com/@wonmigood" target="_blank" rel="noopener">유튜브 마루아빠</a>
+      <a href="https://www.instagram.com/cheonginmaru" target="_blank" rel="noopener">청인마루 인스타</a>
+      <a href="https://www.instagram.com/cheongin_maru_" target="_blank" rel="noopener">마루니와 루루의 마루툰</a>
+    </div>
+    <a href="#partner-apply">건축·인테리어 협력문의</a>
     <a href="#contact">문의하기</a>
   </nav>
 </header>
@@ -868,7 +1124,7 @@
       <div>
         <span class="eyebrow">시공경력 20년+ · 누적 2만 건 이상</span>
         <h1><span class="h1-lead">당신의 소중한 공간,</span>한 걸음마다<br><em>정성</em>을 더합니다.</h1>
-        <p class="lede">청인마루는 원목마루부터 강마루, 미네랄마루, 데코타일·장판, 벽장재까지 — 마루 시공 전 과정을 책임지는 전문 컨설팅입니다.</p>
+        <p class="lede">청인마루는 원목마루부터 강마루, 미네랄마루, 데코타일·장판, 벽장재까지 — 자재 컨설팅부터 시공까지, 마루의 모든 과정을 책임지는 전문업체입니다.</p>
         <div class="hero-ctas">
           <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="btn">
             빠른 견적 문의
@@ -926,6 +1182,40 @@
           <b>주요 시공 실적</b>
           <p>인천국제공항 · 시립박물관 · 독립기념관 등 주요 공공기관을 비롯해 각종 드라마세트,주민센터, 초·중·고등학교, 병원, 전시장 및 다양한 상업 시설 및 주거공간 시공 실적 보유</p>
         </div>
+        <div class="partners-card">
+          <span class="partners-eyebrow">PARTNERS</span>
+          <h4>건축·인테리어 협력문의</h4>
+          <p class="partners-intro">믿고 맡길 수 있는 시공 파트너를 찾는 건축·인테리어 업체들이 청인마루를 먼저 찾습니다. 정직한 시공과 책임감 있는 사후관리로 오랜 협력관계를 이어오고 있습니다.</p>
+          <div id="partnersGroups">
+            <div class="partners-group">
+              <span class="partners-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+                건축·하우징
+              </span>
+              <div class="partners-grid">
+                <div class="partner-chip"><span class="partner-avatar">공</span>공간기록</div>
+                <div class="partner-chip"><span class="partner-avatar">하</span>하우징팩토리</div>
+                <div class="partner-chip"><span class="partner-avatar">청</span>청우건설</div>
+                <div class="partner-chip"><span class="partner-avatar">더</span>더존하우징</div>
+                <div class="partner-chip"><span class="partner-avatar">더</span>더원하우징</div>
+                <div class="partner-chip"><span class="partner-avatar">용</span>용성하우징</div>
+              </div>
+            </div>
+            <div class="partners-group">
+              <span class="partners-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 100 18c1 0 2-.5 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1 1-2 2-2h1.5A4.5 4.5 0 0021 10 9 9 0 0012 3z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="8" r="1"/><circle cx="16.5" cy="10.5" r="1"/></svg>
+                인테리어
+              </span>
+              <div class="partners-grid">
+                <div class="partner-chip"><span class="partner-avatar">새</span>새로고침</div>
+                <div class="partner-chip"><span class="partner-avatar">유</span>유쾌한녀석들</div>
+                <div class="partner-chip"><span class="partner-avatar">딜</span>딜라이트</div>
+                <div class="partner-chip"><span class="partner-avatar">탑</span>탑디자인</div>
+              </div>
+            </div>
+          </div>
+          <a href="#partner-apply" class="partners-apply-link">건축·인테리어 업체이신가요? 문의하기 →</a>
+        </div>
       </div>
     </div>
   </section>
@@ -936,44 +1226,44 @@
       <div class="section-head reveal">
         <p class="k">SERVICES</p>
         <h2>시공 서비스</h2>
-        <p>공간과 예산에 맞는 마루 시공을 제안해드립니다.</p>
+        <p>공간의 크기와 예산은 물론, 함께 사는 가족의 라이프스타일까지 고려해 가장 잘 맞는 마루를 제안해드립니다.</p>
       </div>
       <div class="service-grid reveal-stagger reveal">
-        <div class="service-card" style="--sc:#8B5E34">
-          <span class="service-swatch" aria-hidden="true"></span>
-          <span class="num">01</span>
+        <div class="service-card" id="svc-1" style="--sc:#8B5E34">
+          <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20c2-4 2-8 0-12"/><path d="M9 20c2-5 2-10 0-16"/><path d="M14 20c2-4 2-8 0-12"/><path d="M19 20c2-5 2-10 0-16"/></svg></div>
+          <span class="num">SERVICE 01</span>
           <h3>원목마루 시공</h3>
-          <p>자연 그대로의 질감을 살린 원목마루로 공간에 깊이를 더합니다.</p>
+          <p><b>고급주택이나 넓은 거실처럼 품격과 깊이감을 원하는 공간</b>에 잘 어울리는 원목마루입니다. 자연 그대로의 나뭇결과 촉감, 시간이 지날수록 은은하게 짙어지는 톤 변화가 매력이에요.</p>
         </div>
-        <div class="service-card" style="--sc:#A99878">
-          <span class="service-swatch" aria-hidden="true"></span>
-          <span class="num">02</span>
+        <div class="service-card" id="svc-2" style="--sc:#A99878">
+          <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></div>
+          <span class="num">SERVICE 02</span>
           <h3>타일형 강마루</h3>
-          <p>타일 패턴의 정갈한 느낌을 살린 강마루로 공간을 깔끔하게 마감합니다.</p>
+          <p><b>기존 우드톤 마루에서 분위기를 바꾸고 싶을 때</b> 많이 찾는 선택입니다. 타일 같은 각진 패턴으로 모던한 느낌을 내면서도, 강마루 특유의 따뜻한 질감은 그대로 유지해 차갑지 않아요.</p>
         </div>
-        <div class="service-card" style="--sc:#C99456">
-          <span class="service-swatch" aria-hidden="true"></span>
-          <span class="num">03</span>
+        <div class="service-card" id="svc-3" style="--sc:#C99456">
+          <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></div>
+          <span class="num">SERVICE 03</span>
           <h3>우드형 강마루</h3>
-          <p>넓은 원목 판재 느낌을 그대로 살린 우드형 강마루 시공입니다.</p>
+          <p><b>유행을 타지 않는 오랜 인기 디자인</b>, 우드형 강마루입니다. 원목 무늬를 합리적인 가격에 누릴 수 있어 신축·리모델링 아파트에서 가장 많이 찾는 시공 방식이에요.</p>
         </div>
-        <div class="service-card" style="--sc:#5F7A62">
-          <span class="service-swatch" aria-hidden="true"></span>
-          <span class="num">04</span>
-          <h3>미네랄마루 시공</h3>
-          <p>친환경 소재로 습기와 온도 변화에 강한 미네랄마루 시공입니다.</p>
+        <div class="service-card" id="svc-4" style="--sc:#5F7A62">
+          <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2l7 5-2 8-5 7-5-7-2-8z"/><path d="M5 7l7 3 7-3M12 10v9"/></svg></div>
+          <span class="num">SERVICE 04</span>
+          <h3>미네랄마루·돌마루 시공</h3>
+          <p><b>천연광물이 주는 고급스러운 질감</b>의 미네랄마루·돌마루입니다. 습기와 온도 변화에 강해, 습기에 약한 소재를 피하고 싶은 반려인들이 많이 찾아요.</p>
         </div>
-        <div class="service-card" style="--sc:#5A5652">
-          <span class="service-swatch" aria-hidden="true"></span>
-          <span class="num">05</span>
+        <div class="service-card" id="svc-5" style="--sc:#5A5652">
+          <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></div>
+          <span class="num">SERVICE 05</span>
           <h3>강화마루·데코타일·장판</h3>
-          <p>내구성 좋은 강화마루부터 습기에 강한 데코타일·장판까지, 공간과 예산에 맞게 시공합니다.</p>
+          <p><b>예산에 맞춰 고르는 실속 있는 선택지</b>예요. 강화마루부터 물에 강한 데코타일, 경제적인 장판까지 — 데코타일은 사무실·상가 등 상업 공간에 특히 많이 선택됩니다.</p>
         </div>
-        <div class="service-card" style="--sc:#8C6B5C">
-          <span class="service-swatch" aria-hidden="true"></span>
-          <span class="num">06</span>
+        <div class="service-card" id="svc-6" style="--sc:#8C6B5C">
+          <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></div>
+          <span class="num">SERVICE 06</span>
           <h3>벽장재 시공</h3>
-          <p>바닥과 어울리는 벽장재 시공으로 공간 전체의 톤을 맞춥니다.</p>
+          <p><b>벽지와는 비교할 수 없는 내구성</b>의 벽장재 시공입니다. 바닥재와 같은 톤·질감으로 벽면에 통일감을 주고, 오랜 시간이 지나도 변형·오염 걱정 없이 깨끗함을 유지해요.</p>
         </div>
       </div>
     </div>
@@ -1097,6 +1387,70 @@
         </div>
         <span class="kakao-panel-id">청인마루</span>
       </div>
+    </div>
+  </section>
+
+  <!-- PARTNER APPLY -->
+  <section class="partner-apply-section" id="partner-apply">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="k">PARTNER APPLY</p>
+        <h2>건축·인테리어 업체 문의</h2>
+        <p>건설사·인테리어 업체를 위한 전용 문의창구입니다. 남겨주신 정보로 담당자가 빠르게 연락드립니다.</p>
+      </div>
+      <div class="partner-apply-notice reveal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <p><b>개인 고객이신가요?</b> 시공 견적 문의는 아래 폼이 아니라, <a href="#contact">무료 카카오톡 상담</a>으로 훨씬 빠르게 안내받으실 수 있어요. 이 페이지는 건축·인테리어·하우징 업체 전용입니다.</p>
+      </div>
+
+      <!--
+        업체문의 전용 카카오톡 채널 CTA
+        아래 href를 "청인마루 업체문의"용으로 새로 만드신 카카오톡 채널 주소로 바꿔주세요.
+        (카카오톡 채널 관리자센터에서 무료로 새 채널을 만들 수 있어요)
+      -->
+      <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="partner-kakao-cta reveal">
+        <div class="partner-kakao-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#391B1B"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.86 5.34 4.66 6.77-.2.75-.73 2.73-.83 3.15-.13.53.19.52.4.38.17-.11 2.68-1.82 3.77-2.56.64.09 1.3.14 1.98.14 5.52 0 10-3.58 10-8s-4.48-8-9.98-8z"/></svg>
+        </div>
+        <div class="partner-kakao-text">
+          <b>카카오톡으로 바로 문의하기</b>
+          <span>가장 빠르게 확인하고 답변드려요 — 서류 없이 편하게 문의해도 좋아요</span>
+        </div>
+        <span class="partner-kakao-arrow">→</span>
+      </a>
+
+      <div class="partner-form-divider reveal"><span>또는 아래 양식으로 상세하게 남겨주세요</span></div>
+
+      <form class="partner-form reveal" id="partnerForm">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="pf-company">업체명 *</label>
+            <input type="text" id="pf-company" name="업체명" required>
+          </div>
+          <div class="form-field">
+            <label for="pf-manager">담당자명</label>
+            <input type="text" id="pf-manager" name="담당자명">
+          </div>
+          <div class="form-field">
+            <label for="pf-title">직책</label>
+            <input type="text" id="pf-title" name="직책">
+          </div>
+          <div class="form-field">
+            <label for="pf-phone">연락처 *</label>
+            <input type="tel" id="pf-phone" name="연락처" placeholder="010-0000-0000" required>
+          </div>
+        </div>
+        <div class="form-field">
+          <label for="pf-file">사업자등록증 · 명함 첨부 <span class="form-optional">(선택)</span></label>
+          <input type="file" id="pf-file" name="첨부파일" accept="image/*,.pdf">
+        </div>
+        <div class="form-field">
+          <label for="pf-message">문의내용 *</label>
+          <textarea id="pf-message" name="문의내용" rows="5" required placeholder="협력 제안, 시공 문의 등 편하게 남겨주세요."></textarea>
+        </div>
+        <button type="submit" class="btn partner-submit-btn" id="partnerSubmitBtn">문의 보내기</button>
+        <p class="partner-form-status" id="partnerFormStatus"></p>
+      </form>
     </div>
   </section>
 
@@ -1303,6 +1657,16 @@
       mobileToggle.textContent = '☰';
     });
   });
+  mobileMenu.querySelectorAll('.mm-chev-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      const target = document.getElementById(btn.dataset.target);
+      if(!target) return;
+      target.classList.toggle('open');
+      btn.classList.toggle('open');
+    });
+  });
 
   /*
     ============================================================
@@ -1409,6 +1773,137 @@
   loadPortfolioFromSheet();
 
   /*
+    ============================================================
+    협력업체 목록 — 구글 시트 연동
+    ============================================================
+    아래 PARTNERS_SHEET_CSV_URL 자리에 구글 시트 "웹에 게시" CSV 링크를 넣으세요.
+    시트에는 아래 2개 열(제목 줄, 순서 고정)이 있어야 합니다:
+      구분 | 업체명
+    - 구분: "건축·하우징", "인테리어" 처럼 원하는 카테고리를 자유롭게 적으면 됩니다.
+      새로운 카테고리를 적으면 자동으로 새 그룹이 생깁니다.
+    - 업체명: 그룹 안에 표시할 회사 이름
+
+    링크를 넣기 전까지는 지금 보이는 기본 목록이 그대로 유지됩니다.
+    나중에 회사가 몇십 개로 늘어나도, 시트에 줄만 추가하면 자동 반영됩니다.
+  */
+  const PARTNERS_SHEET_CSV_URL = ""; // 여기에 구글 시트 CSV 링크를 붙여넣으세요
+
+  function partnerIconFor(category){
+    if(category.includes('건축') || category.includes('하우징') || category.includes('건설')){
+      return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>';
+    }
+    if(category.includes('인테리어') || category.includes('디자인')){
+      return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 100 18c1 0 2-.5 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1 1-2 2-2h1.5A4.5 4.5 0 0021 10 9 9 0 0012 3z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="8" r="1"/><circle cx="16.5" cy="10.5" r="1"/></svg>';
+    }
+    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11l2 2 4-4"/><path d="M2 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><circle cx="8" cy="7" r="4"/></svg>';
+  }
+
+  function renderPartnersGroups(groupedData){
+    const container = document.getElementById('partnersGroups');
+    if(!container) return;
+    const entries = Object.entries(groupedData);
+    if(entries.length === 0) return; // 데이터 없으면 기존 기본 목록 유지
+    container.innerHTML = entries.map(([category, names]) => `
+      <div class="partners-group">
+        <span class="partners-label">
+          ${partnerIconFor(category)}
+          ${category}
+        </span>
+        <div class="partners-grid">
+          ${names.map(name => `<div class="partner-chip"><span class="partner-avatar">${name.charAt(0)}</span>${name}</div>`).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function loadPartnersFromSheet(){
+    if(!PARTNERS_SHEET_CSV_URL) return; // 링크 없으면 기본 목록 그대로 둠
+    Papa.parse(PARTNERS_SHEET_CSV_URL, {
+      download:true,
+      header:true,
+      skipEmptyLines:true,
+      complete: function(results){
+        const grouped = {};
+        results.data.forEach(r => {
+          const category = (r['구분']||'').trim();
+          const name = (r['업체명']||'').trim();
+          if(!category || !name) return;
+          if(!grouped[category]) grouped[category] = [];
+          grouped[category].push(name);
+        });
+        renderPartnersGroups(grouped);
+      }
+    });
+  }
+
+  loadPartnersFromSheet();
+
+  /*
+    ============================================================
+    협력업체 문의 폼 — 접수 방식 설정
+    ============================================================
+    이 폼은 지금 상태로는 "제출" 버튼을 눌러도 아무 데도 전송되지 않습니다.
+    무료 서비스인 Formspree를 이용해서 이메일로 받을 수 있게 연결해야 해요.
+
+    설정 방법 (5분이면 끝나요):
+    1. https://formspree.io 접속 → 무료 회원가입 (이메일만 있으면 됨)
+    2. "New Form" 클릭 → 문의받을 이메일 주소 입력
+    3. 만들어진 폼의 주소(https://formspree.io/f/xxxxxxx 형태)를 복사
+    4. 아래 PARTNER_FORM_ENDPOINT 자리에 그 주소를 붙여넣기
+    5. 사이트에서 테스트로 한 번 제출해보면, 가입하신 이메일로 확인 메일이 와요.
+       그 메일의 "Confirm" 링크를 눌러야 그 다음부터 문의가 정상적으로 전달됩니다.
+
+    파일(사업자등록증·명함) 첨부도 Formspree 무료 플랜에서 지원됩니다.
+  */
+  const PARTNER_FORM_ENDPOINT = ""; // 예: "https://formspree.io/f/xxxxxxx"
+
+  (function initPartnerForm(){
+    const form = document.getElementById('partnerForm');
+    const statusEl = document.getElementById('partnerFormStatus');
+    const submitBtn = document.getElementById('partnerSubmitBtn');
+    if(!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusEl.textContent = '';
+      statusEl.className = 'partner-form-status';
+
+      if(!PARTNER_FORM_ENDPOINT){
+        statusEl.textContent = '문의 접수 기능이 아직 연결 중입니다. 급하신 경우 카카오톡 채널로 연락 주세요.';
+        statusEl.classList.add('error');
+        return;
+      }
+
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = '전송 중...';
+
+      try{
+        const formData = new FormData(form);
+        const res = await fetch(PARTNER_FORM_ENDPOINT, {
+          method:'POST',
+          body:formData,
+          headers:{ 'Accept':'application/json' }
+        });
+        if(res.ok){
+          statusEl.textContent = '문의가 정상적으로 접수되었습니다. 빠르게 연락드리겠습니다.';
+          statusEl.classList.add('success');
+          form.reset();
+        } else {
+          statusEl.textContent = '전송 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+          statusEl.classList.add('error');
+        }
+      } catch(err){
+        statusEl.textContent = '전송 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        statusEl.classList.add('error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+  })();
+
+  /*
     고객 후기 데이터
     - videoUrl 이 있으면 카드에 "고객 인터뷰 영상 보기" 버튼이 자동으로 표시됩니다.
     - 영상이 없는 후기는 videoUrl: null 로 두면 됩니다.
@@ -1479,29 +1974,37 @@
   }
 
   const brandBase = "https://blog.naver.com/PostList.naver?blogId=chonginmaru&from=postList&categoryNo=";
+  /*
+    카탈로그 다운로드 안내:
+    각 브랜드에 catalog 항목을 추가하면 카드에 "카탈로그 다운로드" 버튼이 자동으로 생겨요.
+    1. PDF 카탈로그 파일을 깃허브 저장소의 catalogs 폴더에 올리세요 (폴더 없으면 업로드할 때 자동 생성됨)
+       예: catalogs/donghwa.pdf
+    2. 아래 catalog:'' 자리에 그 파일명만 적으면 됩니다. 예: catalog:'donghwa.pdf'
+    3. catalog:'' 로 비워두면 버튼이 그냥 안 보여요 (에러 없이 자연스럽게 생략됨)
+  */
   const brands = [
-    { name:"동화자연마루", color:"#2F7A4B", links:[
+    { name:"동화자연마루", color:"#2F7A4B", catalog:'', links:[
       { label:"제품소개", no:28 }, { label:"시공사례", no:77 }, { label:"벽장재", no:80 }
     ]},
-    { name:"노바마루", color:"#1A1A1A", links:[
+    { name:"노바마루", color:"#1A1A1A", catalog:'', links:[
       { label:"제품소개", no:37 }, { label:"시공사례", no:78 }
     ]},
-    { name:"한솔홈데코", color:"#2E5C9A", links:[
+    { name:"한솔홈데코", color:"#2E5C9A", catalog:'', links:[
       { label:"제품소개", no:84 }, { label:"시공사례", no:83 }, { label:"벽장재", no:90 }
     ]},
-    { name:"구정마루", color:"#E07B1E", links:[
+    { name:"구정마루", color:"#E07B1E", catalog:'', links:[
       { label:"제품소개", no:27 }, { label:"시공사례", no:76 }
     ]},
-    { name:"네스트", color:"#2F7A4B", links:[
+    { name:"네스트", color:"#2F7A4B", catalog:'', links:[
       { label:"제품소개", no:86 }, { label:"시공사례", no:85 }, { label:"벽장재", no:89 }
     ]},
-    { name:"이건", links:[
+    { name:"이건", catalog:'', links:[
       { label:"시공사례", no:93 }
     ]},
-    { name:"수입원목마루(성원외)", links:[
+    { name:"수입원목마루(성원외)", catalog:'', links:[
       { label:"제품소개", no:95 }, { label:"시공사례", no:81 }
     ]},
-    { name:"데코타일·장판 외 기타", links:[
+    { name:"데코타일·장판 외 기타", catalog:'', links:[
       { label:"시공사례", no:87 }
     ]},
   ];
@@ -1534,7 +2037,7 @@
     const brandGrid = document.getElementById('brandGrid');
     if(!brandGrid) return;
     brandGrid.innerHTML = brands.map((b, bi) => `
-      <div class="brand-card"${b.color ? ` style="--bc:${b.color}"` : ''}>
+      <div class="brand-card" id="brand-${bi+1}"${b.color ? ` style="--bc:${b.color}"` : ''}>
         <span class="ghost" aria-hidden="true">${b.name.charAt(0)}</span>
         <h3>${b.name}</h3>
         <div class="brand-links">
@@ -1543,35 +2046,35 @@
             const posts = brandPosts[key];
             const fallbackUrl = `${brandBase}${l.no}`;
             const uid = `bl-${bi}-${li}`;
-            return `
-              <button type="button" class="brand-toggle" data-uid="${uid}" data-fallback="${fallbackUrl}">
-                ${l.label}
-                <span style="display:flex;align-items:center;gap:8px;">
-                  <span class="arrow">→</span>
-                  <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
-                </span>
-              </button>
-              <div class="brand-sublist" id="${uid}">
-                ${posts && posts.length
-                  ? posts.map(p => `<a href="${p.url}" target="_blank" rel="noopener">${p.title}</a>`).join('')
-                  : `<span class="sub-empty">등록된 게시글 목록이 없습니다. 아래 버튼으로 블로그에서 확인하세요.</span><a href="${fallbackUrl}" target="_blank" rel="noopener">→ 네이버 블로그에서 전체 보기</a>`
-                }
-              </div>
-            `;
+            if(posts && posts.length){
+              return `
+                <button type="button" class="brand-toggle" data-uid="${uid}">
+                  ${l.label}
+                  <span style="display:flex;align-items:center;gap:8px;">
+                    <span class="arrow">→</span>
+                    <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+                  </span>
+                </button>
+                <div class="brand-sublist" id="${uid}">
+                  ${posts.map(p => `<a href="${p.url}" target="_blank" rel="noopener">${p.title}</a>`).join('')}
+                </div>
+              `;
+            }
+            return `<a href="${fallbackUrl}" target="_blank" rel="noopener" class="brand-toggle">${l.label}<span class="arrow">→</span></a>`;
           }).join('')}
         </div>
+        ${b.catalog ? `<a href="catalogs/${b.catalog}" download class="brand-catalog-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+          카탈로그 다운로드
+        </a>` : ''}
       </div>
     `).join('');
 
-    brandGrid.querySelectorAll('.brand-toggle').forEach(btn => {
+    brandGrid.querySelectorAll('.brand-toggle[data-uid]').forEach(btn => {
       btn.addEventListener('click', () => {
         const uid = btn.dataset.uid;
         const panel = document.getElementById(uid);
-        const key = btn.dataset.uid;
-        const hasData = panel && panel.querySelector('a, .sub-empty');
         if(!panel) return;
-        const isOpen = panel.classList.contains('open');
-        // 같은 카드 안 다른 패널은 닫고 이것만 토글 (선택사항: 전체 독립 토글로 두고 싶으면 이 두 줄 제거)
         panel.classList.toggle('open');
         btn.classList.toggle('open');
       });

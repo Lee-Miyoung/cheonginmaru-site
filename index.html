@@ -236,8 +236,9 @@
     display:none;flex-direction:column;gap:2px;
     background:var(--bg);border-top:1px solid var(--line);
     padding:12px 40px 24px;
+    position:relative;z-index:49;
   }
-  .mobile-menu.open{display:flex;}
+  .mobile-menu.open{display:flex !important;}
   .mobile-menu > a{
     padding:16px 4px;font-size:16px;font-weight:600;color:var(--ink-soft);
     border-bottom:1px solid var(--line);
@@ -1123,9 +1124,9 @@
     
     /* 로고 크기 절대 방어망 구축 및 눈에 확 띄도록 웅장하게 고정 상향 */
     .logo-img {
-      height: 60px !important; 
+      height: 92px !important; 
       width: auto !important;
-      max-width: 140px !important;
+      max-width: 190px !important;
       flex-shrink: 0 !important;
     }
     .mobile-toggle {
@@ -2272,4 +2273,4 @@
   function brandPostsKey(brand, label){ return `${brand}|${label}`; }
 
   function renderBrandGrid(){
-    const brandGrid = document.getElementById('brandGrid');
+    const brand

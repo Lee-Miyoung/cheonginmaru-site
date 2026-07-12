@@ -1980,10 +1980,10 @@
         const rows = results.data
           .map(r => ({
             category: (r['카테고리']||'').trim(),
-            title: (r['제목']||'').trim(),
+            title: (r['제목(현장명)']||r['제목']||'').trim(),
             desc: (r['설명']||'').trim(),
             image: (r['사진파일명']||'').trim(),
-            link: (r['링크']||'').trim()
+            link: (r['블로그 링크']||r['링크']||'').trim()
           }))
           .filter(r => r.title);
         portfolioItems = rows.length ? rows : FALLBACK_PORTFOLIO_ITEMS;

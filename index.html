@@ -913,103 +913,78 @@
 
   /* ---------- PARTNER APPLY ---------- */
   .partner-apply-section{background:var(--surface);}
-  .partner-apply-notice{
-    display:flex;align-items:flex-start;gap:14px;
-    background:#fff;border-radius:var(--radius);
-    padding:22px 26px;margin-bottom:40px;
-    border:1px solid rgba(18,16,14,0.06);
-    box-shadow:var(--shadow-sm);
-  }
-  .partner-apply-notice svg{color:var(--copper);margin-top:2px;}
-  .partner-apply-notice p{margin:0;font-size:15px;color:var(--ink-soft);line-height:1.7;}
-  .partner-apply-notice b{color:var(--ink);}
-  .partner-apply-notice a{color:var(--copper-deep);font-weight:700;text-decoration:underline;text-underline-offset:2px;}
 
-  .partner-verify-notice{
-    display:flex;align-items:flex-start;gap:16px;
+  .partner-unified-card{
+    position:relative;overflow:hidden;
+    max-width:760px;
     background:linear-gradient(155deg, #fff 0%, var(--surface) 140%);
     border-radius:var(--radius);
-    padding:26px 28px;margin-bottom:32px;
-    border:1px solid rgba(200,106,40,0.18);
-    box-shadow:var(--shadow-sm);
+    border:1px solid rgba(18,16,14,0.05);
+    box-shadow:var(--shadow-lg);
+    padding:44px 44px 40px;
   }
-  .partner-verify-icon{
-    flex-shrink:0;width:44px;height:44px;border-radius:50%;
-    background:rgba(200,106,40,0.12);color:var(--copper-deep);
-    display:flex;align-items:center;justify-content:center;
+  .partner-card-ghost{
+    position:absolute;top:-24px;right:-8px;z-index:0;pointer-events:none;
+    font-family:'Noto Serif KR',serif;font-size:150px;font-weight:900;line-height:1;
+    color:rgba(18,16,14,0.03);
   }
-  .partner-verify-notice b{display:block;font-size:16px;color:var(--ink);font-weight:700;margin-bottom:8px;}
-  .partner-verify-notice p{margin:0 0 10px;font-size:14.5px;color:var(--ink-soft);line-height:1.75;}
-  .partner-verify-notice p strong{color:var(--copper-deep);font-weight:700;}
-  .partner-verify-sub{display:block;font-size:13px;color:var(--ink-faint);line-height:1.6;}
+  .partner-personal-note{
+    position:relative;z-index:1;
+    display:flex;align-items:flex-start;gap:12px;
+    background:#fff;border-radius:var(--radius-sm);
+    padding:18px 20px;margin-bottom:32px;
+    border:1px solid rgba(18,16,14,0.06);
+  }
+  .partner-personal-note svg{color:var(--copper);margin-top:2px;}
+  .partner-personal-note p{margin:0;font-size:14.5px;color:var(--ink-soft);line-height:1.7;}
+  .partner-personal-note a{color:var(--copper-deep);font-weight:700;text-decoration:underline;text-underline-offset:2px;}
 
-  .partner-kakao-cta{
-    display:flex;align-items:center;gap:18px;
-    background:#FEE500;border-radius:var(--radius);
-    padding:24px 28px;margin-bottom:32px;max-width:720px;
-    box-shadow:0 20px 45px -22px rgba(254,229,0,0.6);
+  .partner-unified-card .partners-eyebrow{position:relative;z-index:1;}
+  .partner-unified-card h3{
+    position:relative;z-index:1;
+    font-family:'Noto Serif KR',serif;font-size:24px;font-weight:800;color:var(--ink);
+    margin:0 0 16px;line-height:1.4;
+  }
+  .partner-requirement-desc{
+    position:relative;z-index:1;
+    margin:0 0 22px;font-size:15px;color:var(--ink-soft);line-height:1.8;max-width:56ch;
+  }
+  .partner-requirement-desc b{color:var(--copper-deep);font-weight:700;}
+
+  .requirement-list{
+    position:relative;z-index:1;
+    list-style:none;margin:0 0 16px;padding:0;
+    display:flex;flex-wrap:wrap;gap:12px;
+  }
+  .requirement-list li{
+    display:flex;align-items:center;gap:8px;
+    background:#fff;border:1px solid rgba(200,106,40,0.25);
+    border-radius:30px;padding:10px 20px 10px 16px;
+    font-size:14px;font-weight:700;color:var(--ink);
+  }
+  .requirement-list li svg{
+    flex-shrink:0;color:#fff;background:var(--copper);
+    border-radius:50%;padding:3px;width:16px;height:16px;box-sizing:content-box;
+  }
+  .requirement-sub{
+    position:relative;z-index:1;
+    display:block;font-size:13px;color:var(--ink-faint);line-height:1.7;
+    margin-bottom:30px;
+  }
+
+  .partner-kakao-final{
+    position:relative;z-index:1;
+    display:inline-flex;align-items:center;gap:12px;
+    background:var(--forest);color:#fff;
+    padding:18px 26px;border-radius:var(--radius-sm);
+    font-size:15.5px;font-weight:700;
+    box-shadow:0 14px 28px -12px rgba(26,48,38,0.5);
     transition:all .3s var(--ease);
   }
-  .partner-kakao-cta:hover{transform:translateY(-3px);box-shadow:0 26px 50px -20px rgba(254,229,0,0.75);}
-  .partner-kakao-cta-solo{
-    max-width:640px;padding:32px 32px;margin:0 auto;
-  }
-  .partner-kakao-cta-solo .partner-kakao-icon{width:64px;height:64px;}
-  .partner-kakao-cta-solo .partner-kakao-text b{font-size:19px;}
-  .partner-kakao-cta-solo .partner-kakao-text span{font-size:14px;}
-  .partner-kakao-icon{
-    flex-shrink:0;width:52px;height:52px;border-radius:14px;
-    background:rgba(57,27,27,0.08);display:flex;align-items:center;justify-content:center;
-  }
-  .partner-kakao-text{flex:1;display:flex;flex-direction:column;gap:4px;}
-  .partner-kakao-text b{font-size:16.5px;color:#391B1B;font-weight:800;}
-  .partner-kakao-text span{font-size:13px;color:#5C4A2E;}
-  .partner-kakao-arrow{font-size:20px;color:#391B1B;font-weight:700;flex-shrink:0;}
-  .partner-form-divider{
-    display:flex;align-items:center;gap:16px;
-    max-width:720px;margin:0 0 28px;
-    font-size:13px;color:var(--ink-faint);font-weight:600;
-  }
-  .partner-form-divider::before,.partner-form-divider::after{
-    content:'';flex:1;height:1px;background:rgba(18,16,14,0.1);
-  }
-  .partner-form{
-    background:#fff;border-radius:var(--radius);padding:44px;
-    border:1px solid rgba(18,16,14,0.06);
-    box-shadow:var(--shadow-lg);
-    max-width:720px;
-  }
-  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
-  .form-field{margin-bottom:20px;}
-  .form-field:last-of-type{margin-bottom:0;}
-  .form-field label{
-    display:block;font-size:13.5px;font-weight:700;color:var(--ink);
-    margin-bottom:8px;letter-spacing:.01em;
-  }
-  .form-optional{font-weight:400;color:var(--ink-faint);}
-  .form-field input[type="text"],
-  .form-field input[type="tel"],
-  .form-field textarea{
-    width:100%;padding:14px 18px;border-radius:var(--radius-sm);
-    border:1px solid rgba(18,16,14,0.12);background:#fff;
-    font-family:inherit;font-size:14.5px;color:var(--ink);
-    transition:border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
-  }
-  .form-field input:focus,
-  .form-field textarea:focus{
-    outline:none;border-color:var(--copper);background:#fff;
-    box-shadow:0 0 0 4px color-mix(in srgb, var(--copper) 8%, transparent);
-  }
-  .form-field textarea{resize:vertical;line-height:1.6;}
-  .form-field input[type="file"]{
-    width:100%;padding:11px 14px;border-radius:var(--radius-sm);
-    border:1px dashed var(--line-strong);background:var(--bg);
-    font-size:13.5px;color:var(--ink-soft);cursor:pointer;
-  }
-  .partner-submit-btn{width:100%;justify-content:center;margin-top:8px;}
-  .partner-form-status{margin:14px 0 0;font-size:14px;text-align:center;min-height:20px;}
-  .partner-form-status.success{color:var(--forest);font-weight:700;}
-  .partner-form-status.error{color:#B23A2E;font-weight:700;}
+  .partner-kakao-final svg{color:#FEE500;flex-shrink:0;}
+  .partner-kakao-final .arrow{margin-left:4px;transition:transform .25s var(--ease);}
+  .partner-kakao-final:hover{background:var(--forest-deep);transform:translateY(-2px);box-shadow:0 18px 34px -10px rgba(13,22,18,0.55);}
+  .partner-kakao-final:hover .arrow{transform:translateX(4px);}
 
   /* ---------- MEDIA SECTION ---------- */
   .toon-section{
@@ -1129,12 +1104,10 @@
     .stat:last-child{border-bottom:none;padding-bottom:0;}
     .contact-grid{grid-template-columns:1fr;gap:56px;}
     .form-grid{grid-template-columns:1fr;gap:0;}
-    .partner-form{padding:28px 22px;}
-    .partner-apply-notice{flex-direction:column;gap:8px;}
-    .partner-verify-notice{flex-direction:column;gap:10px;padding:22px 20px;}
-    .partner-kakao-cta{padding:18px 20px;gap:12px;}
-    .partner-kakao-text span{display:none;}
-    .partner-kakao-cta-solo .partner-kakao-text span{display:block;}
+    .partner-unified-card{padding:30px 24px 28px;}
+    .partner-personal-note{flex-direction:column;gap:8px;}
+    .requirement-list{gap:8px;}
+    .partner-kakao-final{width:100%;justify-content:center;}
     .toon-grid{grid-template-columns:1fr;text-align:center;gap:40px;}
     .toon-figure img{width:260px;}
     .toon-copy .k{justify-content:center;}
@@ -1697,32 +1670,36 @@
         <h2>건축·인테리어 업체 문의</h2>
         <p>건설사·인테리어 업체를 위한 전용 문의창구입니다. 남겨주신 정보로 담당자가 빠르게 연락드립니다.</p>
       </div>
-      <div class="partner-apply-notice reveal">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-        <p><b>개인 고객이신가요?</b> 시공 견적 문의는 이 페이지가 아니라, <a href="#contact">무료 카카오톡 상담</a>으로 훨씬 빠르게 안내받으실 수 있어요. 이 페이지는 건축·인테리어·하우징 업체 전용입니다.</p>
-      </div>
+      <div class="partner-unified-card reveal">
+        <span class="partner-card-ghost" aria-hidden="true">협</span>
 
-      <div class="partner-verify-notice reveal">
-        <div class="partner-verify-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.5 0 2.91.37 4.15 1.02"/><path d="M21 5l-3 3-1.5-1.5"/></svg>
+        <div class="partner-personal-note">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <p>개인 고객이신가요? 시공 견적 문의는 <a href="#contact">무료 카카오톡 상담</a>이 훨씬 빨라요. 이 페이지는 건축·인테리어·하우징 업체 전용입니다.</p>
         </div>
-        <div>
-          <b>협력업체 확인 후 상담이 진행됩니다</b>
-          <p>협력업체에게는 일반 견적과 다른 <strong>협력 단가·우선 시공 일정</strong>이 적용돼요. 그래서 실제 협력사분들께 공정한 조건을 지켜드리기 위해, <strong>사업자등록증 또는 명함 사진</strong>을 카톡 대화창에 함께 보내주신 경우에만 협력 상담으로 진행하고 있습니다.</p>
-          <span class="partner-verify-sub">※ 서류 없이 단가만 문의하시는 경우, 일반 소비자 상담으로 안내드릴 수 있어요.</span>
-        </div>
-      </div>
 
-      <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="partner-kakao-cta partner-kakao-cta-solo reveal">
-        <div class="partner-kakao-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="#391B1B"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.86 5.34 4.66 6.77-.2.75-.73 2.73-.83 3.15-.13.53.19.52.4.38.17-.11 2.68-1.82 3.77-2.56.64.09 1.3.14 1.98.14 5.52 0 10-3.58 10-8s-4.48-8-9.98-8z"/></svg>
-        </div>
-        <div class="partner-kakao-text">
-          <b>카카오톡으로 문의하기</b>
-          <span>업체명, 연락처, 협력 제안 내용을 편하게 남겨주시면 담당자가 확인 후 빠르게 답변드려요</span>
-        </div>
-        <span class="partner-kakao-arrow">→</span>
-      </a>
+        <span class="partners-eyebrow">확인 절차 안내</span>
+        <h3>협력업체 확인 후 상담이 진행됩니다</h3>
+        <p class="partner-requirement-desc">협력업체에게는 일반 견적과 다른 <b>협력 단가·우선 시공 일정</b>이 적용돼요. 실제 협력사분들께 공정한 조건을 지켜드리기 위해, 아래 서류 중 하나를 카톡 대화창에 함께 보내주신 경우에만 협력 상담으로 진행합니다.</p>
+
+        <ul class="requirement-list">
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            사업자등록증 사진
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            명함 사진
+          </li>
+        </ul>
+        <span class="requirement-sub">※ 서류 없이 단가만 문의하시는 경우, 일반 소비자 상담으로 안내드릴 수 있어요.</span>
+
+        <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="partner-kakao-final">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.86 5.34 4.66 6.77-.2.75-.73 2.73-.83 3.15-.13.53.19.52.4.38.17-.11 2.68-1.82 3.77-2.56.64.09 1.3.14 1.98.14 5.52 0 10-3.58 10-8s-4.48-8-9.98-8z"/></svg>
+          서류와 함께 카카오톡으로 문의하기
+          <span class="arrow">→</span>
+        </a>
+      </div>
     </div>
   </section>
 

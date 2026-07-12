@@ -694,7 +694,7 @@
   }
   .step:hover{transform:translateY(-8px);box-shadow:var(--shadow-md);}
   .step-visual{
-    position:relative;height:150px;
+    position:relative;height:220px;
     display:flex;align-items:center;justify-content:center;
     background:color-mix(in srgb, var(--sc) 10%, var(--bg));
     border-bottom:1px solid rgba(18,16,14,0.04);
@@ -703,7 +703,7 @@
     content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--sc);
   }
   .step-character{
-    width:auto;height:80%;max-width:70%;
+    width:auto;height:100%;max-width:96%;
     display:flex;align-items:center;justify-content:center;
     filter:drop-shadow(0 10px 16px rgba(18,16,14,0.2));
     transition:transform .35s var(--ease);
@@ -777,13 +777,25 @@
   .portfolio-card:hover .portfolio-info h3{color:var(--copper);}
   .portfolio-info p{font-size:14.5px;color:var(--ink-soft);margin:0;}
   .portfolio-info p .model-tag{color:var(--copper-deep);font-weight:700;font-style:normal;}
+  .portfolio-info p .brand-tag{color:var(--forest);font-weight:700;font-style:normal;}
+  .portfolio-spec-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
   .portfolio-spec{
-    display:inline-block;margin-top:12px;padding:5px 12px;
+    display:inline-block;padding:5px 12px;
     background:var(--bg);border:1px solid rgba(18,16,14,0.08);border-radius:20px;
     font-size:12px;font-weight:600;color:var(--ink-faint);letter-spacing:.01em;
   }
   .portfolio-empty{color:var(--ink-soft);font-size:16px;padding:80px 0;text-align:center;grid-column:span 3;}
-  .portfolio-more{text-align:center;margin-top:56px;display:flex;flex-direction:column;align-items:center;gap:16px;}
+  .portfolio-pagination{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:48px;flex-wrap:wrap;}
+  .page-btn{
+    min-width:40px;height:40px;padding:0 12px;border-radius:10px;
+    border:1px solid rgba(18,16,14,0.1);background:#fff;color:var(--ink-soft);
+    font-size:14.5px;font-weight:700;cursor:pointer;transition:all .25s var(--ease);
+  }
+  .page-btn:hover:not(:disabled){border-color:var(--forest);color:var(--forest);}
+  .page-btn.active{background:var(--forest);border-color:var(--forest);color:#fff;}
+  .page-btn:disabled{opacity:0.35;cursor:default;}
+  .page-btn.page-nav{font-size:18px;}
+  .portfolio-more{text-align:center;margin-top:32px;display:flex;flex-direction:column;align-items:center;gap:16px;}
 
   /* ---------- REVIEWS ---------- */
   .reviews{background:var(--surface);}
@@ -1593,13 +1605,11 @@
       </div>
       <div class="portfolio-toolbar" id="portfolioFilters"></div>
       <div class="portfolio-grid" id="portfolioGrid"></div>
+      <div class="portfolio-pagination" id="portfolioPagination"></div>
       <div class="portfolio-more">
-        <button type="button" id="portfolioLoadMoreBtn" class="btn btn-forest" style="display:none;"></button>
-        <div>
-          <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener" class="btn btn-outline-copper">
-            네이버 블로그에서 전체 시공사례 보기
-          </a>
-        </div>
+        <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener" class="btn btn-outline-copper">
+          네이버 블로그에서 전체 시공사례 보기
+        </a>
       </div>
     </div>
   </section>
@@ -1931,10 +1941,25 @@
   let portfolioItems = FALLBACK_PORTFOLIO_ITEMS;
   const portfolioGrid = document.getElementById('portfolioGrid');
   const portfolioFilters = document.getElementById('portfolioFilters');
-  const portfolioLoadMoreBtn = document.getElementById('portfolioLoadMoreBtn');
+  const portfolioPagination = document.getElementById('portfolioPagination');
   let activeCategory = '전체';
   const PORTFOLIO_PAGE_SIZE = 6;
-  let visibleCount = PORTFOLIO_PAGE_SIZE;
+  let currentPage = 1;
+
+  // 브랜드/제품라인 키워드 - 모델명(따옴표)과는 다른 색으로 강조
+  const PORTFOLIO_BRAND_TERMS = [
+    "동화자연마루","동화마루","노바마루","한솔홈데코","한솔마루","구정마루","네스트","이건","성원",
+    "시그니월","진그란데스퀘어","진 그란데 스퀘어","듀오텍스쳐맥스","마뷸러스젠","원목마루STK","콜렉트월",
+    "미네랄월","SB스톤","sb스톤","SB스퀘어","sb스퀘어","아크로K","아크로","사각돌마루","미네랄마루",
+    "오크스트립","동화","노바","한솔","구정"
+  ].sort((a,b)=>b.length-a.length);
+  const portfolioBrandRegex = new RegExp('(' + PORTFOLIO_BRAND_TERMS.map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')', 'g');
+
+  function highlightPortfolioDesc(text){
+    let out = text.replace(portfolioBrandRegex, `<b class="brand-tag">$1</b>`);
+    out = out.replace(/'([^']+)'/g, `<b class="model-tag">$1</b>`);
+    return out;
+  }
 
   function renderFilters(){
     const cats = ['전체', ...new Set(portfolioItems.map(i=>i.category))];
@@ -1944,7 +1969,7 @@
     portfolioFilters.querySelectorAll('.filter-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         activeCategory = btn.dataset.cat;
-        visibleCount = PORTFOLIO_PAGE_SIZE;
+        currentPage = 1;
         renderFilters();
         renderPortfolio();
       });
@@ -1959,26 +1984,39 @@
     thumb.style.backgroundColor = color || '#C99456';
   };
 
+  function goToPortfolioPage(p){
+    currentPage = p;
+    renderPortfolio();
+    document.getElementById('portfolio').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  window.goToPortfolioPage = goToPortfolioPage;
+
   function renderPortfolio(){
     const filtered = activeCategory==='전체'
       ? portfolioItems
       : portfolioItems.filter(i=>i.category===activeCategory);
     if(filtered.length===0){
       portfolioGrid.innerHTML = '<p class="portfolio-empty">아직 등록된 시공 사례가 없습니다.</p>';
-      portfolioLoadMoreBtn.style.display = 'none';
+      portfolioPagination.innerHTML = '';
       return;
     }
-    const items = filtered.slice(0, visibleCount);
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PORTFOLIO_PAGE_SIZE));
+    if(currentPage > totalPages) currentPage = totalPages;
+    const start = (currentPage - 1) * PORTFOLIO_PAGE_SIZE;
+    const items = filtered.slice(start, start + PORTFOLIO_PAGE_SIZE);
+
     portfolioGrid.innerHTML = items.map(i=>{
       const tag = i.link ? 'a' : 'div';
       const attrs = i.link ? ` href="${i.link}" target="_blank" rel="noopener"` : '';
       const color = i.color || '#C99456';
-      const specMatch = i.desc.match(/[\(（]\s*규격[:：][^\)）]*[\)）]/);
-      const specText = specMatch ? specMatch[0].replace(/^[\(（]|[\)）]$/g, '').trim() : '';
-      const descMain = (specMatch ? i.desc.replace(specMatch[0], '') : i.desc)
-        .replace(/'([^']+)'/g, `<b class="model-tag">$1</b>`)
-        .replace(/\s+([.,])/g, '$1')
-        .trim();
+      const specMatches = i.desc.match(/[\(（]\s*규격[:：][^\)）]*[\)）]/g) || [];
+      let descMain = i.desc;
+      specMatches.forEach(m => { descMain = descMain.replace(m, ''); });
+      descMain = highlightPortfolioDesc(descMain.replace(/\s+([.,])/g, '$1').trim());
+      const specChips = specMatches
+        .map(m => m.replace(/^[\(（]|[\)）]$/g, '').trim())
+        .map(s => `<span class="portfolio-spec">${s}</span>`)
+        .join('');
       return `
       <${tag} class="portfolio-card"${attrs}>
         <div class="portfolio-thumb" ${i.image ? '' : `style="background-color:${color}"`}>
@@ -1989,24 +2027,24 @@
         <div class="portfolio-info">
           <h3>${i.title}</h3>
           <p>${descMain}</p>
-          ${specText ? `<span class="portfolio-spec">${specText}</span>` : ''}
+          ${specChips ? `<div class="portfolio-spec-row">${specChips}</div>` : ''}
         </div>
       </${tag}>
     `;
     }).join('');
 
-    if(filtered.length > visibleCount){
-      portfolioLoadMoreBtn.style.display = 'inline-flex';
-      portfolioLoadMoreBtn.textContent = `시공사례 더 보기 (${items.length}/${filtered.length})`;
-    } else {
-      portfolioLoadMoreBtn.style.display = 'none';
+    if(totalPages <= 1){
+      portfolioPagination.innerHTML = '';
+      return;
     }
+    let pageBtns = '';
+    pageBtns += `<button class="page-btn page-nav" ${currentPage===1?'disabled':''} onclick="goToPortfolioPage(${currentPage-1})" aria-label="이전 페이지">‹</button>`;
+    for(let p=1; p<=totalPages; p++){
+      pageBtns += `<button class="page-btn ${p===currentPage?'active':''}" onclick="goToPortfolioPage(${p})">${p}</button>`;
+    }
+    pageBtns += `<button class="page-btn page-nav" ${currentPage===totalPages?'disabled':''} onclick="goToPortfolioPage(${currentPage+1})" aria-label="다음 페이지">›</button>`;
+    portfolioPagination.innerHTML = pageBtns;
   }
-
-  portfolioLoadMoreBtn.addEventListener('click', ()=>{
-    visibleCount += PORTFOLIO_PAGE_SIZE;
-    renderPortfolio();
-  });
 
   function loadPortfolioFromSheet(){
     if(!PORTFOLIO_SHEET_CSV_URL){

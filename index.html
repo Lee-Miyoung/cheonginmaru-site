@@ -2029,7 +2029,7 @@
             link: (r['블로그 링크']||r['링크']||'').trim()
           }))
           .filter(r => r.title);
-        portfolioItems = rows.length ? rows : FALLBACK_PORTFOLIO_ITEMS;
+        portfolioItems = rows.length ? rows.slice().reverse() : FALLBACK_PORTFOLIO_ITEMS;
         renderFilters();
         renderPortfolio();
       },

@@ -925,6 +925,24 @@
   .partner-apply-notice b{color:var(--ink);}
   .partner-apply-notice a{color:var(--copper-deep);font-weight:700;text-decoration:underline;text-underline-offset:2px;}
 
+  .partner-verify-notice{
+    display:flex;align-items:flex-start;gap:16px;
+    background:linear-gradient(155deg, #fff 0%, var(--surface) 140%);
+    border-radius:var(--radius);
+    padding:26px 28px;margin-bottom:32px;
+    border:1px solid rgba(200,106,40,0.18);
+    box-shadow:var(--shadow-sm);
+  }
+  .partner-verify-icon{
+    flex-shrink:0;width:44px;height:44px;border-radius:50%;
+    background:rgba(200,106,40,0.12);color:var(--copper-deep);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .partner-verify-notice b{display:block;font-size:16px;color:var(--ink);font-weight:700;margin-bottom:8px;}
+  .partner-verify-notice p{margin:0 0 10px;font-size:14.5px;color:var(--ink-soft);line-height:1.75;}
+  .partner-verify-notice p strong{color:var(--copper-deep);font-weight:700;}
+  .partner-verify-sub{display:block;font-size:13px;color:var(--ink-faint);line-height:1.6;}
+
   .partner-kakao-cta{
     display:flex;align-items:center;gap:18px;
     background:#FEE500;border-radius:var(--radius);
@@ -933,6 +951,12 @@
     transition:all .3s var(--ease);
   }
   .partner-kakao-cta:hover{transform:translateY(-3px);box-shadow:0 26px 50px -20px rgba(254,229,0,0.75);}
+  .partner-kakao-cta-solo{
+    max-width:640px;padding:32px 32px;margin:0 auto;
+  }
+  .partner-kakao-cta-solo .partner-kakao-icon{width:64px;height:64px;}
+  .partner-kakao-cta-solo .partner-kakao-text b{font-size:19px;}
+  .partner-kakao-cta-solo .partner-kakao-text span{font-size:14px;}
   .partner-kakao-icon{
     flex-shrink:0;width:52px;height:52px;border-radius:14px;
     background:rgba(57,27,27,0.08);display:flex;align-items:center;justify-content:center;
@@ -1107,8 +1131,10 @@
     .form-grid{grid-template-columns:1fr;gap:0;}
     .partner-form{padding:28px 22px;}
     .partner-apply-notice{flex-direction:column;gap:8px;}
+    .partner-verify-notice{flex-direction:column;gap:10px;padding:22px 20px;}
     .partner-kakao-cta{padding:18px 20px;gap:12px;}
     .partner-kakao-text span{display:none;}
+    .partner-kakao-cta-solo .partner-kakao-text span{display:block;}
     .toon-grid{grid-template-columns:1fr;text-align:center;gap:40px;}
     .toon-figure img{width:260px;}
     .toon-copy .k{justify-content:center;}
@@ -1673,52 +1699,30 @@
       </div>
       <div class="partner-apply-notice reveal">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-        <p><b>개인 고객이신가요?</b> 시공 견적 문의는 아래 폼이 아니라, <a href="#contact">무료 카카오톡 상담</a>으로 훨씬 빠르게 안내받으실 수 있어요. 이 페이지는 건축·인테리어·하우징 업체 전용입니다.</p>
+        <p><b>개인 고객이신가요?</b> 시공 견적 문의는 이 페이지가 아니라, <a href="#contact">무료 카카오톡 상담</a>으로 훨씬 빠르게 안내받으실 수 있어요. 이 페이지는 건축·인테리어·하우징 업체 전용입니다.</p>
       </div>
 
-      <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="partner-kakao-cta reveal">
+      <div class="partner-verify-notice reveal">
+        <div class="partner-verify-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.5 0 2.91.37 4.15 1.02"/><path d="M21 5l-3 3-1.5-1.5"/></svg>
+        </div>
+        <div>
+          <b>협력업체 확인 후 상담이 진행됩니다</b>
+          <p>협력업체에게는 일반 견적과 다른 <strong>협력 단가·우선 시공 일정</strong>이 적용돼요. 그래서 실제 협력사분들께 공정한 조건을 지켜드리기 위해, <strong>사업자등록증 또는 명함 사진</strong>을 카톡 대화창에 함께 보내주신 경우에만 협력 상담으로 진행하고 있습니다.</p>
+          <span class="partner-verify-sub">※ 서류 없이 단가만 문의하시는 경우, 일반 소비자 상담으로 안내드릴 수 있어요.</span>
+        </div>
+      </div>
+
+      <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="partner-kakao-cta partner-kakao-cta-solo reveal">
         <div class="partner-kakao-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="#391B1B"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.86 5.34 4.66 6.77-.2.75-.73 2.73-.83 3.15-.13.53.19.52.4.38.17-.11 2.68-1.82 3.77-2.56.64.09 1.3.14 1.98.14 5.52 0 10-3.58 10-8s-4.48-8-9.98-8z"/></svg>
         </div>
         <div class="partner-kakao-text">
-          <b>카카오톡으로 바로 문의하기</b>
-          <span>가장 빠르게 확인하고 답변드려요 — 서류 없이 편하게 문의해도 좋아요</span>
+          <b>카카오톡으로 문의하기</b>
+          <span>업체명, 연락처, 협력 제안 내용을 편하게 남겨주시면 담당자가 확인 후 빠르게 답변드려요</span>
         </div>
         <span class="partner-kakao-arrow">→</span>
       </a>
-
-      <div class="partner-form-divider reveal"><span>또는 아래 양식으로 상세하게 남겨주세요</span></div>
-
-      <form class="partner-form reveal" id="partnerForm">
-        <div class="form-grid">
-          <div class="form-field">
-            <label for="pf-company">업체명 *</label>
-            <input type="text" id="pf-company" name="업체명" required>
-          </div>
-          <div class="form-field">
-            <label for="pf-manager">담당자명</label>
-            <input type="text" id="pf-manager" name="담당자명">
-          </div>
-          <div class="form-field">
-            <label for="pf-title">직책</label>
-            <input type="text" id="pf-title" name="직책">
-          </div>
-          <div class="form-field">
-            <label for="pf-phone">연락처 *</label>
-            <input type="tel" id="pf-phone" name="연락처" placeholder="010-0000-0000" required>
-          </div>
-        </div>
-        <div class="form-field">
-          <label for="pf-file">사업자등록증 · 명함 첨부 <span class="form-optional">(선택)</span></label>
-          <input type="file" id="pf-file" name="첨부파일" accept="image/*,.pdf">
-        </div>
-        <div class="form-field">
-          <label for="pf-message">문의내용 *</label>
-          <textarea id="pf-message" name="문의내용" rows="5" required placeholder="협력 제안, 시공 문의 등 편하게 남겨주세요."></textarea>
-        </div>
-        <button type="submit" class="btn partner-submit-btn" id="partnerSubmitBtn">문의 보내기</button>
-        <p class="partner-form-status" id="partnerFormStatus"></p>
-      </form>
     </div>
   </section>
 
@@ -2127,54 +2131,6 @@
   }
 
   loadPartnersFromSheet();
-
-  const PARTNER_FORM_ENDPOINT = ""; 
-
-  (function initPartnerForm(){
-    const form = document.getElementById('partnerForm');
-    const statusEl = document.getElementById('partnerFormStatus');
-    const submitBtn = document.getElementById('partnerSubmitBtn');
-    if(!form) return;
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      statusEl.textContent = '';
-      statusEl.className = 'partner-form-status';
-
-      if(!PARTNER_FORM_ENDPOINT){
-        statusEl.textContent = '문의 접수 기능이 아직 연결 중입니다. 급하신 경우 카카오톡 채널로 연락 주세요.';
-        statusEl.classList.add('error');
-        return;
-      }
-
-      const originalText = submitBtn.textContent;
-      submitBtn.disabled = true;
-      submitBtn.textContent = '전송 중...';
-
-      try{
-        const formData = new FormData(form);
-        const res = await fetch(PARTNER_FORM_ENDPOINT, {
-          method:'POST',
-          body:formData,
-          headers:{ 'Accept':'application/json' }
-        });
-        if(res.ok){
-          statusEl.textContent = '문의가 정상적으로 접수되었습니다. 빠르게 연락드리겠습니다.';
-          statusEl.classList.add('success');
-          form.reset();
-        } else {
-          statusEl.textContent = '전송 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
-          statusEl.classList.add('error');
-        }
-      } catch(err){
-        statusEl.textContent = '전송 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
-        statusEl.classList.add('error');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-      }
-    });
-  })();
 
   const reviewItems = [
     {

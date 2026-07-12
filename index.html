@@ -776,8 +776,14 @@
   .portfolio-info h3{font-size:19px;margin:0 0 10px;font-weight:700;transition:color 0.3s;}
   .portfolio-card:hover .portfolio-info h3{color:var(--copper);}
   .portfolio-info p{font-size:14.5px;color:var(--ink-soft);margin:0;}
+  .portfolio-info p .model-tag{color:var(--copper-deep);font-weight:700;font-style:normal;}
+  .portfolio-spec{
+    display:inline-block;margin-top:12px;padding:5px 12px;
+    background:var(--bg);border:1px solid rgba(18,16,14,0.08);border-radius:20px;
+    font-size:12px;font-weight:600;color:var(--ink-faint);letter-spacing:.01em;
+  }
   .portfolio-empty{color:var(--ink-soft);font-size:16px;padding:80px 0;text-align:center;grid-column:span 3;}
-  .portfolio-more{text-align:center;margin-top:64px;}
+  .portfolio-more{text-align:center;margin-top:56px;display:flex;flex-direction:column;align-items:center;gap:16px;}
 
   /* ---------- REVIEWS ---------- */
   .reviews{background:var(--surface);}
@@ -1588,9 +1594,12 @@
       <div class="portfolio-toolbar" id="portfolioFilters"></div>
       <div class="portfolio-grid" id="portfolioGrid"></div>
       <div class="portfolio-more">
-        <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener" class="btn btn-forest">
-          네이버 블로그에서 전체 시공사례 보기
-        </a>
+        <button type="button" id="portfolioLoadMoreBtn" class="btn btn-forest" style="display:none;"></button>
+        <div>
+          <a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener" class="btn btn-outline-copper">
+            네이버 블로그에서 전체 시공사례 보기
+          </a>
+        </div>
       </div>
     </div>
   </section>
@@ -1922,7 +1931,10 @@
   let portfolioItems = FALLBACK_PORTFOLIO_ITEMS;
   const portfolioGrid = document.getElementById('portfolioGrid');
   const portfolioFilters = document.getElementById('portfolioFilters');
+  const portfolioLoadMoreBtn = document.getElementById('portfolioLoadMoreBtn');
   let activeCategory = '전체';
+  const PORTFOLIO_PAGE_SIZE = 6;
+  let visibleCount = PORTFOLIO_PAGE_SIZE;
 
   function renderFilters(){
     const cats = ['전체', ...new Set(portfolioItems.map(i=>i.category))];
@@ -1932,38 +1944,69 @@
     portfolioFilters.querySelectorAll('.filter-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         activeCategory = btn.dataset.cat;
+        visibleCount = PORTFOLIO_PAGE_SIZE;
         renderFilters();
         renderPortfolio();
       });
     });
   }
 
+  window.onPortfolioThumbError = function(imgEl, color){
+    imgEl.onerror = null;
+    const thumb = imgEl.closest('.portfolio-thumb');
+    if(!thumb) return;
+    imgEl.style.display = 'none';
+    thumb.style.backgroundColor = color || '#C99456';
+  };
+
   function renderPortfolio(){
-    const items = activeCategory==='전체'
+    const filtered = activeCategory==='전체'
       ? portfolioItems
       : portfolioItems.filter(i=>i.category===activeCategory);
-    if(items.length===0){
+    if(filtered.length===0){
       portfolioGrid.innerHTML = '<p class="portfolio-empty">아직 등록된 시공 사례가 없습니다.</p>';
+      portfolioLoadMoreBtn.style.display = 'none';
       return;
     }
+    const items = filtered.slice(0, visibleCount);
     portfolioGrid.innerHTML = items.map(i=>{
       const tag = i.link ? 'a' : 'div';
       const attrs = i.link ? ` href="${i.link}" target="_blank" rel="noopener"` : '';
+      const color = i.color || '#C99456';
+      const specMatch = i.desc.match(/[\(（]\s*규격[:：][^\)）]*[\)）]/);
+      const specText = specMatch ? specMatch[0].replace(/^[\(（]|[\)）]$/g, '').trim() : '';
+      const descMain = (specMatch ? i.desc.replace(specMatch[0], '') : i.desc)
+        .replace(/'([^']+)'/g, `<b class="model-tag">$1</b>`)
+        .replace(/\s+([.,])/g, '$1')
+        .trim();
       return `
       <${tag} class="portfolio-card"${attrs}>
-        <div class="portfolio-thumb" ${i.image ? '' : `style="background-color:${i.color || '#C99456'}"`}>
-          ${i.image ? `<img src="images/portfolio/${i.image}" alt="${i.title}" loading="lazy">` : ''}
+        <div class="portfolio-thumb" ${i.image ? '' : `style="background-color:${color}"`}>
+          ${i.image ? `<img src="images/portfolio/${i.image}" alt="${i.title}" loading="lazy" onerror="onPortfolioThumbError(this,'${color}')">` : ''}
           <span class="pill">${i.category}</span>
           ${i.link ? `<span class="portfolio-view">전체 사진 보기 →</span>` : ''}
         </div>
         <div class="portfolio-info">
           <h3>${i.title}</h3>
-          <p>${i.desc}</p>
+          <p>${descMain}</p>
+          ${specText ? `<span class="portfolio-spec">${specText}</span>` : ''}
         </div>
       </${tag}>
     `;
     }).join('');
+
+    if(filtered.length > visibleCount){
+      portfolioLoadMoreBtn.style.display = 'inline-flex';
+      portfolioLoadMoreBtn.textContent = `시공사례 더 보기 (${items.length}/${filtered.length})`;
+    } else {
+      portfolioLoadMoreBtn.style.display = 'none';
+    }
   }
+
+  portfolioLoadMoreBtn.addEventListener('click', ()=>{
+    visibleCount += PORTFOLIO_PAGE_SIZE;
+    renderPortfolio();
+  });
 
   function loadPortfolioFromSheet(){
     if(!PORTFOLIO_SHEET_CSV_URL){

@@ -313,25 +313,21 @@
     animation:orbBreathe3 9s ease-in-out infinite;
   }
   .hero-inner{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1.05fr;gap:60px;align-items:center;}
-  @keyframes heroIn{
-    from{opacity:0;transform:translateY(18px);}
-    to{opacity:1;transform:translateY(0);}
-  }
   .eyebrow{
     display:flex;align-items:center;gap:14px;
     font-size:13.5px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;
     color:var(--gold);margin-bottom:26px;
-    animation:heroIn .8s var(--ease) both;
   }
   .eyebrow::before{content:'';width:44px;height:1px;background:linear-gradient(90deg, transparent, var(--gold));display:inline-block;}
   .hero h1{
     font-size:clamp(38px,5.4vw,76px);
     font-weight:800;line-height:1.28;letter-spacing:-0.03em;
     margin:0 0 32px;
+    color:#fff;
     background:linear-gradient(160deg, #fff 20%, #f3e6d0 70%, #e8d2ac 100%);
-    -webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
     filter:drop-shadow(0 8px 26px rgba(0,0,0,0.4));
-    animation:heroIn .9s var(--ease) .18s both;
   }
   .hero h1 .h1-lead{
     display:block;font-size:0.42em;font-weight:400;font-style:italic;letter-spacing:0.01em;
@@ -341,8 +337,10 @@
   }
   .hero h1 em{
     font-style:normal;position:relative;display:inline-block;
+    color:var(--gold);
     background:linear-gradient(160deg, #F3D9A8 10%, var(--gold) 60%, #B8863F 100%);
-    -webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
   }
   .hero h1 em::before{
     content:'';position:absolute;left:-8px;right:-8px;top:-10px;bottom:-6px;z-index:-1;
@@ -358,10 +356,9 @@
   .tagline{
     font-family:'Noto Serif KR',serif;font-weight:400;font-size:24px;
     color:rgba(255,255,255,0.9);margin:0 0 20px;letter-spacing:0.08em;
-    animation:heroIn .8s var(--ease) .06s both;
   }
-  .hero p.lede{font-size:17.5px;color:rgba(255,255,255,0.72);max-width:44ch;margin:0 0 44px;line-height:1.85;animation:heroIn .8s var(--ease) .32s both;}
-  .hero-ctas{animation:heroIn .8s var(--ease) .44s both;}
+  .hero p.lede{font-size:17.5px;color:rgba(255,255,255,0.72);max-width:44ch;margin:0 0 44px;line-height:1.85;}
+  .hero-ctas{}
 
   .hero-visual{position:relative;}
   .hero-frame{
@@ -2269,4 +2266,111 @@
     { name:"이건", catalog:'', links:[
       { label:"시공사례", no:93 }
     ]},
-    { name:"수입원목마루(성원외)", catalog:'', li
+    { name:"수입원목마루(성원외)", catalog:'', links:[
+      { label:"제품소개", no:95 }, { label:"시공사례", no:81 }
+    ]},
+    { name:"데코타일·장판 외 기타", catalog:'', links:[
+      { label:"시공사례", no:87 }
+    ]},
+  ];
+
+  const BRAND_POSTS_SHEET_CSV_URL = ""; 
+
+  let brandPosts = {}; 
+
+  function brandPostsKey(brand, label){ return `${brand}|${label}`; }
+
+  function renderBrandGrid(){
+    const brandGrid = document.getElementById('brandGrid');
+    if(!brandGrid) return;
+    brandGrid.innerHTML = brands.map((b, bi) => `
+      <div class="brand-card" id="brand-${bi+1}"${b.color ? ` style="--bc:${b.color}"` : ''}>
+        <span class="ghost" aria-hidden="true">${b.name.charAt(0)}</span>
+        <h3>${b.name}</h3>
+        <div class="brand-links">
+          ${b.links.map((l, li) => {
+            const key = brandPostsKey(b.name, l.label);
+            const posts = brandPosts[key];
+            const fallbackUrl = `${brandBase}${l.no}`;
+            const uid = `bl-${bi}-${li}`;
+            if(posts && posts.length){
+              return `
+                <button type="button" class="brand-toggle" data-uid="${uid}">
+                  ${l.label}
+                  <span style="display:flex;align-items:center;gap:8px;">
+                    <span class="arrow">→</span>
+                    <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+                  </span>
+                </button>
+                <div class="brand-sublist" id="${uid}">
+                  ${posts.map(p => `<a href="${p.url}" target="_blank" rel="noopener">${p.title}</a>`).join('')}
+                </div>
+              `;
+            }
+            return `<a href="${fallbackUrl}" target="_blank" rel="noopener" class="brand-toggle">${l.label}<span class="arrow">→</span></a>`;
+          }).join('')}
+        </div>
+        ${b.catalog ? `<a href="catalogs/${b.catalog}" download class="brand-catalog-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+          카탈로그 다운로드
+        </a>` : ''}
+      </div>
+    `).join('');
+
+    brandGrid.querySelectorAll('.brand-toggle[data-uid]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const uid = btn.dataset.uid;
+        const panel = document.getElementById(uid);
+        if(!panel) return;
+        panel.classList.toggle('open');
+        btn.classList.toggle('open');
+      });
+    });
+  }
+
+  function loadBrandPostsFromSheet(){
+    if(!BRAND_POSTS_SHEET_CSV_URL){
+      renderBrandGrid();
+      return;
+    }
+    Papa.parse(BRAND_POSTS_SHEET_CSV_URL, {
+      download:true,
+      header:true,
+      skipEmptyLines:true,
+      complete: function(results){
+        const map = {};
+        results.data.forEach(r => {
+          const brand = (r['브랜드']||'').trim();
+          const label = (r['구분']||'').trim();
+          const title = (r['게시글제목']||'').trim();
+          const url = (r['링크']||'').trim();
+          if(!brand || !label || !title || !url) return;
+          const key = brandPostsKey(brand, label);
+          if(!map[key]) map[key] = [];
+          map[key].push({ title, url });
+        });
+        brandPosts = map;
+        renderBrandGrid();
+      },
+      error: function(){
+        renderBrandGrid();
+      }
+    });
+  }
+
+  loadBrandPostsFromSheet();
+
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        entry.target.classList.add('in');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+  revealEls.forEach(el=>io.observe(el));
+</script>
+
+</body>
+</html>

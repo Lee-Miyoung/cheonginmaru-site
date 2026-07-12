@@ -121,6 +121,17 @@
   .wrap{max-width:1280px;margin:0 auto;padding:0 40px;}
   ::selection{background:var(--copper);color:#fff;}
 
+  /* [접근성 안전장치] 기기의 "애니메이션 줄이기" 설정이 켜져 있어도
+     텍스트가 투명(0%) 상태로 멈추지 않도록 즉시 종료 상태로 처리 */
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration:0.01ms !important;
+      animation-delay:0ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:0.01ms !important;
+    }
+  }
+
   .mo-text { display: none; }
 
   /* ---------- scroll reveal ---------- */
@@ -2258,19 +2269,4 @@
     { name:"이건", catalog:'', links:[
       { label:"시공사례", no:93 }
     ]},
-    { name:"수입원목마루(성원외)", catalog:'', links:[
-      { label:"제품소개", no:95 }, { label:"시공사례", no:81 }
-    ]},
-    { name:"데코타일·장판 외 기타", catalog:'', links:[
-      { label:"시공사례", no:87 }
-    ]},
-  ];
-
-  const BRAND_POSTS_SHEET_CSV_URL = ""; 
-
-  let brandPosts = {}; 
-
-  function brandPostsKey(brand, label){ return `${brand}|${label}`; }
-
-  function renderBrandGrid(){
-    const brand
+    { name:"수입원목마루(성원외)", catalog:'', li

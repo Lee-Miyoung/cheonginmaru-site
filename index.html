@@ -524,12 +524,15 @@
   .catalog-item{
     display:flex;align-items:center;justify-content:space-between;gap:8px;
     border-left:3px solid rgba(18,16,14,0.1);
+    border-bottom:1px solid rgba(18,16,14,0.05);
     transition:all .2s var(--ease);
   }
+  .catalog-item:last-child{border-bottom:none;}
   .catalog-title-link,
   .catalog-title-link.no-link{
-    display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;
-    padding:9px 6px 9px 16px;line-height:1.4;
+    display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;
+    min-width:0;flex:1;text-align:left;
+    padding:11px 6px 11px 16px;line-height:1.35;
   }
 
   /* 소개링크가 있는 항목: 브랜드 색으로 확실히 강조 + 작은 배지 */
@@ -543,8 +546,8 @@
   .catalog-title-link.no-link{cursor:default;}
   .catalog-title-link.no-link .catalog-item-title{color:var(--ink-soft);}
 
-  .catalog-item-title{font-size:13.5px;font-weight:600;transition:color .2s var(--ease);}
-  .catalog-item-sub{font-size:11.5px;color:var(--ink-faint);}
+  .catalog-item-title{font-size:13.5px;font-weight:600;text-align:left;transition:color .2s var(--ease);}
+  .catalog-item-sub{font-size:11.5px;color:var(--ink-faint);text-align:left;}
 
   .catalog-download-icon{
     flex-shrink:0;display:flex;align-items:center;justify-content:center;
@@ -2380,7 +2383,7 @@
                       : `<span class="catalog-title-link no-link">${titleInner}</span>`;
                     const fileBlock = c.file
                       ? `<a href="catalogs/${encodeURIComponent(c.file)}" download class="catalog-download-icon" title="카탈로그 PDF 다운로드" aria-label="카탈로그 PDF 다운로드">
-                           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M11 3a1 1 0 012 0v8.09l2.3-2.3a1 1 0 111.4 1.42l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.42l2.3 2.3V3z"/><path d="M5 18a1 1 0 011 1v.5a.5.5 0 00.5.5h11a.5.5 0 00.5-.5V19a1 1 0 112 0v.5A2.5 2.5 0 0117.5 22h-11A2.5 2.5 0 014 19.5V19a1 1 0 011-1z"/></svg>
+                           <svg width="17" height="17" viewBox="0 0 24 24" fill="#ffffff"><path d="M11 3a1 1 0 012 0v8.09l2.3-2.3a1 1 0 111.4 1.42l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.42l2.3 2.3V3z"/><path d="M5 18a1 1 0 011 1v.5a.5.5 0 00.5.5h11a.5.5 0 00.5-.5V19a1 1 0 112 0v.5A2.5 2.5 0 0117.5 22h-11A2.5 2.5 0 014 19.5V19a1 1 0 011-1z"/></svg>
                          </a>`
                       : `<span class="catalog-pending">준비중</span>`;
                     return `<div class="catalog-item${c.introLink ? ' has-link-item' : ''}">${titleBlock}${fileBlock}</div>`;

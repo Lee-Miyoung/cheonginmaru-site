@@ -521,6 +521,10 @@
     position:relative;z-index:1;
     display:grid;grid-template-columns:1.05fr 0.95fr;gap:64px;align-items:start;
   }
+  .about-copy{
+    position:sticky;
+    top:110px;
+  }
   .about-copy .k-line{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
   .about-copy .k-line span{
     font-size:14.5px;font-weight:700;color:var(--copper);letter-spacing:.22em;text-transform:uppercase;
@@ -1079,6 +1083,7 @@
      오른쪽 칼럼(협력사 카드 포함)이 길어져도 좌우 여백이 어긋나지 않게 함 */
   @media (max-width:1500px){
     .about-grid{grid-template-columns:1fr !important; gap:44px !important;}
+    .about-copy{position:static !important; top:auto !important;}
   }
   @media (max-width:1280px){ 
     .wrap{padding:0 32px;}
@@ -1396,7 +1401,7 @@
           <b>주요 시공 실적</b>
           <p><strong>인천국제공항 · 시립박물관 · 독립기념관</strong> 등 주요 공공기관을 비롯해 각종 드라마세트, 주민센터, 초·중·고등학교, 병원, 전시장 및 다양한 상업 시설 및 주거공간 시공 실적 보유</p>
         </div>
-        
+
         <div class="partners-card">
           <span class="partners-eyebrow">PARTNERS</span>
           <h4>건축·인테리어 업체 전용 협력문의</h4>

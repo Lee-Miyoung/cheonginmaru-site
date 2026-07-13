@@ -538,12 +538,6 @@
   .catalog-title-link.has-link .catalog-item-title{color:var(--bc);font-weight:700;}
   .catalog-title-link.has-link:hover{background:color-mix(in srgb, var(--bc) 10%, transparent);padding-left:18px;}
   .catalog-title-link.has-link:hover .catalog-item-title{text-decoration:underline;}
-  .catalog-link-badge{
-    align-self:flex-start;margin-top:3px;
-    font-size:10px;font-weight:700;color:#fff;
-    background:var(--bc);padding:2px 8px;border-radius:20px;
-    letter-spacing:.02em;
-  }
 
   /* 소개링크가 없는 항목: 진한 무채색으로 처리 (연하게 죽이지 않음) */
   .catalog-title-link.no-link{cursor:default;}
@@ -2382,13 +2376,11 @@
                       ${c.label ? `<span class="catalog-item-sub">${c.label}</span>` : ''}
                     `;
                     const titleBlock = c.introLink
-                      ? `<a href="${c.introLink}" target="_blank" rel="noopener" class="catalog-title-link has-link">${titleInner}
-                           <span class="catalog-link-badge">블로그 보기</span>
-                         </a>`
+                      ? `<a href="${c.introLink}" target="_blank" rel="noopener" class="catalog-title-link has-link">${titleInner}</a>`
                       : `<span class="catalog-title-link no-link">${titleInner}</span>`;
                     const fileBlock = c.file
                       ? `<a href="catalogs/${encodeURIComponent(c.file)}" download class="catalog-download-icon" title="카탈로그 PDF 다운로드" aria-label="카탈로그 PDF 다운로드">
-                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M5 19h14"/></svg>
+                           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M11 3a1 1 0 012 0v8.09l2.3-2.3a1 1 0 111.4 1.42l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.42l2.3 2.3V3z"/><path d="M5 18a1 1 0 011 1v.5a.5.5 0 00.5.5h11a.5.5 0 00.5-.5V19a1 1 0 112 0v.5A2.5 2.5 0 0117.5 22h-11A2.5 2.5 0 014 19.5V19a1 1 0 011-1z"/></svg>
                          </a>`
                       : `<span class="catalog-pending">준비중</span>`;
                     return `<div class="catalog-item${c.introLink ? ' has-link-item' : ''}">${titleBlock}${fileBlock}</div>`;
@@ -2483,7 +2475,7 @@
           const productsDesc = (row[3]||'').trim();
           const file = (row[4]||'').trim();
           const introLink = (row[5]||'').trim();
-          if(!brand || !targetLabel || !file) return;
+          if(!brand || !targetLabel) return;
           if(!byBrand[brand]) byBrand[brand] = {};
           if(!byBrand[brand][targetLabel]) byBrand[brand][targetLabel] = [];
           byBrand[brand][targetLabel].push({ label:category, file, productsDesc, introLink });

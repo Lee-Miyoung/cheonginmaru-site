@@ -518,16 +518,32 @@
     border-left:2px solid rgba(18,16,14,0.08);
     transition:all .2s var(--ease);
   }
-  .catalog-item:hover{border-left-color:var(--bc);background:#fff;}
   .catalog-title-link,
-  .catalog-item-text-plain{
+  .catalog-title-link.no-link{
     display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;
     padding:9px 6px 9px 16px;line-height:1.4;
   }
-  .catalog-title-link:hover{padding-left:16px;}
-  .catalog-item-title{font-size:13px;font-weight:600;color:var(--ink-soft);}
-  .catalog-title-link:hover .catalog-item-title{color:var(--bc);text-decoration:underline;}
+
+  /* 소개링크가 있는 항목: 브랜드 색으로 확실히 강조 + 작은 배지 */
+  .catalog-item:has(.has-link){border-left-color:color-mix(in srgb, var(--bc) 55%, transparent);}
+  .catalog-title-link.has-link{cursor:pointer;}
+  .catalog-title-link.has-link .catalog-item-title{color:var(--bc);}
+  .catalog-title-link.has-link:hover{background:color-mix(in srgb, var(--bc) 6%, transparent);padding-left:18px;}
+  .catalog-title-link.has-link:hover .catalog-item-title{text-decoration:underline;}
+  .catalog-link-badge{
+    align-self:flex-start;margin-top:3px;
+    font-size:10px;font-weight:700;color:#fff;
+    background:var(--bc);padding:2px 8px;border-radius:20px;
+    letter-spacing:.02em;
+  }
+
+  /* 소개링크가 없는 항목: 클릭 불가능한 느낌으로 무채색 처리 */
+  .catalog-title-link.no-link{cursor:default;opacity:0.65;}
+  .catalog-title-link.no-link .catalog-item-title{color:var(--ink-faint);}
+
+  .catalog-item-title{font-size:13px;font-weight:600;transition:color .2s var(--ease);}
   .catalog-item-sub{font-size:11px;color:var(--ink-faint);opacity:0.8;}
+
   .catalog-download-icon{
     flex-shrink:0;display:flex;align-items:center;justify-content:center;
     width:30px;height:30px;border-radius:50%;margin-right:10px;
@@ -2348,20 +2364,22 @@
                 </button>
                 <div class="brand-sublist catalog-sublist" id="${uid}">
                   ${linkCatalogs.map(c => {
-                    const introUrl = c.introLink || fallbackUrl;
-                    return `
-                    <div class="catalog-item">
-                      <a href="${introUrl}" target="_blank" rel="noopener" class="catalog-title-link">
-                        <span class="catalog-item-title">${c.productsDesc || c.label || '제품보기'}</span>
-                        ${c.label ? `<span class="catalog-item-sub">${c.label}</span>` : ''}
-                      </a>
-                      ${c.file ? `
-                        <a href="catalogs/${encodeURIComponent(c.file)}" download class="catalog-download-icon" title="카탈로그 PDF 다운로드" aria-label="카탈로그 PDF 다운로드">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
-                        </a>
-                      ` : `<span class="catalog-pending">준비중</span>`}
-                    </div>
-                  `;}).join('')}
+                    const titleInner = `
+                      <span class="catalog-item-title">${c.productsDesc || c.label || '제품'}</span>
+                      ${c.label ? `<span class="catalog-item-sub">${c.label}</span>` : ''}
+                    `;
+                    const titleBlock = c.introLink
+                      ? `<a href="${c.introLink}" target="_blank" rel="noopener" class="catalog-title-link has-link">${titleInner}
+                           <span class="catalog-link-badge">블로그 보기</span>
+                         </a>`
+                      : `<span class="catalog-title-link no-link">${titleInner}</span>`;
+                    const fileBlock = c.file
+                      ? `<a href="catalogs/${encodeURIComponent(c.file)}" download class="catalog-download-icon" title="카탈로그 PDF 다운로드" aria-label="카탈로그 PDF 다운로드">
+                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+                         </a>`
+                      : `<span class="catalog-pending">준비중</span>`;
+                    return `<div class="catalog-item">${titleBlock}${fileBlock}</div>`;
+                  }).join('')}
                 </div>
               `;
             }

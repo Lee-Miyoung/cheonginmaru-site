@@ -647,6 +647,13 @@
     transition:gap .25s var(--ease);
   }
   .partners-apply-link:hover{gap:10px;}
+  .partners-card-below{
+    max-width:920px;margin:40px auto 0;
+  }
+  .partners-groups-below{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px 40px;
+  }
+  .partners-groups-below .partners-group{margin-bottom:0;}
 
   /* ---------- SERVICES ---------- */
   .service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;}
@@ -796,6 +803,7 @@
     display:inline-block;padding:5px 12px;
     background:var(--bg);border:1px solid rgba(18,16,14,0.08);border-radius:20px;
     font-size:12px;font-weight:600;color:var(--ink-faint);letter-spacing:.01em;
+    max-width:100%;overflow-wrap:break-word;word-break:break-word;white-space:normal;
   }
   .portfolio-empty{color:var(--ink-soft);font-size:16px;padding:80px 0;text-align:center;grid-column:span 3;}
   .portfolio-pagination{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:48px;flex-wrap:wrap;}
@@ -1185,6 +1193,8 @@
       font-size: clamp(19px, 5.5vw, 22px);
       line-height: 1.4;
     }
+    .partners-card-below{margin-top:28px;}
+    .partners-groups-below{grid-template-columns:1fr;gap:24px;}
     .clients-note {
       padding: 26px 20px 24px;
     }
@@ -1400,55 +1410,57 @@
           <b>주요 시공 실적</b>
           <p><strong>인천국제공항 · 시립박물관 · 독립기념관</strong> 등 주요 공공기관을 비롯해 각종 드라마세트, 주민센터, 초·중·고등학교, 병원, 전시장 및 다양한 상업 시설 및 주거공간 시공 실적 보유</p>
         </div>
+      </div>
+    </div>
 
-        <div class="partners-card">
-          <span class="partners-eyebrow">PARTNERS</span>
-          <h4>건축·인테리어 업체 전용 협력문의</h4>
-          <p class="partners-intro">믿고 맡길 수 있는 시공 파트너를 찾는 건축·인테리어 업체들이 청인마루를 먼저 찾습니다. 정직한 시공과 책임감 있는 사후관리로 오랜 협력관계를 이어오고 있습니다.</p>
-          <div id="partnersGroups">
-            <div class="partners-group">
-              <span class="partners-label">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
-                건축·하우징
-              </span>
-              <div class="partners-grid">
-                <div class="partner-chip"><span class="partner-avatar">공</span>공간기록</div>
-                <div class="partner-chip"><span class="partner-avatar">하</span>하우징팩토리</div>
-                <div class="partner-chip"><span class="partner-avatar">더</span>더원하우징</div>
-                <div class="partner-chip"><span class="partner-avatar">더</span>더존하우징</div>
-                <div class="partner-chip"><span class="partner-avatar">윤</span>윤성하우징</div>
-                <div class="partner-chip"><span class="partner-avatar">청</span>청우종합건설</div>
-                <div class="partner-chip"><span class="partner-avatar">월</span>월메이드건설</div>
-                <div class="partner-chip"><span class="partner-avatar">로</span>로하스건축</div>
-                <div class="partner-chip"><span class="partner-avatar">미</span>미래하우징</div>
-                <div class="partner-chip"><span class="partner-avatar">아</span>아키웍스</div>
-                <div class="partner-chip"><span class="partner-avatar">프</span>프랜디홈</div>
-                <div class="partner-chip partner-chip-more">외 다수</div>
-              </div>
-            </div>
-            <div class="partners-group">
-              <span class="partners-label">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 100 18c1 0 2-.5 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1 1-2 2-2h1.5A4.5 4.5 0 0021 10 9 9 0 0012 3z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="8" r="1"/><circle cx="16.5" cy="10.5" r="1"/></svg>
-                인테리어
-              </span>
-              <div class="partners-grid">
-                <div class="partner-chip"><span class="partner-avatar">포</span>포바인인테리어</div>
-                <div class="partner-chip"><span class="partner-avatar">엠</span>엠스디자인</div>
-                <div class="partner-chip"><span class="partner-avatar">디</span>디어홈</div>
-                <div class="partner-chip"><span class="partner-avatar">맥</span>맥디자인</div>
-                <div class="partner-chip"><span class="partner-avatar">2</span>2B디자인</div>
-                <div class="partner-chip"><span class="partner-avatar">탑</span>탑디자인</div>
-                <div class="partner-chip"><span class="partner-avatar">스</span>스튜디오 담담</div>
-                <div class="partner-chip"><span class="partner-avatar">새</span>새로고침</div>
-                <div class="partner-chip"><span class="partner-avatar">유</span>유쾌한녀석들</div>
-                <div class="partner-chip"><span class="partner-avatar">켈</span>켈리디자인</div>
-                <div class="partner-chip"><span class="partner-avatar">이</span>이가인테리어</div>
-                <div class="partner-chip partner-chip-more">외 다수</div>
-              </div>
+    <div class="wrap">
+      <div class="partners-card partners-card-below">
+        <span class="partners-eyebrow">PARTNERS</span>
+        <h4>건축·인테리어 업체 전용 협력문의</h4>
+        <p class="partners-intro">믿고 맡길 수 있는 시공 파트너를 찾는 건축·인테리어 업체들이 청인마루를 먼저 찾습니다. 정직한 시공과 책임감 있는 사후관리로 오랜 협력관계를 이어오고 있습니다.</p>
+        <div id="partnersGroups" class="partners-groups-below">
+          <div class="partners-group">
+            <span class="partners-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+              건축·하우징
+            </span>
+            <div class="partners-grid">
+              <div class="partner-chip"><span class="partner-avatar">공</span>공간기록</div>
+              <div class="partner-chip"><span class="partner-avatar">하</span>하우징팩토리</div>
+              <div class="partner-chip"><span class="partner-avatar">더</span>더원하우징</div>
+              <div class="partner-chip"><span class="partner-avatar">더</span>더존하우징</div>
+              <div class="partner-chip"><span class="partner-avatar">윤</span>윤성하우징</div>
+              <div class="partner-chip"><span class="partner-avatar">청</span>청우종합건설</div>
+              <div class="partner-chip"><span class="partner-avatar">월</span>월메이드건설</div>
+              <div class="partner-chip"><span class="partner-avatar">로</span>로하스건축</div>
+              <div class="partner-chip"><span class="partner-avatar">미</span>미래하우징</div>
+              <div class="partner-chip"><span class="partner-avatar">아</span>아키웍스</div>
+              <div class="partner-chip"><span class="partner-avatar">프</span>프랜디홈</div>
+              <div class="partner-chip partner-chip-more">외 다수</div>
             </div>
           </div>
-          <a href="#partner-apply" class="partners-apply-link">건축·인테리어 업체이신가요? 문의하기 →</a>
+          <div class="partners-group">
+            <span class="partners-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 100 18c1 0 2-.5 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1 1-2 2-2h1.5A4.5 4.5 0 0021 10 9 9 0 0012 3z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="8" r="1"/><circle cx="16.5" cy="10.5" r="1"/></svg>
+              인테리어
+            </span>
+            <div class="partners-grid">
+              <div class="partner-chip"><span class="partner-avatar">포</span>포바인인테리어</div>
+              <div class="partner-chip"><span class="partner-avatar">엠</span>엠스디자인</div>
+              <div class="partner-chip"><span class="partner-avatar">디</span>디어홈</div>
+              <div class="partner-chip"><span class="partner-avatar">맥</span>맥디자인</div>
+              <div class="partner-chip"><span class="partner-avatar">2</span>2B디자인</div>
+              <div class="partner-chip"><span class="partner-avatar">탑</span>탑디자인</div>
+              <div class="partner-chip"><span class="partner-avatar">스</span>스튜디오 담담</div>
+              <div class="partner-chip"><span class="partner-avatar">새</span>새로고침</div>
+              <div class="partner-chip"><span class="partner-avatar">유</span>유쾌한녀석들</div>
+              <div class="partner-chip"><span class="partner-avatar">켈</span>켈리디자인</div>
+              <div class="partner-chip"><span class="partner-avatar">이</span>이가인테리어</div>
+              <div class="partner-chip partner-chip-more">외 다수</div>
+            </div>
+          </div>
         </div>
+        <a href="#partner-apply" class="partners-apply-link">건축·인테리어 업체이신가요? 문의하기 →</a>
       </div>
     </div>
   </section>

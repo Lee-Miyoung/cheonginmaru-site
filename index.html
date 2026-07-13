@@ -581,7 +581,7 @@
     margin-right:10px;white-space:nowrap;border:1px dashed rgba(18,16,14,0.15);
   }
 
-  /* ---------- ABOUT (명세 최적화 완료 빌드) ---------- */
+  /* ---------- ABOUT ---------- */
   .about{background:var(--surface);position:relative;overflow:hidden;}
   .about-head{max-width:920px;}
   .about-head h2{margin-bottom: 28px;}
@@ -597,9 +597,9 @@
   .about-head-flex p{
     flex:1;
     margin:0;
-    font-size: 18px !important; /* 명세에 맞춘 글자 크기 스케일 업 */
-    line-height: 1.95 !important; /* 황금 비율 행간 */
-    letter-spacing: -0.015em !important; /* 최적 자간 확보 */
+    font-size: 18px !important;
+    line-height: 1.95 !important;
+    letter-spacing: -0.015em !important;
     color: var(--ink-soft);
   }
 
@@ -665,9 +665,8 @@
     100% { r: 20px; opacity: 0; }
   }
   
-  /* 전국 시공 네트워크 인프라 16px 스케일 업 */
   .korea-map-label{
-    font-size:16px !important; /* 명세 반영 확장 */
+    font-size:16px !important;
     font-weight:800 !important;
     color:var(--copper-deep);
     letter-spacing:0.04em !important;
@@ -1508,7 +1507,7 @@
         <p class="k">ABOUT</p>
         <h2>한 평의 바닥에도<br>사는 사람의 가치가 담깁니다</h2>
         <div class="about-head-flex">
-          <p><b>공간의 완성도는 가장 마지막에 닿는 마감의 차이에서 결정됩니다.</b> 청인마루는 단순히 자재를 깔아내는 시공을 넘어, <b>공간 전체의 조화와 사는 사람의 라이프스타일을 고려한 맞춤형 시공</b>을 지향합니다. 인천 송도 본점 전시장을 기반으로 <b><span class="hl-nationwide">전국 각지</span></b>의 주거 및 상업 공간을 안정적으로 시공해 왔으며, <b>20년 노하우의 철저한 자재 추천, 정밀 현장 실측, 완벽한 책임 시공 관리 시스템</b>을 통해 <b>고객이 신뢰할 수 있는 가치 있는 바닥</b>을 구현합니다.</p>
+          <p><b>공간의 완성도는 가장 마지막에 닿는 마감의 차이에서 결정됩니다.</b> 청인마루는 단순히 자재를 깔아내는 시공을 넘어, <b>공간 전체의 조화와 사는 사람의 라이프스타일을 고려한 맞춤형 시공</b>을 지향합니다. 인천 송도 본점 전시장을 기반으로 <b><span class="hl-nationwide">전국 각지</span></b>의 주거 및 상업 공간을 안정적으로 시공해 왔으며, <b>20년 노하우의 철저한 자재 추천, 정밀 현장 실측, 완벽한 책임 시공 관리 시스템</b>을 통해 <b>고객이 신뢰할 수 있는 완성도 높은 바닥</b>을 구현합니다.</p>
           
           <!-- 전국 시공 네트워크 고해상도 프리미엄 지도 인프라 탑재 -->
           <div class="korea-map-wrap" aria-hidden="true">
@@ -1533,7 +1532,7 @@
               <path d="M 195 95 C 198 95, 200 98, 198 100 C 195 102, 192 100, 195 95 Z" class="km-island"/>
               <path d="M 212 105 C 214 105, 215 107, 213 108 C 211 109, 210 108, 212 105 Z" class="km-island"/>
 
-              <!-- 확산 네트워크 유동 선로 (강원도 노선 포함) -->
+              <!-- 확산 네트워크 유동 선로 -->
               <path d="M 74 62 L 86 56" class="network-line" />
               <path d="M 74 62 Q 110 55 145 65" class="network-line" />
               <path d="M 74 62 Q 85 90 105 120" class="network-line" />
@@ -1542,7 +1541,7 @@
               <path d="M 74 62 Q 110 120 152 195" class="network-line" />
               <path d="M 74 62 Q 60 160 80 270" class="network-line" />
 
-              <!-- 거점별 노드 (강원도 거점 인프라 구체화) -->
+              <!-- 거점별 노드 -->
               <g>
                 <circle cx="74" cy="62" r="0" class="km-ping-circle" style="animation-delay: 0s;" />
                 <circle cx="74" cy="62" r="6" class="km-dot-main" />
@@ -2284,13 +2283,13 @@
   }
 
   function loadPortfolioFromSheet(){
-    if(!PORTFOLIO_SHEET_URL){
+    if(!PORTFOLIO_SHEET_CSV_URL){
       renderFilters();
       renderPortfolio();
       return;
     }
     portfolioGrid.innerHTML = '<p class="portfolio-loading">시공 사례를 불러오는 중...</p>';
-    Papa.parse(PORTFOLIO_SHEET_URL, {
+    Papa.parse(PORTFOLIO_SHEET_CSV_URL, {
       download:true,
       header:true,
       skipEmptyLines:true,
@@ -2318,7 +2317,7 @@
 
   loadPortfolioFromSheet();
 
-  const PARTNERS_SHEET_URL = ""; 
+  const PARTNERS_SHEET_CSV_URL = ""; 
 
   function partnerIconFor(category){
     if(category.includes('건축') || category.includes('하우징') || category.includes('건설')){
@@ -2349,8 +2348,8 @@
   }
 
   function loadPartnersFromSheet(){
-    if(!PARTNERS_SHEET_URL) return; 
-    Papa.parse(PARTNERS_SHEET_URL, {
+    if(!PARTNERS_SHEET_CSV_URL) return; 
+    Papa.parse(PARTNERS_SHEET_CSV_URL, {
       download:true,
       header:true,
       skipEmptyLines:true,
@@ -2485,7 +2484,7 @@
     ]},
   ];
 
-  const BRAND_POSTS_SHEET_URL = ""; 
+  const BRAND_POSTS_SHEET_CSV_URL = ""; 
 
   let brandPosts = {}; 
 
@@ -2575,11 +2574,11 @@
   }
 
   function loadBrandPostsFromSheet(){
-    if(!BRAND_POSTS_SHEET_URL){
+    if(!BRAND_POSTS_SHEET_CSV_URL){
       loadCatalogFromSheet();
       return;
     }
-    Papa.parse(BRAND_POSTS_SHEET_URL, {
+    Papa.parse(BRAND_POSTS_SHEET_CSV_URL, {
       download:true,
       header:true,
       skipEmptyLines:true,
@@ -2589,7 +2588,7 @@
           const brand = (r['브랜드']||'').trim();
           const label = (r['구분']||'').trim();
           const title = (r['게시글제목']||'').trim();
-          const url = (r['LINK']||'').trim();
+          const url = (r['링크']||'').trim();
           if(!brand || !label || !title || !url) return;
           const key = brandPostsKey(brand, label);
           if(!map[key]) map[key] = [];

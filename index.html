@@ -515,7 +515,7 @@
   .catalog-sublist.open{max-height:340px;}
   .catalog-item{
     display:flex;align-items:center;justify-content:space-between;gap:8px;
-    border-left:2px solid rgba(18,16,14,0.08);
+    border-left:3px solid rgba(18,16,14,0.1);
     transition:all .2s var(--ease);
   }
   .catalog-title-link,
@@ -525,10 +525,10 @@
   }
 
   /* 소개링크가 있는 항목: 브랜드 색으로 확실히 강조 + 작은 배지 */
-  .catalog-item:has(.has-link){border-left-color:color-mix(in srgb, var(--bc) 55%, transparent);}
+  .catalog-item.has-link-item{border-left-color:var(--bc);background:color-mix(in srgb, var(--bc) 4%, transparent);}
   .catalog-title-link.has-link{cursor:pointer;}
-  .catalog-title-link.has-link .catalog-item-title{color:var(--bc);}
-  .catalog-title-link.has-link:hover{background:color-mix(in srgb, var(--bc) 6%, transparent);padding-left:18px;}
+  .catalog-title-link.has-link .catalog-item-title{color:var(--bc);font-weight:700;}
+  .catalog-title-link.has-link:hover{background:color-mix(in srgb, var(--bc) 10%, transparent);padding-left:18px;}
   .catalog-title-link.has-link:hover .catalog-item-title{text-decoration:underline;}
   .catalog-link-badge{
     align-self:flex-start;margin-top:3px;
@@ -537,32 +537,33 @@
     letter-spacing:.02em;
   }
 
-  /* 소개링크가 없는 항목: 클릭 불가능한 느낌으로 무채색 처리 */
-  .catalog-title-link.no-link{cursor:default;opacity:0.65;}
-  .catalog-title-link.no-link .catalog-item-title{color:var(--ink-faint);}
+  /* 소개링크가 없는 항목: 진한 무채색으로 처리 (연하게 죽이지 않음) */
+  .catalog-title-link.no-link{cursor:default;}
+  .catalog-title-link.no-link .catalog-item-title{color:var(--ink-soft);}
 
-  .catalog-item-title{font-size:13px;font-weight:600;transition:color .2s var(--ease);}
-  .catalog-item-sub{font-size:11px;color:var(--ink-faint);opacity:0.8;}
+  .catalog-item-title{font-size:13.5px;font-weight:600;transition:color .2s var(--ease);}
+  .catalog-item-sub{font-size:11.5px;color:var(--ink-faint);}
 
   .catalog-download-icon{
-    flex-shrink:0;display:flex;align-items:center;justify-content:center;
-    width:30px;height:30px;border-radius:50%;margin-right:10px;
-    color:var(--bc);background:color-mix(in srgb, var(--bc) 12%, #fff);
-    border:1px solid color-mix(in srgb, var(--bc) 22%, transparent);
+    flex-shrink:0;display:flex;align-items:center;gap:5px;
+    padding:7px 12px 7px 10px;border-radius:20px;margin-right:10px;
+    font-size:11.5px;font-weight:700;white-space:nowrap;
+    color:#fff;background:var(--bc);border:1px solid var(--bc);
+    box-shadow:0 4px 10px -4px color-mix(in srgb, var(--bc) 60%, transparent);
     transition:all .25s var(--ease);
   }
-  .catalog-download-icon svg{transition:transform .25s var(--ease);}
+  .catalog-download-icon svg{transition:transform .25s var(--ease);flex-shrink:0;}
   .catalog-download-icon:hover{
-    background:var(--bc);color:#fff;border-color:var(--bc);
-    transform:translateY(-2px) scale(1.06);
-    box-shadow:0 8px 16px -6px color-mix(in srgb, var(--bc) 60%, transparent);
+    background:var(--copper-deep);border-color:var(--copper-deep);
+    transform:translateY(-2px);
+    box-shadow:0 8px 16px -6px color-mix(in srgb, var(--bc) 70%, transparent);
   }
   .catalog-download-icon:hover svg{transform:translateY(1px);}
   .catalog-download-icon:active{transform:scale(0.95);}
   .catalog-pending{
-    flex-shrink:0;font-size:10.5px;font-weight:700;color:var(--ink-faint);
-    background:rgba(18,16,14,0.05);padding:5px 10px;border-radius:20px;
-    margin-right:10px;white-space:nowrap;
+    flex-shrink:0;font-size:11px;font-weight:700;color:var(--ink-faint);
+    background:rgba(18,16,14,0.06);padding:6px 12px;border-radius:20px;
+    margin-right:10px;white-space:nowrap;border:1px dashed rgba(18,16,14,0.15);
   }
 
   /* ---------- ABOUT ---------- */
@@ -2376,9 +2377,10 @@
                     const fileBlock = c.file
                       ? `<a href="catalogs/${encodeURIComponent(c.file)}" download class="catalog-download-icon" title="카탈로그 PDF 다운로드" aria-label="카탈로그 PDF 다운로드">
                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+                           <span class="catalog-download-label">다운로드</span>
                          </a>`
                       : `<span class="catalog-pending">준비중</span>`;
-                    return `<div class="catalog-item">${titleBlock}${fileBlock}</div>`;
+                    return `<div class="catalog-item${c.introLink ? ' has-link-item' : ''}">${titleBlock}${fileBlock}</div>`;
                   }).join('')}
                 </div>
               `;

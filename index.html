@@ -2001,7 +2001,7 @@
       const tag = i.link ? 'a' : 'div';
       const attrs = i.link ? ` href="${i.link}" target="_blank" rel="noopener"` : '';
       const color = i.color || '#C99456';
-      const specMatches = i.desc.match(/[\(（]\s*규격[:：][^\)）]*[\)）]/g) || [];
+      const specMatches = i.desc.match(/[\(（][^()（）]*\d[\d,.]*\s*[×x\*]\s*[\d,.]+(?:\s*[×x\*]\s*[\d,.]+)?[^()（）]*[\)）]/gi) || [];
       let descMain = i.desc;
       specMatches.forEach(m => { descMain = descMain.replace(m, ''); });
       descMain = highlightPortfolioDesc(descMain.replace(/\s+([.,])/g, '$1').trim());

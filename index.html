@@ -1929,7 +1929,7 @@
   const portfolioGrid = document.getElementById('portfolioGrid');
   const portfolioFilters = document.getElementById('portfolioFilters');
   const portfolioPagination = document.getElementById('portfolioPagination');
-  let activeCategory = '전체';
+  let activeCategories = new Set(); // 비어있으면 '전체'
   const PORTFOLIO_PAGE_SIZE = 6;
   let currentPage = 1;
 
@@ -1948,14 +1948,49 @@
     return out;
   }
 
+  // 괄호 안에 괄호가 중첩되어 있어도(예: "(규격: 150*1200*9(1)T)") 정확히
+  // 여는 괄호~짝이 맞는 닫는 괄호까지를 통째로 잡아내는 함수
+  const SPEC_DIMENSION_RE = /\d[\d,.]*\s*[×x\*]\s*[\d,.]+/i;
+  function extractSpecGroups(desc){
+    const groups = [];
+    let depth = 0, startIdx = -1;
+    for(let i = 0; i < desc.length; i++){
+      const ch = desc[i];
+      if(ch === '(' || ch === '（'){
+        if(depth === 0) startIdx = i;
+        depth++;
+      } else if(ch === ')' || ch === '）'){
+        if(depth > 0){
+          depth--;
+          if(depth === 0 && startIdx !== -1){
+            groups.push(desc.slice(startIdx, i + 1));
+            startIdx = -1;
+          }
+        }
+      }
+    }
+    const specGroups = groups.filter(g => SPEC_DIMENSION_RE.test(g));
+    return specGroups;
+  }
+
   function renderFilters(){
     const cats = ['전체', ...new Set(portfolioItems.map(i=>i.category))];
-    portfolioFilters.innerHTML = cats.map(c=>
-      `<button class="filter-btn ${c===activeCategory?'active':''}" data-cat="${c}">${c}</button>`
-    ).join('');
+    portfolioFilters.innerHTML = cats.map(c=>{
+      const isActive = c === '전체' ? activeCategories.size === 0 : activeCategories.has(c);
+      return `<button class="filter-btn ${isActive?'active':''}" data-cat="${c}">${c}</button>`;
+    }).join('');
     portfolioFilters.querySelectorAll('.filter-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        activeCategory = btn.dataset.cat;
+        const cat = btn.dataset.cat;
+        if(cat === '전체'){
+          activeCategories.clear();
+        } else {
+          if(activeCategories.has(cat)){
+            activeCategories.delete(cat);
+          } else {
+            activeCategories.add(cat);
+          }
+        }
         currentPage = 1;
         renderFilters();
         renderPortfolio();
@@ -1979,9 +2014,9 @@
   window.goToPortfolioPage = goToPortfolioPage;
 
   function renderPortfolio(){
-    const filtered = activeCategory==='전체'
+    const filtered = activeCategories.size === 0
       ? portfolioItems
-      : portfolioItems.filter(i=>i.category===activeCategory);
+      : portfolioItems.filter(i=>activeCategories.has(i.category));
     if(filtered.length===0){
       portfolioGrid.innerHTML = '<p class="portfolio-empty">아직 등록된 시공 사례가 없습니다.</p>';
       portfolioPagination.innerHTML = '';
@@ -1996,7 +2031,7 @@
       const tag = i.link ? 'a' : 'div';
       const attrs = i.link ? ` href="${i.link}" target="_blank" rel="noopener"` : '';
       const color = i.color || '#C99456';
-      const specMatches = i.desc.match(/[\(（][^()（）]*\d[\d,.]*\s*[×x\*]\s*[\d,.]+(?:\s*[×x\*]\s*[\d,.]+)?[^()（）]*[\)）]/gi) || [];
+      const specMatches = extractSpecGroups(i.desc);
       let descMain = i.desc;
       specMatches.forEach(m => { descMain = descMain.replace(m, ''); });
       descMain = highlightPortfolioDesc(descMain.replace(/\s+([.,])/g, '$1').trim());

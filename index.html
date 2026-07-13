@@ -543,6 +543,11 @@
   }
   .catalog-download-icon:hover svg{transform:translateY(1px);}
   .catalog-download-icon:active{transform:scale(0.95);}
+  .catalog-pending{
+    flex-shrink:0;font-size:10.5px;font-weight:700;color:var(--ink-faint);
+    background:rgba(18,16,14,0.05);padding:5px 10px;border-radius:20px;
+    margin-right:10px;white-space:nowrap;
+  }
 
   /* ---------- ABOUT ---------- */
   .about{background:var(--surface);position:relative;overflow:hidden;}
@@ -2328,6 +2333,7 @@
           ${b.links.map((l, li) => {
             const uid = `bl-${bi}-${li}`;
             const typeClass = linkTypeClass(l.label);
+            const fallbackUrl = `${brandBase}${l.no}`;
 
             // 시트의 '라벨'(제품소개/벽장재 등)과 일치하는 링크는 제품명 목록+다운로드 아코디언으로 병합
             const linkCatalogs = b.catalogsByLabel && b.catalogsByLabel[l.label];
@@ -2341,31 +2347,27 @@
                   </span>
                 </button>
                 <div class="brand-sublist catalog-sublist" id="${uid}">
-                  ${linkCatalogs.map(c => `
+                  ${linkCatalogs.map(c => {
+                    const introUrl = c.introLink || fallbackUrl;
+                    return `
                     <div class="catalog-item">
-                      ${c.introLink ? `
-                        <a href="${c.introLink}" target="_blank" rel="noopener" class="catalog-title-link">
-                          <span class="catalog-item-title">${c.productsDesc || c.label || '제품보기'}</span>
-                          ${c.label ? `<span class="catalog-item-sub">${c.label}</span>` : ''}
-                        </a>
-                      ` : `
-                        <span class="catalog-item-text-plain">
-                          <span class="catalog-item-title">${c.productsDesc || c.label || '제품'}</span>
-                          ${c.label ? `<span class="catalog-item-sub">${c.label}</span>` : ''}
-                        </span>
-                      `}
-                      <a href="catalogs/${encodeURIComponent(c.file)}" download class="catalog-download-icon" title="카탈로그 PDF 다운로드" aria-label="카탈로그 PDF 다운로드">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+                      <a href="${introUrl}" target="_blank" rel="noopener" class="catalog-title-link">
+                        <span class="catalog-item-title">${c.productsDesc || c.label || '제품보기'}</span>
+                        ${c.label ? `<span class="catalog-item-sub">${c.label}</span>` : ''}
                       </a>
+                      ${c.file ? `
+                        <a href="catalogs/${encodeURIComponent(c.file)}" download class="catalog-download-icon" title="카탈로그 PDF 다운로드" aria-label="카탈로그 PDF 다운로드">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+                        </a>
+                      ` : `<span class="catalog-pending">준비중</span>`}
                     </div>
-                  `).join('')}
+                  `;}).join('')}
                 </div>
               `;
             }
 
             const key = brandPostsKey(b.name, l.label);
             const posts = brandPosts[key];
-            const fallbackUrl = `${brandBase}${l.no}`;
             if(posts && posts.length){
               return `
                 <button type="button" class="brand-toggle ${typeClass}" data-uid="${uid}">

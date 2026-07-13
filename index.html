@@ -573,8 +573,45 @@
 
   /* ---------- ABOUT ---------- */
   .about{background:var(--surface);position:relative;overflow:hidden;}
-  .about-head{max-width:820px;}
+  .about-head{max-width:920px;}
   .about-head p{max-width:none;}
+  .hl-nationwide{color:var(--copper-deep);position:relative;}
+  .hl-nationwide::after{
+    content:'';position:absolute;left:-2px;right:-2px;bottom:1px;height:6px;
+    background:rgba(200,106,40,0.18);border-radius:2px;z-index:-1;
+  }
+
+  .about-head-flex{
+    display:flex;align-items:center;gap:40px;
+  }
+  .about-head-flex p{flex:1;margin:0;}
+
+  .korea-map-wrap{
+    flex-shrink:0;width:150px;display:flex;flex-direction:column;align-items:center;gap:10px;
+  }
+  .korea-map-svg{width:100%;height:auto;overflow:visible;}
+  .km-dot{fill:var(--copper);}
+  .km-dot-main{fill:var(--copper-deep);}
+  .km-ping{
+    fill:var(--copper);opacity:0;
+    transform-origin:center;
+    animation:kmPing 2.6s var(--ease) infinite;
+    animation-delay:var(--d, 0s);
+  }
+  @keyframes kmPing{
+    0%{opacity:0.5;transform:scale(0.3);}
+    70%{opacity:0;transform:scale(2.6);}
+    100%{opacity:0;transform:scale(2.6);}
+  }
+  .korea-map-label{
+    font-size:11.5px;font-weight:700;color:var(--copper-deep);
+    letter-spacing:.02em;text-align:center;
+  }
+
+  @media (max-width:900px){
+    .about-head-flex{flex-direction:column;gap:24px;}
+    .korea-map-wrap{width:110px;}
+  }
   .about-split{
     position:relative;z-index:1;
     display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;
@@ -1412,7 +1449,41 @@
       <div class="section-head about-head reveal">
         <p class="k">ABOUT</p>
         <h2>한 평의 바닥에도<br>사는 사람의 가치가 담깁니다</h2>
-        <p><b>공간의 완성도는 가장 마지막에 닿는 마감의 차이에서 결정됩니다.</b> 청인마루는 단순히 자재를 깔아내는 시공을 넘어, <b>공간 전체의 조화와 사는 사람의 라이프스타일을 고려한 맞춤형 시공</b>을 지향합니다. <b>인천 송도 전시장을 기반으로</b> 전국 각지의 주거 및 상업 공간을 신뢰감 있게 시공해 왔으며, <b>자재 추천부터 현장 정밀 실측, 철저한 책임 시공 관리까지</b> 투명한 원스톱 시스템을 통해 <b>오차 없는 바닥을 완성</b>합니다.</p>
+        <div class="about-head-flex">
+          <p><b>공간의 완성도는 가장 마지막에 닿는 마감의 차이에서 결정됩니다.</b> 청인마루는 단순히 자재를 깔아내는 시공을 넘어, <b>공간 전체의 조화와 사는 사람의 라이프스타일을 고려한 맞춤형 시공</b>을 지향합니다. <b>인천 송도 전시장을 기반으로 <span class="hl-nationwide">전국 각지</span></b>의 주거 및 상업 공간을 신뢰감 있게 시공해 왔으며, <b>자재 추천부터 현장 정밀 실측, 철저한 책임 시공 관리까지</b> 투명한 원스톱 시스템을 통해 <b>오차 없는 바닥을 완성</b>합니다.</p>
+          <div class="korea-map-wrap" aria-hidden="true">
+            <svg viewBox="0 0 240 370" class="korea-map-svg">
+              <path d="M108,8 L150,5 L185,12 L200,45 L192,90 L205,130 L198,175 L210,215 L205,255 L222,285 L205,310 L175,325 L150,315 L160,335 L130,330 L110,310 L95,325 L75,300 L60,275 L68,240 L55,210 L72,185 L58,155 L75,130 L55,95 L80,75 L65,45 L95,25 Z" fill="var(--copper)" opacity="0.16"/>
+              <ellipse cx="140" cy="347" rx="15" ry="8" fill="var(--copper)" opacity="0.16"/>
+
+              <g class="km-city km-incheon">
+                <circle cx="90" cy="63" r="14" class="km-ping"/>
+                <circle cx="90" cy="63" r="5" class="km-dot km-dot-main"/>
+              </g>
+              <g class="km-city" style="--d:.3s">
+                <circle cx="118" cy="58" r="9" class="km-ping"/>
+                <circle cx="118" cy="58" r="3.5" class="km-dot"/>
+              </g>
+              <g class="km-city" style="--d:.9s">
+                <circle cx="142" cy="175" r="9" class="km-ping"/>
+                <circle cx="142" cy="175" r="3.5" class="km-dot"/>
+              </g>
+              <g class="km-city" style="--d:1.5s">
+                <circle cx="90" cy="262" r="9" class="km-ping"/>
+                <circle cx="90" cy="262" r="3.5" class="km-dot"/>
+              </g>
+              <g class="km-city" style="--d:.6s">
+                <circle cx="178" cy="222" r="9" class="km-ping"/>
+                <circle cx="178" cy="222" r="3.5" class="km-dot"/>
+              </g>
+              <g class="km-city" style="--d:1.2s">
+                <circle cx="197" cy="290" r="9" class="km-ping"/>
+                <circle cx="197" cy="290" r="3.5" class="km-dot"/>
+              </g>
+            </svg>
+            <span class="korea-map-label">전국 시공 네트워크</span>
+          </div>
+        </div>
       </div>
 
       <div class="about-split">
@@ -1840,11 +1911,11 @@
     7: { title:"오산 단독주택 미네랄마루 시공", sub:"네스트_미네랄마루_아크로" },
     8: { title:"벽장재 시공", sub:"동화_시그니월_이모션블랑" },
     9: { title:"단독주택 원목마루", sub:"노바_원목마루STK_제스티" },
-    10: { title:"벽장재 시공", sub:"한솔_콜렉트월_우유니화이트" },
+    10: { title:"벽장재 시공", sub:"한솔_콜렉트월_페이퍼화이트" },
     11: { title:"원목마루_단독주택", sub:"노바_원목마루 아크로K_돌체비타" },
     12: { title:"타일형 강마루 시공_34평 아파트", sub:"노바_테라스_아로하베이지" },
     13: { title:"부천 단독주택", sub:"네스트_사각돌마루 시공" },
-    14: { title:"송도 아파트 블랙마루 시공", sub:"노바_블랙라벨_누아르블랙" }
+    14: { title:"부천 도자기 공방", sub:"네스트_미네랄마루_아크로 시공" }
   };
 
   (function initHeroSlideshow(){
@@ -2228,13 +2299,13 @@
       videoUrl: null
     },
     {
-      text:"이사 날짜가 촉박했는데 일정을 맞춰주셔서 정말 감사했어요. 강마루가 안 미끄러워서 그런지 우리집 반려견도 편하게 뛰어다니고 좋아하네요.",
+      text:"이사 날짜를 갑자기 당겨야 했는데도 일정을 딱 맞춰주셔서 감사했어요. 강마루가 미끄럽지 않아서인지 반려견도 편하게 잘 뛰어다니네요.",
       who:"경기 시흥 · 아파트 24평",
       videoUrl: "https://www.youtube.com/shorts/M_TDpA4O5t4",
       videoLabel: "고객 인터뷰 영상 보기"
     },
     {
-      text:"아이가 있어서 소음이랑 냄새가 제일 걱정이었는데, 시공 당일 환기며 마감 처리까지 꼼꼼하게 신경써주셨어요.",
+      text:"아이 때문에 소음이랑 냄새 걱정이 컸는데, 시공 당일 환기부터 마감 처리까지 세심하게 챙겨주시더라고요.",
       who:"서울 강서 · 아파트 29평",
       videoUrl: null
     },
@@ -2245,19 +2316,19 @@
       videoLabel: "고객 인터뷰 영상 보기"
     },
     {
-      text:"미네랄마루가 처음엔 생소했는데, 장단점을 자세히 설명해주셔서 안심하고 선택했어요. 여름철 습기에도 끄떡없네요.",
+      text:"미네랄마루는 처음 들어봐서 낯설었는데, 장단점을 하나하나 짚어주셔서 믿고 선택했어요. 여름 장마철에도 습기 걱정이 없네요.",
       who:"수원 매탄동 · 아파트 40평형대",
       videoUrl: "https://youtube.com/shorts/0p_E-8bBtUc?si=cHygA1mAUfN-27ZE",
       videoLabel: "관련 영상 보기"
     },
     {
-      text:"세 군데 정도 견적을 받아봤는데, 여기만 항목별로 하나하나 정리해서 보여주셨어요. 이래서 다들 여기 추천하는구나 싶었습니다.",
+      text:"다른 곳 세 군데랑 같이 비교해봤는데, 항목별로 정리해서 설명해주신 곳은 여기가 유일했어요. 왜 다들 추천하는지 알겠더라고요.",
       who:"서울 개포동 · 34평형 디자인월",
       videoUrl: "https://youtube.com/shorts/gdEEHQbZZRI?si=ioa16kxvOO2SgxZY",
       videoLabel: "관련 영상 보기"
     },
     {
-      text:"오래된 마루 들뜸 때문에 고생했는데, 원인부터 짚어주시고 재발 안 하게 꼼꼼히 시공해주셨어요.",
+      text:"마루가 자꾸 들떠서 골치였는데, 원인을 먼저 확인하시고 재발 안 하도록 꼼꼼하게 시공해주셨어요.",
       who:"경기 부천 · 단독주택",
       videoUrl: null
     },

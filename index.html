@@ -121,8 +121,6 @@
   .wrap{max-width:1280px;margin:0 auto;padding:0 40px;}
   ::selection{background:var(--copper);color:#fff;}
 
-  /* [접근성 안전장치] 기기의 "애니메이션 줄이기" 설정이 켜져 있어도
-     텍스트가 투명(0%) 상태로 멈추지 않도록 즉시 종료 상태로 처리 */
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{
       animation-duration:0.01ms !important;
@@ -210,13 +208,11 @@
     transition: background 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.1s var(--ease);
   }
   
-  /* 마우스 PC 환경에서만 호버 효과가 뜨도록 제한 */
   @media (hover: hover) {
     .btn:hover{background:var(--copper-deep);border-color:var(--copper-deep);transform:translateY(-2px);box-shadow:0 10px 24px -8px rgba(143,67,17,0.45);}
     .btn-outline-copper:hover{background:var(--copper) !important;color:#fff !important;transform:translateY(-2px);box-shadow:0 8px 18px -6px rgba(200,106,40,0.4);}
   }
   
-  /* [터치 피드백 강화] 아이패드/모바일에서 손가락이 닿았을 때(터치) 주황색 불이 선명하게 들어오는 상태 설계 */
   .btn:active {
     background: var(--copper-deep) !important;
     border-color: var(--copper-deep) !important;
@@ -358,7 +354,6 @@
     color:rgba(255,255,255,0.9);margin:0 0 20px;letter-spacing:0.08em;
   }
   .hero p.lede{font-size:17.5px;color:rgba(255,255,255,0.72);max-width:44ch;margin:0 0 44px;line-height:1.85;}
-  .hero-ctas{}
 
   .hero-visual{position:relative;}
   .hero-frame{
@@ -477,7 +472,6 @@
   }
   .brand-links .brand-toggle:first-child{border-top:1px solid rgba(18,16,14,0.04);}
 
-  /* 링크 종류별 살짝 다른 색 악센트 */
   .brand-links .brand-toggle{border-left:3px solid transparent !important;}
   .brand-links .link-product{border-left-color:#5B8FB9 !important;}
   .brand-links .link-portfolio{border-left-color:#6FA576 !important;}
@@ -535,14 +529,12 @@
     padding:11px 6px 11px 16px;line-height:1.35;
   }
 
-  /* 소개링크가 있는 항목: 브랜드 색으로 확실히 강조 + 작은 배지 */
   .catalog-item.has-link-item{border-left-color:var(--bc);background:color-mix(in srgb, var(--bc) 4%, transparent);}
   .catalog-title-link.has-link{cursor:pointer;}
   .catalog-title-link.has-link .catalog-item-title{color:var(--bc);font-weight:700;}
   .catalog-title-link.has-link:hover{background:color-mix(in srgb, var(--bc) 10%, transparent);padding-left:18px;}
   .catalog-title-link.has-link:hover .catalog-item-title{text-decoration:underline;}
 
-  /* 소개링크가 없는 항목: 진한 무채색으로 처리 (연하게 죽이지 않음) */
   .catalog-title-link.no-link{cursor:default;}
   .catalog-title-link.no-link .catalog-item-title{color:var(--ink-soft);}
 
@@ -586,31 +578,67 @@
   }
   .about-head-flex p{flex:1;margin:0;}
 
+  /* ---------- 전국 시공 네트워크 고해상도 프리미엄 지도 인프라 스타일 ---------- */
   .korea-map-wrap{
-    flex-shrink:0;width:150px;display:flex;flex-direction:column;align-items:center;gap:10px;
+    flex-shrink:0;width:200px;display:flex;flex-direction:column;align-items:center;gap:12px;
   }
   .korea-map-svg{width:100%;height:auto;overflow:visible;}
-  .km-dot{fill:var(--copper);}
-  .km-dot-main{fill:var(--copper-deep);}
-  .km-ping{
-    fill:var(--copper);opacity:0;
-    transform-origin:center;
-    animation:kmPing 2.6s var(--ease) infinite;
-    animation-delay:var(--d, 0s);
+  .km-outline{
+    fill: var(--forest);
+    fill-opacity: 0.05;
+    stroke: var(--forest);
+    stroke-width: 1.2;
+    stroke-opacity: 0.15;
+    stroke-dasharray: none;
   }
-  @keyframes kmPing{
-    0%{opacity:0.5;transform:scale(0.3);}
-    70%{opacity:0;transform:scale(2.6);}
-    100%{opacity:0;transform:scale(2.6);}
+  .km-island {
+    fill: var(--forest);
+    fill-opacity: 0.08;
+    stroke: var(--forest);
+    stroke-width: 1;
+    stroke-opacity: 0.2;
+  }
+  .km-dot{
+    fill: var(--copper);
+    filter: drop-shadow(0 2px 4px rgba(200,106,40,0.25));
+  }
+  .km-dot-main{
+    fill: var(--copper-deep);
+    stroke: #fff;
+    stroke-width: 2.5;
+    filter: drop-shadow(0 4px 10px rgba(143,67,17,0.45));
+  }
+  .km-ping-circle {
+    fill: none;
+    stroke: var(--copper);
+    stroke-width: 1.5;
+    animation: kmPulse 2.4s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+  }
+  .network-line {
+    fill: none;
+    stroke: var(--copper);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-dasharray: 4 4;
+    animation: networkFlow 2s linear infinite;
+    opacity: 0.75;
+  }
+  @keyframes networkFlow {
+    from { stroke-dashoffset: 20; }
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes kmPulse {
+    0% { r: 2px; opacity: 0.8; }
+    100% { r: 16px; opacity: 0; }
   }
   .korea-map-label{
-    font-size:11.5px;font-weight:700;color:var(--copper-deep);
-    letter-spacing:.02em;text-align:center;
+    font-size:12px;font-weight:700;color:var(--copper-deep);
+    letter-spacing:.05em;text-align:center;
   }
 
   @media (max-width:900px){
     .about-head-flex{flex-direction:column;gap:24px;}
-    .korea-map-wrap{width:110px;}
+    .korea-map-wrap{width:140px;}
   }
   .about-split{
     position:relative;z-index:1;
@@ -651,9 +679,6 @@
     content:'';position:absolute;inset:0;
     background:linear-gradient(180deg, rgba(13,22,18,0) 55%, rgba(13,22,18,0.55) 100%);
   }
-  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:20px;border-top:2px solid var(--line-strong);}
-  
-  /* [중괄호 구문오류 완벽 수정완료] */
   .stat{padding:28px 20px 0 0;border-right:1px solid var(--line-strong);position:relative;}
   .stat:last-child{border-right:none;}
   .stat::before{
@@ -926,7 +951,7 @@
   /* ---------- CONTACT ---------- */
   .contact{background:var(--surface);}
   .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;}
-  .info-card{background:#fff;padding:44px;border-radius:var(--radius);box-shadow:var(--shadow-md);border:1px solid rgba(18,16,14,0.04);}
+  .info-card">background:#fff;padding:44px;border-radius:var(--radius);box-shadow:var(--shadow-md);border:1px solid rgba(18,16,14,0.04);}
   .info-row{display:flex;gap:20px;align-items:flex-start;padding:24px 0;border-bottom:1px solid rgba(18,16,14,0.05);}
   .info-row:last-child{border-bottom:none;}
   .info-row b{
@@ -1114,7 +1139,6 @@
   .toon-copy .k::before{content:'';width:32px;height:2px;background:#E4C98A;display:inline-block;}
   .toon-copy h2{font-size:clamp(30px,3.6vw,44px);margin:0 0 24px;color:#fff;font-weight:700;letter-spacing:-0.02em;}
   
-  /* [오타 수정 완료] 소괄호 구문오류 중괄호로 정상 정돈 */
   .toon-copy p { color:rgba(246,241,231,0.8);font-size:16.5px;margin:0 0 36px;max-width:54ch;line-height:1.85; }
   
   .toon-tags{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 40px;}
@@ -1170,11 +1194,7 @@
   .footer-links{display:flex;gap:32px;font-size:14px;color:rgba(246,241,231,0.7);font-weight:600;}
   .footer-links a:hover{color:#E4C98A;}
 
-  /* ============================================================
-     [해상도 완전 통합 마스터 반응형 빌드] 1280px 이하 전 기종 동기화 완료
-     ============================================================ */
-  /* 아이패드 등 태블릿 가로 폭에서는 소개 섹션만 먼저 세로로 쌓아서
-     오른쪽 칼럼(협력사 카드 포함)이 길어져도 좌우 여백이 어긋나지 않게 함 */
+  /* 반응형 마스터 빌드 해상도 조율 */
   @media (max-width:900px){
     .about-split{grid-template-columns:1fr; gap:40px;}
   }
@@ -1210,7 +1230,6 @@
     .toon-social{grid-template-columns:1fr;max-width:420px;margin:0 auto;}
     .navlinks{display:none;}
     
-    /* 모바일/태블릿 헤더: 로고+햄버거 1줄로 축소 (버튼 배너 제거) */
     .nav {
       display: flex !important;
       align-items: center !important;
@@ -1223,7 +1242,6 @@
       flex-shrink: 0 !important;
     }
     
-    /* 로고 크기 절대 방어망 구축 및 눈에 확 띄도록 웅장하게 고정 상향 */
     .logo-img {
       height: 92px !important; 
       width: auto !important;
@@ -1237,7 +1255,6 @@
       padding: 4px !important;
       line-height: 1 !important;
     }
-    /* 헤더 안 협력문의·무료상담 버튼은 모바일에서 숨김 (햄버거 메뉴 + 플로팅 버튼으로 대체) */
     .header-btns {
       display: none !important;
     }
@@ -1245,7 +1262,6 @@
     .mobile-menu{padding:12px 32px 24px;}
     .mascot-sticker{width:88px;}
 
-    /* 모바일 브랜드 카드 패널 조율 */
     .brand-card {
       padding: 32px 24px 28px;
     }
@@ -1451,34 +1467,51 @@
         <h2>한 평의 바닥에도<br>사는 사람의 가치가 담깁니다</h2>
         <div class="about-head-flex">
           <p><b>공간의 완성도는 가장 마지막에 닿는 마감의 차이에서 결정됩니다.</b> 청인마루는 단순히 자재를 깔아내는 시공을 넘어, <b>공간 전체의 조화와 사는 사람의 라이프스타일을 고려한 맞춤형 시공</b>을 지향합니다. <b>인천 송도 전시장을 기반으로 <span class="hl-nationwide">전국 각지</span></b>의 주거 및 상업 공간을 신뢰감 있게 시공해 왔으며, <b>자재 추천부터 현장 정밀 실측, 철저한 책임 시공 관리까지</b> 투명한 원스톱 시스템을 통해 <b>오차 없는 바닥을 완성</b>합니다.</p>
+          
+          <!-- 전국 시공 네트워크 고해상도 디자인 컴포넌트 탑재 -->
           <div class="korea-map-wrap" aria-hidden="true">
-            <svg viewBox="0 0 240 370" class="korea-map-svg">
-              <path d="M108,8 L150,5 L185,12 L200,45 L192,90 L205,130 L198,175 L210,215 L205,255 L222,285 L205,310 L175,325 L150,315 L160,335 L130,330 L110,310 L95,325 L75,300 L60,275 L68,240 L55,210 L72,185 L58,155 L75,130 L55,95 L80,75 L65,45 L95,25 Z" fill="var(--copper)" opacity="0.16"/>
-              <ellipse cx="140" cy="347" rx="15" ry="8" fill="var(--copper)" opacity="0.16"/>
+            <svg viewBox="0 0 220 340" class="korea-map-svg">
+              <!-- 대한민국 본토 실루엣 정밀 벡터 패스 -->
+              <path d="M 80 35 C 90 35, 105 32, 120 30 C 135 28, 145 25, 150 25 C 153 35, 150 55, 146 70 C 144 80, 155 90, 162 105 C 168 120, 175 125, 172 135 C 168 140, 160 142, 164 148 C 168 152, 172 155, 165 168 C 158 180, 162 195, 165 205 C 168 215, 160 222, 155 224 C 145 228, 135 220, 125 225 C 115 230, 105 235, 95 232 C 85 228, 80 215, 75 218 C 70 222, 65 230, 55 228 C 48 225, 48 212, 52 205 C 56 195, 62 188, 60 178 C 58 170, 50 165, 54 152 C 58 140, 68 135, 68 125 C 68 115, 55 110, 50 102 C 46 95, 48 85, 55 80 C 62 75, 68 78, 72 72 C 75 66, 68 60, 70 52 C 72 45, 76 38, 80 35 Z" class="km-outline"/>
+              
+              <!-- 주요 도서(제주도, 울릉도, 독도) 인프라 구축 -->
+              <path d="M 65 265 C 75 262, 90 265, 95 272 C 92 280, 78 282, 68 278 C 62 275, 60 268, 65 265 Z" class="km-island"/>
+              <path d="M 195 95 C 198 95, 200 98, 198 100 C 195 102, 192 100, 195 95 Z" class="km-island"/>
+              <path d="M 212 105 C 214 105, 215 107, 213 108 C 211 109, 210 108, 212 105 Z" class="km-island"/>
 
-              <g class="km-city km-incheon">
-                <circle cx="90" cy="63" r="14" class="km-ping"/>
-                <circle cx="90" cy="63" r="5" class="km-dot km-dot-main"/>
+              <!-- 인천 송도메인 허브발 전국 확산 네트워크 유동 선로 -->
+              <path d="M 74 62 L 86 56" class="network-line" />
+              <path d="M 74 62 Q 85 90 105 120" class="network-line" />
+              <path d="M 74 62 Q 100 100 138 155" class="network-line" />
+              <path d="M 74 62 Q 70 120 85 185" class="network-line" />
+              <path d="M 74 62 Q 110 120 152 195" class="network-line" />
+              <path d="M 74 62 Q 60 160 80 270" class="network-line" />
+
+              <!-- 거점별 동적 레이더 파동 및 노드 인프라 -->
+              <g>
+                <circle cx="74" cy="62" r="0" class="km-ping-circle" style="animation-delay: 0s;" />
+                <circle cx="74" cy="62" r="6" class="km-dot-main" />
               </g>
-              <g class="km-city" style="--d:.3s">
-                <circle cx="118" cy="58" r="9" class="km-ping"/>
-                <circle cx="118" cy="58" r="3.5" class="km-dot"/>
+              <g><circle cx="86" cy="56" r="3.5" class="km-dot" /></g>
+              <g>
+                <circle cx="105" cy="120" r="0" class="km-ping-circle" style="animation-delay: 0.5s;" />
+                <circle cx="105" cy="120" r="4" class="km-dot" />
               </g>
-              <g class="km-city" style="--d:.9s">
-                <circle cx="142" cy="175" r="9" class="km-ping"/>
-                <circle cx="142" cy="175" r="3.5" class="km-dot"/>
+              <g>
+                <circle cx="138" cy="155" r="0" class="km-ping-circle" style="animation-delay: 1s;" />
+                <circle cx="138" cy="155" r="4" class="km-dot" />
               </g>
-              <g class="km-city" style="--d:1.5s">
-                <circle cx="90" cy="262" r="9" class="km-ping"/>
-                <circle cx="90" cy="262" r="3.5" class="km-dot"/>
+              <g>
+                <circle cx="85" cy="185" r="0" class="km-ping-circle" style="animation-delay: 1.5s;" />
+                <circle cx="85" cy="185" r="4" class="km-dot" />
               </g>
-              <g class="km-city" style="--d:.6s">
-                <circle cx="178" cy="222" r="9" class="km-ping"/>
-                <circle cx="178" cy="222" r="3.5" class="km-dot"/>
+              <g>
+                <circle cx="152" cy="195" r="0" class="km-ping-circle" style="animation-delay: 0.8s;" />
+                <circle cx="152" cy="195" r="4" class="km-dot" />
               </g>
-              <g class="km-city" style="--d:1.2s">
-                <circle cx="197" cy="290" r="9" class="km-ping"/>
-                <circle cx="197" cy="290" r="3.5" class="km-dot"/>
+              <g>
+                <circle cx="80" cy="270" r="0" class="km-ping-circle" style="animation-delay: 1.2s;" />
+                <circle cx="80" cy="270" r="4" class="km-dot" />
               </g>
             </svg>
             <span class="korea-map-label">전국 시공 네트워크</span>
@@ -1524,7 +1557,7 @@
               </div>
               <div class="about-value-text">
                 <b>20년 노하우의 자재 컨설팅</b>
-                <p>공간과 라이프스타일에 맞는 마루를 경험을 바탕으로 정확하게 제안해요.</p>
+                <p>공간 and 라이프스타일에 맞는 마루를 경험을 바탕으로 정확하게 제안해요.</p>
               </div>
             </div>
           </div>
@@ -2055,11 +2088,10 @@
   const portfolioGrid = document.getElementById('portfolioGrid');
   const portfolioFilters = document.getElementById('portfolioFilters');
   const portfolioPagination = document.getElementById('portfolioPagination');
-  let activeCategories = new Set(); // 비어있으면 '전체'
+  let activeCategories = new Set(); 
   const PORTFOLIO_PAGE_SIZE = 6;
   let currentPage = 1;
 
-  // 브랜드/제품라인 키워드 - 모델명(따옴표)과는 다른 색으로 강조
   const PORTFOLIO_BRAND_TERMS = [
     "동화자연마루","동화마루","노바마루","한솔홈데코","한솔마루","구정마루","네스트","이건","성원",
     "시그니월","진그란데스퀘어","진 그란데 스퀘어","듀오텍스쳐맥스","마뷸러스젠","원목마루STK","콜렉트월",
@@ -2074,8 +2106,6 @@
     return out;
   }
 
-  // 괄호 안에 괄호가 중첩되어 있어도(예: "(규격: 150*1200*9(1)T)") 정확히
-  // 여는 괄호~짝이 맞는 닫는 괄호까지를 통째로 잡아내는 함수
   const SPEC_DIMENSION_RE = /\d[\d,.]*\s*[×x\*]\s*[\d,.]+/i;
   function extractSpecGroups(desc){
     const groups = [];
@@ -2299,7 +2329,7 @@
       videoUrl: null
     },
     {
-      text:"이사 날짜를 갑자기 당겨야 했는데도 일정을 딱 맞춰주셔서 감사했어요. 강마루가 미끄럽지 않아서인지 반려견도 편하게 잘 뛰어다니네요.",
+      text:"경기 시흥 · 아파트 24평",
       who:"경기 시흥 · 아파트 24평",
       videoUrl: "https://www.youtube.com/shorts/M_TDpA4O5t4",
       videoLabel: "고객 인터뷰 영상 보기"
@@ -2422,7 +2452,6 @@
             const typeClass = linkTypeClass(l.label);
             const fallbackUrl = `${brandBase}${l.no}`;
 
-            // 시트의 '라벨'(제품소개/벽장재 등)과 일치하는 링크는 제품명 목록+다운로드 아코디언으로 병합
             const linkCatalogs = b.catalogsByLabel && b.catalogsByLabel[l.label];
             if(linkCatalogs && linkCatalogs.length){
               return `
@@ -2516,8 +2545,6 @@
     });
   }
 
-  // 카탈로그 파일 목록 구글시트 연동
-  // 컬럼 순서: A 브랜드 | B 라벨(어느 버튼에 속할지: 제품소개/벽장재 등) | C 카테고리 | D 제품명(설명) | E 파일명 | F 소개링크
   const CATALOG_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRqKKthh1WuYiS_BC3LeR2mQiPqfqEPQZH7rvlTmzq70xS3ASkObknKcb4nenxIATiUza-42k4UHhty/pub?output=csv";
 
   function loadCatalogFromSheet(){
@@ -2533,9 +2560,9 @@
         const cleanTrim = (v) => (v||'').replace(/^[\s\u00A0\u200B]+|[\s\u00A0\u200B]+$/g, '');
         const byBrand = {};
         results.data.forEach((row, idx) => {
-          if(idx === 0) return; // 헤더 행 건너뜀
+          if(idx === 0) return; 
           const brand = cleanTrim(row[0]);
-          const targetLabel = cleanTrim(row[1]); // 어느 링크(제품소개/벽장재 등) 아코디언에 붙을지
+          const targetLabel = cleanTrim(row[1]); 
           const category = cleanTrim(row[2]);
           const productsDesc = cleanTrim(row[3]);
           const file = cleanTrim(row[4]);

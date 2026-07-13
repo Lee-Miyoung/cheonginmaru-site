@@ -468,6 +468,13 @@
     width:100%;text-align:left;cursor:pointer;font-family:inherit;
   }
   .brand-links .brand-toggle:first-child{border-top:1px solid rgba(18,16,14,0.04);}
+
+  /* 링크 종류별 살짝 다른 색 악센트 */
+  .brand-links .brand-toggle{border-left:3px solid transparent !important;}
+  .brand-links .link-product{border-left-color:#5B8FB9 !important;}
+  .brand-links .link-portfolio{border-left-color:#6FA576 !important;}
+  .brand-links .link-wall{border-left-color:#C9985A !important;}
+  .brand-links .link-catalog{border-left-color:#9B7FBF !important;}
   
   .brand-links .brand-toggle .arrow{
     color:var(--bc);opacity:0.5;transform:translateX(0);
@@ -500,15 +507,6 @@
     transition:all .2s var(--ease);
   }
   .brand-sublist a:hover{color:var(--bc);border-left-color:var(--bc);background:#fff;padding-left:20px;}
-  
-  .brand-catalog-btn{
-    position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;
-    margin-top:20px;padding:12px;border-radius:var(--radius-sm);
-    background:transparent;color:var(--bc);font-size:13px;font-weight:700;
-    border:1px solid color-mix(in srgb, var(--bc) 30%, transparent);
-    transition:all .25s var(--ease);
-  }
-  .brand-catalog-btn:hover{background:var(--bc);color:#fff;transform:translateY(-2px);box-shadow:var(--shadow-md);}
 
   /* ---------- ABOUT ---------- */
   .about{background:var(--surface);position:relative;overflow:hidden;}
@@ -2227,7 +2225,12 @@
   const brandBase = "https://blog.naver.com/PostList.naver?blogId=chonginmaru&from=postList&categoryNo=";
   
   const brands = [
-    { name:"동화자연마루", color:"#2F7A4B", catalog:'', links:[
+    { name:"동화자연마루", color:"#2F7A4B", catalog:'', catalogs:[
+        { label:"강마루", file:"동화_강마루.pdf" },
+        { label:"강화마루", file:"동화_강화마루.pdf" },
+        { label:"원목마루", file:"동화_원목마루.pdf" },
+        { label:"벽재", file:"동화_벽재.pdf" }
+      ], links:[
       { label:"제품소개", no:28 }, { label:"시공사례", no:77 }, { label:"벽장재", no:80 }
     ]},
     { name:"노바마루", color:"#1A1A1A", catalog:'', links:[
@@ -2259,6 +2262,13 @@
 
   function brandPostsKey(brand, label){ return `${brand}|${label}`; }
 
+  function linkTypeClass(label){
+    if(label === '제품소개') return 'link-product';
+    if(label === '시공사례') return 'link-portfolio';
+    if(label === '벽장재') return 'link-wall';
+    return '';
+  }
+
   function renderBrandGrid(){
     const brandGrid = document.getElementById('brandGrid');
     if(!brandGrid) return;
@@ -2268,13 +2278,15 @@
         <h3>${b.name}</h3>
         <div class="brand-links">
           ${b.links.map((l, li) => {
+            const uid = `bl-${bi}-${li}`;
+            const typeClass = linkTypeClass(l.label);
+
             const key = brandPostsKey(b.name, l.label);
             const posts = brandPosts[key];
             const fallbackUrl = `${brandBase}${l.no}`;
-            const uid = `bl-${bi}-${li}`;
             if(posts && posts.length){
               return `
-                <button type="button" class="brand-toggle" data-uid="${uid}">
+                <button type="button" class="brand-toggle ${typeClass}" data-uid="${uid}">
                   ${l.label}
                   <span style="display:flex;align-items:center;gap:8px;">
                     <span class="arrow">→</span>
@@ -2286,13 +2298,38 @@
                 </div>
               `;
             }
-            return `<a href="${fallbackUrl}" target="_blank" rel="noopener" class="brand-toggle">${l.label}<span class="arrow">→</span></a>`;
+            return `<a href="${fallbackUrl}" target="_blank" rel="noopener" class="brand-toggle ${typeClass}">${l.label}<span class="arrow">→</span></a>`;
           }).join('')}
+          ${(() => {
+            const catUid = `cat-${bi}`;
+            if(b.catalogs && b.catalogs.length > 1){
+              return `
+                <button type="button" class="brand-toggle link-catalog" data-uid="${catUid}">
+                  카탈로그 (${b.catalogs.length})
+                  <span style="display:flex;align-items:center;gap:8px;">
+                    <span class="arrow">↓</span>
+                    <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+                  </span>
+                </button>
+                <div class="brand-sublist" id="${catUid}">
+                  ${b.catalogs.map(c => `
+                    <a href="catalogs/${encodeURIComponent(c.file)}" download>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+                      ${c.label} 카탈로그
+                    </a>
+                  `).join('')}
+                </div>
+              `;
+            }
+            const single = (b.catalogs && b.catalogs[0]) || (b.catalog ? { label:'', file:b.catalog } : null);
+            if(single){
+              return `<a href="catalogs/${encodeURIComponent(single.file)}" download class="brand-toggle link-catalog">
+                ${single.label ? `${single.label} 카탈로그` : '카탈로그 다운로드'}<span class="arrow">↓</span>
+              </a>`;
+            }
+            return '';
+          })()}
         </div>
-        ${b.catalog ? `<a href="catalogs/${b.catalog}" download class="brand-catalog-btn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
-          카탈로그 다운로드
-        </a>` : ''}
       </div>
     `).join('');
 
@@ -2309,7 +2346,7 @@
 
   function loadBrandPostsFromSheet(){
     if(!BRAND_POSTS_SHEET_CSV_URL){
-      renderBrandGrid();
+      loadCatalogFromSheet();
       return;
     }
     Papa.parse(BRAND_POSTS_SHEET_CSV_URL, {
@@ -2329,6 +2366,42 @@
           map[key].push({ title, url });
         });
         brandPosts = map;
+        loadCatalogFromSheet();
+      },
+      error: function(){
+        loadCatalogFromSheet();
+      }
+    });
+  }
+
+  // 카탈로그 파일 목록 구글시트 연동
+  // 스프레드시트에 "카탈로그" 탭을 만들고 컬럼: 브랜드 | 라벨 | 파일명
+  const CATALOG_SHEET_CSV_URL = "";
+
+  function loadCatalogFromSheet(){
+    if(!CATALOG_SHEET_CSV_URL){
+      renderBrandGrid();
+      return;
+    }
+    Papa.parse(CATALOG_SHEET_CSV_URL, {
+      download:true,
+      header:true,
+      skipEmptyLines:true,
+      complete: function(results){
+        const byBrand = {};
+        results.data.forEach(r => {
+          const brand = (r['브랜드']||'').trim();
+          const label = (r['라벨']||'').trim();
+          const file = (r['파일명']||'').trim();
+          if(!brand || !label || !file) return;
+          if(!byBrand[brand]) byBrand[brand] = [];
+          byBrand[brand].push({ label, file });
+        });
+        brands.forEach(b => {
+          if(byBrand[b.name] && byBrand[b.name].length){
+            b.catalogs = byBrand[b.name];
+          }
+        });
         renderBrandGrid();
       },
       error: function(){

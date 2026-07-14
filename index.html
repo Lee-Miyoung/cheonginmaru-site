@@ -128,6 +128,19 @@
       animation-iteration-count:1 !important;
       transition-duration:0.01ms !important;
     }
+    /* 전국 시공 네트워크 지도는 장식성 모션이 핵심 요소이므로 예외 처리 */
+    .korea-map-wrap{
+      animation-duration:5s !important;
+      animation-iteration-count:infinite !important;
+    }
+    .network-line{
+      animation-duration:1.1s !important;
+      animation-iteration-count:infinite !important;
+    }
+    .km-ping-circle{
+      animation-duration:2s !important;
+      animation-iteration-count:infinite !important;
+    }
   }
 
   .mo-text { display: none; }
@@ -594,13 +607,19 @@
   .about-head-flex{
     display:flex;align-items:center;gap:48px;
   }
-  .about-head-flex p{
+  .about-head-text{
     flex:1;
-    margin:0;
+    min-width:0;
+  }
+  .about-head-text p{
+    margin:0 0 18px;
     font-size: 18px !important;
     line-height: 1.95 !important;
     letter-spacing: -0.015em !important;
     color: var(--ink-soft);
+  }
+  .about-head-text p:last-child{
+    margin-bottom:0;
   }
 
   .korea-map-wrap{
@@ -679,7 +698,7 @@
     .about-head-flex{flex-direction:column;gap:24px;}
     .korea-map-wrap{width:160px; animation: none;}
     .korea-map-wrap:hover {transform: none;}
-    .about-head-flex p{font-size: 16px !important; line-height: 1.8 !important;}
+    .about-head-text p{font-size: 16px !important; line-height: 1.8 !important;}
   }
   .about-split{
     position:relative;z-index:1;
@@ -973,17 +992,21 @@
   /* ---------- REVIEWS ---------- */
   .reviews{background:var(--surface);}
   .review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-  .review-card{background:#fff;padding:44px 40px;border-radius:var(--radius);box-shadow:var(--shadow-sm);transition:all .3s var(--ease);display:flex;flex-direction:column;}
+  .review-card{background:#fff;padding:26px 28px;border-radius:var(--radius);box-shadow:var(--shadow-sm);transition:all .3s var(--ease);display:flex;flex-direction:column;}
   .review-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
-  .review-card .stars{color:var(--gold);font-size:15px;margin-bottom:24px;letter-spacing:3px;}
-  .review-card p{font-size:15.5px;color:var(--ink);margin:0 0 28px;font-weight:500;line-height:1.85;}
-  .review-card .who{font-size:13px;color:var(--ink-faint);letter-spacing:.02em;font-weight:600;}
+  .review-card .stars{color:var(--gold);font-size:13.5px;margin-bottom:12px;letter-spacing:2.5px;}
+  .review-card p{font-size:14.5px;color:var(--ink);margin:0 0 16px;font-weight:500;line-height:1.68;}
+  .review-card .footer-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    margin-top:auto;flex-wrap:wrap;
+    padding-top:14px;border-top:1px solid rgba(18,16,14,0.06);
+  }
+  .review-card .who{font-size:12.5px;color:var(--ink-faint);letter-spacing:.02em;font-weight:600;}
   .review-card .video-link{
-    display:inline-flex;align-items:center;gap:8px;
-    margin-top:20px;padding:10px 18px;
+    display:inline-flex;align-items:center;gap:5px;flex-shrink:0;
+    padding:6px 13px;
     background:var(--forest);color:#fff;
-    border-radius:30px;font-size:13px;font-weight:700;
-    align-self:flex-start;
+    border-radius:30px;font-size:11px;font-weight:700;white-space:nowrap;
     transition:all .3s var(--ease);
   }
   .review-card .video-link:hover{background:var(--forest-deep);transform:translateY(-2px);}
@@ -1057,7 +1080,8 @@
     transform:rotate(-4deg);
   }
   .kakao-panel h3{position:relative;z-index:1;font-size:26px;margin:0 0 16px;color:#fff;font-weight:800;letter-spacing:-0.02em;}
-  .kakao-panel p{position:relative;z-index:1;font-size:15.5px;color:rgba(255,255,255,0.65);margin:0 0 36px;line-height:1.8;}
+  .kakao-panel p{position:relative;z-index:1;font-size:15.5px;color:rgba(255,255,255,0.65);margin:0 0 36px;line-height:1.9;}
+  .kakao-panel p b{color:#F3E4C4;font-weight:800;}
   .kakao-panel-btns{position:relative;z-index:1;display:flex;flex-direction:column;gap:14px;width:100%;max-width:320px;}
   .kakao-panel-id{
     position:relative;z-index:1;margin-top:28px;
@@ -1507,7 +1531,10 @@
         <p class="k">ABOUT</p>
         <h2>한 평의 바닥에도<br>사는 사람의 가치가 담깁니다</h2>
         <div class="about-head-flex">
-          <p><b>공간의 완성도는 가장 마지막에 닿는 마감의 차이에서 결정됩니다.</b> 청인마루는 단순히 자재를 깔아내는 시공을 넘어, <b>공간 전체의 조화와 사는 사람의 라이프스타일을 고려한 맞춤형 시공</b>을 지향합니다. 인천 송도 본점 전시장을 기반으로 <b><span class="hl-nationwide">전국 각지</span></b>의 주거 및 상업 공간을 안정적으로 시공해 왔으며, <b>20년 노하우의 철저한 자재 추천, 정밀 현장 실측, 완벽한 책임 시공 관리 시스템</b>을 통해 <b>고객이 신뢰할 수 있는 완성도 높은 바닥</b>을 구현합니다.</p>
+          <div class="about-head-text">
+            <p><b>공간의 완성도는 가장 마지막에 닿는 마감의 차이에서 결정됩니다.</b> 청인마루는 단순히 자재를 깔아내는 시공을 넘어, <b>공간 전체의 조화와 사는 사람의 라이프스타일을 고려한 맞춤형 시공</b>을 지향합니다.</p>
+            <p>인천 송도 본점 전시장을 기반으로 <b><span class="hl-nationwide">전국 각지</span></b>의 주거 및 상업 공간을 안정적으로 시공해 왔으며, <b>20년 노하우의 철저한 자재 추천, 정밀 현장 실측, 완벽한 책임 시공 관리 시스템</b>을 통해 <b>고객이 신뢰할 수 있는 완성도 높은 바닥</b>을 구현합니다.</p>
+          </div>
           
           <!-- 전국 시공 네트워크 고해상도 프리미엄 지도 인프라 탑재 -->
           <div class="korea-map-wrap" aria-hidden="true">
@@ -1876,9 +1903,9 @@
           <svg width="28" height="28" viewBox="0 0 24 24" fill="#391B1B"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.86 5.34 4.66 6.77-.2.75-.73 2.73-.83 3.15-.13.53.19.52.4.38.17-.11 2.68-1.82 3.77-2.56.64.09 1.3.14 1.98.14 5.52 0 10-3.58 10-8s-4.48-8-9.98-8z"/></svg>
         </div>
         <h3>카카오톡 채널</h3>
-        <p>버튼 하나로 청인마루와 바로 연결돼요.<br>현장 사진이나 궁금하신 부분 편하게 보내주시면
-확인 후 순서대로 답변드리고 있어요.
-급하신 경우 전화(032-210-6268)도 언제든 환영입니다!</p>
+        <p>버튼 하나로 <b>청인마루</b>와 바로 연결돼요.<br>
+사진이나 궁금한 점을 남겨주시면 순서대로 답변드려요.<br>
+급하실 땐 <b>032-210-6268</b>로 전화 주세요!</p>
         <div class="kakao-panel-btns">
           <a href="https://pf.kakao.com/_xkcwEn/chat" target="_blank" rel="noopener" class="btn kakao-btn">
             바로 채팅하기
@@ -2008,8 +2035,9 @@
     11: { title:"원목마루_단독주택", sub:"노바_원목마루 아크로K_돌체비타" },
     12: { title:"타일형 강마루 시공_34평 아파트", sub:"노바_테라스_아로하베이지" },
     13: { title:"부천 단독주택", sub:"네스트_사각돌마루 시공" },
-    14: { title:"송도 아파트 블랙마루 시공", sub:"노바_블랙라벨_누아르블랙" }
-    15: { title:"부천 도자기 공방", sub:"네스트_미네랄마루_아크로 시공" }
+    14: { title:"송도 아파트 블랙마루 시공", sub:"노바_블랙라벨_누아르블랙" },
+    15: { title:"부천 도자기 공방", sub:"네스트_미네랄마루_아크로 시공" },
+    16: { title:"인천 송도 40평대 직사각 타일형 강마루 시공", sub:"동화_진그란데스퀘어_플로쏘" }
   };
 
   (function initHeroSlideshow(){
@@ -2423,6 +2451,21 @@
       who:"경기 부천 · 단독주택",
       videoUrl: null
     },
+    {
+      text:"이사 준비 중에 가장 신경 쓰였던 게 비용이었어요. 도면이랑 사진만 보내드려도 미리 예상 견적을 알려주셔서 마음 놓고 준비할 수 있었고, 시공 당일 시간도 정확히 지켜주셨습니다.",
+      who:"대전 유성구 · 아파트 32평",
+      videoUrl: null
+    },
+    {
+      text:"강마루 색상 고르는 일, 생각보다 훨씬 고민되더라고요. 저희 집 조명 톤까지 고려해서 추천해주신 덕분에 실제로 시공하고 보니 사진보다 훨씬 예쁘게 나왔어요.",
+      who:"인천 남동구 · 아파트 27평",
+      videoUrl: null
+    },
+    {
+      text:"다세대주택이 워낙 오래돼서 바닥 상태가 많이 상해 있었거든요. 그래도 샌딩 작업을 꼼꼼하게 해주셔서 걱정했던 것보다 훨씬 만족스러운 결과가 나왔습니다.",
+      who:"인천 미추홀구 · 다세대주택",
+      videoUrl: null
+    },
   ];
 
   const reviewGrid = document.getElementById('reviewGrid');
@@ -2431,12 +2474,14 @@
       <div class="review-card">
         <div class="stars">★★★★★</div>
         <p>"${r.text}"</p>
-        <div class="who">${r.who}</div>
-        ${r.videoUrl ? `
-          <a href="${r.videoUrl}" target="_blank" rel="noopener" class="video-link">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor" stroke="none"/></svg>
-            ${r.videoLabel || '관련 영상 보기'}
-          </a>` : ``}
+        <div class="footer-row">
+          <div class="who">${r.who}</div>
+          ${r.videoUrl ? `
+            <a href="${r.videoUrl}" target="_blank" rel="noopener" class="video-link">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor" stroke="none"/></svg>
+              영상 보기
+            </a>` : ``}
+        </div>
       </div>
     `).join('');
   }

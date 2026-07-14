@@ -601,12 +601,18 @@
   }
   .global-brand-tooltip.show{
     opacity:1;visibility:visible;transform:translateY(0);
+    pointer-events:auto;
   }
   .global-brand-tooltip .brand-notice-line{display:block;position:relative;padding-left:12px;}
   .global-brand-tooltip .brand-notice-line::before{
     content:'';position:absolute;left:0;top:6px;
     width:4px;height:4px;border-radius:50%;background:var(--gold);
   }
+  .global-brand-tooltip a{
+    color:var(--gold);font-weight:800;text-decoration:underline;
+    text-underline-offset:2px;word-break:break-all;
+  }
+  .global-brand-tooltip a:hover{color:#fff;}
 
   .catalog-download-icon{
     flex-shrink:0;display:flex;align-items:center;justify-content:center;
@@ -2771,11 +2777,30 @@
   brandTooltipEl.className = 'global-brand-tooltip';
   document.body.appendChild(brandTooltipEl);
 
+  function escapeHtml(str){
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // 공지 문구 안에 URL이 있으면 자동으로 클릭 가능한 링크로 변환합니다.
+  function linkifyNotice(str){
+    const escaped = escapeHtml(str);
+    return escaped.replace(/(https?:\/\/[^\s<]+)/g, (url) => {
+      let trimmed = url;
+      let trailing = '';
+      const trailingMatch = trimmed.match(/([),.!?;:]+)$/);
+      if(trailingMatch){
+        trailing = trailingMatch[1];
+        trimmed = trimmed.slice(0, -trailing.length);
+      }
+      return `<a href="${trimmed}" target="_blank" rel="noopener">${trimmed}</a>${trailing}`;
+    });
+  }
+
   function showBrandTooltip(badge){
     const brandName = badge.dataset.brand;
     const brand = brands.find(b => b.name === brandName);
     if(!brand || !brand.notices || !brand.notices.length) return;
-    brandTooltipEl.innerHTML = brand.notices.map(n => `<span class="brand-notice-line">${n}</span>`).join('');
+    brandTooltipEl.innerHTML = brand.notices.map(n => `<span class="brand-notice-line">${linkifyNotice(n)}</span>`).join('');
     brandTooltipEl.classList.add('show');
 
     const rect = badge.getBoundingClientRect();
@@ -2793,21 +2818,36 @@
     brandTooltipEl.classList.remove('show');
   }
 
+  // 배지 → 툴팁으로 마우스가 넘어가는 짧은 순간에 닫히지 않도록,
+  // 즉시 숨기지 않고 살짝 지연 후 숨김 처리합니다(그 사이 안의 링크를 누를 수 있음).
+  let brandTooltipHideTimer = null;
+  function scheduleHideBrandTooltip(){
+    clearTimeout(brandTooltipHideTimer);
+    brandTooltipHideTimer = setTimeout(hideBrandTooltip, 200);
+  }
+  function cancelHideBrandTooltip(){
+    clearTimeout(brandTooltipHideTimer);
+  }
+
   document.addEventListener('mouseover', (e) => {
     const badge = e.target.closest('.brand-notice-badge');
-    if(badge) showBrandTooltip(badge);
+    if(badge){ cancelHideBrandTooltip(); showBrandTooltip(badge); return; }
+    if(e.target.closest('.global-brand-tooltip')) cancelHideBrandTooltip();
   });
   document.addEventListener('mouseout', (e) => {
-    const badge = e.target.closest('.brand-notice-badge');
-    if(badge) hideBrandTooltip();
+    const leavingBadge = e.target.closest('.brand-notice-badge');
+    const leavingTooltip = e.target.closest('.global-brand-tooltip');
+    if(leavingBadge || leavingTooltip) scheduleHideBrandTooltip();
   });
   document.addEventListener('focusin', (e) => {
     const badge = e.target.closest('.brand-notice-badge');
-    if(badge) showBrandTooltip(badge);
+    if(badge){ cancelHideBrandTooltip(); showBrandTooltip(badge); return; }
+    if(e.target.closest('.global-brand-tooltip')) cancelHideBrandTooltip();
   });
   document.addEventListener('focusout', (e) => {
-    const badge = e.target.closest('.brand-notice-badge');
-    if(badge) hideBrandTooltip();
+    const leavingBadge = e.target.closest('.brand-notice-badge');
+    const leavingTooltip = e.target.closest('.global-brand-tooltip');
+    if(leavingBadge || leavingTooltip) scheduleHideBrandTooltip();
   });
   // 스크롤하면 화면 좌표에 고정된 툴팁이 어긋나 보이므로, 스크롤 시작 시 바로 닫습니다.
   window.addEventListener('scroll', hideBrandTooltip, { passive:true, capture:true });

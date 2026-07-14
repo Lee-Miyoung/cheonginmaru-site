@@ -1763,7 +1763,7 @@
         <div class="service-card" id="svc-1" style="--sc:#8B5E34">
           <div class="service-photo">
             <div class="service-photo-inner">
-              <img src="images/svc-1.jpeg" alt="원목마루 시공 예시" onerror="this.style.display='none'">
+              <img src="images/svc-1.jpeg" alt="원목마루 시공 예시" loading="eager" fetchpriority="high" onerror="this.style.display='none'">
             </div>
             <span class="service-num-pill">SERVICE 01</span>
             <div class="service-icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20c2-4 2-8 0-12"/><path d="M9 20c2-5 2-10 0-16"/><path d="M14 20c2-4 2-8 0-12"/><path d="M19 20c2-5 2-10 0-16"/></svg></div>
@@ -1776,7 +1776,7 @@
         <div class="service-card" id="svc-2" style="--sc:#A99878">
           <div class="service-photo">
             <div class="service-photo-inner">
-              <img src="images/svc-2.jpeg" alt="타일형 강마루 시공 예시" onerror="this.style.display='none'">
+              <img src="images/svc-2.jpeg" alt="타일형 강마루 시공 예시" loading="eager" onerror="this.style.display='none'">
             </div>
             <span class="service-num-pill">SERVICE 02</span>
             <div class="service-icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></div>
@@ -1789,7 +1789,7 @@
         <div class="service-card" id="svc-3" style="--sc:#C99456">
           <div class="service-photo">
             <div class="service-photo-inner">
-              <img src="images/svc-3.jpeg" alt="우드형 강마루 시공 예시" onerror="this.style.display='none'">
+              <img src="images/svc-3.jpeg" alt="우드형 강마루 시공 예시" loading="lazy" onerror="this.style.display='none'">
             </div>
             <span class="service-num-pill">SERVICE 03</span>
             <div class="service-icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></div>
@@ -1802,7 +1802,7 @@
         <div class="service-card" id="svc-4" style="--sc:#5F7A62">
           <div class="service-photo">
             <div class="service-photo-inner">
-              <img src="images/svc-4.jpeg" alt="미네랄마루·돌마루 시공 예시" onerror="this.style.display='none'">
+              <img src="images/svc-4.jpeg" alt="미네랄마루·돌마루 시공 예시" loading="lazy" onerror="this.style.display='none'">
             </div>
             <span class="service-num-pill">SERVICE 04</span>
             <div class="service-icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2l7 5-2 8-5 7-5-7-2-8z"/><path d="M5 7l7 3 7-3M12 10v9"/></svg></div>
@@ -1815,7 +1815,7 @@
         <div class="service-card" id="svc-5" style="--sc:#5A5652">
           <div class="service-photo">
             <div class="service-photo-inner">
-              <img src="images/svc-5.jpeg" alt="강화마루·데코타일·장판 시공 예시" onerror="this.style.display='none'">
+              <img src="images/svc-5.jpeg" alt="강화마루·데코타일·장판 시공 예시" loading="lazy" onerror="this.style.display='none'">
             </div>
             <span class="service-num-pill">SERVICE 05</span>
             <div class="service-icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></div>
@@ -1828,7 +1828,7 @@
         <div class="service-card" id="svc-6" style="--sc:#8C6B5C">
           <div class="service-photo">
             <div class="service-photo-inner">
-              <img src="images/svc-6.jpeg" alt="벽장재 시공 예시" onerror="this.style.display='none'">
+              <img src="images/svc-6.jpeg" alt="벽장재 시공 예시" loading="lazy" onerror="this.style.display='none'">
             </div>
             <span class="service-num-pill">SERVICE 06</span>
             <div class="service-icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></div>
@@ -2765,6 +2765,10 @@
       }
     });
   }
+
+  // 구글 시트 응답을 기다리지 않고, 기본 카드 틀을 즉시 먼저 그립니다.
+  // (카탈로그·공지 데이터는 시트 로딩이 끝나는 대로 갱신됩니다)
+  renderBrandGrid();
 
   loadBrandPostsFromSheet();
 

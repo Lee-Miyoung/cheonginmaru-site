@@ -141,6 +141,11 @@
       animation-duration:2s !important;
       animation-iteration-count:infinite !important;
     }
+    /* 무료 견적 상담 버튼의 반짝임 효과도 예외 처리 */
+    .btn-consult::before{
+      animation-duration:4s !important;
+      animation-iteration-count:infinite !important;
+    }
   }
 
   .mo-text { display: none; }
@@ -624,13 +629,23 @@
 
   .korea-map-wrap{
     flex-shrink:0;
-    width:270px;
-    display:flex;flex-direction:column;align-items:center;gap:12px;
+    width:320px;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:30px 26px 24px;
+    background:linear-gradient(155deg, #fff 0%, rgba(255,255,255,0.5) 100%);
+    border-radius:var(--radius);
+    border:1px solid rgba(18,16,14,0.05);
+    box-shadow:var(--shadow-md);
     animation: mapFloat 5s ease-in-out infinite;
-    transition: transform 0.4s var(--ease);
+    transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
   }
   .korea-map-wrap:hover {
     transform: translateY(-10px) scale(1.02);
+    box-shadow:var(--shadow-lg);
+  }
+  .korea-map-eyebrow{
+    font-size:11.5px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--copper);margin-bottom:4px;
   }
   @keyframes mapFloat {
     0%, 100% { transform: translateY(0); }
@@ -685,18 +700,24 @@
   }
   
   .korea-map-label{
-    font-size:16px !important;
+    font-size:17px !important;
     font-weight:800 !important;
     color:var(--copper-deep);
-    letter-spacing:0.04em !important;
+    letter-spacing:0.02em !important;
     text-align:center;
-    margin-top: 10px;
+    margin-top: 8px;
     display: block;
+    position:relative;
+  }
+  .korea-map-label::after{
+    content:'';display:block;width:28px;height:2px;
+    background:var(--copper);border-radius:2px;
+    margin:10px auto 0;
   }
 
   @media (max-width:900px){
     .about-head-flex{flex-direction:column;gap:24px;}
-    .korea-map-wrap{width:160px; animation: none;}
+    .korea-map-wrap{width:210px;padding:22px 18px 16px; animation: none;}
     .korea-map-wrap:hover {transform: none;}
     .about-head-text p{font-size: 16px !important; line-height: 1.8 !important;}
   }
@@ -1111,21 +1132,19 @@
     box-shadow:var(--shadow-lg);
     padding:44px 44px 40px;
   }
-  .partner-card-ghost{
-    position:absolute;top:-24px;right:-8px;z-index:0;pointer-events:none;
-    font-family:'Noto Serif KR',serif;font-size:150px;font-weight:900;line-height:1;
-    color:rgba(18,16,14,0.03);
-  }
   .partner-personal-note{
     position:relative;z-index:1;
-    display:flex;align-items:flex-start;gap:12px;
-    background:#fff;border-radius:var(--radius-sm);
-    padding:18px 20px;margin-bottom:32px;
-    border:1px solid rgba(18,16,14,0.06);
+    display:flex;align-items:flex-start;gap:14px;
+    background:linear-gradient(135deg, #FFF3E4, #FCE7CC);
+    border-radius:var(--radius-sm);
+    padding:22px 24px;margin-bottom:32px;
+    border:1.5px solid rgba(200,106,40,0.4);
+    box-shadow:0 10px 24px -12px rgba(200,106,40,0.35);
   }
-  .partner-personal-note svg{color:var(--copper);margin-top:2px;}
-  .partner-personal-note p{margin:0;font-size:14.5px;color:var(--ink-soft);line-height:1.7;}
-  .partner-personal-note a{color:var(--copper-deep);font-weight:700;text-decoration:underline;text-underline-offset:2px;}
+  .partner-personal-note svg{color:var(--copper-deep);margin-top:1px;}
+  .partner-personal-note p{margin:0;font-size:16px;color:var(--ink);line-height:1.75;font-weight:500;}
+  .partner-personal-note p b{color:var(--copper-deep);font-weight:800;}
+  .partner-personal-note a{color:var(--copper-deep);font-weight:800;text-decoration:underline;text-underline-offset:3px;}
 
   .partner-unified-card .partners-eyebrow{position:relative;z-index:1;}
   .partner-unified-card h3{
@@ -1538,6 +1557,7 @@
           
           <!-- 전국 시공 네트워크 고해상도 프리미엄 지도 인프라 탑재 -->
           <div class="korea-map-wrap" aria-hidden="true">
+            <span class="korea-map-eyebrow">LOCATION NETWORK</span>
             <svg viewBox="0 0 220 340" class="korea-map-svg">
               <defs>
                 <linearGradient id="mapGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1928,11 +1948,10 @@
         <p>건설사·인테리어 업체를 위한 전용 문의창구입니다. 남겨주신 정보로 담당자가 빠르게 연락드립니다.</p>
       </div>
       <div class="partner-unified-card reveal">
-        <span class="partner-card-ghost" aria-hidden="true">협</span>
 
         <div class="partner-personal-note">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-          <p>개인 고객이신가요? 시공 견적 문의는 <a href="#contact">무료 카카오톡 상담</a>이 훨씬 빨라요. 이 페이지는 건축·인테리어·하우징 업체 전용입니다.</p>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          <p><b>개인 고객이신가요?</b> 시공 견적 문의는 <a href="#contact">무료 카카오톡 상담</a>이 훨씬 빨라요. 이 페이지는 건축·인테리어·하우징 업체 전용입니다.</p>
         </div>
 
         <span class="partners-eyebrow">확인 절차 안내</span>

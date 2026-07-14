@@ -580,34 +580,32 @@
   }
   .brand-notice-badge{
     position:relative;display:inline-flex;align-items:center;justify-content:center;
-    width:25px;height:25px;border-radius:50%;flex-shrink:0;
+    width:24px;height:24px;border-radius:50%;flex-shrink:0;
     background:rgba(200,106,40,0.12);color:var(--copper-deep);
     cursor:pointer;transition:all .25s var(--ease);
   }
-  .brand-notice-badge:hover, .brand-notice-badge:focus-within{
+  .brand-notice-badge:hover, .brand-notice-badge:focus-visible{
     background:var(--copper);color:#fff;
   }
-  .brand-notice-tooltip{
-    position:absolute;top:calc(100% + 10px);left:0;z-index:30;
-    min-width:230px;max-width:280px;
+  .global-brand-tooltip{
+    position:fixed;z-index:9999;
+    min-width:200px;max-width:250px;
     background:var(--forest-deep);color:#fff;
-    padding:14px 18px;border-radius:10px;
-    font-size:12.5px;font-weight:600;line-height:1.75;letter-spacing:-0.01em;
+    padding:11px 15px;border-radius:10px;
+    font-size:11px;font-weight:600;line-height:1.65;letter-spacing:-0.01em;
     box-shadow:var(--shadow-lg);
     opacity:0;visibility:hidden;transform:translateY(-6px);
-    transition:opacity .25s var(--ease), transform .25s var(--ease), visibility .25s;
-    display:flex;flex-direction:column;gap:6px;
+    transition:opacity .2s var(--ease), transform .2s var(--ease), visibility .2s;
+    display:flex;flex-direction:column;gap:5px;
     pointer-events:none;
   }
-  .brand-notice-badge:hover .brand-notice-tooltip,
-  .brand-notice-badge:focus-within .brand-notice-tooltip{
+  .global-brand-tooltip.show{
     opacity:1;visibility:visible;transform:translateY(0);
-    pointer-events:auto;
   }
-  .brand-notice-line{display:block;position:relative;padding-left:14px;}
-  .brand-notice-line::before{
-    content:'';position:absolute;left:0;top:7px;
-    width:5px;height:5px;border-radius:50%;background:var(--gold);
+  .global-brand-tooltip .brand-notice-line{display:block;position:relative;padding-left:12px;}
+  .global-brand-tooltip .brand-notice-line::before{
+    content:'';position:absolute;left:0;top:6px;
+    width:4px;height:4px;border-radius:50%;background:var(--gold);
   }
 
   .catalog-download-icon{
@@ -2610,11 +2608,8 @@
         <h3>
           ${b.name}
           ${b.notices && b.notices.length ? `
-            <span class="brand-notice-badge" tabindex="0" aria-label="브랜드 공지사항">
+            <span class="brand-notice-badge" tabindex="0" aria-label="브랜드 공지사항" data-brand="${b.name}">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-              <span class="brand-notice-tooltip">
-                ${b.notices.map(n => `<span class="brand-notice-line">${n}</span>`).join('')}
-              </span>
             </span>
           ` : ''}
         </h3>
@@ -2765,6 +2760,51 @@
       }
     });
   }
+
+  // 브랜드 공지 툴팁 - 카드의 overflow:hidden에 잘리지 않도록
+  // body에 붙는 전역 고정(fixed) 위치 툴팁 하나를 공용으로 사용합니다.
+  const brandTooltipEl = document.createElement('div');
+  brandTooltipEl.className = 'global-brand-tooltip';
+  document.body.appendChild(brandTooltipEl);
+
+  function showBrandTooltip(badge){
+    const brandName = badge.dataset.brand;
+    const brand = brands.find(b => b.name === brandName);
+    if(!brand || !brand.notices || !brand.notices.length) return;
+    brandTooltipEl.innerHTML = brand.notices.map(n => `<span class="brand-notice-line">${n}</span>`).join('');
+    brandTooltipEl.classList.add('show');
+
+    const rect = badge.getBoundingClientRect();
+    const tooltipWidth = Math.min(250, Math.max(200, brandTooltipEl.offsetWidth));
+    let left = rect.left;
+    if(left + tooltipWidth > window.innerWidth - 12){
+      left = window.innerWidth - tooltipWidth - 12;
+    }
+    if(left < 12) left = 12;
+    brandTooltipEl.style.left = `${left}px`;
+    brandTooltipEl.style.top = `${rect.bottom + 10}px`;
+  }
+
+  function hideBrandTooltip(){
+    brandTooltipEl.classList.remove('show');
+  }
+
+  document.addEventListener('mouseover', (e) => {
+    const badge = e.target.closest('.brand-notice-badge');
+    if(badge) showBrandTooltip(badge);
+  });
+  document.addEventListener('mouseout', (e) => {
+    const badge = e.target.closest('.brand-notice-badge');
+    if(badge) hideBrandTooltip();
+  });
+  document.addEventListener('focusin', (e) => {
+    const badge = e.target.closest('.brand-notice-badge');
+    if(badge) showBrandTooltip(badge);
+  });
+  document.addEventListener('focusout', (e) => {
+    const badge = e.target.closest('.brand-notice-badge');
+    if(badge) hideBrandTooltip();
+  });
 
   // 구글 시트 응답을 기다리지 않고, 기본 카드 틀을 즉시 먼저 그립니다.
   // (카탈로그·공지 데이터는 시트 로딩이 끝나는 대로 갱신됩니다)

@@ -23,6 +23,7 @@
 <meta name="twitter:description" content="20년 경력·누적 2만 건 이상 시공 실적. 무료 견적 상담 가능.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preload" as="image" href="images/hero-1.jpg" fetchpriority="high">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
@@ -576,6 +577,12 @@
 
   .catalog-item-title{font-size:13.5px;font-weight:600;text-align:left !important;width:100%;transition:color .2s var(--ease);}
   .catalog-item-sub{font-size:11.5px;color:var(--ink-faint);text-align:left !important;width:100%;}
+  .catalog-item-note{
+    display:inline-block;margin-top:4px;
+    font-size:10.5px;font-weight:700;color:#B5540E;
+    background:rgba(200,106,40,0.12);border:1px solid rgba(200,106,40,0.25);
+    padding:2px 8px;border-radius:20px;white-space:nowrap;
+  }
 
   .catalog-download-icon{
     flex-shrink:0;display:flex;align-items:center;justify-content:center;
@@ -1509,7 +1516,7 @@
       </div>
       <div class="hero-visual">
         <div class="hero-frame" id="heroFrame">
-          <div id="heroSlideContainer"></div>
+          <div id="heroSlideContainer"><img src="images/hero-1.jpg" class="hero-slide active" alt="청인마루 시공 현장 사진" fetchpriority="high" onerror="this.style.display='none'"></div>
           <div class="hero-dots" id="heroDots"></div>
           <div class="tag" id="heroTag">시공 현장<span id="heroTagSub">다양한 공간의 마루 시공 사례</span></div>
         </div>
@@ -2070,11 +2077,21 @@
       }
     }
 
-    for(let i=1;i<=HERO_SLIDE_MAX;i++){
-      const testImg = new Image();
-      testImg.onload = () => { found.push({order:i, src:`images/hero-${i}.jpg`}); onEachChecked(); };
-      testImg.onerror = () => { onEachChecked(); };
-      testImg.src = `images/hero-${i}.jpg`;
+    function scanForSlides(){
+      for(let i=1;i<=HERO_SLIDE_MAX;i++){
+        const testImg = new Image();
+        testImg.onload = () => { found.push({order:i, src:`images/hero-${i}.jpg`}); onEachChecked(); };
+        testImg.onerror = () => { onEachChecked(); };
+        testImg.src = `images/hero-${i}.jpg`;
+      }
+    }
+
+    // 실제 보여줄 1번 사진 로딩과 경쟁하지 않도록, 전체 사진 목록 스캔은
+    // 페이지 로드가 끝난 뒤(또는 약간의 지연 후) 백그라운드에서 진행합니다.
+    if(document.readyState === 'complete'){
+      scanForSlides();
+    } else {
+      window.addEventListener('load', scanForSlides, { once:true });
     }
 
     function updateCaption(order){
@@ -2586,6 +2603,7 @@
                     const titleInner = `
                       <span class="catalog-item-title">${c.productsDesc || c.label || '제품'}</span>
                       ${c.label ? `<span class="catalog-item-sub">${c.label}</span>` : ''}
+                      ${c.note ? `<span class="catalog-item-note">${c.note}</span>` : ''}
                     `;
                     const titleBlock = c.introLink
                       ? `<a href="${c.introLink}" target="_blank" rel="noopener" class="catalog-title-link has-link">${titleInner}</a>`
@@ -2686,10 +2704,11 @@
           const productsDesc = cleanTrim(row[3]);
           const file = cleanTrim(row[4]);
           const introLink = cleanTrim(row[5]);
+          const note = cleanTrim(row[6]);
           if(!brand || !targetLabel) return;
           if(!byBrand[brand]) byBrand[brand] = {};
           if(!byBrand[brand][targetLabel]) byBrand[brand][targetLabel] = [];
-          byBrand[brand][targetLabel].push({ label:category, file, productsDesc, introLink });
+          byBrand[brand][targetLabel].push({ label:category, file, productsDesc, introLink, note });
         });
         brands.forEach(b => {
           if(byBrand[b.name]){

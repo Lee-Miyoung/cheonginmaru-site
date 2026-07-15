@@ -97,7 +97,7 @@
     --surface-2:#E6D8BE;
     --ink:#12100E;
     --ink-soft:#4A423A;
-    --ink-faint:#827568;
+    --ink-faint:#6E6358;
     --copper:#C86A28;
     --copper-deep:#8F4311;
     --forest:#1A3026;
@@ -428,8 +428,13 @@
     display:flex;justify-content:center;gap:8px;
   }
   .hero-dot{
+    position:relative;
     width:7px;height:7px;border-radius:50%;padding:0;border:none;cursor:pointer;
     background:rgba(255,255,255,0.4);transition:all .3s var(--ease);
+  }
+  .hero-dot::after{
+    content:'';position:absolute;top:50%;left:50%;
+    width:24px;height:24px;transform:translate(-50%,-50%);
   }
   .hero-dot.active{width:22px;border-radius:5px;background:var(--gold);}
   .hero-badge{
@@ -834,7 +839,7 @@
     letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px;
   }
   .partners-eyebrow::before{content:'';width:22px;height:2px;background:var(--copper);display:inline-block;}
-  .partners-card h4{
+  .partners-card h3{
     position:relative;z-index:1;
     font-family:'Noto Serif KR',serif;font-size:22px;font-weight:800;color:var(--ink);
     margin:0 0 14px;
@@ -1413,7 +1418,7 @@
       transform: translateX(0) !important;
     }
 
-    .partners-card h4 {
+    .partners-card h3 {
       font-size: clamp(19px, 5.5vw, 22px);
       line-height: 1.4;
     }
@@ -1721,7 +1726,7 @@
 
       <div class="partners-card partners-card-below">
         <span class="partners-eyebrow">PARTNERS</span>
-        <h4>건축·인테리어 업체 전용 협력문의</h4>
+        <h3>건축·인테리어 업체 전용 협력문의</h3>
         <p class="partners-intro">믿고 맡길 수 있는 시공 파트너를 찾는 건축·인테리어 업체들이 청인마루를 먼저 찾습니다. 정직한 시공과 책임감 있는 사후관리로 오랜 협력관계를 이어오고 있습니다.</p>
         <div id="partnersGroups" class="partners-groups-below">
           <div class="partners-group">
@@ -2630,7 +2635,7 @@
         <h3>
           ${b.name}
           ${b.notices && b.notices.length ? `
-            <span class="brand-notice-badge" tabindex="0" aria-label="브랜드 공지사항" data-brand="${b.name}">
+            <span class="brand-notice-badge" role="button" tabindex="0" aria-label="브랜드 공지사항" data-brand="${b.name}">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
             </span>
           ` : ''}

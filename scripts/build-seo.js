@@ -18,6 +18,7 @@ const path = require('path');
 const Papa = require('papaparse');
 
 const INDEX_PATH = path.join(__dirname, '..', 'index.html');
+const SITEMAP_PATH = path.join(__dirname, '..', 'sitemap.xml');
 
 const PORTFOLIO_SHEET_CSV_URL =
   "https://docs.google.com/spreadsheets/d/1rt4nMI1JAhLFvk3WWz6IyvlnmUExlbgLj6yGK9Ta0MA/gviz/tq?tqx=out:csv&sheet=%EC%8B%9C%EB%B3%B5%EC%82%AC%EB%A1%80";
@@ -30,7 +31,7 @@ const PORTFOLIO_BRAND_TERMS = [
   "동화자연마루", "동화마루", "노바마루", "한솔홈데코", "한솔마루", "구정마루", "네스트", "이건", "성원",
   "시그니월", "진그란데스퀘어", "진 그란데 스퀘어", "듀오텍스쳐맥스", "마뷸러스젠", "원목마루STK", "콜렉트월",
   "미네랄월", "SB스톤", "sb스톤", "SB스퀘어", "sb스퀘어", "아크로K", "아크로", "사각돌마루", "미네랄마루",
-  "오크스트립", "동화", "노바", "한솔", "구정"
+  "오크스트립", "수입원목마루", "Nass", "동화", "노바", "한솔", "구정"
 ].sort((a, b) => b.length - a.length);
 
 const portfolioBrandRegex = new RegExp(
@@ -146,6 +147,15 @@ async function main() {
 
   fs.writeFileSync(INDEX_PATH, indexHtml, 'utf8');
   console.log(`✅ index.html에 시공사례 ${items.length}건을 정적으로 반영했습니다.`);
+
+  // 사이트맵의 마지막 수정일도 오늘 날짜로 갱신 (검색엔진에 "계속 관리 중" 신호를 줌)
+  if (fs.existsSync(SITEMAP_PATH)) {
+    const today = new Date().toISOString().slice(0, 10);
+    let sitemapXml = fs.readFileSync(SITEMAP_PATH, 'utf8');
+    sitemapXml = sitemapXml.replace(/<lastmod>.*?<\/lastmod>/, `<lastmod>${today}</lastmod>`);
+    fs.writeFileSync(SITEMAP_PATH, sitemapXml, 'utf8');
+    console.log(`✅ sitemap.xml의 lastmod를 ${today}로 갱신했습니다.`);
+  }
 }
 
 main().catch(err => {

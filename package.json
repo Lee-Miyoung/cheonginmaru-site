@@ -1,0 +1,15 @@
+{
+  "name": "cheonginmaru-seo-build",
+  "private": true,
+  "version": "1.0.0",
+  "description": "구글 시트 콘텐츠를 index.html에 정적으로 반영하는 SEO 빌드 스크립트",
+  "scripts": {
+    "build:seo": "node scripts/build-seo.js"
+  },
+  "dependencies": {
+    "papaparse": "^5.4.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

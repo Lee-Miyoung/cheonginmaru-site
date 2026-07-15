@@ -1,0 +1,35 @@
+name: SEO 정적 빌드 (시공사례 자동 반영)
+
+# 구글 시트에 시공사례를 새로 적을 때마다, 아래 스케줄에 따라
+# index.html에 실제 내용을 정적으로 구워 넣고 자동 커밋합니다.
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # 30분마다 자동 실행 (필요시 주기 조정 가능)
+  workflow_dispatch: {}       # Actions 탭에서 수동으로도 실행 가능
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node.js 설치
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 의존성 설치
+        run: npm install
+
+      - name: 구글 시트 → index.html 정적 반영
+        run: npm run build:seo
+
+      - name: 변경사항 커밋 & 푸시
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: 시공사례 자동 반영 (SEO 빌드)"
+          file_pattern: index.html

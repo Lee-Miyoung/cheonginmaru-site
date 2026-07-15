@@ -23,12 +23,16 @@ jobs:
       - name: 저장소 체크아웃
         uses: actions/checkout@v7
 
-      - name: 이미지 압축 (커밋은 하지 않고 파일만 압축)
-        id: calibre
-        uses: calibreapp/image-actions@main
+      - name: Node.js 설치
+        uses: actions/setup-node@v5
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          compressOnly: true
+          node-version: '22'
+
+      - name: 의존성 설치
+        run: npm install
+
+      - name: 이미지 리사이즈 + 압축
+        run: npm run optimize:images
 
       - name: 압축된 이미지 자동 커밋 & 푸시
         uses: stefanzweifel/git-auto-commit-action@v7

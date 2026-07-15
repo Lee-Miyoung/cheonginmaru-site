@@ -1,0 +1,37 @@
+name: 이미지 자동 압축
+
+# images 폴더에 새 jpg/png/webp 사진이 올라오면
+# 자동으로 압축해서 다시 커밋합니다. (화질 차이는 거의 없고 용량만 크게 줄어듭니다)
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'images/**.jpg'
+      - 'images/**.jpeg'
+      - 'images/**.png'
+      - 'images/**.webp'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  compress:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v7
+
+      - name: 이미지 압축 (커밋은 하지 않고 파일만 압축)
+        id: calibre
+        uses: calibreapp/image-actions@main
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          compressOnly: true
+
+      - name: 압축된 이미지 자동 커밋 & 푸시
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "chore: 이미지 자동 압축"
+          file_pattern: images/**

@@ -27,7 +27,7 @@ jobs:
         id: calibre
         uses: calibreapp/image-actions@main
         with:
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           compressOnly: true
 
       - name: 압축된 이미지 자동 커밋 & 푸시

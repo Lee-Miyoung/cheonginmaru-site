@@ -1079,7 +1079,20 @@
   .portfolio-more{text-align:center;margin-top:32px;display:flex;flex-direction:column;align-items:center;gap:16px;}
 
   /* ---------- REVIEWS ---------- */
-  .reviews{background:var(--surface);}
+  .reviews{background:var(--surface);position:relative;overflow:hidden;}
+  .reviews::before{
+    content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+    background-image: repeating-linear-gradient(115deg,
+      rgba(26,48,38,0.045) 0px, rgba(26,48,38,0.045) 1.5px,
+      transparent 1.5px, transparent 90px);
+  }
+  .reviews::after{
+    content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(420px circle at 94% -8%, rgba(26,48,38,0.09), transparent 70%),
+      radial-gradient(380px circle at 2% 108%, rgba(26,48,38,0.07), transparent 70%);
+  }
+  .reviews .wrap{position:relative;z-index:1;}
   .review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
   .review-card{background:#fff;padding:26px 28px;border-radius:var(--radius);box-shadow:var(--shadow-sm);transition:all .3s var(--ease);display:flex;flex-direction:column;}
   .review-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
@@ -1102,7 +1115,11 @@
   .review-card .video-link svg{flex-shrink:0;}
 
   /* ---------- CONTACT ---------- */
-  .contact{background:var(--surface);}
+  .contact{background:var(--bg);position:relative;}
+  .contact::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg, transparent, rgba(18,16,14,0.1) 50%, transparent);
+  }
   .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;}
   .info-card{background:#fff;padding:44px;border-radius:var(--radius);box-shadow:var(--shadow-md);border:1px solid rgba(18,16,14,0.04);}
   .info-row{display:flex;gap:20px;align-items:flex-start;padding:24px 0;border-bottom:1px solid rgba(18,16,14,0.05);}

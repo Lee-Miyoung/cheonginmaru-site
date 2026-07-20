@@ -1052,21 +1052,21 @@
     font-size:11.5px;font-weight:800;padding:6px 16px;border-radius:30px;letter-spacing:.05em;
     z-index:2;box-shadow:0 4px 12px -2px rgba(0,0,0,0.1);
   }
-  .portfolio-info{padding:28px 28px 32px;}
-  .portfolio-info h3{font-size:19px;margin:0 0 10px;font-weight:700;transition:color 0.3s;}
+  .portfolio-info{padding:14px 18px 16px;}
+  .portfolio-info h3{font-size:17px;margin:0 0 4px;font-weight:700;line-height:1.3;transition:color 0.3s;}
   .portfolio-card:hover .portfolio-info h3{color:var(--copper);}
-  .portfolio-info p{font-size:14.5px;color:var(--ink-soft);margin:0;}
+  .portfolio-info p{font-size:13.5px;color:var(--ink-soft);margin:0;line-height:1.5;}
   .portfolio-info p .model-tag{color:var(--copper-deep);font-weight:700;font-style:normal;}
   .portfolio-info p .brand-tag{color:var(--forest);font-weight:700;font-style:normal;}
-  .portfolio-spec-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .portfolio-spec-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
   .portfolio-spec{
-    display:inline-block;padding:5px 12px;
+    display:inline-block;padding:3px 10px;
     background:var(--bg);border:1px solid rgba(18,16,14,0.08);border-radius:20px;
-    font-size:12px;font-weight:600;color:var(--ink-faint);letter-spacing:.01em;
+    font-size:11.5px;font-weight:600;color:var(--ink-faint);letter-spacing:.01em;
     max-width:100%;overflow-wrap:break-word;word-break:break-word;white-space:normal;
   }
   .portfolio-empty{color:var(--ink-soft);font-size:16px;padding:80px 0;text-align:center;grid-column:span 3;}
-  .portfolio-pagination{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:48px;flex-wrap:wrap;}
+  .portfolio-pagination{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:32px;flex-wrap:wrap;}
   .page-btn{
     min-width:40px;height:40px;padding:0 12px;border-radius:10px;
     border:1px solid rgba(18,16,14,0.1);background:#fff;color:var(--ink-soft);
@@ -1122,6 +1122,11 @@
   }
   .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;}
   .info-card{background:#fff;padding:44px;border-radius:var(--radius);box-shadow:var(--shadow-md);border:1px solid rgba(18,16,14,0.04);}
+  .contact-map{
+    margin-top:24px;border-radius:var(--radius);overflow:hidden;
+    box-shadow:var(--shadow-md);border:1px solid rgba(18,16,14,0.04);
+  }
+  .contact-map iframe{width:100%;height:260px;border:0;display:block;}
   .info-row{display:flex;gap:20px;align-items:flex-start;padding:24px 0;border-bottom:1px solid rgba(18,16,14,0.05);}
   .info-row:last-child{border-bottom:none;}
   .info-row b{
@@ -2525,6 +2530,15 @@
           <div class="info-row"><b>운영시간</b><span>평일 10:00 - 17:00 · 방문예약 필수 / 주말 예약제</span></div>
           <div class="info-row"><b>시공사례</b><span><a href="https://blog.naver.com/chonginmaru" target="_blank" rel="noopener" style="color:var(--forest);font-weight:700;">네이버 블로그 '청인마루'</a>에서 더 많은 사례를 확인하세요</span></div>
           <div class="info-row"><b>SNS</b><span>인스타그램·Threads @cheonginmaru · 유튜브 '마루아빠'</span></div>
+        </div>
+        <div class="contact-map">
+          <iframe
+            src="https://maps.google.com/maps?q=%EC%9D%B8%EC%B2%9C%EA%B4%91%EC%97%AD%EC%8B%9C%20%EC%97%B0%EC%88%98%EA%B5%AC%20%EC%86%A1%EB%8F%84%EB%AF%B8%EB%9E%98%EB%A1%9C%2030&t=&z=16&ie=UTF8&iwloc=&output=embed"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            title="청인마루 위치 지도"
+            aria-label="청인마루 위치 지도 - 인천광역시 연수구 송도미래로 30"
+          ></iframe>
         </div>
       </div>
 

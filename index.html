@@ -2035,23 +2035,10 @@
       <div class="portfolio-toolbar" id="portfolioFilters"></div>
       <div class="portfolio-grid" id="portfolioGrid"><!-- SSR:PORTFOLIO:START -->
 
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224350530914" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_53.jpg" alt="인천 서해구 청라봄오피스텔 34평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">데코타일</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 서해구 청라봄오피스텔 34평형</h3>
-          <p>오피스텔 가성비 좋은 LX하우시스 라임스톤 시공</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격 450*450*3T</span></div>
-        </div>
-      </a>
-
       <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224347094048" target="_blank" rel="noopener">
         <div class="portfolio-thumb" >
           <img src="images/portfolio/portfolio_52.jpg" alt="천안 독립기념관 제 7관" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">원목마루</span>
+          <span class="pill">원목 마루</span>
           <span class="portfolio-view">전체 사진 보기 →</span>
         </div>
         <div class="portfolio-info">
@@ -3232,9 +3219,10 @@
 
   const reviewItems = [
     {
-      text:"상담부터 시공까지 일정 안내가 정확해서 믿음이 갔어요. 마감도 깔끔합니다.",
-      who:"인천 송도 · 아파트 34평",
-      videoUrl: null
+      text:"3년 전 시공했던 결과가 마음에 들어서, 이번 이사할 때도 마루는 청인마루에 맡겼습니다. 초광폭 마루라 시공하기 쉽지 않으셨을 텐데, 덕분에 셀프 인테리어가 예쁘게 나온 것 같아 만족스러워요. 다음 이사 때도 무조건 청인마루입니다.",
+      who:"인천 부평 · 아파트 24평",
+      videoUrl: "https://blog.naver.com/chonginmaru/224352109468",
+      videoLabel: "관련 글 보기"
     },
     {
       text:"처음 시공했던 결과가 마음에 들어서, 이번에 새로 이사한 집도 고민 없이 다시 청인마루를 찾았어요. 두 번 다 믿고 맡길 수 있었습니다.",
@@ -3308,8 +3296,10 @@
           <div class="who">${r.who}</div>
           ${r.videoUrl ? `
             <a href="${r.videoUrl}" target="_blank" rel="noopener" class="video-link">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor" stroke="none"/></svg>
-              영상 보기
+              ${r.videoUrl.includes('blog.naver.com')
+                ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.07 0l1.41-1.41a5 5 0 00-7.07-7.07L10 6"/><path d="M14 11a5 5 0 00-7.07 0l-1.41 1.41a5 5 0 007.07 7.07L14 18"/></svg>`
+                : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor" stroke="none"/></svg>`}
+              ${r.videoLabel || '영상 보기'}
             </a>` : ``}
         </div>
       </div>

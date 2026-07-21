@@ -197,6 +197,29 @@
     background:linear-gradient(90deg, transparent, var(--copper) 20%, var(--gold) 50%, var(--copper) 80%, transparent);
     opacity:0.55;
   }
+
+  /* 데스크탑/태블릿: 떠 있는 라운드 아일랜드형 네비게이션 (최신 트렌드) */
+  @media (min-width:1281px){
+    header{
+      background:transparent;border-bottom:none;box-shadow:none;
+      padding:14px 24px 0;
+    }
+    header::after{display:none;}
+    .nav{
+      background:rgba(255,253,249,0.72);
+      backdrop-filter:blur(22px) saturate(1.6);
+      -webkit-backdrop-filter:blur(22px) saturate(1.6);
+      border:1px solid rgba(18,16,14,0.07);
+      border-radius:24px;
+      box-shadow:0 24px 56px -22px rgba(18,16,14,0.22), 0 2px 10px -4px rgba(18,16,14,0.06);
+      max-width:1360px;
+      transition:box-shadow .35s var(--ease), border-color .35s var(--ease);
+    }
+    .nav:hover{
+      box-shadow:0 28px 64px -20px rgba(18,16,14,0.26), 0 4px 14px -4px rgba(200,106,40,0.1);
+      border-color:rgba(217,96,31,0.18);
+    }
+  }
   .nav{
     display:flex;align-items:center;justify-content:space-between;gap:20px;
     padding:6px 40px;max-width:1280px;margin:0 auto;
@@ -275,6 +298,11 @@
   .btn-consult {
     position: relative;
     overflow: hidden;
+    background:linear-gradient(135deg, var(--copper) 0%, var(--copper-deep) 100%);
+    border-color:transparent;
+  }
+  @media (hover:hover){
+    .btn-consult:hover{transform:translateY(-2px) scale(1.03);}
   }
   .btn-consult::before {
     content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;

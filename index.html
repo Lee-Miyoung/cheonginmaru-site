@@ -186,11 +186,16 @@
   /* ---------- HEADER ---------- */
   header{
     position:sticky; top:0; z-index:50;
-    background:rgba(250,247,242,0.82);
+    background:linear-gradient(180deg, rgba(255,253,249,0.92) 0%, rgba(250,247,242,0.86) 100%);
     backdrop-filter:blur(24px) saturate(1.5);
     -webkit-backdrop-filter:blur(24px) saturate(1.5);
     border-bottom:1px solid rgba(18,16,14,0.06);
     box-shadow: 0 10px 40px -20px rgba(18,16,14,0.12);
+  }
+  header::after{
+    content:'';position:absolute;left:0;right:0;bottom:-2px;height:2px;
+    background:linear-gradient(90deg, transparent, var(--copper) 20%, var(--gold) 50%, var(--copper) 80%, transparent);
+    opacity:0.55;
   }
   .nav{
     display:flex;align-items:center;justify-content:space-between;gap:20px;
@@ -227,16 +232,17 @@
     transform-origin:left center;
     flex-shrink: 0 !important;
   }
-  .navlinks{display:flex;gap:30px;font-size:15px;font-weight:700;color:var(--ink-soft);}
-  .navlinks a{position:relative;padding:8px 0;transition:color .35s var(--ease);}
+  .navlinks{display:flex;gap:4px;font-size:15px;font-weight:700;color:var(--ink-soft);}
+  .navlinks a{position:relative;padding:9px 14px;border-radius:30px;transition:color .3s var(--ease), background .3s var(--ease);}
   .navlinks a::after{
     content:'';position:absolute;
-    left:50%;right:50%;bottom:0;height:2.5px;
+    left:14px;right:14px;bottom:3px;height:2px;
     background:var(--copper);
-    transition:all .35s cubic-bezier(0.25, 1, 0.5, 1);
+    transform:scaleX(0);transform-origin:center;
+    transition:transform .35s cubic-bezier(0.25, 1, 0.5, 1);
   }
-  .navlinks a:hover{color:var(--copper);}
-  .navlinks a:hover::after{left:0;right:0;}
+  .navlinks a:hover{color:var(--copper-deep);background:rgba(217,96,31,0.08);}
+  .navlinks a:hover::after{transform:scaleX(1);}
 
   .btn{
     display:inline-flex;align-items:center;gap:12px;white-space:nowrap;
@@ -1434,7 +1440,8 @@
   /* 반응형 마스터 빌드 해상도 조율 */
   @media (min-width:1281px) and (max-width:1480px){
     .wrap{padding:0 24px;}
-    .navlinks{gap:18px;font-size:13.5px;}
+    .navlinks{gap:0;font-size:13.5px;}
+    .navlinks a{padding:8px 10px;}
     .header-btns{gap:8px;}
     .btn-outline-copper{padding:12px 18px;font-size:13px;}
     .btn-consult{padding:12px 20px;font-size:13px;}
@@ -2042,36 +2049,10 @@
       <div class="portfolio-toolbar" id="portfolioFilters"></div>
       <div class="portfolio-grid" id="portfolioGrid"><!-- SSR:PORTFOLIO:START -->
 
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224352109468" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_54.jpg" alt="인천 부평구 삼산타운1단지 24평 아파트" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">우드형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 부평구 삼산타운1단지 24평 아파트</h3>
-          <p>초광폭 복합(보드+합판)강마루 <b class="brand-tag">동화</b> 듀오텍스처맥스 <b class="model-tag">브램튼 내추럴</b> 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:232*2400*10.5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224350530914" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_53.jpg" alt="인천 서해구 청라봄오피스텔 34평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">데코타일</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 서해구 청라봄오피스텔 34평형</h3>
-          <p>오피스텔 가성비 좋은 LX하우시스 라임스톤 시공</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격 450*450*3T</span></div>
-        </div>
-      </a>
-
       <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224347094048" target="_blank" rel="noopener">
         <div class="portfolio-thumb" >
           <img src="images/portfolio/portfolio_52.jpg" alt="천안 독립기념관 제 7관" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">원목마루</span>
+          <span class="pill">원목 마루</span>
           <span class="portfolio-view">전체 사진 보기 →</span>
         </div>
         <div class="portfolio-info">
@@ -2187,12 +2168,12 @@
 
       <a class="portfolio-card" href="https://m.blog.naver.com/PostView.naver?blogId=chonginmaru&amp;logNo=224293539080&amp;navType=by" target="_blank" rel="noopener">
         <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_08.jpg" alt="인천 송도_에듀포레푸르지오" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">우드형 강마루</span>
+          <img src="images/portfolio/portfolio_08.jpg" alt="인천 송도_아트윈푸르지오" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
+          <span class="pill">타일형 강마루</span>
           <span class="portfolio-view">전체 사진 보기 →</span>
         </div>
         <div class="portfolio-info">
-          <h3>인천 송도_에듀포레푸르지오</h3>
+          <h3>인천 송도_아트윈푸르지오</h3>
           <p>보드 우드형 강마루 패턴의 <b class="brand-tag">한솔마루</b> sb강 <b class="model-tag">밸리내추럴</b> 마루 시공 완료 건입니다.</p>
           <div class="portfolio-spec-row"><span class="portfolio-spec">규격:165*1,200*7.5T</span></div>
         </div>
@@ -2803,7 +2784,7 @@
     12: { title:"타일형 강마루 시공_34평 아파트", sub:"노바_테라스_아로하베이지" },
     13: { title:"부천 단독주택", sub:"네스트_사각돌마루 시공" },
     14: { title:"송도 아파트 블랙마루 시공", sub:"노바_블랙라벨_누아르블랙" },
-    15: { title:"부천 도자기 스튜디오", sub:"네스트_미네랄마루_아크로 시공" },
+    15: { title:"부천 도자기 공방", sub:"네스트_미네랄마루_아크로 시공" },
     16: { title:"인천 송도 40평대 직사각 타일형 강마루 시공", sub:"동화_진그란데스퀘어_플로쏘" }
   };
 
@@ -3265,7 +3246,7 @@
     },
     {
       text:"배관 공사 중 실수로 물이 완전히 차오른 적이 있었는데, 미네랄마루라 천연광물 소재 덕분에 마루가 멀쩡했어요. 다른 자재였으면 전부 걷어내고 재시공해야 했을 텐데, 정말 탁월한 선택이었다는 생각이 들었습니다.",
-      who:"경기 부천 · 도자기 스튜디오",
+      who:"경기 부천 · 도자기 공방",
       videoUrl: "https://youtu.be/ncV409F45Bc?si=7S71jQWrJfpFqZNI",
       videoLabel: "관련 영상 보기"
     },

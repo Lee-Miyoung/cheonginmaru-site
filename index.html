@@ -198,6 +198,15 @@
     opacity:0.55;
   }
 
+  @keyframes navAuroraSpin{
+    from{ transform:rotate(0deg); }
+    to{ transform:rotate(360deg); }
+  }
+  @keyframes livePulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(74,222,128,0.5); }
+    50%{ box-shadow:0 0 0 5px rgba(74,222,128,0); }
+  }
+
   /* 데스크탑/태블릿: 떠 있는 라운드 아일랜드형 네비게이션 (최신 트렌드) */
   @media (min-width:1281px){
     header{
@@ -206,6 +215,7 @@
     }
     header::after{display:none;}
     .nav{
+      position:relative;isolation:isolate;
       background:rgba(255,253,249,0.72);
       backdrop-filter:blur(22px) saturate(1.6);
       -webkit-backdrop-filter:blur(22px) saturate(1.6);
@@ -215,9 +225,25 @@
       max-width:1360px;
       transition:box-shadow .35s var(--ease), border-color .35s var(--ease);
     }
+    .nav::before{
+      content:'';position:absolute;inset:-1.5px;z-index:-1;border-radius:25.5px;
+      background:conic-gradient(from 0deg, var(--copper), var(--gold), transparent 35%, transparent 65%, var(--copper));
+      opacity:0.55;
+      animation:navAuroraSpin 7s linear infinite;
+    }
     .nav:hover{
       box-shadow:0 28px 64px -20px rgba(18,16,14,0.26), 0 4px 14px -4px rgba(200,106,40,0.1);
       border-color:rgba(217,96,31,0.18);
+    }
+    .nav-live-badge{
+      display:flex;align-items:center;gap:7px;
+      font-size:12px;font-weight:700;color:var(--forest);
+      padding:7px 14px;border-radius:20px;margin-right:6px;
+      background:rgba(26,48,38,0.06);white-space:nowrap;
+    }
+    .nav-live-badge .dot{
+      width:7px;height:7px;border-radius:50%;background:#4ADE80;flex-shrink:0;
+      animation:livePulse 2s infinite;
     }
   }
   .nav{
@@ -300,6 +326,7 @@
     overflow: hidden;
     background:linear-gradient(135deg, var(--copper) 0%, var(--copper-deep) 100%);
     border-color:transparent;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 24px -8px rgba(168,72,15,0.45);
   }
   @media (hover:hover){
     .btn-consult:hover{transform:translateY(-2px) scale(1.03);}
@@ -324,6 +351,17 @@
   .btn-ghost:hover{background:#fff;color:var(--forest-deep);border-color:#fff;}
 
   .header-btns{display:flex;align-items:center;gap:10px;}
+  .nav-live-badge{display:none;}
+  .mobile-live-badge{
+    display:flex !important;align-items:center;gap:7px;
+    font-size:12px;font-weight:700;color:var(--forest);
+    padding:8px 14px;border-radius:20px;margin-bottom:14px;
+    background:rgba(26,48,38,0.06);width:fit-content;
+  }
+  .mobile-live-badge .dot{
+    width:7px;height:7px;border-radius:50%;background:#4ADE80;flex-shrink:0;
+    animation:livePulse 2s infinite;
+  }
   .btn-outline-copper{
     background:transparent !important;color:var(--copper) !important;border:1px solid var(--copper) !important;
     box-shadow:none;padding:14px 28px;font-size:14.5px;
@@ -1589,14 +1627,26 @@
   .fab-kakao{
     display:none;
   }
+  @keyframes fabPulseRing{
+    0%{ transform:scale(0.85); opacity:0.55; }
+    70%{ transform:scale(1.45); opacity:0; }
+    100%{ opacity:0; }
+  }
   @media (max-width:1480px){
     .fab-kakao{
       display:flex;align-items:center;justify-content:center;
       position:fixed;right:18px;bottom:22px;z-index:60;
       width:58px;height:58px;border-radius:50%;
-      background:#FEE500;color:#391B1B;
-      box-shadow:0 12px 28px -8px rgba(0,0,0,0.35);
+      background:linear-gradient(135deg, #FFEE58 0%, #FEE500 55%, #FDD800 100%);
+      color:#391B1B;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 12px 28px -8px rgba(0,0,0,0.35);
       border:none;
+    }
+    .fab-kakao::before{
+      content:'';position:absolute;inset:-7px;border-radius:50%;
+      background:rgba(254,229,0,0.4);
+      animation:fabPulseRing 2.3s ease-out infinite;
+      z-index:-1;
     }
     .fab-kakao:active{transform:scale(0.94);}
     .fab-kakao svg{width:28px;height:28px;}
@@ -1622,6 +1672,7 @@
       <a href="#contact">문의하기</a>
     </nav>
     <div class="header-btns">
+      <span class="nav-live-badge"><span class="dot"></span>실시간 상담 가능</span>
       <a href="#partner-apply" class="btn btn-outline-copper">
         <span class="pc-text">건축·인테리어 업체 전용 협력문의</span>
         <span class="mo-text">건축 인테리어 업체 협력문의</span>
@@ -1634,6 +1685,7 @@
     <button class="mobile-toggle" id="mobileToggle" aria-label="메뉴 열기" aria-expanded="false">☰</button>
   </div>
   <nav class="mobile-menu" id="mobileMenu">
+    <span class="nav-live-badge mobile-live-badge"><span class="dot"></span>실시간 상담 가능</span>
     <a href="#about">소개</a>
     <div class="mobile-menu-row">
       <a href="#brands" class="mm-main-link">브랜드</a>
@@ -2077,36 +2129,10 @@
       <div class="portfolio-toolbar" id="portfolioFilters"></div>
       <div class="portfolio-grid" id="portfolioGrid"><!-- SSR:PORTFOLIO:START -->
 
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224352109468" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_54.jpg" alt="인천 부평구 삼산타운1단지 24평 아파트" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">우드형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 부평구 삼산타운1단지 24평 아파트</h3>
-          <p>초광폭 복합(보드+합판)강마루 <b class="brand-tag">동화</b> 듀오텍스처맥스 <b class="model-tag">브램튼 내추럴</b> 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:232*2400*10.5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224350530914" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_53.jpg" alt="인천 서해구 청라봄오피스텔 34평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">데코타일</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 서해구 청라봄오피스텔 34평형</h3>
-          <p>오피스텔 가성비 좋은 LX하우시스 라임스톤 시공</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격 450*450*3T</span></div>
-        </div>
-      </a>
-
       <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224347094048" target="_blank" rel="noopener">
         <div class="portfolio-thumb" >
           <img src="images/portfolio/portfolio_52.jpg" alt="천안 독립기념관 제 7관" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">원목마루</span>
+          <span class="pill">원목 마루</span>
           <span class="portfolio-view">전체 사진 보기 →</span>
         </div>
         <div class="portfolio-info">
@@ -2222,12 +2248,12 @@
 
       <a class="portfolio-card" href="https://m.blog.naver.com/PostView.naver?blogId=chonginmaru&amp;logNo=224293539080&amp;navType=by" target="_blank" rel="noopener">
         <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_08.jpg" alt="인천 송도_에듀포레푸르지오" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">우드형 강마루</span>
+          <img src="images/portfolio/portfolio_08.jpg" alt="인천 송도_아트윈푸르지오" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
+          <span class="pill">타일형 강마루</span>
           <span class="portfolio-view">전체 사진 보기 →</span>
         </div>
         <div class="portfolio-info">
-          <h3>인천 송도_에듀포레푸르지오</h3>
+          <h3>인천 송도_아트윈푸르지오</h3>
           <p>보드 우드형 강마루 패턴의 <b class="brand-tag">한솔마루</b> sb강 <b class="model-tag">밸리내추럴</b> 마루 시공 완료 건입니다.</p>
           <div class="portfolio-spec-row"><span class="portfolio-spec">규격:165*1,200*7.5T</span></div>
         </div>

@@ -1054,10 +1054,10 @@
   }
   .portfolio-info{padding:10px 18px 16px;}
   .portfolio-info h3{
-    position:relative;font-size:17px;margin:0 0 4px;font-weight:700;line-height:1.3;transition:color 0.3s;
+    position:relative;font-size:17px;margin:0 0 8px;font-weight:700;line-height:1.3;transition:color 0.3s;
   }
   .portfolio-info h3::after{
-    content:'';position:absolute;left:0;right:0;bottom:-4px;height:1px;
+    content:'';position:absolute;left:0;right:0;bottom:-6px;height:1px;
     background:rgba(18,16,14,0.08);
   }
   .portfolio-card:hover .portfolio-info h3{color:var(--copper);}
@@ -1403,6 +1403,46 @@
   .toon-social .media-text{display:flex;flex-direction:column;gap:3px;text-align:left;}
   .toon-social .media-text b{font-size:14.5px;font-weight:700;}
   .toon-social .media-text span.handle{color:rgba(246,241,231,0.5);font-weight:500;font-size:13px;margin-left:0;}
+
+  /* ---------- PORTFOLIO LIGHTBOX ---------- */
+  .lightbox-overlay{
+    position:fixed;inset:0;z-index:200;
+    background:rgba(13,22,18,0.92);
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+    opacity:0;visibility:hidden;
+    transition:opacity .3s var(--ease), visibility .3s;
+  }
+  .lightbox-overlay.open{opacity:1;visibility:visible;}
+  .lightbox-content{
+    position:relative;max-width:1000px;width:100%;
+    display:grid;grid-template-columns:1.4fr 1fr;
+    background:#fff;border-radius:var(--radius);overflow:hidden;
+    max-height:88vh;
+    box-shadow:var(--shadow-lg);
+    transform:scale(0.96);transition:transform .3s var(--ease);
+  }
+  .lightbox-overlay.open .lightbox-content{transform:scale(1);}
+  .lightbox-img-wrap{background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .lightbox-img-wrap img{width:100%;height:100%;object-fit:contain;display:block;max-height:88vh;}
+  .lightbox-caption{padding:36px 32px;overflow-y:auto;}
+  .lightbox-caption h3{font-size:21px;margin:0 0 14px;font-weight:700;color:var(--ink);font-family:'Noto Serif KR',serif;}
+  .lightbox-caption p{font-size:15px;color:var(--ink-soft);line-height:1.8;margin:0 0 18px;}
+  .lightbox-caption .portfolio-spec-row{margin-bottom:22px;}
+  .lightbox-caption .btn{width:100%;justify-content:center;}
+  .lightbox-close{
+    position:absolute;top:14px;right:14px;z-index:2;
+    width:38px;height:38px;border-radius:50%;
+    background:rgba(255,255,255,0.92);border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;line-height:1;color:var(--ink);
+    transition:background .2s, transform .2s;
+  }
+  .lightbox-close:hover{background:#fff;transform:scale(1.08);}
+  @media (max-width:768px){
+    .lightbox-content{grid-template-columns:1fr;max-height:92vh;overflow-y:auto;}
+    .lightbox-img-wrap img{max-height:46vh;}
+  }
 
   /* ---------- FOOTER ---------- */
   footer{padding:80px 0 48px;background:var(--forest-deep);border-top:1px solid rgba(255,255,255,0.06);}
@@ -2783,6 +2823,22 @@
   </div>
 </footer>
 
+<!-- PORTFOLIO LIGHTBOX -->
+<div class="lightbox-overlay" id="lightboxOverlay" role="dialog" aria-modal="true" aria-label="시공사례 크게 보기">
+  <div class="lightbox-content">
+    <button type="button" class="lightbox-close" id="lightboxClose" aria-label="닫기">&times;</button>
+    <div class="lightbox-img-wrap">
+      <img id="lightboxImg" src="" alt="">
+    </div>
+    <div class="lightbox-caption">
+      <h3 id="lightboxTitle"></h3>
+      <p id="lightboxDesc"></p>
+      <div class="portfolio-spec-row" id="lightboxSpec"></div>
+      <a href="#" target="_blank" rel="noopener" class="btn btn-outline-copper" id="lightboxLink">네이버 블로그에서 전체 사진 보기</a>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
   const HERO_SLIDE_MAX = 30;
@@ -3130,6 +3186,67 @@
     renderFilters();
     renderPortfolio();
   }
+
+  // ---------- 시공사례 라이트박스 ----------
+  // 시공사례 카드를 누르면 바로 블로그로 나가는 대신, 사이트 안에서 사진을 크게 볼 수 있게 해줍니다.
+  // (정적으로 미리 렌더링된 카드와, 구글시트에서 불러와 JS로 그린 카드 모두에 동일하게 적용됩니다)
+  (function initPortfolioLightbox(){
+    const overlay = document.getElementById('lightboxOverlay');
+    if(!overlay) return;
+    const imgEl = document.getElementById('lightboxImg');
+    const titleEl = document.getElementById('lightboxTitle');
+    const descEl = document.getElementById('lightboxDesc');
+    const specEl = document.getElementById('lightboxSpec');
+    const linkEl = document.getElementById('lightboxLink');
+    const closeBtn = document.getElementById('lightboxClose');
+    const grid = document.getElementById('portfolioGrid');
+
+    function openLightbox(card){
+      const img = card.querySelector('.portfolio-thumb img');
+      const title = card.querySelector('.portfolio-info h3');
+      const desc = card.querySelector('.portfolio-info p');
+      const specRow = card.querySelector('.portfolio-spec-row');
+      const href = card.tagName === 'A' ? card.getAttribute('href') : '';
+
+      imgEl.src = img ? img.src : '';
+      imgEl.alt = img ? img.alt : '';
+      titleEl.textContent = title ? title.textContent : '';
+      descEl.innerHTML = desc ? desc.innerHTML : '';
+      specEl.innerHTML = specRow ? specRow.innerHTML : '';
+
+      if(href){
+        linkEl.href = href;
+        linkEl.style.display = '';
+      } else {
+        linkEl.style.display = 'none';
+      }
+
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox(){
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    if(grid){
+      grid.addEventListener('click', function(e){
+        const card = e.target.closest('.portfolio-card');
+        if(!card || !grid.contains(card)) return;
+        e.preventDefault();
+        openLightbox(card);
+      });
+    }
+
+    closeBtn.addEventListener('click', closeLightbox);
+    overlay.addEventListener('click', function(e){
+      if(e.target === overlay) closeLightbox();
+    });
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape') closeLightbox();
+    });
+  })();
 
   // ---------- FAQ (구글시트 연동) ----------
   // 구글 시트에 "질문", "답변" 두 개의 열을 만들고 [파일 → 공유 → 웹에 게시]로 CSV 링크를 받아

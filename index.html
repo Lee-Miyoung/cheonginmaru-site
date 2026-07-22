@@ -1,4 +1,4 @@
-\<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -226,12 +226,10 @@
     animation:logoIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     transform-origin:left center;
     flex-shrink: 0 !important;
-    transition:transform .35s var(--ease), filter .35s var(--ease);
+    transition:transform .15s ease-out;
+    will-change:transform;
   }
-  .logo:hover .logo-img{
-    transform:scale(1.045);
-    filter:drop-shadow(0 6px 16px rgba(217,96,31,0.32));
-  }
+  .logo{perspective:500px;}
   .logo-shine{
     position:relative;display:inline-block;overflow:hidden;line-height:0;
   }
@@ -1477,7 +1475,7 @@
   }
   .footer-logo-img{
     position:relative;z-index:1;
-    height:128px;
+    height:102px;
     width:auto;
     object-fit:contain;
     filter: brightness(0) invert(1) drop-shadow(0 8px 22px rgba(230,190,120,0.3));
@@ -2881,6 +2879,25 @@
     15: { title:"부천 도자기 스튜디오", sub:"네스트_미네랄마루_아크로 시공" },
     16: { title:"인천 송도 40평대 직사각 타일형 강마루 시공", sub:"동화_진그란데스퀘어_플로쏘" }
   };
+
+  // 로고에 마우스를 올리면 커서 위치를 따라 살짝 3D로 기울어지는 인터랙션
+  // (Linear, Vercel 등 프리미엄 사이트들이 즐겨 쓰는 "마그네틱 틸트" 효과)
+  (function initLogoTilt(){
+    const logoWrap = document.querySelector('.logo');
+    const img = document.querySelector('.logo-img');
+    if(!logoWrap || !img) return;
+    const maxTilt = 9;
+
+    logoWrap.addEventListener('mousemove', (e) => {
+      const rect = logoWrap.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      img.style.transform = `perspective(500px) rotateY(${x * maxTilt}deg) rotateX(${-y * maxTilt}deg) scale(1.05)`;
+    });
+    logoWrap.addEventListener('mouseleave', () => {
+      img.style.transform = '';
+    });
+  })();
 
   (function initHeroSlideshow(){
     const container = document.getElementById('heroSlideContainer');

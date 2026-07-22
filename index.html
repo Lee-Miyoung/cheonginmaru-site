@@ -186,63 +186,15 @@
   /* ---------- HEADER ---------- */
   header{
     position:sticky; top:0; z-index:50;
-    background:linear-gradient(180deg, rgba(255,253,249,0.92) 0%, rgba(250,247,242,0.86) 100%);
+    background:rgba(250,247,242,0.82);
     backdrop-filter:blur(24px) saturate(1.5);
     -webkit-backdrop-filter:blur(24px) saturate(1.5);
     border-bottom:1px solid rgba(18,16,14,0.06);
     box-shadow: 0 10px 40px -20px rgba(18,16,14,0.12);
   }
-  header::after{
-    content:'';position:absolute;left:0;right:0;bottom:-2px;height:2px;
-    background:linear-gradient(90deg, transparent, var(--copper) 20%, var(--gold) 50%, var(--copper) 80%, transparent);
-    opacity:0.55;
-  }
-
-  @keyframes navAuroraSpin{
-    from{ transform:rotate(0deg); }
-    to{ transform:rotate(360deg); }
-  }
-  @keyframes livePulse{
-    0%,100%{ box-shadow:0 0 0 0 rgba(74,222,128,0.5); }
-    50%{ box-shadow:0 0 0 5px rgba(74,222,128,0); }
-  }
-
-  /* 데스크탑/태블릿: 떠 있는 라운드 아일랜드형 네비게이션 (최신 트렌드) */
-  @media (min-width:1281px){
-    header{
-      background:transparent;border-bottom:none;box-shadow:none;
-      padding:8px 24px 0;
-    }
-    header::after{display:none;}
-    .nav{
-      position:relative;isolation:isolate;
-      background:rgba(255,253,249,0.72);
-      backdrop-filter:blur(22px) saturate(1.6);
-      -webkit-backdrop-filter:blur(22px) saturate(1.6);
-      border:1px solid rgba(18,16,14,0.07);
-      border-radius:24px;
-      box-shadow:0 24px 56px -22px rgba(18,16,14,0.22), 0 2px 10px -4px rgba(18,16,14,0.06);
-      max-width:1360px;
-      transition:box-shadow .35s var(--ease), border-color .35s var(--ease);
-    }
-    .nav:hover{
-      box-shadow:0 28px 64px -20px rgba(18,16,14,0.26), 0 4px 14px -4px rgba(200,106,40,0.1);
-      border-color:rgba(217,96,31,0.18);
-    }
-    .nav-live-badge{
-      display:flex;align-items:center;gap:7px;
-      font-size:12px;font-weight:700;color:var(--forest);
-      padding:7px 14px;border-radius:20px;margin-right:6px;
-      background:rgba(26,48,38,0.06);white-space:nowrap;
-    }
-    .nav-live-badge .dot{
-      width:7px;height:7px;border-radius:50%;background:#4ADE80;flex-shrink:0;
-      animation:livePulse 2s infinite;
-    }
-  }
   .nav{
     display:flex;align-items:center;justify-content:space-between;gap:20px;
-    padding:4px 40px;max-width:1280px;margin:0 auto;
+    padding:6px 40px;max-width:1280px;margin:0 auto;
   }
   .logo{
     display:flex;align-items:center;
@@ -275,17 +227,16 @@
     transform-origin:left center;
     flex-shrink: 0 !important;
   }
-  .navlinks{display:flex;gap:4px;font-size:15px;font-weight:700;color:var(--ink-soft);}
-  .navlinks a{position:relative;padding:9px 14px;border-radius:30px;transition:color .3s var(--ease), background .3s var(--ease);}
+  .navlinks{display:flex;gap:30px;font-size:15px;font-weight:700;color:var(--ink-soft);}
+  .navlinks a{position:relative;padding:8px 0;transition:color .35s var(--ease);}
   .navlinks a::after{
     content:'';position:absolute;
-    left:14px;right:14px;bottom:3px;height:2px;
+    left:50%;right:50%;bottom:0;height:2.5px;
     background:var(--copper);
-    transform:scaleX(0);transform-origin:center;
-    transition:transform .35s cubic-bezier(0.25, 1, 0.5, 1);
+    transition:all .35s cubic-bezier(0.25, 1, 0.5, 1);
   }
-  .navlinks a:hover{color:var(--copper-deep);background:rgba(217,96,31,0.08);}
-  .navlinks a:hover::after{transform:scaleX(1);}
+  .navlinks a:hover{color:var(--copper);}
+  .navlinks a:hover::after{left:0;right:0;}
 
   .btn{
     display:inline-flex;align-items:center;gap:12px;white-space:nowrap;
@@ -318,12 +269,6 @@
   .btn-consult {
     position: relative;
     overflow: hidden;
-    background:linear-gradient(135deg, var(--copper) 0%, var(--copper-deep) 100%);
-    border-color:transparent;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 24px -8px rgba(168,72,15,0.45);
-  }
-  @media (hover:hover){
-    .btn-consult:hover{transform:translateY(-2px) scale(1.03);}
   }
   .btn-consult::before {
     content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
@@ -345,17 +290,6 @@
   .btn-ghost:hover{background:#fff;color:var(--forest-deep);border-color:#fff;}
 
   .header-btns{display:flex;align-items:center;gap:10px;}
-  .nav-live-badge{display:none;}
-  .mobile-live-badge{
-    display:flex !important;align-items:center;gap:7px;
-    font-size:12px;font-weight:700;color:var(--forest);
-    padding:8px 14px;border-radius:20px;margin-bottom:14px;
-    background:rgba(26,48,38,0.06);width:fit-content;
-  }
-  .mobile-live-badge .dot{
-    width:7px;height:7px;border-radius:50%;background:#4ADE80;flex-shrink:0;
-    animation:livePulse 2s infinite;
-  }
   .btn-outline-copper{
     background:transparent !important;color:var(--copper) !important;border:1px solid var(--copper) !important;
     box-shadow:none;padding:14px 28px;font-size:14.5px;
@@ -1500,8 +1434,7 @@
   /* 반응형 마스터 빌드 해상도 조율 */
   @media (min-width:1281px) and (max-width:1480px){
     .wrap{padding:0 24px;}
-    .navlinks{gap:0;font-size:13.5px;}
-    .navlinks a{padding:8px 10px;}
+    .navlinks{gap:18px;font-size:13.5px;}
     .header-btns{gap:8px;}
     .btn-outline-copper{padding:12px 18px;font-size:13px;}
     .btn-consult{padding:12px 20px;font-size:13px;}
@@ -1621,26 +1554,14 @@
   .fab-kakao{
     display:none;
   }
-  @keyframes fabPulseRing{
-    0%{ transform:scale(0.85); opacity:0.55; }
-    70%{ transform:scale(1.45); opacity:0; }
-    100%{ opacity:0; }
-  }
   @media (max-width:1480px){
     .fab-kakao{
       display:flex;align-items:center;justify-content:center;
       position:fixed;right:18px;bottom:22px;z-index:60;
       width:58px;height:58px;border-radius:50%;
-      background:linear-gradient(135deg, #FFEE58 0%, #FEE500 55%, #FDD800 100%);
-      color:#391B1B;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 12px 28px -8px rgba(0,0,0,0.35);
+      background:#FEE500;color:#391B1B;
+      box-shadow:0 12px 28px -8px rgba(0,0,0,0.35);
       border:none;
-    }
-    .fab-kakao::before{
-      content:'';position:absolute;inset:-7px;border-radius:50%;
-      background:rgba(254,229,0,0.4);
-      animation:fabPulseRing 2.3s ease-out 3;
-      z-index:-1;
     }
     .fab-kakao:active{transform:scale(0.94);}
     .fab-kakao svg{width:28px;height:28px;}
@@ -1666,7 +1587,6 @@
       <a href="#contact">문의하기</a>
     </nav>
     <div class="header-btns">
-      <span class="nav-live-badge"><span class="dot"></span>실시간 상담 가능</span>
       <a href="#partner-apply" class="btn btn-outline-copper">
         <span class="pc-text">건축·인테리어 업체 전용 협력문의</span>
         <span class="mo-text">건축 인테리어 업체 협력문의</span>
@@ -1679,7 +1599,6 @@
     <button class="mobile-toggle" id="mobileToggle" aria-label="메뉴 열기" aria-expanded="false">☰</button>
   </div>
   <nav class="mobile-menu" id="mobileMenu">
-    <span class="nav-live-badge mobile-live-badge"><span class="dot"></span>실시간 상담 가능</span>
     <a href="#about">소개</a>
     <div class="mobile-menu-row">
       <a href="#brands" class="mm-main-link">브랜드</a>

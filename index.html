@@ -214,12 +214,12 @@
       0 0 0 1px rgba(255,255,255,0.04) inset;
     padding:0 0 26px;
     overflow:hidden;
-    pointer-events:auto;
+    pointer-events:none;
     opacity:0;
     transform:translate(-16px, -16px) scale(0.95);
     transition:transform .5s cubic-bezier(0.19, 1.15, 0.36, 1), opacity .4s ease;
   }
-  .notice-popup-overlay.show .notice-popup{transform:translate(0,0) scale(1);opacity:1;}
+  .notice-popup-overlay.show .notice-popup{transform:translate(0,0) scale(1);opacity:1;pointer-events:auto;}
   .notice-popup-inner{padding:22px 26px 0;}
   .notice-popup-close{
     position:absolute;top:14px;right:14px;z-index:3;

@@ -3692,15 +3692,29 @@
     if(reopenBtn) reopenBtn.style.top = top + 'px';
   }
 
+  const NOTICE_COLOR_MAP = {
+    '빨강':'#C0392B', '레드':'#C0392B',
+    '주황':'var(--copper-deep)', '오렌지':'var(--copper-deep)', '코퍼':'var(--copper-deep)',
+    '초록':'var(--forest)', '그린':'var(--forest)',
+    '파랑':'#2E5C9A', '블루':'#2E5C9A',
+    '금색':'var(--gold)', '골드':'var(--gold)',
+    '보라':'#8A6DB0', '퍼플':'#8A6DB0',
+    '회색':'var(--ink-faint)', '그레이':'var(--ink-faint)'
+  };
+
   function formatNoticeRichText(text, opts){
     opts = opts || {};
     // 브랜드·제품명(진테라, 동화, 노바 등)은 자동으로 강조됩니다.
-    // **단어**  → 볼드 강조 / __단어__ → 밑줄
+    // **단어** → 볼드 강조 / __단어__ → 밑줄 / {{색상:단어}} → 색깔 지정 (예: {{빨강:품절임박}})
     let out = escapeHtml(text);
     if(opts.brand !== false){
       out = out.replace(portfolioBrandRegex, '<b class="notice-highlight">$1</b>');
     }
     out = out
+      .replace(/\{\{\s*([^:{}]+)\s*:\s*([^{}]+?)\s*\}\}/g, (m, color, word) => {
+        const c = NOTICE_COLOR_MAP[color.trim()] || 'var(--copper-deep)';
+        return `<b style="color:${c};font-weight:800;">${word}</b>`;
+      })
       .replace(/\*\*(.+?)\*\*/g, '<b class="notice-highlight">$1</b>')
       .replace(/__(.+?)__/g, '<u>$1</u>');
     if(opts.br !== false){

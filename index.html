@@ -314,6 +314,33 @@
     transform:rotate(45deg);
   }
 
+  /* ---------- 공지 다시보기 버튼 ---------- */
+  /* 팝업을 닫아도 이 작은 버튼이 남아서, 눌러서 언제든 다시 볼 수 있어요. */
+  .notice-reopen-btn{
+    position:fixed;z-index:150;
+    top:16px;left:16px;
+    width:44px;height:44px;border-radius:50%;
+    background:var(--bg);color:var(--copper-deep);
+    border:1.5px solid rgba(217,96,31,0.3);
+    box-shadow:0 10px 24px -8px rgba(18,16,14,0.25);
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:transform .25s var(--ease), box-shadow .25s var(--ease);
+    opacity:0;transform:scale(0.6);
+    animation:noticeReopenIn .4s cubic-bezier(0.34,1.56,0.64,1) .1s forwards;
+  }
+  .notice-reopen-btn:hover{transform:scale(1.08);box-shadow:0 14px 30px -8px rgba(18,16,14,0.32);}
+  .notice-reopen-btn:active{transform:scale(0.96);}
+  @keyframes noticeReopenIn{
+    from{opacity:0;transform:scale(0.6);}
+    to{opacity:1;transform:scale(1);}
+  }
+  .notice-reopen-dot{
+    position:absolute;top:2px;right:2px;
+    width:9px;height:9px;border-radius:50%;
+    background:var(--copper);
+    border:2px solid var(--bg);
+  }
+
   /* ---------- 프리미엄 디테일: 은은한 종이 질감 ---------- */
   body::before{
     content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
@@ -1796,6 +1823,11 @@
     </div>
   </div>
 </div>
+
+<button type="button" class="notice-reopen-btn" id="noticeReopenBtn" aria-label="공지 다시 보기" style="display:none;">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+  <span class="notice-reopen-dot"></span>
+</button>
 
 <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 
@@ -3547,8 +3579,19 @@
   const NOTICE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1tPEiganG6bcXcDzLOiCODV2KvwjMSjJw5b9dYnfMIQM/gviz/tq?tqx=out:csv&gid=2008112676";
   const NOTICE_DISMISS_KEY = "cheonginmaru_notice_dismiss";
 
+  function positionNoticeUI(){
+    const headerEl = document.querySelector('header');
+    const headerBottom = headerEl ? headerEl.getBoundingClientRect().bottom : 0;
+    const top = Math.max(16, headerBottom + 14);
+    const overlay = document.getElementById('noticePopupOverlay');
+    const reopenBtn = document.getElementById('noticeReopenBtn');
+    if(overlay) overlay.style.paddingTop = top + 'px';
+    if(reopenBtn) reopenBtn.style.top = top + 'px';
+  }
+
   function openNoticePopup(data){
     const overlay = document.getElementById('noticePopupOverlay');
+    const reopenBtn = document.getElementById('noticeReopenBtn');
     const imgWrap = document.getElementById('noticePopupImgWrap');
     const imgEl = document.getElementById('noticePopupImg');
     const tagEl = document.getElementById('noticePopupTag');
@@ -3558,7 +3601,11 @@
     if(!overlay || !imgWrap || !imgEl || !tagEl || !titleEl || !bodyEl || !btnEl) return;
 
     if(data.image){
-      const src = /^https?:\/\//.test(data.image) ? data.image : ('images/notice/' + data.image);
+      const rawSrc = /^https?:\/\//.test(data.image) ? data.image : ('images/notice/' + data.image);
+      // 사진 파일을 같은 이름으로 새로 올려도 예전 캐시(특히 한 번 깨졌던 이미지)가 남지 않도록
+      // 오늘 날짜를 붙여서 매번 새로 받아오게 합니다.
+      const cacheBust = new Date().toISOString().slice(0,10);
+      const src = rawSrc + (rawSrc.includes('?') ? '&' : '?') + 'v=' + cacheBust;
       imgEl.src = src;
       imgEl.alt = data.title || '공지 이미지';
       imgWrap.style.display = '';
@@ -3598,18 +3645,19 @@
     }
 
     // 헤더(로고) 높이만큼 아래로 내려서, 팝업이 로고를 가리지 않도록 위치를 계산합니다.
-    const headerEl = document.querySelector('header');
-    const headerBottom = headerEl ? headerEl.getBoundingClientRect().bottom : 0;
-    overlay.style.paddingTop = Math.max(16, headerBottom + 14) + 'px';
-
+    positionNoticeUI();
+    if(reopenBtn) reopenBtn.style.display = 'none';
     overlay.classList.add('show');
   }
 
   function closeNoticePopup(noticeKey){
     const overlay = document.getElementById('noticePopupOverlay');
+    const reopenBtn = document.getElementById('noticeReopenBtn');
     const dontShowBox = document.getElementById('noticePopupDontShow');
     if(!overlay) return;
     overlay.classList.remove('show');
+    // 완전히 닫아도 이 작은 버튼이 남아서, 새로고침 없이 언제든 다시 볼 수 있어요.
+    if(reopenBtn) reopenBtn.style.display = 'flex';
     if(dontShowBox && dontShowBox.checked){
       try{
         const today = new Date().toISOString().slice(0, 10);
@@ -3640,17 +3688,19 @@
         if(!title && !body && !image) return;
 
         const noticeKey = title + '|' + body + '|' + image + '|' + tag;
+        const noticeData = { title, body, image, tag, btnText, btnLink };
 
+        let alreadyDismissedToday = false;
         try{
           const saved = JSON.parse(localStorage.getItem(NOTICE_DISMISS_KEY) || 'null');
           const today = new Date().toISOString().slice(0, 10);
-          if(saved && saved.date === today && saved.key === noticeKey) return;
+          if(saved && saved.date === today && saved.key === noticeKey) alreadyDismissedToday = true;
         } catch(e){}
-
-        openNoticePopup({ title, body, image, tag, btnText, btnLink });
 
         const closeBtn = document.getElementById('noticePopupCloseBtn');
         const overlayEl = document.getElementById('noticePopupOverlay');
+        const reopenBtn = document.getElementById('noticeReopenBtn');
+
         if(closeBtn) closeBtn.addEventListener('click', () => closeNoticePopup(noticeKey));
         if(overlayEl){
           overlayEl.addEventListener('click', (e) => {
@@ -3660,6 +3710,19 @@
         document.addEventListener('keydown', function(e){
           if(e.key === 'Escape') closeNoticePopup(noticeKey);
         });
+        if(reopenBtn){
+          reopenBtn.addEventListener('click', () => openNoticePopup(noticeData));
+        }
+        window.addEventListener('resize', positionNoticeUI);
+
+        if(alreadyDismissedToday){
+          // 오늘 하루 안 보기로 닫았던 공지예요. 자동으로 다시 띄우진 않지만,
+          // 작은 버튼을 남겨서 원할 때 언제든 다시 볼 수 있게 해줍니다.
+          positionNoticeUI();
+          if(reopenBtn) reopenBtn.style.display = 'flex';
+        } else {
+          openNoticePopup(noticeData);
+        }
       },
       error: function(){}
     });

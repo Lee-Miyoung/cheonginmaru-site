@@ -3651,6 +3651,7 @@
   const NOTICE_DISMISS_KEY = "cheonginmaru_notice_dismiss";
   let noticeItems = [];
   let noticeSlideIdx = 0;
+  window.__noticePopupOpenedAt = 0;
 
   // ---------- 공지 이미지 크게 보기 ----------
   (function initNoticeImgLightbox(){
@@ -3663,6 +3664,8 @@
 
     function openLb(){
       if(!srcImg.src) return;
+      // 팝업이 막 열린 직후(고스트 클릭) 확대창이 실수로 뜨는 것을 막는 안전장치
+      if(Date.now() - window.__noticePopupOpenedAt < 350) return;
       lbImg.src = srcImg.src;
       lbImg.alt = srcImg.alt;
       overlay.classList.add('open');
@@ -3769,6 +3772,7 @@
     const reopenBtn = document.getElementById('noticeReopenBtn');
     if(!overlay || !noticeItems.length) return;
 
+    window.__noticePopupOpenedAt = Date.now();
     showNoticeSlide(noticeSlideIdx);
     // 헤더(로고) 높이만큼 아래로 내려서, 팝업이 로고를 가리지 않도록 위치를 계산합니다.
     positionNoticeUI();
@@ -3860,7 +3864,13 @@
           if(e.key === 'Escape') closeNoticePopup(noticeKey);
         });
         if(reopenBtn){
-          reopenBtn.addEventListener('click', () => { noticeSlideIdx = 0; openNoticePopup(); });
+          reopenBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // 닫기→다시 열기를 빠르게 반복할 때, 터치 화면에서 같은 자리를 두 번 누른 것처럼
+            // 인식되어 방금 나타난 이미지가 바로 확대되는 오작동을 막기 위한 약간의 지연입니다.
+            setTimeout(() => { noticeSlideIdx = 0; openNoticePopup(); }, 120);
+          });
         }
         window.addEventListener('resize', positionNoticeUI);
 

@@ -270,6 +270,9 @@
     font-size:14.5px;line-height:1.75;color:var(--ink-soft);
     margin-bottom:24px;word-break:keep-all;
   }
+  .notice-popup-body .notice-highlight{
+    color:var(--copper-deep);font-weight:800;
+  }
   .notice-popup-btn{
     position:relative;overflow:hidden;
     display:block;width:100%;text-align:center;
@@ -3728,7 +3731,10 @@
     }
 
     if(data.body){
-      bodyEl.innerHTML = escapeHtml(data.body).replace(/\n/g, '<br>');
+      // **텍스트** 로 감싸면 자동으로 포인트 색상 볼드로 강조됩니다. (예: **진테라맥스**)
+      bodyEl.innerHTML = escapeHtml(data.body)
+        .replace(/\*\*(.+?)\*\*/g, '<b class="notice-highlight">$1</b>')
+        .replace(/\n/g, '<br>');
       bodyEl.style.display = '';
     } else {
       bodyEl.style.display = 'none';

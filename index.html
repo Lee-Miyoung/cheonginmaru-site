@@ -3345,7 +3345,7 @@
     "동화자연마루","동화마루","노바마루","한솔홈데코","한솔마루","구정마루","네스트","이건","성원",
     "시그니월","진그란데스퀘어","진 그란데 스퀘어","듀오텍스쳐맥스","마뷸러스젠","원목마루STK","콜렉트월",
     "미네랄월","SB스톤","sb스톤","SB스퀘어","sb스퀘어","아크로K","아크로","사각돌마루","미네랄마루",
-    "오크스트립","수입원목마루","Nass","동화","노바","한솔","구정"
+    "오크스트립","수입원목마루","Nass","진테라맥스","진 테라 맥스","진테라","진 테라","동화","노바","한솔","구정"
   ].sort((a,b)=>b.length-a.length);
   const portfolioBrandRegex = new RegExp('(' + PORTFOLIO_BRAND_TERMS.map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')', 'g');
 
@@ -3731,8 +3731,10 @@
     }
 
     if(data.body){
-      // **텍스트** 로 감싸면 자동으로 포인트 색상 볼드로 강조됩니다. (예: **진테라맥스**)
+      // 브랜드·제품명(진테라, 동화, 노바 등)은 자동으로 강조됩니다.
+      // 그 외에 특별히 강조하고 싶은 단어는 **단어** 로 감싸면 추가로 강조돼요.
       bodyEl.innerHTML = escapeHtml(data.body)
+        .replace(portfolioBrandRegex, '<b class="notice-highlight">$1</b>')
         .replace(/\*\*(.+?)\*\*/g, '<b class="notice-highlight">$1</b>')
         .replace(/\n/g, '<br>');
       bodyEl.style.display = '';

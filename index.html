@@ -192,46 +192,42 @@
     transition:width .08s linear;
   }
 
-  /* ---------- 공지 팝업 (프리미엄) ---------- */
+  /* ---------- 공지 팝업 (프리미엄, 코너 알림형) ---------- */
   /* 켜고 끄고, 내용 바꾸는 건 코드가 아니라 구글 시트 "공지팝업" 탭에서 관리합니다. */
   .notice-popup-overlay{
     position:fixed;inset:0;z-index:200;
-    background:radial-gradient(ellipse at center, rgba(26,48,38,0.55) 0%, rgba(13,22,18,0.78) 100%);
-    backdrop-filter:blur(10px) saturate(1.2);
-    -webkit-backdrop-filter:blur(10px) saturate(1.2);
-    display:flex;align-items:center;justify-content:center;
-    padding:20px;
-    opacity:0;pointer-events:none;
-    transition:opacity .4s var(--ease);
+    display:flex;align-items:flex-start;justify-content:flex-start;
+    padding:16px;
+    pointer-events:none;
   }
-  .notice-popup-overlay.show{opacity:1;pointer-events:auto;}
   .notice-popup{
     position:relative;
-    width:100%;max-width:440px;
+    width:100%;max-width:360px;
     background:
       linear-gradient(var(--bg), var(--bg)) padding-box,
       linear-gradient(155deg, var(--gold) 0%, var(--copper) 45%, var(--forest) 100%) border-box;
     border:1px solid transparent;
-    border-radius:20px;
+    border-radius:18px;
     box-shadow:
-      0 40px 80px -20px rgba(13,22,18,0.55),
-      0 12px 32px -8px rgba(18,16,14,0.35),
+      0 24px 56px -16px rgba(13,22,18,0.4),
+      0 8px 20px -6px rgba(18,16,14,0.22),
       0 0 0 1px rgba(255,255,255,0.04) inset;
-    padding:0 0 30px;
+    padding:0 0 26px;
     overflow:hidden;
-    transform:translateY(24px) scale(0.93);
+    pointer-events:auto;
     opacity:0;
+    transform:translate(-16px, -16px) scale(0.95);
     transition:transform .5s cubic-bezier(0.19, 1.15, 0.36, 1), opacity .4s ease;
   }
-  .notice-popup-overlay.show .notice-popup{transform:translateY(0) scale(1);opacity:1;}
-  .notice-popup-inner{padding:26px 30px 0;}
+  .notice-popup-overlay.show .notice-popup{transform:translate(0,0) scale(1);opacity:1;}
+  .notice-popup-inner{padding:22px 26px 0;}
   .notice-popup-close{
-    position:absolute;top:16px;right:16px;z-index:3;
-    width:34px;height:34px;border-radius:50%;
+    position:absolute;top:14px;right:14px;z-index:3;
+    width:30px;height:30px;border-radius:50%;
     border:1px solid rgba(255,255,255,0.35);
     background:rgba(18,16,14,0.28);
     backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-    color:#fff;font-size:15px;line-height:1;
+    color:#fff;font-size:14px;line-height:1;
     cursor:pointer;display:flex;align-items:center;justify-content:center;
     transition:background .2s, transform .2s;
   }
@@ -3601,8 +3597,12 @@
       btnEl.style.display = 'none';
     }
 
+    // 헤더(로고) 높이만큼 아래로 내려서, 팝업이 로고를 가리지 않도록 위치를 계산합니다.
+    const headerEl = document.querySelector('header');
+    const headerBottom = headerEl ? headerEl.getBoundingClientRect().bottom : 0;
+    overlay.style.paddingTop = Math.max(16, headerBottom + 14) + 'px';
+
     overlay.classList.add('show');
-    document.body.style.overflow = 'hidden';
   }
 
   function closeNoticePopup(noticeKey){
@@ -3610,7 +3610,6 @@
     const dontShowBox = document.getElementById('noticePopupDontShow');
     if(!overlay) return;
     overlay.classList.remove('show');
-    document.body.style.overflow = '';
     if(dontShowBox && dontShowBox.checked){
       try{
         const today = new Date().toISOString().slice(0, 10);

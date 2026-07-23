@@ -192,6 +192,131 @@
     transition:width .08s linear;
   }
 
+  /* ---------- 공지 팝업 (프리미엄) ---------- */
+  /* 켜고 끄고, 내용 바꾸는 건 코드가 아니라 구글 시트 "공지팝업" 탭에서 관리합니다. */
+  .notice-popup-overlay{
+    position:fixed;inset:0;z-index:200;
+    background:radial-gradient(ellipse at center, rgba(26,48,38,0.55) 0%, rgba(13,22,18,0.78) 100%);
+    backdrop-filter:blur(10px) saturate(1.2);
+    -webkit-backdrop-filter:blur(10px) saturate(1.2);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+    opacity:0;pointer-events:none;
+    transition:opacity .4s var(--ease);
+  }
+  .notice-popup-overlay.show{opacity:1;pointer-events:auto;}
+  .notice-popup{
+    position:relative;
+    width:100%;max-width:400px;
+    background:
+      linear-gradient(var(--bg), var(--bg)) padding-box,
+      linear-gradient(155deg, var(--gold) 0%, var(--copper) 45%, var(--forest) 100%) border-box;
+    border:1px solid transparent;
+    border-radius:20px;
+    box-shadow:
+      0 40px 80px -20px rgba(13,22,18,0.55),
+      0 12px 32px -8px rgba(18,16,14,0.35),
+      0 0 0 1px rgba(255,255,255,0.04) inset;
+    padding:0 0 30px;
+    overflow:hidden;
+    transform:translateY(24px) scale(0.93);
+    opacity:0;
+    transition:transform .5s cubic-bezier(0.19, 1.15, 0.36, 1), opacity .4s ease;
+  }
+  .notice-popup-overlay.show .notice-popup{transform:translateY(0) scale(1);opacity:1;}
+  .notice-popup-inner{padding:26px 30px 0;}
+  .notice-popup-close{
+    position:absolute;top:16px;right:16px;z-index:3;
+    width:34px;height:34px;border-radius:50%;
+    border:1px solid rgba(255,255,255,0.35);
+    background:rgba(18,16,14,0.28);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    color:#fff;font-size:15px;line-height:1;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:background .2s, transform .2s;
+  }
+  .notice-popup-close:hover{background:rgba(18,16,14,0.5);transform:rotate(90deg);}
+  .notice-popup-img-wrap{
+    position:relative;width:100%;height:200px;overflow:hidden;
+    background:linear-gradient(135deg, var(--forest), var(--forest-deep));
+  }
+  .notice-popup-img{
+    display:block;width:100%;height:100%;object-fit:cover;
+    transform:scale(1.08);
+    transition:transform 6s cubic-bezier(0.19,1,0.22,1);
+  }
+  .notice-popup-overlay.show .notice-popup-img{transform:scale(1);}
+  .notice-popup-img-wrap::after{
+    content:'';position:absolute;left:0;right:0;bottom:0;height:70px;
+    background:linear-gradient(to bottom, rgba(18,16,14,0) 0%, var(--bg) 100%);
+  }
+  .notice-popup-tag{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:11px;font-weight:700;letter-spacing:0.14em;
+    color:var(--copper-deep);
+    background:linear-gradient(135deg, rgba(217,96,31,0.12), rgba(212,163,89,0.12));
+    border:1px solid rgba(217,96,31,0.25);
+    padding:5px 12px;border-radius:100px;
+    margin-bottom:14px;
+  }
+  .notice-popup-tag::before{
+    content:'';width:5px;height:5px;border-radius:50%;
+    background:var(--copper);flex-shrink:0;
+  }
+  .notice-popup-title{
+    margin:0 0 12px;
+    font-family:'Noto Serif KR', serif;
+    font-size:22px;font-weight:700;color:var(--ink);
+    line-height:1.4;
+  }
+  .notice-popup-body{
+    font-size:14.5px;line-height:1.75;color:var(--ink-soft);
+    margin-bottom:24px;word-break:keep-all;
+  }
+  .notice-popup-btn{
+    position:relative;overflow:hidden;
+    display:block;width:100%;text-align:center;
+    background:linear-gradient(120deg, var(--copper), var(--copper-deep));
+    color:#fff !important;
+    font-weight:600;font-size:14.5px;letter-spacing:0.01em;
+    padding:14px 20px;border-radius:12px;
+    margin-bottom:18px;
+    box-shadow:0 10px 24px -8px rgba(217,96,31,0.55);
+    transition:transform .2s, box-shadow .2s;
+  }
+  .notice-popup-btn:hover{transform:translateY(-1px);box-shadow:0 14px 30px -8px rgba(217,96,31,0.65);}
+  .notice-popup-btn::before{
+    content:''; position:absolute; top:0; left:-100%; width:50%; height:100%;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform:skewX(-25deg);
+    animation:btnShimmer 3.2s infinite cubic-bezier(0.43,0.15,0.57,0.85);
+  }
+  .notice-popup-divider{
+    height:1px;margin:0 0 16px;
+    background:linear-gradient(90deg, var(--line-strong), transparent);
+  }
+  .notice-popup-dontshow{
+    display:flex;align-items:center;gap:8px;
+    font-size:12.5px;color:var(--ink-faint);cursor:pointer;
+    user-select:none;
+  }
+  .notice-popup-dontshow input{
+    appearance:none;-webkit-appearance:none;
+    width:16px;height:16px;border-radius:5px;
+    border:1.5px solid var(--line-strong);
+    cursor:pointer;position:relative;flex-shrink:0;
+    transition:background .15s, border-color .15s;
+  }
+  .notice-popup-dontshow input:checked{
+    background:var(--copper);border-color:var(--copper);
+  }
+  .notice-popup-dontshow input:checked::after{
+    content:'';position:absolute;left:4.5px;top:1px;
+    width:4px;height:8px;
+    border:solid #fff;border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+  }
+
   /* ---------- 프리미엄 디테일: 은은한 종이 질감 ---------- */
   body::before{
     content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
@@ -1654,6 +1779,26 @@
 </style>
 </head>
 <body>
+
+<div class="notice-popup-overlay" id="noticePopupOverlay">
+  <div class="notice-popup" role="dialog" aria-modal="true" aria-labelledby="noticePopupTitle">
+    <button class="notice-popup-close" id="noticePopupCloseBtn" aria-label="닫기">✕</button>
+    <div class="notice-popup-img-wrap" id="noticePopupImgWrap" style="display:none;">
+      <img class="notice-popup-img" id="noticePopupImg" alt="">
+    </div>
+    <div class="notice-popup-inner">
+      <span class="notice-popup-tag" id="noticePopupTag" style="display:none;"></span>
+      <h3 class="notice-popup-title" id="noticePopupTitle"></h3>
+      <div class="notice-popup-body" id="noticePopupBody"></div>
+      <a class="notice-popup-btn" id="noticePopupBtn" href="#" target="_blank" rel="noopener" style="display:none;"></a>
+      <div class="notice-popup-divider"></div>
+      <label class="notice-popup-dontshow">
+        <input type="checkbox" id="noticePopupDontShow">
+        <span>오늘 하루 보지 않기</span>
+      </label>
+    </div>
+  </div>
+</div>
 
 <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 
@@ -3391,6 +3536,127 @@
   } catch(e){
     renderFaq(FALLBACK_FAQ_ITEMS);
   }
+
+  // ---------- 공지 팝업 (구글시트 연동) ----------
+  // 구글 시트 "공지팝업" 탭에서 관리합니다. 열: 사용여부 / 제목 / 내용 / 이미지 / 뱃지 / 버튼문구 / 버튼링크
+  // - 사용여부 칸에 "켜짐" 이라고 적어야만 팝업이 뜹니다. 그 외(꺼짐, 빈칸 등)에는 뜨지 않아요.
+  // - 이미지 칸: images/notice/ 폴더에 사진을 올려두고 그 파일명만 적으면 팝업 위쪽에 사진이 뜹니다.
+  //   (인스타그램 등 외부 사진 주소를 통째로 적어도 됩니다. 비워두면 사진 없이 텍스트만 떠요.)
+  // - 뱃지 칸: "이벤트", "신상품", "공지" 같은 짧은 단어를 적으면 제목 위에 작은 표시(뱃지)가 뜹니다. 비워두면 안 뜹니다.
+  // - 버튼문구/버튼링크: 카톡뿐 아니라 인스타그램, 블로그, 전시회 안내 페이지 등 어떤 링크든 넣을 수 있어요.
+  //   안 적어도 되며, 비워두면 버튼 없이 안내문만 뜹니다.
+  // - 사용자가 "오늘 하루 보지 않기"를 체크하고 닫으면, 같은 날에는 같은 내용의 팝업을 다시 보여주지 않습니다.
+  //   (내용이나 제목을 바꾸면 "새 공지"로 인식해서 다시 떠요.)
+  const NOTICE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1rt4nMI1JAhLFvk3WWz6IyvlnmUExlbgLj6yGK9Ta0MA/gviz/tq?tqx=out:csv&sheet=" + encodeURIComponent("공지팝업");
+  const NOTICE_DISMISS_KEY = "cheonginmaru_notice_dismiss";
+
+  function openNoticePopup(data){
+    const overlay = document.getElementById('noticePopupOverlay');
+    const imgWrap = document.getElementById('noticePopupImgWrap');
+    const imgEl = document.getElementById('noticePopupImg');
+    const tagEl = document.getElementById('noticePopupTag');
+    const titleEl = document.getElementById('noticePopupTitle');
+    const bodyEl = document.getElementById('noticePopupBody');
+    const btnEl = document.getElementById('noticePopupBtn');
+    if(!overlay || !imgWrap || !imgEl || !tagEl || !titleEl || !bodyEl || !btnEl) return;
+
+    if(data.image){
+      const src = /^https?:\/\//.test(data.image) ? data.image : ('images/notice/' + data.image);
+      imgEl.src = src;
+      imgEl.alt = data.title || '공지 이미지';
+      imgWrap.style.display = '';
+      imgEl.onerror = function(){ imgWrap.style.display = 'none'; };
+    } else {
+      imgWrap.style.display = 'none';
+      imgEl.removeAttribute('src');
+    }
+
+    if(data.tag){
+      tagEl.textContent = data.tag;
+      tagEl.style.display = '';
+    } else {
+      tagEl.style.display = 'none';
+    }
+
+    titleEl.textContent = data.title;
+    bodyEl.innerHTML = escapeHtml(data.body).replace(/\n/g, '<br>');
+
+    if(data.btnText && data.btnLink){
+      btnEl.textContent = data.btnText;
+      btnEl.href = data.btnLink;
+      btnEl.style.display = '';
+    } else {
+      btnEl.style.display = 'none';
+    }
+
+    overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeNoticePopup(noticeKey){
+    const overlay = document.getElementById('noticePopupOverlay');
+    const dontShowBox = document.getElementById('noticePopupDontShow');
+    if(!overlay) return;
+    overlay.classList.remove('show');
+    document.body.style.overflow = '';
+    if(dontShowBox && dontShowBox.checked){
+      try{
+        const today = new Date().toISOString().slice(0, 10);
+        localStorage.setItem(NOTICE_DISMISS_KEY, JSON.stringify({ date: today, key: noticeKey }));
+      } catch(e){}
+    }
+  }
+
+  function loadNoticePopup(){
+    if(typeof Papa === 'undefined') return;
+    Papa.parse(NOTICE_SHEET_CSV_URL, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results){
+        const row = results.data[0];
+        if(!row) return;
+
+        const enabled = (row['사용여부'] || '').trim();
+        if(enabled !== '켜짐') return;
+
+        const title = (row['제목'] || '').trim();
+        const body = (row['내용'] || '').trim();
+        const image = (row['이미지'] || '').trim();
+        const tag = (row['뱃지'] || '').trim();
+        const btnText = (row['버튼문구'] || '').trim();
+        const btnLink = (row['버튼링크'] || '').trim();
+        if(!body) return;
+
+        const noticeKey = title + '|' + body + '|' + image + '|' + tag;
+
+        try{
+          const saved = JSON.parse(localStorage.getItem(NOTICE_DISMISS_KEY) || 'null');
+          const today = new Date().toISOString().slice(0, 10);
+          if(saved && saved.date === today && saved.key === noticeKey) return;
+        } catch(e){}
+
+        openNoticePopup({ title, body, image, tag, btnText, btnLink });
+
+        const closeBtn = document.getElementById('noticePopupCloseBtn');
+        const overlayEl = document.getElementById('noticePopupOverlay');
+        if(closeBtn) closeBtn.addEventListener('click', () => closeNoticePopup(noticeKey));
+        if(overlayEl){
+          overlayEl.addEventListener('click', (e) => {
+            if(e.target.id === 'noticePopupOverlay') closeNoticePopup(noticeKey);
+          });
+        }
+        document.addEventListener('keydown', function(e){
+          if(e.key === 'Escape') closeNoticePopup(noticeKey);
+        });
+      },
+      error: function(){}
+    });
+  }
+
+  try {
+    loadNoticePopup();
+  } catch(e){}
 
   const PARTNERS_SHEET_CSV_URL = ""; 
 

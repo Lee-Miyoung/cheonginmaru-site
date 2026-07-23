@@ -3692,6 +3692,23 @@
     if(reopenBtn) reopenBtn.style.top = top + 'px';
   }
 
+  function formatNoticeRichText(text, opts){
+    opts = opts || {};
+    // 브랜드·제품명(진테라, 동화, 노바 등)은 자동으로 강조됩니다.
+    // **단어**  → 볼드 강조 / __단어__ → 밑줄
+    let out = escapeHtml(text);
+    if(opts.brand !== false){
+      out = out.replace(portfolioBrandRegex, '<b class="notice-highlight">$1</b>');
+    }
+    out = out
+      .replace(/\*\*(.+?)\*\*/g, '<b class="notice-highlight">$1</b>')
+      .replace(/__(.+?)__/g, '<u>$1</u>');
+    if(opts.br !== false){
+      out = out.replace(/\n/g, '<br>');
+    }
+    return out;
+  }
+
   function fillNoticeContent(data){
     const imgWrap = document.getElementById('noticePopupImgWrap');
     const imgEl = document.getElementById('noticePopupImg');
@@ -3724,19 +3741,14 @@
     }
 
     if(data.title){
-      titleEl.textContent = data.title;
+      titleEl.innerHTML = formatNoticeRichText(data.title, { br:false });
       titleEl.style.display = '';
     } else {
       titleEl.style.display = 'none';
     }
 
     if(data.body){
-      // 브랜드·제품명(진테라, 동화, 노바 등)은 자동으로 강조됩니다.
-      // 그 외에 특별히 강조하고 싶은 단어는 **단어** 로 감싸면 추가로 강조돼요.
-      bodyEl.innerHTML = escapeHtml(data.body)
-        .replace(portfolioBrandRegex, '<b class="notice-highlight">$1</b>')
-        .replace(/\*\*(.+?)\*\*/g, '<b class="notice-highlight">$1</b>')
-        .replace(/\n/g, '<br>');
+      bodyEl.innerHTML = formatNoticeRichText(data.body);
       bodyEl.style.display = '';
     } else {
       bodyEl.style.display = 'none';

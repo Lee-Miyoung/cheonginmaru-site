@@ -848,9 +848,13 @@
 
   .catalog-item.has-link-item{border-left-color:var(--bc);background:color-mix(in srgb, var(--bc) 4%, transparent);}
   .catalog-title-link.has-link{cursor:pointer;}
-  .catalog-title-link.has-link .catalog-item-title{color:var(--bc);font-weight:700;}
+  .catalog-title-link.has-link .catalog-item-title{color:var(--ink);font-weight:700;}
+  .catalog-title-link.has-link .catalog-item-title::after{
+    content:'→';margin-left:6px;color:var(--bc);font-weight:700;
+    display:inline-block;transition:transform .2s var(--ease);
+  }
   .catalog-title-link.has-link:hover{background:color-mix(in srgb, var(--bc) 10%, transparent);padding-left:18px;}
-  .catalog-title-link.has-link:hover .catalog-item-title{text-underline-position: from-font; text-decoration:underline;}
+  .catalog-title-link.has-link:hover .catalog-item-title::after{transform:translateX(3px);}
 
   .catalog-title-link.no-link{cursor:default;}
   .catalog-title-link.no-link .catalog-item-title{color:var(--ink-soft);}
@@ -900,10 +904,9 @@
   .global-brand-tooltip a:hover{color:#fff;}
 
   .catalog-download-icon{
-    flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:6px;
-    padding:8px 14px;border-radius:30px;margin-right:10px;
+    flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    width:32px;height:32px;border-radius:50%;margin-right:10px;
     color:#fff;background:var(--bc);
-    font-size:12.5px;font-weight:700;white-space:nowrap;
     border:2px solid #fff;
     box-shadow:0 0 0 1.5px var(--bc), 0 4px 10px -3px color-mix(in srgb, var(--bc) 65%, transparent);
     transition:all .25s var(--ease);
@@ -911,11 +914,11 @@
   .catalog-download-icon svg{transition:transform .25s var(--ease);flex-shrink:0;}
   .catalog-download-icon:hover{
     background:var(--copper-deep);
-    transform:translateY(-2px) scale(1.04);
+    transform:translateY(-2px) scale(1.1);
     box-shadow:0 0 0 1.5px var(--copper-deep), 0 8px 18px -5px color-mix(in srgb, var(--bc) 70%, transparent);
   }
   .catalog-download-icon:hover svg{transform:translateY(1px);}
-  .catalog-download-icon:active{transform:scale(0.97);}
+  .catalog-download-icon:active{transform:scale(0.95);}
 
   /* ---------- ABOUT ---------- */
   .about{background:var(--surface);position:relative;overflow:hidden;}
@@ -4148,8 +4151,7 @@
             const fallbackUrl = `${brandBase}${l.no}`;
 
             const linkCatalogs = b.catalogsByLabel && b.catalogsByLabel[l.label];
-            const readyCatalogs = linkCatalogs ? linkCatalogs.filter(c => c.file) : [];
-            if(readyCatalogs.length){
+            if(linkCatalogs && linkCatalogs.length){
               return `
                 <button type="button" class="brand-toggle ${typeClass}" data-uid="${uid}">
                   ${l.label}
@@ -4159,7 +4161,7 @@
                   </span>
                 </button>
                 <div class="brand-sublist catalog-sublist" id="${uid}">
-                  ${readyCatalogs.map(c => {
+                  ${linkCatalogs.map(c => {
                     const titleInner = `
                       <span class="catalog-item-title">${c.productsDesc || c.label || '제품'}</span>
                       ${c.label ? `<span class="catalog-item-sub">${c.label}</span>` : ''}
@@ -4167,10 +4169,12 @@
                     const titleBlock = c.introLink
                       ? `<a href="${c.introLink}" target="_blank" rel="noopener" class="catalog-title-link has-link">${titleInner}</a>`
                       : `<span class="catalog-title-link no-link">${titleInner}</span>`;
-                    const fileBlock = `<a href="catalogs/${encodeURIComponent(c.file)}" download class="catalog-download-icon" title="카탈로그 PDF 다운로드" aria-label="카탈로그 다운로드">
+                    // 카탈로그 파일이 있을 때만 작은 다운로드 아이콘을 보여줍니다. 없으면 그냥 표시 안 함(목록 자체는 계속 나옴).
+                    const fileBlock = c.file
+                      ? `<a href="catalogs/${encodeURIComponent(c.file)}" download class="catalog-download-icon" title="카탈로그 PDF 다운로드" aria-label="카탈로그 다운로드">
                            <svg width="15" height="15" viewBox="0 0 24 24" fill="#ffffff"><path d="M11 3a1 1 0 012 0v8.09l2.3-2.3a1 1 0 111.4 1.42l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.42l2.3 2.3V3z"/><path d="M5 18a1 1 0 011 1v.5a.5.5 0 00.5.5h11a.5.5 0 00.5-.5V19a1 1 0 112 0v.5A2.5 2.5 0 0117.5 22h-11A2.5 2.5 0 014 19.5V19a1 1 0 011-1z"/></svg>
-                           <span>카탈로그 다운</span>
-                         </a>`;
+                         </a>`
+                      : '';
                     return `<div class="catalog-item${c.introLink ? ' has-link-item' : ''}">${titleBlock}${fileBlock}</div>`;
                   }).join('')}
                 </div>

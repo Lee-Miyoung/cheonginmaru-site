@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>청인마루 거래처 단가표</title>
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <style>
   :root{
     --bg:#f1f5f9; --card:#ffffff; --ink:#0f172a; --sub:#64748b;
@@ -90,11 +93,30 @@
     border-radius:12px; font-size:11.5px; color:var(--sub); font-weight:600; line-height:1.6;
   }
   .empty{text-align:center; padding:60px 20px; color:var(--sub); font-size:13px; font-weight:600;}
+
+  /* 접근 게이트 */
+  #gate{
+    position:fixed; inset:0; background:#0f172a; z-index:999;
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px;
+    color:#fff; text-align:center; padding:20px;
+  }
+  #gate .g-icon{font-size:32px;}
+  #gate h2{font-size:16px; font-weight:900; margin:0;}
+  #gate p{font-size:12.5px; color:#94a3b8; font-weight:600; margin:0; line-height:1.6;}
+  #gate.hidden{display:none;}
+  .wrap{display:none;}
+  .wrap.ready{display:block;}
 </style>
 </head>
 <body>
 
-<div class="wrap">
+<div id="gate">
+  <div class="g-icon">🔒</div>
+  <h2 id="gate-title">접속 확인 중입니다...</h2>
+  <p id="gate-msg">잠시만 기다려주세요.</p>
+</div>
+
+<div class="wrap" id="mainWrap">
   <header>
     <div class="brand">CHEONGIN MARU · 거래처 단가</div>
     <h1>청인마루 거래처 단가표</h1>
@@ -116,6 +138,65 @@
 </div>
 
 <script>
+/* ============================================
+   Firebase 초기화 (마루-calc과 동일한 프로젝트 재사용)
+   ============================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCHdMgp2clJ0y3L1GR-WubpAYKEVYvLcLA",
+  authDomain: "maru-quote-history.firebaseapp.com",
+  databaseURL: "https://maru-quote-history-default-rtdb.firebaseio.com",
+  projectId: "maru-quote-history",
+  storageBucket: "maru-quote-history.firebasestorage.app",
+  messagingSenderId: "936179721364",
+  appId: "1:936179721364:web:cbf9e9bb6c71970d400081"
+};
+firebase.initializeApp(firebaseConfig);
+const fbDatabase = firebase.database();
+
+function showGate(title, msg){
+  document.getElementById('gate-title').innerText = title;
+  document.getElementById('gate-msg').innerText = msg;
+}
+
+function grantAccess(clientName){
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('mainWrap').classList.add('ready');
+  document.getElementById('clientName').innerText = clientName || '거래처';
+  loadData();
+}
+
+function denyAccess(msg){
+  showGate('접근 권한이 없습니다', msg || '전달받은 링크가 정확한지 확인해주세요. 문의: 청인마루');
+}
+
+async function checkTokenAndStart(){
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('t');
+
+  if (!token) { denyAccess('링크에 접속 코드가 없습니다. 담당자에게 전달받은 링크 그대로 접속해주세요.'); return; }
+
+  try {
+    await firebase.auth().signInAnonymously();
+    const snap = await fbDatabase.ref('priceAccessTokens/' + token).once('value');
+    const data = snap.val();
+    if (!data || data.active === false) {
+      denyAccess('유효하지 않거나 비활성화된 링크입니다.');
+      return;
+    }
+    // 조회 로그 남기기 (선택적, 실패해도 접속엔 지장 없음)
+    fbDatabase.ref('priceAccessTokens/' + token).update({
+      lastAccessedAt: Date.now(),
+      accessCount: (data.accessCount || 0) + 1
+    }).catch(()=>{});
+
+    grantAccess(data.clientName);
+  } catch (e) {
+    console.error(e);
+    denyAccess('접속 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+  }
+}
+
+checkTokenAndStart();
 /* ============================================
    실제 데이터 엔드포인트 (Apps Script 거래처용 배포 URL)
    ============================================ */
@@ -203,8 +284,6 @@ function toggleCard(id){
   openState[id] = !openState[id];
   renderList();
 }
-
-loadData();
 </script>
 </body>
 </html>

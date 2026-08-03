@@ -104,7 +104,9 @@
 
   /* 브랜드 필터 칩 */
   .brand-filter{
-    display:flex; gap:7px; padding:10px 20px 4px; overflow-x:auto; scrollbar-width:none;
+    display:flex; gap:7px; padding:10px 28px 4px; overflow-x:auto; scrollbar-width:none;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%);
   }
   .brand-filter::-webkit-scrollbar{display:none;}
   .filter-chip{
@@ -113,6 +115,8 @@
     border:1.5px solid var(--line); padding:7px 13px; border-radius:100px;
     cursor:pointer; user-select:none; transition:all .12s; white-space:nowrap;
   }
+  .filter-chip:first-child{margin-left:4px;}
+  .filter-chip:last-child{margin-right:4px;}
   .filter-chip .n{font-size:10px; font-weight:700; color:var(--sub);}
   .filter-chip.active{
     background:var(--ink); border-color:var(--ink); color:#fff;
@@ -230,7 +234,7 @@
           <div class="partner-tag">★ PARTNER ACCESS ONLY</div>
           <div class="live-tag"><span class="live-dot"></span>실시간 데이터</div>
         </div>
-        <div class="header-sub">기준일 <b id="baseDate">2026-05-01</b> 적용 중</div>
+        <div class="header-sub">조회일 <b id="baseDate">-</b> 기준 최신 단가</div>
       </div>
       <div class="header-trust">
         <span class="trust-line"><span class="ck">✓</span> 정품 자재 · 정식 파트너사 유통</span>
@@ -283,6 +287,16 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const fbDatabase = firebase.database();
 
+function setTodayDate(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  const el = document.getElementById('baseDate');
+  if (el) el.innerText = `${y}-${m}-${day}`;
+}
+setTodayDate();
+
 /* ============================================
    단가 데이터 미리 가져오기 (토큰 확인과 동시에 시작 → 순차 대기 없이 속도 개선)
    캐시를 써서 재방문 시엔 즉시 표시, 뒤에서 조용히 최신화
@@ -322,12 +336,14 @@ function showGate(title, msg){
 async function loadData(){
   const root = document.getElementById('listRoot');
   if (RAW_DATA.length) {
+    renderBrandFilter(groupData(RAW_DATA));
     renderList(); // 캐시된 데이터가 있으면 즉시 먼저 보여줌
   } else {
     root.innerHTML = '<div class="empty">단가 정보를 불러오는 중입니다...</div>';
   }
   try {
     await dataFetchPromise;
+    renderBrandFilter(groupData(RAW_DATA));
     renderList(); // 최신 데이터로 다시 그림
   } catch (e) {
     if (!RAW_DATA.length) {
@@ -380,6 +396,7 @@ let openState = {};
 let selectedBrand = null;
 function selectBrand(brand){
   selectedBrand = (selectedBrand === brand) ? null : brand;
+  renderBrandFilter(groupData(RAW_DATA));
   renderList();
   document.getElementById('listRoot').scrollIntoView({behavior:'smooth', block:'start'});
 }
@@ -403,7 +420,7 @@ function fmtFactor(f){
 let searchDebounceTimer = null;
 function onSearchInput(){
   clearTimeout(searchDebounceTimer);
-  searchDebounceTimer = setTimeout(renderList, 120);
+  searchDebounceTimer = setTimeout(renderList, 250);
 }
 
 /* ============================================
@@ -491,18 +508,7 @@ function groupData(data){
   return patterns;
 }
 
-function renderList(){
-  const q = document.getElementById('searchInput').value.trim();
-  const patterns = groupData(RAW_DATA);
-
-  // 상단 요약 통계 (전체 기준, 필터와 무관)
-  const brandSet = new Set(); let modelCount = 0;
-  patterns.forEach(p => { brandSet.add(p.brand); p.variants.forEach(v => modelCount += Math.max(v.models.length,1)); });
-  document.getElementById('statBrand').innerText = brandSet.size;
-  document.getElementById('statPattern').innerText = patterns.length;
-  document.getElementById('statModel').innerText = modelCount;
-
-  // 브랜드 필터 칩 렌더링 (검색과 무관하게 항상 전체 브랜드 목록 표시)
+function renderBrandFilter(patterns){
   const allBrandCounts = {};
   patterns.forEach(p => { allBrandCounts[p.brand] = (allBrandCounts[p.brand]||0) + 1; });
   const brandNames = Object.keys(allBrandCounts);
@@ -513,6 +519,18 @@ function renderList(){
       <span class="filter-chip ${selectedBrand===b ? 'active' : ''}" onclick="selectBrand('${b.replace(/'/g,"\\'")}')">${b} <span class="n">${allBrandCounts[b]}</span></span>
     `).join('')}
   `;
+}
+
+function renderList(){
+  const q = document.getElementById('searchInput').value.trim();
+  const patterns = groupData(RAW_DATA);
+
+  // 상단 요약 통계 (전체 기준, 필터와 무관)
+  const brandSet = new Set(); let modelCount = 0;
+  patterns.forEach(p => { brandSet.add(p.brand); p.variants.forEach(v => modelCount += Math.max(v.models.length,1)); });
+  document.getElementById('statBrand').innerText = brandSet.size;
+  document.getElementById('statPattern').innerText = patterns.length;
+  document.getElementById('statModel').innerText = modelCount;
 
   const byBrand = {};
   patterns.forEach(p => {
@@ -541,7 +559,9 @@ function renderList(){
 }
 
 function renderPatternCard(p, id, bc, q){
-  const isOpen = q ? true : !!openState[id];
+  const matchOnlyInModels = q && !fuzzyIncludes(p.brand, q) && !fuzzyIncludes(p.name, q)
+    && p.variants.some(v => v.models.some(m => fuzzyIncludes(m, q)));
+  const isOpen = q ? matchOnlyInModels : !!openState[id];
   const isMulti = p.variants.length > 1;
   const totalModels = p.variants.reduce((s,v)=>s+Math.max(v.models.length,1),0);
 

@@ -34,15 +34,22 @@
     width:34px; height:34px; border-radius:9px; object-fit:cover;
     box-shadow:0 2px 6px rgba(0,0,0,.25); flex-shrink:0; background:#fff;
   }
-  header h1{margin:4px 0 2px; font-size:20px; font-weight:900;}
-  header .meta{display:flex; align-items:center; gap:6px; font-size:12px; color:#94a3b8; font-weight:600;}
-  header .meta b{color:#e2e8f0; font-weight:800;}
-  header .client-badge{
-    display:inline-flex; align-items:center; gap:5px; margin-top:12px;
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
-    padding:6px 12px; border-radius:100px; font-size:12px; font-weight:700; color:#cbd5e1;
+  .client-hero{margin-top:18px; display:flex; align-items:flex-end; gap:9px; flex-wrap:wrap;}
+  .client-hero .name{
+    font-size:26px; font-weight:900; letter-spacing:-0.02em;
+    background:linear-gradient(90deg,#fbbf24,#f59e0b 55%,#fbbf24);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    line-height:1.15;
   }
-  header .client-badge b{color:#fff;}
+  .client-hero .suffix{font-size:15px; font-weight:800; color:#e2e8f0; padding-bottom:2px;}
+  .partner-tag{
+    display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:900;
+    color:#f59e0b; background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.35);
+    padding:3px 9px; border-radius:100px; letter-spacing:.04em; margin-top:9px;
+  }
+  .header-sub{font-size:12px; color:#94a3b8; font-weight:600; margin-top:9px;}
+  .header-sub b{color:#e2e8f0; font-weight:800;}
+  header .meta{display:none;}
 
   .stat-bar{
     display:flex; gap:0; margin-top:18px; border-top:1px solid rgba(255,255,255,.1);
@@ -115,6 +122,7 @@
     font-size:11.5px; font-weight:700; color:#475569; background:#fff;
     border:1px solid var(--line); padding:5px 10px; border-radius:8px;
   }
+  mark.hl{background:var(--wood-soft); color:var(--wood); padding:0 1px; border-radius:3px; font-weight:900;}
 
   /* 하단 안내 */
   .footnote{
@@ -149,11 +157,14 @@
   <header>
     <div class="logo-row">
       <img src="logo.png" alt="청인마루" class="logo-img" onerror="this.style.display='none'">
-      <div class="brand">CHEONGIN MARU · 거래처 단가</div>
+      <div class="brand">CHEONGIN MARU · 거래처 전용 단가표</div>
     </div>
-    <h1>청인마루 거래처 단가표</h1>
-    <div class="meta">기준일 <b id="baseDate">2026-05-01</b> 적용 중</div>
-    <div class="client-badge">거래처: <b id="clientName">-</b> 님 전용 조회 페이지</div>
+    <div class="client-hero">
+      <span class="name" id="clientName">-</span>
+      <span class="suffix">님</span>
+    </div>
+    <div class="partner-tag">★ PARTNER ACCESS</div>
+    <div class="header-sub">기준일 <b id="baseDate">2026-05-01</b> 적용 중</div>
     <div class="stat-bar">
       <div class="stat"><b id="statBrand">-</b><span>브랜드</span></div>
       <div class="stat"><b id="statPattern">-</b><span>패턴</span></div>
@@ -259,6 +270,59 @@ function fmtFactor(f){
   return (Math.round(n*100)/100).toString();
 }
 
+/* ============================================
+   검색 유틸: 띄어쓰기 무시 + 헷갈리기 쉬운 모음(폐/패, 왠/웬 등) 동일 취급 + 매칭부 하이라이트
+   ============================================ */
+function decomposeHangulChar(ch){
+  const code = ch.charCodeAt(0) - 0xAC00;
+  if (code < 0 || code > 11171) return null;
+  const T_COUNT = 28, V_COUNT = 21;
+  return {
+    L: Math.floor(code / (V_COUNT * T_COUNT)),
+    V: Math.floor((code % (V_COUNT * T_COUNT)) / T_COUNT),
+    T: code % T_COUNT
+  };
+}
+// ㅐ/ㅔ/ㅒ/ㅖ (애·에·얘·예) 를 하나로, ㅙ/ㅚ/ㅞ (왜·외·웨) 를 하나로 통일
+const VOWEL_MERGE = {1:1, 5:1, 3:1, 7:1,  10:10, 11:10, 15:10};
+function mergeVowelChar(ch){
+  const d = decomposeHangulChar(ch);
+  if (!d) return ch;
+  const v2 = (VOWEL_MERGE[d.V] !== undefined) ? VOWEL_MERGE[d.V] : d.V;
+  if (v2 === d.V) return ch;
+  return String.fromCharCode(0xAC00 + (d.L * 21 + v2) * 28 + d.T);
+}
+function foldForSearch(str){
+  return str.toLowerCase().split('').map(mergeVowelChar).join('');
+}
+function stripWithMap(str){
+  let stripped = '', map = [];
+  for (let i = 0; i < str.length; i++){
+    if (!/\s/.test(str[i])) { stripped += str[i]; map.push(i); }
+  }
+  return { stripped, map };
+}
+function fuzzyIncludes(text, query){
+  if (!query) return true;
+  if (!text) return false;
+  const normText = foldForSearch(stripWithMap(text).stripped);
+  const normQuery = foldForSearch(stripWithMap(query).stripped);
+  if (!normQuery) return true;
+  return normText.includes(normQuery);
+}
+function highlightMatch(text, query){
+  if (!text) return '';
+  if (!query) return text;
+  const { stripped, map } = stripWithMap(text);
+  const normText = foldForSearch(stripped);
+  const normQuery = foldForSearch(stripWithMap(query).stripped);
+  if (!normQuery) return text;
+  const idx = normText.indexOf(normQuery);
+  if (idx === -1) return text;
+  const s = map[idx], e = map[idx + normQuery.length - 1];
+  return text.slice(0, s) + '<mark class="hl">' + text.slice(s, e + 1) + '</mark>' + text.slice(e + 1);
+}
+
 async function loadData(){
   const root = document.getElementById('listRoot');
   root.innerHTML = '<div class="empty">단가 정보를 불러오는 중입니다...</div>';
@@ -306,7 +370,7 @@ function groupData(data){
 }
 
 function renderList(){
-  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const q = document.getElementById('searchInput').value.trim();
   const patterns = groupData(RAW_DATA);
 
   // 상단 요약 통계
@@ -319,9 +383,9 @@ function renderList(){
   const byBrand = {};
   patterns.forEach(p => {
     const hit = !q
-      || p.brand.toLowerCase().includes(q)
-      || p.name.toLowerCase().includes(q)
-      || p.variants.some(v => v.models.some(m => m.toLowerCase().includes(q)));
+      || fuzzyIncludes(p.brand, q)
+      || fuzzyIncludes(p.name, q)
+      || p.variants.some(v => v.models.some(m => fuzzyIncludes(m, q)));
     if (!hit) return;
     (byBrand[p.brand] = byBrand[p.brand] || []).push(p);
   });
@@ -335,14 +399,14 @@ function renderList(){
     const bc = colorFor(brand);
     return `
       <div class="brand-group" style="--bc:${bc}">
-        <div class="brand-title"><span class="dot"></span>${brand}<span class="count">${items.length}개 패턴</span></div>
-        ${items.map((p,i) => renderPatternCard(p, brand + '_' + i, bc)).join('')}
+        <div class="brand-title"><span class="dot"></span>${highlightMatch(brand, q)}<span class="count">${items.length}개 패턴</span></div>
+        ${items.map((p,i) => renderPatternCard(p, brand + '_' + i, bc, q)).join('')}
       </div>`;
   }).join('');
 }
 
-function renderPatternCard(p, id, bc){
-  const isOpen = !!openState[id];
+function renderPatternCard(p, id, bc, q){
+  const isOpen = q ? true : !!openState[id];
   const isMulti = p.variants.length > 1;
   const totalModels = p.variants.reduce((s,v)=>s+Math.max(v.models.length,1),0);
 
@@ -370,7 +434,7 @@ function renderPatternCard(p, id, bc){
     <div class="pattern-card ${isOpen ? 'open' : ''}" data-id="${id}">
       <div class="pattern-row" onclick="toggleCard('${id}')">
         <div class="pattern-main">
-          <div class="pattern-name">${p.name}</div>
+          <div class="pattern-name">${highlightMatch(p.name, q)}</div>
           <div class="pattern-spec">${specLine}</div>
         </div>
         <div class="pattern-price">${priceHTML}</div>
@@ -387,7 +451,7 @@ function renderPatternCard(p, id, bc){
                 <span class="vprice">${(v.firm_price||0).toLocaleString()}원</span>
               </div>
               <div class="chips">
-                ${v.models.length ? v.models.map(m => `<span class="model-chip">${m}</span>`).join('') : '<span class="model-chip">모델 정보 없음</span>'}
+                ${v.models.length ? v.models.map(m => `<span class="model-chip">${highlightMatch(m, q)}</span>`).join('') : '<span class="model-chip">모델 정보 없음</span>'}
               </div>
             </div>`;
           }).join('')}

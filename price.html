@@ -92,6 +92,24 @@
   }
   .trust-badge .ck{color:var(--accent); font-weight:900;}
 
+  /* 브랜드 필터 칩 */
+  .brand-filter{
+    display:flex; gap:7px; padding:10px 20px 4px; overflow-x:auto; scrollbar-width:none;
+  }
+  .brand-filter::-webkit-scrollbar{display:none;}
+  .filter-chip{
+    flex-shrink:0; display:inline-flex; align-items:center; gap:5px;
+    font-size:12px; font-weight:800; color:#334155; background:#fff;
+    border:1.5px solid var(--line); padding:7px 13px; border-radius:100px;
+    cursor:pointer; user-select:none; transition:all .12s; white-space:nowrap;
+  }
+  .filter-chip .n{font-size:10px; font-weight:700; color:var(--sub);}
+  .filter-chip.active{
+    background:var(--ink); border-color:var(--ink); color:#fff;
+  }
+  .filter-chip.active .n{color:#cbd5e1;}
+  .filter-chip:active{transform:scale(.96);}
+
   /* 브랜드 섹션 */
   .brand-group{margin:0 20px 20px; border-left:3px solid var(--bc,var(--accent)); padding-left:12px;}
   .brand-title{
@@ -147,6 +165,10 @@
   .model-chip{
     font-size:11.5px; font-weight:700; color:#475569; background:#fff;
     border:1px solid var(--line); padding:5px 10px; border-radius:8px;
+  }
+  .model-chip.chip-disc{
+    text-decoration:line-through; text-decoration-thickness:1.5px;
+    color:#94a3b8; background:#f1f5f9; border-color:#e2e8f0;
   }
   mark.hl{background:var(--wood-soft); color:var(--wood); padding:0 1px; border-radius:3px; font-weight:900;}
 
@@ -212,6 +234,8 @@
     <span class="trust-badge"><span class="ck">✓</span> 실시간 최신 단가 반영</span>
     <span class="trust-badge"><span class="ck">✓</span> 실측 후 정확한 시공</span>
   </div>
+
+  <div class="brand-filter" id="brandFilter"></div>
 
   <div id="listRoot"></div>
 
@@ -333,6 +357,12 @@ async function checkTokenAndStart(){
 checkTokenAndStart();
 
 let openState = {};
+let selectedBrand = null;
+function selectBrand(brand){
+  selectedBrand = (selectedBrand === brand) ? null : brand;
+  renderList();
+  document.getElementById('listRoot').scrollIntoView({behavior:'smooth', block:'start'});
+}
 
 /* 브랜드마다 다른 강조색을 순환 배정 (네이비/버건디/포레스트 등 차분한 톤으로 통일) */
 const BRAND_COLORS = ['#1e3a8a','#831843','#166534','#78350f','#3730a3','#164e63'];
@@ -445,15 +475,28 @@ function renderList(){
   const q = document.getElementById('searchInput').value.trim();
   const patterns = groupData(RAW_DATA);
 
-  // 상단 요약 통계
+  // 상단 요약 통계 (전체 기준, 필터와 무관)
   const brandSet = new Set(); let modelCount = 0;
   patterns.forEach(p => { brandSet.add(p.brand); p.variants.forEach(v => modelCount += Math.max(v.models.length,1)); });
   document.getElementById('statBrand').innerText = brandSet.size;
   document.getElementById('statPattern').innerText = patterns.length;
   document.getElementById('statModel').innerText = modelCount;
 
+  // 브랜드 필터 칩 렌더링 (검색과 무관하게 항상 전체 브랜드 목록 표시)
+  const allBrandCounts = {};
+  patterns.forEach(p => { allBrandCounts[p.brand] = (allBrandCounts[p.brand]||0) + 1; });
+  const brandNames = Object.keys(allBrandCounts);
+  const filterRoot = document.getElementById('brandFilter');
+  filterRoot.innerHTML = `
+    <span class="filter-chip ${!selectedBrand ? 'active' : ''}" onclick="selectBrand(null)">전체 <span class="n">${patterns.length}</span></span>
+    ${brandNames.map(b => `
+      <span class="filter-chip ${selectedBrand===b ? 'active' : ''}" onclick="selectBrand('${b.replace(/'/g,"\\'")}')">${b} <span class="n">${allBrandCounts[b]}</span></span>
+    `).join('')}
+  `;
+
   const byBrand = {};
   patterns.forEach(p => {
+    if (selectedBrand && p.brand !== selectedBrand) return;
     const hit = !q
       || fuzzyIncludes(p.brand, q)
       || fuzzyIncludes(p.name, q)
@@ -524,7 +567,7 @@ function renderPatternCard(p, id, bc, q){
                 <span class="vprice">${(v.firm_price||0).toLocaleString()}원</span>
               </div>
               <div class="chips">
-                ${v.models.length ? v.models.map(m => `<span class="model-chip">${highlightMatch(m, q)}</span>`).join('') : '<span class="model-chip">모델 정보 없음</span>'}
+                ${v.models.length ? v.models.map(m => `<span class="model-chip${m.includes('단종') ? ' chip-disc' : ''}">${highlightMatch(m, q)}</span>`).join('') : '<span class="model-chip">모델 정보 없음</span>'}
               </div>
             </div>`;
           }).join('')}

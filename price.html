@@ -63,12 +63,30 @@
   .search-bar{
     padding:14px 20px; background:var(--bg); position:sticky; top:150px; z-index:9;
   }
+  .search-wrap{position:relative;}
+  .search-wrap::before{
+    content:'⌕'; position:absolute; left:14px; top:50%; transform:translateY(-50%);
+    font-size:16px; color:var(--sub); font-weight:900; pointer-events:none;
+  }
   .search-bar input{
-    width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--line);
+    width:100%; padding:12px 14px 12px 36px; border-radius:12px; border:1px solid var(--line);
     background:#fff; font-size:14px; font-weight:600; outline:none;
-    box-shadow:0 1px 2px rgba(15,23,42,.03);
+    box-shadow:0 1px 2px rgba(15,23,42,.03); transition:border-color .15s, box-shadow .15s;
   }
   .search-bar input:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);}
+
+  /* 신뢰 메시지 배지 */
+  .trust-bar{
+    display:flex; gap:8px; padding:0 20px 4px; overflow-x:auto; scrollbar-width:none;
+  }
+  .trust-bar::-webkit-scrollbar{display:none;}
+  .trust-badge{
+    flex-shrink:0; display:inline-flex; align-items:center; gap:5px;
+    font-size:11px; font-weight:800; color:#1e293b; background:#fff;
+    border:1px solid var(--line); padding:7px 12px; border-radius:100px;
+    box-shadow:0 1px 2px rgba(15,23,42,.03); white-space:nowrap;
+  }
+  .trust-badge .ck{color:var(--accent); font-weight:900;}
 
   /* 브랜드 섹션 */
   .brand-group{margin:0 20px 20px; border-left:3px solid var(--bc,var(--accent)); padding-left:12px;}
@@ -84,10 +102,12 @@
     background:var(--card); border:1px solid var(--line); border-top:3px solid var(--bc,var(--accent));
     border-radius:12px;
     margin-bottom:8px; overflow:hidden; box-shadow:0 1px 3px rgba(15,23,42,.05);
+    transition:box-shadow .15s ease, transform .1s ease;
   }
+  .pattern-card:hover{box-shadow:0 4px 14px rgba(15,23,42,.08);}
   .pattern-row{
     display:flex; align-items:center; gap:12px; padding:14px; cursor:pointer;
-    user-select:none;
+    user-select:none; transition:background .12s;
   }
   .pattern-row:active{background:#f8fafc;}
   .pattern-main{flex:1; min-width:0;}
@@ -175,7 +195,16 @@
   </header>
 
   <div class="search-bar">
-    <input id="searchInput" type="text" placeholder="브랜드, 패턴, 모델명으로 검색" oninput="onSearchInput()">
+    <div class="search-wrap">
+      <input id="searchInput" type="text" placeholder="브랜드, 패턴, 모델명으로 검색" oninput="onSearchInput()">
+    </div>
+  </div>
+
+  <div class="trust-bar">
+    <span class="trust-badge"><span class="ck">✓</span> 정품 자재 · 정식 파트너사 유통</span>
+    <span class="trust-badge"><span class="ck">✓</span> 세금계산서 100% 발행</span>
+    <span class="trust-badge"><span class="ck">✓</span> 실시간 최신 단가 반영</span>
+    <span class="trust-badge"><span class="ck">✓</span> 실측 후 정확한 시공</span>
   </div>
 
   <div id="listRoot"></div>

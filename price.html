@@ -37,14 +37,21 @@
   }
   .header-flex{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px 26px;}
   .header-left{flex:1 1 auto; min-width:210px;}
-  .logo-row{display:flex; align-items:center; gap:11px;}
+  .logo-row{display:flex; align-items:center; gap:14px;}
   .logo-badge{
     display:inline-flex; align-items:center; justify-content:center;
-    background:#fff; border-radius:10px; padding:5px 9px; flex-shrink:0;
-    box-shadow:0 3px 10px rgba(0,0,0,.3);
+    background:#fff; border-radius:12px; padding:8px 12px; flex-shrink:0;
+    box-shadow:0 4px 16px rgba(240,176,63,.22), 0 2px 8px rgba(0,0,0,.35);
+    border:1px solid rgba(240,176,63,.25);
   }
-  .logo-img{width:auto; height:26px; max-width:110px; object-fit:contain; display:block;}
-  .brand-eyebrow{font-size:10.5px; font-weight:800; color:#8fb4ee; letter-spacing:.14em; text-transform:uppercase;}
+  .logo-img{width:auto; height:36px; max-width:140px; object-fit:contain; display:block;}
+  .brand-divider{width:1px; height:34px; background:linear-gradient(180deg,transparent,rgba(240,176,63,.45),transparent); flex-shrink:0;}
+  .brand-text{display:flex; flex-direction:column; gap:2px;}
+  .brand-title-main{
+    font-size:14.5px; font-weight:900; letter-spacing:.06em; color:#fff; line-height:1.1;
+  }
+  .brand-title-main span{color:var(--gold);}
+  .brand-eyebrow{font-size:15px; font-weight:800; color:#c3d2ea; letter-spacing:.01em;}
 
   .client-hero{margin-top:19px; display:flex; align-items:flex-end; gap:9px; flex-wrap:wrap;}
   .client-hero .name{
@@ -109,6 +116,11 @@
     margin-bottom:6px;
   }
   .footnote b{color:var(--wood);}
+  .fn-highlight{
+    margin-top:11px; padding:10px 12px; background:var(--gold-soft);
+    border:1px solid rgba(240,176,63,.4); border-radius:9px;
+    font-size:12px; font-weight:800; color:#7a5410; line-height:1.5;
+  }
 
   /* ─── 검색 ─── */
   .search-bar{padding:14px 20px 8px; background:var(--bg); position:sticky; top:0; z-index:20;}
@@ -225,6 +237,10 @@
     text-decoration:line-through; text-decoration-thickness:1.5px; text-decoration-color:#c0392b;
     color:#a89d8d; background:#f5f1e8; border-style:dashed;
   }
+  .pattern-name.name-disc{
+    text-decoration:line-through; text-decoration-thickness:2px; text-decoration-color:#c0392b;
+    color:#a89d8d;
+  }
   mark.hl{background:#ffe9b8; color:var(--wood); padding:0 1px; border-radius:3px; font-weight:900;}
 
   /* ─── 기타 ─── */
@@ -275,7 +291,11 @@
           <span class="logo-badge">
             <img src="images/logo.png" alt="청인마루" class="logo-img" onerror="this.parentElement.style.display='none'">
           </span>
-          <div class="brand-eyebrow">CHEONGIN MARU · 거래처 전용 단가표</div>
+          <span class="brand-divider"></span>
+          <div class="brand-text">
+            <div class="brand-title-main">CHEONGIN<span> MARU</span></div>
+            <div class="brand-eyebrow">거래처 전용 단가표 · PARTNER SYSTEM</div>
+          </div>
         </div>
         <div class="client-hero">
           <span class="name" id="clientName">-</span>
@@ -304,11 +324,11 @@
   <div class="footnote">
     <div class="fn-title">📋 거래 안내</div>
     * 표시된 단가는 <b>부가세 별도</b> 금액입니다. 계산서 발행 시 10% 추가됩니다.<br>
-    * 걸레받이는 <b>개당 7,000원</b>입니다.<br>
+    * 걸레받이는 <b>개당 7,000원(VAT 별도)</b>입니다.<br>
     * 방문지가 <b>30km 초과 시 초과분에 대해 km당 1,000원</b>의 출장비가 추가됩니다.<br>
     * <b>보양비 및 양중비는 별도</b>입니다.<br>
-    * 패턴을 누르면 색상(모델) 목록을 확인할 수 있으며, <s>취소선</s> 표시는 단종(예정) 모델입니다.<br>
-    * 단가 변경 시 이 페이지가 자동으로 최신화되니, 이 링크를 즐겨찾기 해두세요.
+    * 패턴을 누르면 색상(모델) 목록을 확인할 수 있으며, <s>취소선</s> 표시는 단종(예정) 모델입니다.
+    <div class="fn-highlight">🔔 단가 변경 시 이 페이지가 자동으로 최신화됩니다 — 이 링크를 즐겨찾기 해두세요.</div>
   </div>
 
   <div class="search-bar">
@@ -492,6 +512,7 @@ function groupData(data){
       variantMap.set(vKey, {
         brand: row.brand, name: row.name, firm_price: row.firm_price,
         spec: row.spec, factor: row.factor,
+        nameDiscontinued: !!row.name_discontinued || String(row.name||'').includes('단종'),
         models: modelObj ? [modelObj] : []
       });
     } else if (modelObj) {
@@ -501,8 +522,8 @@ function groupData(data){
   const patternMap = new Map(); const patterns = [];
   variantMap.forEach(v => {
     const pKey = v.brand + '__' + v.name;
-    if (!patternMap.has(pKey)) { const p = { brand: v.brand, name: v.name, variants: [v] }; patternMap.set(pKey, p); patterns.push(p); }
-    else patternMap.get(pKey).variants.push(v);
+    if (!patternMap.has(pKey)) { const p = { brand: v.brand, name: v.name, discontinued: v.nameDiscontinued, variants: [v] }; patternMap.set(pKey, p); patterns.push(p); }
+    else { patternMap.get(pKey).variants.push(v); if (v.nameDiscontinued) patternMap.get(pKey).discontinued = true; }
   });
   return patterns;
 }
@@ -616,7 +637,7 @@ function renderPatternCard(p, id, q){
     <div class="pattern-card ${isOpen ? 'open' : ''}" data-id="${id}">
       <div class="pattern-row" onclick="toggleCard('${id}')">
         <div class="pattern-main">
-          <div class="pattern-name">${highlightMatch(p.name, q)}</div>
+          <div class="pattern-name${p.discontinued ? ' name-disc' : ''}">${highlightMatch(p.name, q)}</div>
           <div class="pattern-spec">${specLine}</div>
         </div>
         <div class="pattern-price">${priceHTML}</div>

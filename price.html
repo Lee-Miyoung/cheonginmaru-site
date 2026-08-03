@@ -10,10 +10,10 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <style>
   :root{
-    --bg:#f0f2f6; --card:#ffffff; --ink:#0f172a; --sub:#64748b;
-    --line:#e5e9f0; --accent:#2563eb; --accent-soft:#eff6ff;
-    --wood:#b45309; --wood-soft:#fef3e2;
-    --tag:#f8fafc;
+    --bg:#f4f2ec; --card:#fffefc; --ink:#0f172a; --sub:#6b6559;
+    --line:#e9e3d6; --accent:#a8590e; --accent-soft:#fbe9d2;
+    --wood:#78350f; --wood-soft:#f3e4d0;
+    --tag:#faf8f3;
   }
   *{box-sizing:border-box;}
   body{
@@ -81,8 +81,9 @@
 
   /* 패턴 카드 */
   .pattern-card{
-    background:var(--card); border:1px solid var(--line); border-radius:14px;
-    margin-bottom:8px; overflow:hidden; box-shadow:0 1px 2px rgba(15,23,42,.03);
+    background:var(--card); border:1px solid var(--line); border-top:3px solid var(--bc,var(--accent));
+    border-radius:12px;
+    margin-bottom:8px; overflow:hidden; box-shadow:0 1px 3px rgba(15,23,42,.05);
   }
   .pattern-row{
     display:flex; align-items:center; gap:12px; padding:14px; cursor:pointer;
@@ -91,16 +92,16 @@
   .pattern-row:active{background:#f8fafc;}
   .pattern-main{flex:1; min-width:0;}
   .pattern-name{font-size:14.5px; font-weight:800; color:var(--ink); margin-bottom:3px;}
-  .pattern-spec{font-size:11px; color:var(--sub); font-weight:600; display:flex; align-items:center; gap:5px; flex-wrap:wrap;}
+  .pattern-spec{font-size:12.5px; color:#475569; font-weight:700; display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
   .box-chip{
-    display:inline-flex; align-items:center; font-size:10px; font-weight:800; color:var(--wood);
-    background:var(--wood-soft); padding:2px 7px; border-radius:6px;
+    display:inline-flex; align-items:center; font-size:12px; font-weight:900; color:var(--wood);
+    background:var(--wood-soft); padding:3px 9px; border-radius:7px;
   }
   .pattern-price{text-align:right; white-space:nowrap;}
   .price-num{font-size:16.5px; font-weight:900; color:var(--accent);}
   .price-range{font-size:13.5px; font-weight:900; color:var(--accent);}
   .price-unit{font-size:9.5px; color:var(--sub); font-weight:700;}
-  .price-multi-badge{font-size:9.5px; color:#b45309; font-weight:800; background:var(--wood-soft); padding:1px 6px; border-radius:5px; margin-top:2px; display:inline-block;}
+  .price-multi-badge{font-size:9.5px; color:var(--wood); font-weight:800; background:var(--wood-soft); padding:1px 6px; border-radius:5px; margin-top:2px; display:inline-block;}
   .chev{color:#cbd5e1; font-size:12px; transition:transform .2s; flex-shrink:0;}
   .pattern-card.open .chev{transform:rotate(180deg);}
 
@@ -114,9 +115,10 @@
   .variant-block:last-child{margin-bottom:0;}
   .variant-head{
     display:flex; align-items:center; justify-content:space-between; gap:8px;
-    font-size:11.5px; font-weight:800; color:#334155; margin-bottom:7px;
+    font-size:13px; font-weight:800; color:#334155; margin-bottom:8px; flex-wrap:wrap;
   }
-  .variant-head .vprice{color:var(--accent); font-weight:900; font-size:12.5px;}
+  .variant-head .spec-txt{display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;}
+  .variant-head .vprice{color:var(--accent); font-weight:900; font-size:14px;}
   .chips{display:flex; flex-wrap:wrap; gap:6px;}
   .model-chip{
     font-size:11.5px; font-weight:700; color:#475569; background:#fff;
@@ -173,7 +175,7 @@
   </header>
 
   <div class="search-bar">
-    <input id="searchInput" type="text" placeholder="브랜드, 패턴, 모델명으로 검색" oninput="renderList()">
+    <input id="searchInput" type="text" placeholder="브랜드, 패턴, 모델명으로 검색" oninput="onSearchInput()">
   </div>
 
   <div id="listRoot"></div>
@@ -202,9 +204,58 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const fbDatabase = firebase.database();
 
+/* ============================================
+   단가 데이터 미리 가져오기 (토큰 확인과 동시에 시작 → 순차 대기 없이 속도 개선)
+   캐시를 써서 재방문 시엔 즉시 표시, 뒤에서 조용히 최신화
+   ============================================ */
+const FEED_URL = 'https://script.google.com/macros/s/AKfycbzyafI_d2PZiE_AYS4Y5f9uBQjK5ULCxX21hk2Z5BMDcbktNT9NnF8mUb_HhA8hJqy9Fw/exec';
+const CACHE_KEY = 'cm_price_cache_v1';
+const CACHE_TTL = 5 * 60 * 1000; // 5분
+
+let RAW_DATA = [];
+let dataFetchPromise = null;
+
+function startDataFetch(){
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { data, ts } = JSON.parse(cached);
+      if (Array.isArray(data) && (Date.now() - ts) < CACHE_TTL) RAW_DATA = data;
+    }
+  } catch(e){}
+
+  dataFetchPromise = fetch(FEED_URL)
+    .then(res => { if (!res.ok) throw new Error('네트워크 오류'); return res.json(); })
+    .then(json => {
+      RAW_DATA = json;
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: json, ts: Date.now() })); } catch(e){}
+      return json;
+    });
+  return dataFetchPromise;
+}
+startDataFetch(); // 토큰 확인을 기다리지 않고 바로 시작
+
 function showGate(title, msg){
   document.getElementById('gate-title').innerText = title;
   document.getElementById('gate-msg').innerText = msg;
+}
+
+async function loadData(){
+  const root = document.getElementById('listRoot');
+  if (RAW_DATA.length) {
+    renderList(); // 캐시된 데이터가 있으면 즉시 먼저 보여줌
+  } else {
+    root.innerHTML = '<div class="empty">단가 정보를 불러오는 중입니다...</div>';
+  }
+  try {
+    await dataFetchPromise;
+    renderList(); // 최신 데이터로 다시 그림
+  } catch (e) {
+    if (!RAW_DATA.length) {
+      root.innerHTML = '<div class="empty">단가 정보를 불러오지 못했습니다.<br>잠시 후 새로고침 해주세요.</div>';
+    }
+    console.error(e);
+  }
 }
 
 function grantAccess(clientName){
@@ -246,16 +297,10 @@ async function checkTokenAndStart(){
 
 checkTokenAndStart();
 
-/* ============================================
-   실제 데이터 엔드포인트 (Apps Script 거래처용 배포 URL)
-   ============================================ */
-const FEED_URL = 'https://script.google.com/macros/s/AKfycbzyafI_d2PZiE_AYS4Y5f9uBQjK5ULCxX21hk2Z5BMDcbktNT9NnF8mUb_HhA8hJqy9Fw/exec';
-
-let RAW_DATA = [];
 let openState = {};
 
-/* 브랜드마다 다른 강조색을 순환 배정해서 시각적으로 구분되게 함 */
-const BRAND_COLORS = ['#2563eb','#b45309','#0f766e','#7c3aed','#be185d','#4d7c0f'];
+/* 브랜드마다 다른 강조색을 순환 배정 (네이비/버건디/포레스트 등 차분한 톤으로 통일) */
+const BRAND_COLORS = ['#1e3a8a','#831843','#166534','#78350f','#3730a3','#164e63'];
 const brandColorMap = {};
 function colorFor(brand){
   if (!brandColorMap[brand]) {
@@ -268,6 +313,12 @@ function fmtFactor(f){
   const n = parseFloat(f);
   if (!n || isNaN(n)) return null;
   return (Math.round(n*100)/100).toString();
+}
+
+let searchDebounceTimer = null;
+function onSearchInput(){
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(renderList, 120);
 }
 
 /* ============================================
@@ -321,20 +372,6 @@ function highlightMatch(text, query){
   if (idx === -1) return text;
   const s = map[idx], e = map[idx + normQuery.length - 1];
   return text.slice(0, s) + '<mark class="hl">' + text.slice(s, e + 1) + '</mark>' + text.slice(e + 1);
-}
-
-async function loadData(){
-  const root = document.getElementById('listRoot');
-  root.innerHTML = '<div class="empty">단가 정보를 불러오는 중입니다...</div>';
-  try {
-    const res = await fetch(FEED_URL);
-    if (!res.ok) throw new Error('네트워크 오류');
-    RAW_DATA = await res.json();
-    renderList();
-  } catch (e) {
-    root.innerHTML = '<div class="empty">단가 정보를 불러오지 못했습니다.<br>잠시 후 새로고침 해주세요.</div>';
-    console.error(e);
-  }
 }
 
 /* 1단계: brand+name+firm_price+spec+factor 가 같은 행끼리 "가격 변형(variant)"으로 묶음
@@ -426,9 +463,10 @@ function renderPatternCard(p, id, bc, q){
   }
 
   const firstSpec = p.variants[0].spec;
-  const specLine = !isMulti && firstSpec
-    ? `<span>${firstSpec}</span><span>·</span><span>색상 ${totalModels}종</span>`
-    : `<span>색상 ${totalModels}종</span>`;
+  const firstFactor = fmtFactor(p.variants[0].factor);
+  const specLine = !isMulti
+    ? `${firstSpec ? `<span>${firstSpec}</span>` : ''}${firstFactor ? `<span class="box-chip">1BOX = ${firstFactor}㎡</span>` : ''}<span>· 색상 ${totalModels}종</span>`
+    : `<span>색상 ${totalModels}종 · 규격/면적 상세는 펼쳐서 확인</span>`;
 
   return `
     <div class="pattern-card ${isOpen ? 'open' : ''}" data-id="${id}">
@@ -447,7 +485,7 @@ function renderPatternCard(p, id, bc, q){
             return `
             <div class="variant-block">
               <div class="variant-head">
-                <span>${v.spec || ''} ${factorTxt ? `<span class="box-chip">1BOX = ${factorTxt}㎡</span>` : ''}</span>
+                <span class="spec-txt">${v.spec || ''} ${factorTxt ? `<span class="box-chip">1BOX = ${factorTxt}㎡</span>` : ''}</span>
                 <span class="vprice">${(v.firm_price||0).toLocaleString()}원</span>
               </div>
               <div class="chips">

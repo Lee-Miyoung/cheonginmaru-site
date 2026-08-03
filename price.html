@@ -10,8 +10,9 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <style>
   :root{
-    --bg:#f1f5f9; --card:#ffffff; --ink:#0f172a; --sub:#64748b;
-    --line:#e2e8f0; --accent:#2563eb; --accent-soft:#eff6ff;
+    --bg:#f0f2f6; --card:#ffffff; --ink:#0f172a; --sub:#64748b;
+    --line:#e5e9f0; --accent:#2563eb; --accent-soft:#eff6ff;
+    --wood:#b45309; --wood-soft:#fef3e2;
     --tag:#f8fafc;
   }
   *{box-sizing:border-box;}
@@ -20,14 +21,19 @@
     background:var(--bg); color:var(--ink); letter-spacing:-0.01em;
     -webkit-tap-highlight-color:transparent;
   }
-  .wrap{max-width:640px; margin:0 auto; padding:0 0 40px;}
+  .wrap{max-width:660px; margin:0 auto; padding:0 0 48px;}
 
   /* 헤더 */
   header{
     background:linear-gradient(160deg,#1e293b 0%,#0f172a 100%);
-    color:#fff; padding:28px 20px 22px; position:sticky; top:0; z-index:10;
+    color:#fff; padding:26px 20px 0; position:sticky; top:0; z-index:10;
   }
-  header .brand{font-size:11px; font-weight:800; color:#93c5fd; letter-spacing:.08em; text-transform:uppercase;}
+  header .brand{font-size:11px; font-weight:800; color:#93c5fd; letter-spacing:.1em; text-transform:uppercase;}
+  .logo-row{display:flex; align-items:center; gap:10px;}
+  .logo-img{
+    width:34px; height:34px; border-radius:9px; object-fit:cover;
+    box-shadow:0 2px 6px rgba(0,0,0,.25); flex-shrink:0; background:#fff;
+  }
   header h1{margin:4px 0 2px; font-size:20px; font-weight:900;}
   header .meta{display:flex; align-items:center; gap:6px; font-size:12px; color:#94a3b8; font-weight:600;}
   header .meta b{color:#e2e8f0; font-weight:800;}
@@ -38,24 +44,33 @@
   }
   header .client-badge b{color:#fff;}
 
+  .stat-bar{
+    display:flex; gap:0; margin-top:18px; border-top:1px solid rgba(255,255,255,.1);
+  }
+  .stat-bar .stat{flex:1; padding:12px 4px; text-align:center; border-right:1px solid rgba(255,255,255,.1);}
+  .stat-bar .stat:last-child{border-right:none;}
+  .stat-bar .stat b{display:block; font-size:16px; font-weight:900; color:#fff;}
+  .stat-bar .stat span{font-size:10px; color:#94a3b8; font-weight:700;}
+
   /* 검색 */
   .search-bar{
-    padding:14px 20px; background:var(--bg); position:sticky; top:96px; z-index:9;
+    padding:14px 20px; background:var(--bg); position:sticky; top:150px; z-index:9;
   }
   .search-bar input{
     width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--line);
     background:#fff; font-size:14px; font-weight:600; outline:none;
+    box-shadow:0 1px 2px rgba(15,23,42,.03);
   }
   .search-bar input:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);}
 
   /* 브랜드 섹션 */
-  .brand-group{margin:0 20px 18px;}
+  .brand-group{margin:0 20px 20px; border-left:3px solid var(--bc,var(--accent)); padding-left:12px;}
   .brand-title{
-    display:flex; align-items:center; gap:8px; padding:10px 2px 8px;
-    font-size:13px; font-weight:900; color:#334155;
+    display:flex; align-items:center; gap:8px; padding:8px 2px 10px;
+    font-size:13.5px; font-weight:900; color:#1e293b;
   }
-  .brand-title .dot{width:6px; height:6px; border-radius:50%; background:var(--accent);}
-  .brand-title .count{margin-left:auto; font-size:11px; font-weight:700; color:var(--sub);}
+  .brand-title .dot{width:7px; height:7px; border-radius:50%; background:var(--bc,var(--accent)); flex-shrink:0;}
+  .brand-title .count{margin-left:auto; font-size:10.5px; font-weight:700; color:var(--sub); background:#fff; padding:3px 9px; border-radius:100px; border:1px solid var(--line);}
 
   /* 패턴 카드 */
   .pattern-card{
@@ -63,25 +78,39 @@
     margin-bottom:8px; overflow:hidden; box-shadow:0 1px 2px rgba(15,23,42,.03);
   }
   .pattern-row{
-    display:flex; align-items:center; gap:12px; padding:13px 14px; cursor:pointer;
+    display:flex; align-items:center; gap:12px; padding:14px; cursor:pointer;
     user-select:none;
   }
   .pattern-row:active{background:#f8fafc;}
   .pattern-main{flex:1; min-width:0;}
-  .pattern-name{font-size:14px; font-weight:800; color:var(--ink); margin-bottom:2px;}
-  .pattern-spec{font-size:11px; color:var(--sub); font-weight:600;}
+  .pattern-name{font-size:14.5px; font-weight:800; color:var(--ink); margin-bottom:3px;}
+  .pattern-spec{font-size:11px; color:var(--sub); font-weight:600; display:flex; align-items:center; gap:5px; flex-wrap:wrap;}
+  .box-chip{
+    display:inline-flex; align-items:center; font-size:10px; font-weight:800; color:var(--wood);
+    background:var(--wood-soft); padding:2px 7px; border-radius:6px;
+  }
   .pattern-price{text-align:right; white-space:nowrap;}
-  .price-num{font-size:16px; font-weight:900; color:var(--accent);}
-  .price-unit{font-size:10px; color:var(--sub); font-weight:700;}
+  .price-num{font-size:16.5px; font-weight:900; color:var(--accent);}
+  .price-range{font-size:13.5px; font-weight:900; color:var(--accent);}
+  .price-unit{font-size:9.5px; color:var(--sub); font-weight:700;}
+  .price-multi-badge{font-size:9.5px; color:#b45309; font-weight:800; background:var(--wood-soft); padding:1px 6px; border-radius:5px; margin-top:2px; display:inline-block;}
   .chev{color:#cbd5e1; font-size:12px; transition:transform .2s; flex-shrink:0;}
   .pattern-card.open .chev{transform:rotate(180deg);}
 
   .model-panel{
-    max-height:0; overflow:hidden; transition:max-height .25s ease;
+    max-height:0; overflow:hidden; transition:max-height .2s ease;
     background:var(--tag); border-top:1px solid transparent;
   }
-  .pattern-card.open .model-panel{border-top:1px solid var(--line);}
-  .model-inner{padding:12px 14px; display:flex; flex-wrap:wrap; gap:6px;}
+  .pattern-card.open .model-panel{max-height:2400px; border-top:1px solid var(--line);}
+  .model-inner{padding:12px 14px;}
+  .variant-block{margin-bottom:12px;}
+  .variant-block:last-child{margin-bottom:0;}
+  .variant-head{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    font-size:11.5px; font-weight:800; color:#334155; margin-bottom:7px;
+  }
+  .variant-head .vprice{color:var(--accent); font-weight:900; font-size:12.5px;}
+  .chips{display:flex; flex-wrap:wrap; gap:6px;}
   .model-chip{
     font-size:11.5px; font-weight:700; color:#475569; background:#fff;
     border:1px solid var(--line); padding:5px 10px; border-radius:8px;
@@ -90,7 +119,7 @@
   /* 하단 안내 */
   .footnote{
     margin:20px 20px 0; padding:14px 16px; background:#fff; border:1px dashed var(--line);
-    border-radius:12px; font-size:11.5px; color:var(--sub); font-weight:600; line-height:1.6;
+    border-radius:12px; font-size:11.5px; color:var(--sub); font-weight:600; line-height:1.7;
   }
   .empty{text-align:center; padding:60px 20px; color:var(--sub); font-size:13px; font-weight:600;}
 
@@ -118,10 +147,18 @@
 
 <div class="wrap" id="mainWrap">
   <header>
-    <div class="brand">CHEONGIN MARU · 거래처 단가</div>
+    <div class="logo-row">
+      <img src="logo.png" alt="청인마루" class="logo-img" onerror="this.style.display='none'">
+      <div class="brand">CHEONGIN MARU · 거래처 단가</div>
+    </div>
     <h1>청인마루 거래처 단가표</h1>
     <div class="meta">기준일 <b id="baseDate">2026-05-01</b> 적용 중</div>
     <div class="client-badge">거래처: <b id="clientName">-</b> 님 전용 조회 페이지</div>
+    <div class="stat-bar">
+      <div class="stat"><b id="statBrand">-</b><span>브랜드</span></div>
+      <div class="stat"><b id="statPattern">-</b><span>패턴</span></div>
+      <div class="stat"><b id="statModel">-</b><span>모델(색상)</span></div>
+    </div>
   </header>
 
   <div class="search-bar">
@@ -132,7 +169,8 @@
 
   <div class="footnote">
     * 표시된 단가는 <b>부가세 별도</b> 금액입니다. 계산서 발행 시 10% 추가됩니다.<br>
-    * 패턴을 눌러보면 해당 색상(모델) 목록을 확인할 수 있습니다.<br>
+    * 패턴을 눌러보면 색상(모델)별 상세 가격과 1박스당 면적을 확인할 수 있습니다.<br>
+    * 같은 패턴이어도 모델에 따라 단가가 다를 수 있어, 그럴 경우 별도로 구분해서 보여드립니다.<br>
     * 단가 변경 시 이 페이지가 자동으로 최신화되니, 이 링크를 즐겨찾기 해두세요.
   </div>
 </div>
@@ -183,7 +221,6 @@ async function checkTokenAndStart(){
       denyAccess('유효하지 않거나 비활성화된 링크입니다.');
       return;
     }
-    // 조회 로그 남기기 (선택적, 실패해도 접속엔 지장 없음)
     fbDatabase.ref('priceAccessTokens/' + token).update({
       lastAccessedAt: Date.now(),
       accessCount: (data.accessCount || 0) + 1
@@ -197,6 +234,7 @@ async function checkTokenAndStart(){
 }
 
 checkTokenAndStart();
+
 /* ============================================
    실제 데이터 엔드포인트 (Apps Script 거래처용 배포 URL)
    ============================================ */
@@ -204,6 +242,22 @@ const FEED_URL = 'https://script.google.com/macros/s/AKfycbzyafI_d2PZiE_AYS4Y5f9
 
 let RAW_DATA = [];
 let openState = {};
+
+/* 브랜드마다 다른 강조색을 순환 배정해서 시각적으로 구분되게 함 */
+const BRAND_COLORS = ['#2563eb','#b45309','#0f766e','#7c3aed','#be185d','#4d7c0f'];
+const brandColorMap = {};
+function colorFor(brand){
+  if (!brandColorMap[brand]) {
+    brandColorMap[brand] = BRAND_COLORS[Object.keys(brandColorMap).length % BRAND_COLORS.length];
+  }
+  return brandColorMap[brand];
+}
+
+function fmtFactor(f){
+  const n = parseFloat(f);
+  if (!n || isNaN(n)) return null;
+  return (Math.round(n*100)/100).toString();
+}
 
 async function loadData(){
   const root = document.getElementById('listRoot');
@@ -219,29 +273,57 @@ async function loadData(){
   }
 }
 
-function groupByPattern(data){
-  const groups = [];
-  const map = new Map();
+/* 1단계: brand+name+firm_price+spec+factor 가 같은 행끼리 "가격 변형(variant)"으로 묶음
+   2단계: 그 variant들을 다시 brand+name(패턴) 기준으로 묶음
+   → 같은 패턴이어도 가격이 다르면 서로 다른 variant로 분리되어 정확하게 표시됨 */
+function groupData(data){
+  const variantMap = new Map();
   data.forEach(row => {
-    const key = row.brand + '__' + row.name;
-    if (!map.has(key)) {
-      const g = { brand:row.brand, name:row.name, spec:row.spec, firm_price:row.firm_price, models: row.model ? [row.model] : [] };
-      map.set(key, g); groups.push(g);
+    const vKey = [row.brand, row.name, row.firm_price, row.spec, row.factor].join('__');
+    if (!variantMap.has(vKey)) {
+      variantMap.set(vKey, {
+        brand: row.brand, name: row.name, firm_price: row.firm_price,
+        spec: row.spec, factor: row.factor,
+        models: row.model ? [row.model] : []
+      });
     } else if (row.model) {
-      map.get(key).models.push(row.model);
+      variantMap.get(vKey).models.push(row.model);
     }
   });
-  return groups;
+
+  const patternMap = new Map();
+  const patterns = [];
+  variantMap.forEach(v => {
+    const pKey = v.brand + '__' + v.name;
+    if (!patternMap.has(pKey)) {
+      const p = { brand: v.brand, name: v.name, variants: [v] };
+      patternMap.set(pKey, p); patterns.push(p);
+    } else {
+      patternMap.get(pKey).variants.push(v);
+    }
+  });
+  return patterns;
 }
 
 function renderList(){
   const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  const groups = groupByPattern(RAW_DATA);
+  const patterns = groupData(RAW_DATA);
+
+  // 상단 요약 통계
+  const brandSet = new Set(); let modelCount = 0;
+  patterns.forEach(p => { brandSet.add(p.brand); p.variants.forEach(v => modelCount += Math.max(v.models.length,1)); });
+  document.getElementById('statBrand').innerText = brandSet.size;
+  document.getElementById('statPattern').innerText = patterns.length;
+  document.getElementById('statModel').innerText = modelCount;
+
   const byBrand = {};
-  groups.forEach(g => {
-    const hit = !q || g.brand.toLowerCase().includes(q) || g.name.toLowerCase().includes(q) || g.models.some(m => m.toLowerCase().includes(q));
+  patterns.forEach(p => {
+    const hit = !q
+      || p.brand.toLowerCase().includes(q)
+      || p.name.toLowerCase().includes(q)
+      || p.variants.some(v => v.models.some(m => m.toLowerCase().includes(q)));
     if (!hit) return;
-    (byBrand[g.brand] = byBrand[g.brand] || []).push(g);
+    (byBrand[p.brand] = byBrand[p.brand] || []).push(p);
   });
 
   const root = document.getElementById('listRoot');
@@ -250,39 +332,74 @@ function renderList(){
 
   root.innerHTML = brands.map(brand => {
     const items = byBrand[brand];
+    const bc = colorFor(brand);
     return `
-      <div class="brand-group">
+      <div class="brand-group" style="--bc:${bc}">
         <div class="brand-title"><span class="dot"></span>${brand}<span class="count">${items.length}개 패턴</span></div>
-        ${items.map((g,i) => {
-          const id = brand + '_' + i;
-          const isOpen = !!openState[id];
-          return `
-          <div class="pattern-card ${isOpen ? 'open' : ''}" data-id="${id}">
-            <div class="pattern-row" onclick="toggleCard('${id}')">
-              <div class="pattern-main">
-                <div class="pattern-name">${g.name}</div>
-                <div class="pattern-spec">${g.spec} · 색상 ${g.models.length}종</div>
-              </div>
-              <div class="pattern-price">
-                <div class="price-num">${g.firm_price.toLocaleString()}원</div>
-                <div class="price-unit">/ BOX (부가세 별도)</div>
-              </div>
-              <div class="chev">▼</div>
-            </div>
-            <div class="model-panel" style="${isOpen ? 'max-height:400px;' : ''}">
-              <div class="model-inner">
-                ${g.models.map(m => `<span class="model-chip">${m}</span>`).join('')}
-              </div>
-            </div>
-          </div>`;
-        }).join('')}
+        ${items.map((p,i) => renderPatternCard(p, brand + '_' + i, bc)).join('')}
       </div>`;
   }).join('');
 }
 
+function renderPatternCard(p, id, bc){
+  const isOpen = !!openState[id];
+  const isMulti = p.variants.length > 1;
+  const totalModels = p.variants.reduce((s,v)=>s+Math.max(v.models.length,1),0);
+
+  let priceHTML;
+  if (isMulti) {
+    const prices = p.variants.map(v => v.firm_price).filter(Boolean);
+    const lo = Math.min(...prices), hi = Math.max(...prices);
+    priceHTML = `
+      <div class="price-range">${lo.toLocaleString()}~${hi.toLocaleString()}원</div>
+      <div class="price-unit">/ BOX (부가세 별도)</div>
+      <div class="price-multi-badge">모델별 가격 상이</div>`;
+  } else {
+    const v = p.variants[0];
+    priceHTML = `
+      <div class="price-num">${(v.firm_price||0).toLocaleString()}원</div>
+      <div class="price-unit">/ BOX (부가세 별도)</div>`;
+  }
+
+  const firstSpec = p.variants[0].spec;
+  const specLine = !isMulti && firstSpec
+    ? `<span>${firstSpec}</span><span>·</span><span>색상 ${totalModels}종</span>`
+    : `<span>색상 ${totalModels}종</span>`;
+
+  return `
+    <div class="pattern-card ${isOpen ? 'open' : ''}" data-id="${id}">
+      <div class="pattern-row" onclick="toggleCard('${id}')">
+        <div class="pattern-main">
+          <div class="pattern-name">${p.name}</div>
+          <div class="pattern-spec">${specLine}</div>
+        </div>
+        <div class="pattern-price">${priceHTML}</div>
+        <div class="chev">▼</div>
+      </div>
+      <div class="model-panel">
+        <div class="model-inner">
+          ${p.variants.map(v => {
+            const factorTxt = fmtFactor(v.factor);
+            return `
+            <div class="variant-block">
+              <div class="variant-head">
+                <span>${v.spec || ''} ${factorTxt ? `<span class="box-chip">1BOX = ${factorTxt}㎡</span>` : ''}</span>
+                <span class="vprice">${(v.firm_price||0).toLocaleString()}원</span>
+              </div>
+              <div class="chips">
+                ${v.models.length ? v.models.map(m => `<span class="model-chip">${m}</span>`).join('') : '<span class="model-chip">모델 정보 없음</span>'}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
 function toggleCard(id){
   openState[id] = !openState[id];
-  renderList();
+  const el = document.querySelector('.pattern-card[data-id="' + CSS.escape(id) + '"]');
+  if (el) el.classList.toggle('open');
 }
 </script>
 </body>

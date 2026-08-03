@@ -174,9 +174,10 @@
 
   /* 하단 안내 */
   .footnote{
-    margin:20px 20px 0; padding:14px 16px; background:#fff; border:1px dashed var(--line);
-    border-radius:12px; font-size:11.5px; color:var(--sub); font-weight:600; line-height:1.7;
+    margin:18px 20px 0; padding:14px 16px; background:var(--wood-soft); border:1px solid #ecd5b0;
+    border-radius:12px; font-size:11.5px; color:#5c4a37; font-weight:600; line-height:1.75;
   }
+  .footnote b{color:var(--wood);}
   .empty{text-align:center; padding:60px 20px; color:var(--sub); font-size:13px; font-weight:600;}
 
   /* 접근 게이트 */
@@ -222,6 +223,16 @@
     </div>
   </header>
 
+  <div class="footnote">
+    * 표시된 단가는 <b>부가세 별도</b> 금액입니다. 계산서 발행 시 10% 추가됩니다.<br>
+    * 걸레받이는 <b>개당 7,000원</b>입니다.<br>
+    * 방문지가 <b>30km 초과 시 초과분에 대해 km당 1,000원</b>의 출장비가 추가됩니다.<br>
+    * <b>보양비 및 양중비는 별도</b>입니다.<br>
+    * 패턴을 눌러보면 색상(모델)별 상세 가격과 1박스당 면적을 확인할 수 있습니다.<br>
+    * 같은 패턴이어도 모델에 따라 단가가 다를 수 있어, 그럴 경우 별도로 구분해서 보여드립니다.<br>
+    * 단가 변경 시 이 페이지가 자동으로 최신화되니, 이 링크를 즐겨찾기 해두세요.
+  </div>
+
   <div class="search-bar">
     <div class="search-wrap">
       <input id="searchInput" type="text" placeholder="브랜드, 패턴, 모델명으로 검색" oninput="onSearchInput()">
@@ -238,13 +249,6 @@
   <div class="brand-filter" id="brandFilter"></div>
 
   <div id="listRoot"></div>
-
-  <div class="footnote">
-    * 표시된 단가는 <b>부가세 별도</b> 금액입니다. 계산서 발행 시 10% 추가됩니다.<br>
-    * 패턴을 눌러보면 색상(모델)별 상세 가격과 1박스당 면적을 확인할 수 있습니다.<br>
-    * 같은 패턴이어도 모델에 따라 단가가 다를 수 있어, 그럴 경우 별도로 구분해서 보여드립니다.<br>
-    * 단가 변경 시 이 페이지가 자동으로 최신화되니, 이 링크를 즐겨찾기 해두세요.
-  </div>
 </div>
 
 <script>

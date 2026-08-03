@@ -30,9 +30,13 @@
   }
   header .brand{font-size:11px; font-weight:800; color:#93c5fd; letter-spacing:.1em; text-transform:uppercase;}
   .logo-row{display:flex; align-items:center; gap:10px;}
+  .logo-badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    background:#fff; border-radius:9px; padding:5px 8px; flex-shrink:0;
+    box-shadow:0 2px 6px rgba(0,0,0,.2);
+  }
   .logo-img{
-    width:auto; height:38px; max-width:120px; border-radius:6px; object-fit:contain;
-    flex-shrink:0; background:transparent;
+    width:auto; height:26px; max-width:110px; object-fit:contain; display:block;
   }
   .client-hero{margin-top:18px; display:flex; align-items:flex-end; gap:9px; flex-wrap:wrap;}
   .client-hero .name{
@@ -178,7 +182,9 @@
 <div class="wrap" id="mainWrap">
   <header>
     <div class="logo-row">
-      <img src="images/logo.png" alt="청인마루" class="logo-img" onerror="this.style.display='none'">
+      <span class="logo-badge">
+        <img src="images/logo.png" alt="청인마루" class="logo-img" onerror="this.parentElement.style.display='none'">
+      </span>
       <div class="brand">CHEONGIN MARU · 거래처 전용 단가표</div>
     </div>
     <div class="client-hero">

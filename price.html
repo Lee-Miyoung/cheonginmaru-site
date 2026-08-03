@@ -487,10 +487,10 @@ function groupData(data){
       variantMap.set(vKey, {
         brand: row.brand, name: row.name, firm_price: row.firm_price,
         spec: row.spec, factor: row.factor,
-        models: row.model ? [row.model] : []
+        models: row.model ? [{ name: row.model, discontinued: !!row.discontinued }] : []
       });
     } else if (row.model) {
-      variantMap.get(vKey).models.push(row.model);
+      variantMap.get(vKey).models.push({ name: row.model, discontinued: !!row.discontinued });
     }
   });
 
@@ -538,7 +538,7 @@ function renderList(){
     const hit = !q
       || fuzzyIncludes(p.brand, q)
       || fuzzyIncludes(p.name, q)
-      || p.variants.some(v => v.models.some(m => fuzzyIncludes(m, q)));
+      || p.variants.some(v => v.models.some(m => fuzzyIncludes(m.name, q)));
     if (!hit) return;
     (byBrand[p.brand] = byBrand[p.brand] || []).push(p);
   });
@@ -560,7 +560,7 @@ function renderList(){
 
 function renderPatternCard(p, id, bc, q){
   const matchOnlyInModels = q && !fuzzyIncludes(p.brand, q) && !fuzzyIncludes(p.name, q)
-    && p.variants.some(v => v.models.some(m => fuzzyIncludes(m, q)));
+    && p.variants.some(v => v.models.some(m => fuzzyIncludes(m.name, q)));
   const isOpen = q ? matchOnlyInModels : !!openState[id];
   const isMulti = p.variants.length > 1;
   const totalModels = p.variants.reduce((s,v)=>s+Math.max(v.models.length,1),0);
@@ -600,15 +600,21 @@ function renderPatternCard(p, id, bc, q){
         <div class="model-inner">
           ${p.variants.map(v => {
             const factorTxt = fmtFactor(v.factor);
+            const chipsHTML = `
+              <div class="chips">
+                ${v.models.length ? v.models.map(m => `<span class="model-chip${(m.discontinued || m.name.includes('단종')) ? ' chip-disc' : ''}">${highlightMatch(m.name, q)}</span>`).join('') : '<span class="model-chip">모델 정보 없음</span>'}
+              </div>`;
+            if (!isMulti) {
+              // 단일 가격 패턴: 규격/factor/가격은 카드 헤더에 이미 표시했으니 모델명만 보여줌
+              return `<div class="variant-block">${chipsHTML}</div>`;
+            }
             return `
             <div class="variant-block">
               <div class="variant-head">
                 <span class="spec-txt">${v.spec || ''} ${factorTxt ? `<span class="box-chip">1BOX = ${factorTxt}㎡</span>` : ''}</span>
                 <span class="vprice">${(v.firm_price||0).toLocaleString()}원</span>
               </div>
-              <div class="chips">
-                ${v.models.length ? v.models.map(m => `<span class="model-chip${m.includes('단종') ? ' chip-disc' : ''}">${highlightMatch(m, q)}</span>`).join('') : '<span class="model-chip">모델 정보 없음</span>'}
-              </div>
+              ${chipsHTML}
             </div>`;
           }).join('')}
         </div>

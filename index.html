@@ -51,7 +51,7 @@
     font-size:14.5px; font-weight:900; letter-spacing:.06em; color:#fff; line-height:1.1;
   }
   .brand-title-main span{color:var(--gold);}
-  .brand-eyebrow{font-size:12.5px; font-weight:800; color:#a8bad9; letter-spacing:.02em;}
+  .brand-eyebrow{font-size:15px; font-weight:800; color:#c3d2ea; letter-spacing:.01em;}
 
   .client-hero{margin-top:19px; display:flex; align-items:flex-end; gap:9px; flex-wrap:wrap;}
   .client-hero .name{
@@ -236,6 +236,10 @@
   .model-chip.chip-disc{
     text-decoration:line-through; text-decoration-thickness:1.5px; text-decoration-color:#c0392b;
     color:#a89d8d; background:#f5f1e8; border-style:dashed;
+  }
+  .pattern-name.name-disc{
+    text-decoration:line-through; text-decoration-thickness:2px; text-decoration-color:#c0392b;
+    color:#a89d8d;
   }
   mark.hl{background:#ffe9b8; color:var(--wood); padding:0 1px; border-radius:3px; font-weight:900;}
 
@@ -508,6 +512,7 @@ function groupData(data){
       variantMap.set(vKey, {
         brand: row.brand, name: row.name, firm_price: row.firm_price,
         spec: row.spec, factor: row.factor,
+        nameDiscontinued: !!row.name_discontinued || String(row.name||'').includes('단종'),
         models: modelObj ? [modelObj] : []
       });
     } else if (modelObj) {
@@ -517,8 +522,8 @@ function groupData(data){
   const patternMap = new Map(); const patterns = [];
   variantMap.forEach(v => {
     const pKey = v.brand + '__' + v.name;
-    if (!patternMap.has(pKey)) { const p = { brand: v.brand, name: v.name, variants: [v] }; patternMap.set(pKey, p); patterns.push(p); }
-    else patternMap.get(pKey).variants.push(v);
+    if (!patternMap.has(pKey)) { const p = { brand: v.brand, name: v.name, discontinued: v.nameDiscontinued, variants: [v] }; patternMap.set(pKey, p); patterns.push(p); }
+    else { patternMap.get(pKey).variants.push(v); if (v.nameDiscontinued) patternMap.get(pKey).discontinued = true; }
   });
   return patterns;
 }
@@ -632,7 +637,7 @@ function renderPatternCard(p, id, q){
     <div class="pattern-card ${isOpen ? 'open' : ''}" data-id="${id}">
       <div class="pattern-row" onclick="toggleCard('${id}')">
         <div class="pattern-main">
-          <div class="pattern-name">${highlightMatch(p.name, q)}</div>
+          <div class="pattern-name${p.discontinued ? ' name-disc' : ''}">${highlightMatch(p.name, q)}</div>
           <div class="pattern-spec">${specLine}</div>
         </div>
         <div class="pattern-price">${priceHTML}</div>

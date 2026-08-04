@@ -162,6 +162,26 @@
   .filter-chip.active .n{background:var(--gold); color:var(--navy);}
   .filter-chip:active{transform:scale(.95);}
 
+  /* 전체 클릭 시 펼쳐지는 브랜드 아코디언 */
+  .brand-accordion{
+    max-height:0; overflow:hidden; transition:max-height .25s ease;
+    margin:0 20px;
+  }
+  .brand-accordion.open{max-height:340px; overflow-y:auto; margin-bottom:10px;}
+  .brand-accordion-inner{
+    background:#fff; border:1px solid var(--line); border-radius:12px;
+    box-shadow:0 4px 14px rgba(60,45,20,.08); overflow:hidden;
+  }
+  .ba-item{
+    display:flex; align-items:center; gap:10px; padding:12px 14px;
+    cursor:pointer; border-bottom:1px solid var(--line); font-size:13.5px; font-weight:800; color:#3a3226;
+    transition:background .12s;
+  }
+  .ba-item:last-child{border-bottom:none;}
+  .ba-item:active{background:#faf7f0;}
+  .ba-item .ba-dot{width:9px; height:9px; border-radius:2.5px; transform:rotate(45deg); flex-shrink:0;}
+  .ba-item .ba-count{margin-left:auto; font-size:10.5px; font-weight:800; color:#8a7d64; background:#f5f2ea; padding:3px 9px; border-radius:100px;}
+
   /* ─── 브랜드 그룹 ─── */
   .brand-group{margin:10px 20px 26px;}
   .brand-title{
@@ -342,6 +362,7 @@
   </div>
 
   <div class="brand-filter" id="brandFilter"></div>
+  <div class="brand-accordion" id="brandAccordion"></div>
 
   <div id="listRoot"></div>
 
@@ -540,15 +561,51 @@ function renderBrandFilter(patterns){
   patterns.forEach(p => { counts[p.brand] = (counts[p.brand]||0) + 1; });
   const names = Object.keys(counts);
   document.getElementById('brandFilter').innerHTML = `
-    <span class="filter-chip ${!selectedBrand ? 'active' : ''}" onclick="selectBrand(null)">전체 <span class="n">${patterns.length}</span></span>
+    <span class="filter-chip ${!selectedBrand ? 'active' : ''}" onclick="toggleBrandAccordion()">전체 <span class="n">${patterns.length}</span> <span style="font-size:9px;">▾</span></span>
     ${names.map(b => `
       <span class="filter-chip ${selectedBrand===b ? 'active' : ''}" onclick="selectBrand('${b.replace(/'/g,"\\'")}')">${b} <span class="n">${counts[b]}</span></span>
     `).join('')}
   `;
 }
 
+let brandAccordionOpen = false;
+function renderBrandAccordion(patterns){
+  const counts = {};
+  patterns.forEach(p => { counts[p.brand] = (counts[p.brand]||0) + 1; });
+  const names = Object.keys(counts);
+  const el = document.getElementById('brandAccordion');
+  el.classList.toggle('open', brandAccordionOpen);
+  el.innerHTML = `
+    <div class="brand-accordion-inner">
+      ${names.map(b => `
+        <div class="ba-item" onclick="selectBrand('${b.replace(/'/g,"\\'")}'); closeBrandAccordion();">
+          <span class="ba-dot" style="background:${colorFor(b)}"></span>
+          ${b}
+          <span class="ba-count">${counts[b]}개 패턴</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function toggleBrandAccordion(){
+  brandAccordionOpen = !brandAccordionOpen;
+  selectedBrand = null;
+  const patterns = groupData(RAW_DATA);
+  renderBrandFilter(patterns);
+  renderBrandAccordion(patterns);
+  renderList();
+}
+
+function closeBrandAccordion(){
+  brandAccordionOpen = false;
+  document.getElementById('brandAccordion').classList.remove('open');
+}
+
 function selectBrand(brand){
   selectedBrand = (selectedBrand === brand) ? null : brand;
+  brandAccordionOpen = false;
+  document.getElementById('brandAccordion').classList.remove('open');
   renderBrandFilter(groupData(RAW_DATA));
   renderList();
   document.getElementById('listRoot').scrollIntoView({behavior:'smooth', block:'start'});

@@ -184,6 +184,12 @@
 
   /* ─── 브랜드 그룹 ─── */
   .brand-group{margin:10px 20px 26px;}
+  .cards-wrap{display:grid; grid-template-columns:1fr; gap:9px;}
+  .cards-wrap .pattern-card{margin-bottom:0;}
+  @media (min-width:760px){
+    .wrap{max-width:1040px;}
+    .cards-wrap{grid-template-columns:1fr 1fr;}
+  }
   .brand-title{
     display:flex; align-items:center; gap:10px; padding:12px 14px;
     font-size:18px; font-weight:900; color:#1a1408; letter-spacing:-0.01em;
@@ -674,7 +680,9 @@ function renderList(){
     return `
       <div class="brand-group" style="--bc:${bc}">
         <div class="brand-title"><span class="dot"></span>${highlightMatch(brand, q)}<span class="count">${items.length}개 패턴</span></div>
-        ${items.map((p,i) => renderPatternCard(p, brand + '_' + i, q)).join('')}
+        <div class="cards-wrap">
+          ${items.map((p,i) => renderPatternCard(p, brand + '_' + i, q)).join('')}
+        </div>
       </div>`;
   }).join('');
 }
@@ -685,6 +693,8 @@ function renderPatternCard(p, id, q){
   const isOpen = q ? matchOnlyInModels : !!openState[id];
   const isMulti = p.variants.length > 1;
   const totalModels = p.variants.reduce((s,v)=>s+Math.max(v.models.length,1),0);
+  const isJangpan = String(p.brand).includes('장판');
+  const unitLabel = isJangpan ? '/ 평 (부가세 별도)' : '/ BOX (부가세 별도)';
 
   let priceHTML;
   if (isMulti) {
@@ -692,19 +702,19 @@ function renderPatternCard(p, id, q){
     const lo = Math.min(...prices), hi = Math.max(...prices);
     priceHTML = `
       <div class="price-range">${lo.toLocaleString()}~${hi.toLocaleString()}원</div>
-      <div class="price-unit">/ BOX (부가세 별도)</div>
+      <div class="price-unit">${unitLabel}</div>
       <div class="price-multi-badge">모델별 가격 상이</div>`;
   } else {
     priceHTML = `
       <div class="price-num">${(p.variants[0].firm_price||0).toLocaleString()}원</div>
-      <div class="price-unit">/ BOX (부가세 별도)</div>`;
+      <div class="price-unit">${unitLabel}</div>`;
   }
 
   const firstSpec = p.variants[0].spec;
   const firstFactor = fmtFactor(p.variants[0].factor);
   const specLine = !isMulti
-    ? `${firstSpec ? `<span>${firstSpec}</span>` : ''}${firstFactor ? `<span class="box-chip">1BOX = ${firstFactor}㎡</span>` : ''}<span>· 색상 ${totalModels}종</span>`
-    : `<span>색상 ${totalModels}종 · 규격/면적은 펼쳐서 확인</span>`;
+    ? `${firstSpec ? `<span>${firstSpec}</span>` : ''}${(!isJangpan && firstFactor) ? `<span class="box-chip">1BOX = ${firstFactor}㎡</span>` : ''}<span>· 색상 ${totalModels}종</span>`
+    : `<span>색상 ${totalModels}종 · 규격은 펼쳐서 확인</span>`;
 
   return `
     <div class="pattern-card ${isOpen ? 'open' : ''}" data-id="${id}">
@@ -728,7 +738,7 @@ function renderPatternCard(p, id, q){
             return `
             <div class="variant-block">
               <div class="variant-head">
-                <span class="spec-txt">${v.spec || ''} ${factorTxt ? `<span class="box-chip">1BOX = ${factorTxt}㎡</span>` : ''}</span>
+                <span class="spec-txt">${v.spec || ''} ${(!isJangpan && factorTxt) ? `<span class="box-chip">1BOX = ${factorTxt}㎡</span>` : ''}</span>
                 <span class="vprice">${(v.firm_price||0).toLocaleString()}원</span>
               </div>
               ${chipsHTML}

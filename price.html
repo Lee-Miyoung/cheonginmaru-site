@@ -137,6 +137,21 @@
     font-size:12px; font-weight:800; color:#7a5410; line-height:1.55;
   }
 
+  .site-link{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin:12px 20px 0; padding:13px 17px;
+    background:linear-gradient(100deg, var(--navy) 0%, var(--navy-3) 100%);
+    border-radius:var(--r-m); text-decoration:none;
+    box-shadow:var(--shadow-s); transition:box-shadow .15s, transform .12s;
+  }
+  .site-link:active{transform:scale(.98);}
+  .site-link .sl-text{font-size:12.5px; font-weight:800; color:#f0e3c8; letter-spacing:-0.01em;}
+  .site-link .sl-arrow{
+    font-size:13px; font-weight:900; color:var(--navy); background:var(--gold);
+    width:26px; height:26px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+
   /* ═══ 검색 ═══ */
   .search-bar{
     padding:14px 20px 8px; position:sticky; top:0; z-index:20;
@@ -386,6 +401,11 @@
     * 패턴을 누르면 색상(모델) 목록을 확인할 수 있으며, <s>취소선</s> 표시는 단종(예정) 모델입니다.
     <div class="fn-highlight">🔔 단가 변경 시 이 페이지가 자동으로 최신화됩니다 — 이 링크를 즐겨찾기 해두세요.</div>
   </div>
+
+  <a href="https://cheonginmaru.com" target="_blank" rel="noopener" class="site-link">
+    <span class="sl-text">시공사례 · 카탈로그는 청인마루 홈페이지에서 확인하세요</span>
+    <span class="sl-arrow">→</span>
+  </a>
 
   <div class="search-bar">
     <div class="search-wrap">

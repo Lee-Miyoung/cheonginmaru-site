@@ -35,18 +35,38 @@
   }
   .wrap{max-width:700px; margin:0 auto; padding:0 0 84px;}
 
-  /* ═══ 긴급 공지 배너 (시트 "공지사항" 탭에서 켜고 끔) ═══ */
-  .urgent-banner{
-    background:linear-gradient(90deg, #b91c1c, #dc2626);
-    color:#fff; text-align:center; font-size:13px; font-weight:900;
-    padding:12px 20px; letter-spacing:-0.01em; line-height:1.5;
-    animation:urgentBlink 1.4s ease-in-out infinite;
-    box-shadow:0 2px 10px rgba(185,28,28,.3);
+  /* ═══ 긴급 공지: 거래 안내 옆 작은 벨 아이콘, 클릭하면 펼쳐짐 ═══ */
+  .fn-title-row{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px;}
+  .urgent-bell{
+    display:none; align-items:center; gap:5px; border:1px solid rgba(220,38,38,.35);
+    background:rgba(220,38,38,.08); color:#b91c1c; font-size:11.5px; font-weight:900;
+    padding:5px 11px; border-radius:100px; cursor:pointer; user-select:none;
+    animation:bellPulse 1.8s ease-in-out infinite;
   }
-  @keyframes urgentBlink{
-    0%,100%{opacity:1;}
-    50%{opacity:.62;}
+  .urgent-bell:active{transform:scale(.95);}
+  .urgent-bell .ub-icon{font-size:13px;}
+  .urgent-bell .ub-badge{
+    background:#dc2626; color:#fff; font-size:10px; font-weight:900;
+    min-width:16px; height:16px; border-radius:100px; display:inline-flex;
+    align-items:center; justify-content:center; padding:0 4px;
   }
+  @keyframes bellPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.28);}
+    50%{box-shadow:0 0 0 5px rgba(220,38,38,0);}
+  }
+  .urgent-panel{
+    max-height:0; overflow:hidden; transition:max-height .22s ease;
+    margin-bottom:0;
+  }
+  .urgent-panel.open{max-height:400px; margin-bottom:12px;}
+  .urgent-panel-inner{
+    background:#fef2f2; border:1px solid #fecaca; border-left:4px solid #dc2626;
+    border-radius:var(--r-s); padding:12px 14px; font-size:12.5px; font-weight:700;
+    color:#991b1b; line-height:1.75;
+  }
+  .urgent-panel-inner b{color:#7f1d1d; font-weight:900;}
+  .urgent-panel-inner .up-item{margin-bottom:6px;}
+  .urgent-panel-inner .up-item:last-child{margin-bottom:0;}
 
   /* ═══ 헤더 ═══ */
   header{
@@ -369,7 +389,6 @@
 </div>
 
 <div class="wrap" id="mainWrap">
-  <div class="urgent-banner" id="urgentBanner" style="display:none"></div>
   <header>
     <div class="header-flex">
       <div class="header-left">
@@ -409,7 +428,15 @@
   </header>
 
   <div class="footnote">
-    <div class="fn-title">📋 거래 안내</div>
+    <div class="fn-title-row">
+      <div class="fn-title">📋 거래 안내</div>
+      <button type="button" class="urgent-bell" id="urgentBell" onclick="toggleUrgentPanel()">
+        <span class="ub-icon">🔔</span> 긴급 공지 <span class="ub-badge" id="ubBadge">1</span>
+      </button>
+    </div>
+    <div class="urgent-panel" id="urgentPanel">
+      <div class="urgent-panel-inner" id="urgentPanelInner"></div>
+    </div>
     <div id="infoList"></div>
     <div class="fn-highlight">🔔 단가 변경 시 이 페이지가 자동으로 최신화됩니다 — 이 링크를 즐겨찾기 해두세요.</div>
   </div>
@@ -464,7 +491,7 @@ const CACHE_KEY = 'cm_price_cache_v3';
 const CACHE_TTL = 5 * 60 * 1000;
 
 let RAW_DATA = [];
-let NOTICES = { info: [], urgent: '' };
+let NOTICES = { info: [], urgentList: [] };
 let dataFetchPromise = null;
 
 (function startDataFetch(){
@@ -474,7 +501,7 @@ let dataFetchPromise = null;
       const { data, ts } = JSON.parse(cached);
       if (data && (Date.now() - ts) < CACHE_TTL) {
         RAW_DATA = data.prices || [];
-        NOTICES = data.notices || { info: [], urgent: '' };
+        NOTICES = data.notices || { info: [], urgentList: [] };
       }
     }
   } catch(e){}
@@ -482,7 +509,7 @@ let dataFetchPromise = null;
     .then(res => { if (!res.ok) throw new Error('네트워크 오류'); return res.json(); })
     .then(json => {
       RAW_DATA = json.prices || [];
-      NOTICES = json.notices || { info: [], urgent: '' };
+      NOTICES = json.notices || { info: [], urgentList: [] };
       try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: json, ts: Date.now() })); } catch(e){}
       return json;
     });
@@ -709,20 +736,38 @@ async function loadData(){
   }
 }
 
+/* 문구 안 **이렇게** 감싸면 자동으로 굵게(볼드) 처리 */
+function mdBold(text){
+  if (!text) return '';
+  return String(text).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+}
+
+let urgentPanelOpen = false;
+function toggleUrgentPanel(){
+  urgentPanelOpen = !urgentPanelOpen;
+  document.getElementById('urgentPanel').classList.toggle('open', urgentPanelOpen);
+}
+
 function renderNotices(){
-  const urgentEl = document.getElementById('urgentBanner');
-  if (urgentEl) {
-    if (NOTICES && NOTICES.urgent) {
-      urgentEl.textContent = '🚨 ' + NOTICES.urgent;
-      urgentEl.style.display = 'block';
-    } else {
-      urgentEl.style.display = 'none';
-    }
+  const bell = document.getElementById('urgentBell');
+  const badge = document.getElementById('ubBadge');
+  const panelInner = document.getElementById('urgentPanelInner');
+  const list = (NOTICES && NOTICES.urgentList) ? NOTICES.urgentList : [];
+
+  if (list.length > 0) {
+    bell.style.display = 'inline-flex';
+    badge.innerText = list.length;
+    panelInner.innerHTML = list.map(t => `<div class="up-item">🚨 ${mdBold(t)}</div>`).join('');
+  } else {
+    bell.style.display = 'none';
+    urgentPanelOpen = false;
+    document.getElementById('urgentPanel').classList.remove('open');
   }
+
   const infoEl = document.getElementById('infoList');
   if (infoEl) {
     if (NOTICES && NOTICES.info && NOTICES.info.length) {
-      infoEl.innerHTML = NOTICES.info.map(t => '* ' + t).join('<br>');
+      infoEl.innerHTML = NOTICES.info.map(t => '* ' + mdBold(t)).join('<br>');
     } else {
       infoEl.innerHTML = '';
     }

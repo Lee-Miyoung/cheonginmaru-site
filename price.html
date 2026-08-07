@@ -295,11 +295,12 @@
 
   /* ═══ 기타 ═══ */
   .empty{text-align:center; padding:70px 20px; color:#a1957d; font-size:13px; font-weight:600;}
-  .list-footer{
-    text-align:center; margin:30px 20px 0; padding-top:20px; border-top:1px dashed var(--line);
-    font-size:11px; color:#ab9f87; font-weight:600; line-height:1.85;
+  .header-notice{
+    margin-top:14px; padding:11px 0; border-top:1px solid rgba(255,255,255,.08);
+    font-size:10.5px; color:#8fa0bd; font-weight:600; line-height:1.7; text-align:center;
+    position:relative; z-index:1;
   }
-  .list-footer b{color:var(--wood);}
+  .header-notice b{color:#dbe3f0; font-weight:800;}
 
   #topBtn{
     position:fixed; right:18px; bottom:22px; z-index:50;
@@ -373,6 +374,7 @@
       <div class="stat"><b id="statPattern">-</b><span>패턴</span></div>
       <div class="stat"><b id="statModel">-</b><span>모델(색상)</span></div>
     </div>
+    <div class="header-notice">🔒 본 단가표는 <b>청인마루</b>가 거래처 전용으로 제공하는 자료입니다 · 외부 공유를 삼가주시기 바랍니다 · 접속 이력이 기록됩니다</div>
   </header>
 
   <div class="footnote">
@@ -395,11 +397,6 @@
   <div class="brand-accordion" id="brandAccordion"></div>
 
   <div id="listRoot"></div>
-
-  <div class="list-footer">
-    본 단가표는 <b>청인마루</b>가 거래처 전용으로 제공하는 자료입니다.<br>
-    외부 공유를 삼가주시기 바랍니다 · 접속 이력이 기록됩니다
-  </div>
 </div>
 
 <button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="맨 위로">↑</button>

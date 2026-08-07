@@ -736,10 +736,21 @@ async function loadData(){
   }
 }
 
-/* 문구 안 **이렇게** 감싸면 자동으로 굵게(볼드) 처리 */
+/* ============================================================
+   ★ 수정됨: 문구 안 **볼드** 및 URL 링크 자동 인식 처리 함수
+   ============================================================ */
 function mdBold(text){
   if (!text) return '';
-  return String(text).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  let parsed = String(text);
+
+  // 1) [문구](https://...) 마크다운 형태 지원
+  parsed = parsed.replace(/\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline; font-weight:bold;">$1</a>');
+
+  // 2) 일반 https://... 링크 자동감지 -> [상세보기] 태그로 전환
+  parsed = parsed.replace(/(^|[^"'])((https?:\/\/[^\s<]+))/g, '$1<a href="$2" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline; font-weight:bold; margin-left:4px;">[상세보기]</a>');
+
+  // 3) **텍스트** 감싸기 -> 볼드(<b>) 처리
+  return parsed.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
 }
 
 let urgentPanelOpen = false;

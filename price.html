@@ -35,13 +35,26 @@
   }
   .wrap{max-width:700px; margin:0 auto; padding:0 0 84px;}
 
+  /* ═══ 긴급 공지 배너 (시트 "공지사항" 탭에서 켜고 끔) ═══ */
+  .urgent-banner{
+    background:linear-gradient(90deg, #b91c1c, #dc2626);
+    color:#fff; text-align:center; font-size:13px; font-weight:900;
+    padding:12px 20px; letter-spacing:-0.01em; line-height:1.5;
+    animation:urgentBlink 1.4s ease-in-out infinite;
+    box-shadow:0 2px 10px rgba(185,28,28,.3);
+  }
+  @keyframes urgentBlink{
+    0%,100%{opacity:1;}
+    50%{opacity:.62;}
+  }
+
   /* ═══ 헤더 ═══ */
   header{
     background:
       radial-gradient(ellipse 80% 90% at 92% -20%, rgba(232,171,60,.16), transparent 58%),
       radial-gradient(ellipse 50% 60% at 0% 110%, rgba(60,90,160,.12), transparent 60%),
       linear-gradient(160deg, var(--navy-2) 0%, var(--navy) 72%);
-    color:#fff; padding:26px 24px 0;
+    color:#fff; padding:26px 24px 20px;
     border-bottom:2px solid rgba(232,171,60,.4);
     position:relative; overflow:hidden;
   }
@@ -311,11 +324,13 @@
   /* ═══ 기타 ═══ */
   .empty{text-align:center; padding:70px 20px; color:#a1957d; font-size:13px; font-weight:600;}
   .header-notice{
-    margin-top:14px; padding:11px 0; border-top:1px solid rgba(255,255,255,.08);
-    font-size:10.5px; color:#8fa0bd; font-weight:600; line-height:1.7; text-align:center;
+    margin-top:14px; padding:12px 14px;
+    font-size:13px; color:#dbe3f0; font-weight:700; line-height:1.75; text-align:center;
     position:relative; z-index:1;
+    background:rgba(232,171,60,.09); border-radius:var(--r-s);
+    border:1px solid rgba(232,171,60,.22);
   }
-  .header-notice b{color:#dbe3f0; font-weight:800;}
+  .header-notice b{color:var(--gold-2); font-weight:900;}
 
   #topBtn{
     position:fixed; right:18px; bottom:22px; z-index:50;
@@ -354,6 +369,7 @@
 </div>
 
 <div class="wrap" id="mainWrap">
+  <div class="urgent-banner" id="urgentBanner" style="display:none"></div>
   <header>
     <div class="header-flex">
       <div class="header-left">
@@ -394,11 +410,7 @@
 
   <div class="footnote">
     <div class="fn-title">📋 거래 안내</div>
-    * 표시된 단가는 <b>부가세 별도</b> 금액입니다. 계산서 발행 시 10% 추가됩니다.<br>
-    * 걸레받이는 <b>개당 7,000원(VAT 별도)</b>입니다.<br>
-    * 방문지가 <b>30km 초과 시 초과분에 대해 km당 1,000원</b>의 출장비가 추가됩니다.<br>
-    * <b>보양비 및 양중비는 별도</b>입니다.<br>
-    * 패턴을 누르면 색상(모델) 목록을 확인할 수 있으며, <s>취소선</s> 표시는 단종(예정) 모델입니다.
+    <div id="infoList"></div>
     <div class="fn-highlight">🔔 단가 변경 시 이 페이지가 자동으로 최신화됩니다 — 이 링크를 즐겨찾기 해두세요.</div>
   </div>
 
@@ -445,13 +457,14 @@ const fbDatabase = firebase.database();
 })();
 
 /* ============================================================
-   단가 데이터: 토큰 확인과 "동시에" 미리 가져오기 + 5분 캐시
+   단가 데이터 + 공지사항: 토큰 확인과 "동시에" 미리 가져오기 + 5분 캐시
    ============================================================ */
 const FEED_URL = 'https://script.google.com/macros/s/AKfycbzyafI_d2PZiE_AYS4Y5f9uBQjK5ULCxX21hk2Z5BMDcbktNT9NnF8mUb_HhA8hJqy9Fw/exec';
-const CACHE_KEY = 'cm_price_cache_v2';
+const CACHE_KEY = 'cm_price_cache_v3';
 const CACHE_TTL = 5 * 60 * 1000;
 
 let RAW_DATA = [];
+let NOTICES = { info: [], urgent: '' };
 let dataFetchPromise = null;
 
 (function startDataFetch(){
@@ -459,13 +472,17 @@ let dataFetchPromise = null;
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
       const { data, ts } = JSON.parse(cached);
-      if (Array.isArray(data) && (Date.now() - ts) < CACHE_TTL) RAW_DATA = data;
+      if (data && (Date.now() - ts) < CACHE_TTL) {
+        RAW_DATA = data.prices || [];
+        NOTICES = data.notices || { info: [], urgent: '' };
+      }
     }
   } catch(e){}
   dataFetchPromise = fetch(FEED_URL)
     .then(res => { if (!res.ok) throw new Error('네트워크 오류'); return res.json(); })
     .then(json => {
-      RAW_DATA = json;
+      RAW_DATA = json.prices || [];
+      NOTICES = json.notices || { info: [], urgent: '' };
       try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: json, ts: Date.now() })); } catch(e){}
       return json;
     });
@@ -495,6 +512,7 @@ function grantAccess(clientName){
     const snap = await fbDatabase.ref('priceAccessTokens/' + token).once('value');
     const data = snap.val();
     if (!data || data.active === false) { denyAccess('유효하지 않거나 비활성화된 링크입니다.'); return; }
+    if (data.expiresAt && Date.now() > data.expiresAt) { denyAccess('이 링크의 유효기간이 만료되었습니다. 담당자에게 문의해주세요.'); return; }
     fbDatabase.ref('priceAccessTokens/' + token).update({
       lastAccessedAt: Date.now(),
       accessCount: (data.accessCount || 0) + 1
@@ -678,15 +696,36 @@ function onSearchInput(){
 
 async function loadData(){
   const root = document.getElementById('listRoot');
-  if (RAW_DATA.length) { renderBrandFilter(groupData(RAW_DATA)); renderList(); }
+  if (RAW_DATA.length) { renderBrandFilter(groupData(RAW_DATA)); renderList(); renderNotices(); }
   else root.innerHTML = '<div class="empty">단가 정보를 불러오는 중입니다...</div>';
   try {
     await dataFetchPromise;
     renderBrandFilter(groupData(RAW_DATA));
     renderList();
+    renderNotices();
   } catch (e) {
     if (!RAW_DATA.length) root.innerHTML = '<div class="empty">단가 정보를 불러오지 못했습니다.<br>잠시 후 새로고침 해주세요.</div>';
     console.error(e);
+  }
+}
+
+function renderNotices(){
+  const urgentEl = document.getElementById('urgentBanner');
+  if (urgentEl) {
+    if (NOTICES && NOTICES.urgent) {
+      urgentEl.textContent = '🚨 ' + NOTICES.urgent;
+      urgentEl.style.display = 'block';
+    } else {
+      urgentEl.style.display = 'none';
+    }
+  }
+  const infoEl = document.getElementById('infoList');
+  if (infoEl) {
+    if (NOTICES && NOTICES.info && NOTICES.info.length) {
+      infoEl.innerHTML = NOTICES.info.map(t => '* ' + t).join('<br>');
+    } else {
+      infoEl.innerHTML = '';
+    }
   }
 }
 

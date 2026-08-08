@@ -1257,6 +1257,38 @@
   .step p{font-size:15.5px;color:var(--ink-soft);margin:0;line-height:1.75;}
 
   /* ---------- PORTFOLIO ---------- */
+  .portfolio-search-wrap{
+    position:relative;max-width:420px;margin-bottom:20px;
+  }
+  .portfolio-search-icon{
+    position:absolute;left:18px;top:50%;transform:translateY(-50%);
+    color:var(--ink-faint);pointer-events:none;
+  }
+  .portfolio-search-input{
+    width:100%;padding:14px 44px 14px 46px;
+    border-radius:30px;border:1px solid rgba(18,16,14,0.1);
+    background:#fff;font-size:14.5px;color:var(--ink);
+    font-family:inherit;
+    box-shadow:0 4px 10px rgba(0,0,0,0.02);
+    transition:border-color .25s var(--ease), box-shadow .25s var(--ease);
+  }
+  .portfolio-search-input:focus{
+    outline:none;border-color:var(--copper);
+    box-shadow:0 0 0 3px rgba(217,96,31,0.12);
+  }
+  .portfolio-search-input::placeholder{color:var(--ink-faint);}
+  .portfolio-search-clear{
+    position:absolute;right:10px;top:50%;transform:translateY(-50%);
+    width:26px;height:26px;border-radius:50%;
+    border:none;background:rgba(18,16,14,0.06);color:var(--ink-soft);
+    font-size:13px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .2s;
+  }
+  .portfolio-search-clear:hover{background:rgba(18,16,14,0.12);}
+  .portfolio-search-empty{
+    color:var(--ink-soft);font-size:15px;padding:60px 0;text-align:center;
+  }
   .portfolio-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:44px;}
   .filter-btn{
     background:#fff;border:1px solid rgba(18,16,14,0.1);
@@ -2373,86 +2405,14 @@
         <h2>시공 사례</h2>
         <p>대표 시공 사례예요. 더 많은 사례는 네이버 블로그에서 계속 업데이트됩니다.</p>
       </div>
+      <div class="portfolio-search-wrap">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="portfolio-search-icon"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="portfolioSearchInput" class="portfolio-search-input" placeholder="검색 (예: 송도, 원목마루, 34평)" autocomplete="off">
+        <button type="button" id="portfolioSearchClear" class="portfolio-search-clear" aria-label="검색어 지우기" style="display:none;">✕</button>
+      </div>
       <div class="portfolio-toolbar" id="portfolioFilters"></div>
+      <p class="portfolio-search-empty" id="portfolioSearchEmpty" style="display:none;">"<span id="portfolioSearchEmptyTerm"></span>"에 대한 검색 결과가 없어요.</p>
       <div class="portfolio-grid" id="portfolioGrid"><!-- SSR:PORTFOLIO:START -->
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224371127883" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_60.jpg" alt="인천 송도 베르디움더퍼스트 34평형 아트월시공" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">벽장재_디자인월</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 송도 베르디움더퍼스트 34평형 아트월시공</h3>
-          <p><b class="brand-tag">동화</b> 디자인월그란데 <b class="model-tag">사하라라이트</b> 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격: 590 × 1,200 × 9T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224370159883" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_59.jpg" alt="인천 송도 더프라우 52평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">타일(스톤)형 마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 송도 더프라우 52평형</h3>
-          <p>LX 에디톤 <b class="model-tag">솔티애쉬</b> 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:  450*900*5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224362748135" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_58.jpg" alt="인천 연수구 송도 더샵그린스퀘어 38평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">우드형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 연수구 송도 더샵그린스퀘어 38평형</h3>
-          <p><b class="brand-tag">동화</b> 합판 베이스 강마루 강 텍스쳐 165 <b class="model-tag">리네아내추럴</b> 제품 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:165*1205*7.5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224355095311" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_57.jpg" alt="인천 연수구 송도 글로벌캠퍼스 푸르지오" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">우드형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 연수구 송도 글로벌캠퍼스 푸르지오</h3>
-          <p><b class="brand-tag">구정</b> 합판 베이스 강마루 그랜드 텍스쳐 165 <b class="model-tag">본오크</b> 제품 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:165*1200*7.5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224361958424" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_56.jpg" alt="경기 의왕 대원칸타빌 35평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">타일형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>경기 의왕 대원칸타빌 35평형</h3>
-          <p>보드 타일형 강마루 패턴의 <b class="brand-tag">한솔마루</b> <b class="brand-tag">sb스퀘어</b> <b class="model-tag">마테라베이지</b> 마루 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:600*600*7.5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224357339481" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_55.jpg" alt="인천 영종도 운남도 단독주택" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">타일형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 영종도 운남도 단독주택</h3>
-          <p>보드 타일형 강마루 패턴의 <b class="brand-tag">한솔마루</b> <b class="brand-tag">sb스톤</b> <b class="model-tag">마테라베이지</b> 마루 시공 완료 건입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:395*795*7.5T</span></div>
-        </div>
-      </a>
 
       <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224352109468" target="_blank" rel="noopener">
         <div class="portfolio-thumb" >
@@ -3417,6 +3377,40 @@
   let activeCategories = new Set(); 
   const PORTFOLIO_PAGE_SIZE = 9;
   let currentPage = 1;
+  let portfolioSearchTerm = '';
+
+  // ---------- 시공사례 검색: 띄어쓰기 무시 + 헷갈리기 쉬운 모음(폐/패 등) 통합 ----------
+  function normalizeKoreanSearch(str){
+    if(!str) return '';
+    const HANGUL_BASE = 0xAC00, HANGUL_END = 0xD7A3;
+    const JUNG_COUNT = 21, JONG_COUNT = 28;
+    // 발음이 비슷해서 자주 헷갈리는 모음들을 같은 것으로 취급합니다.
+    // ㅐ/ㅔ/ㅒ/ㅖ (예: 폐↔패), ㅙ/ㅚ/ㅞ (예: 왠↔웬)
+    const JUNG_MERGE = { 1:1, 5:1, 3:1, 7:1, 10:11, 15:11 };
+    let out = '';
+    const cleaned = String(str).replace(/\s+/g, '').toLowerCase();
+    for(const ch of cleaned){
+      const code = ch.codePointAt(0);
+      if(code >= HANGUL_BASE && code <= HANGUL_END){
+        const offset = code - HANGUL_BASE;
+        const cho = Math.floor(offset / (JUNG_COUNT * JONG_COUNT));
+        const jungRaw = Math.floor((offset % (JUNG_COUNT * JONG_COUNT)) / JONG_COUNT);
+        const jong = offset % JONG_COUNT;
+        const jung = JUNG_MERGE.hasOwnProperty(jungRaw) ? JUNG_MERGE[jungRaw] : jungRaw;
+        out += String.fromCodePoint(HANGUL_BASE + (cho * JUNG_COUNT + jung) * JONG_COUNT + jong);
+      } else {
+        out += ch;
+      }
+    }
+    return out;
+  }
+
+  function portfolioMatchesSearch(item, rawQuery){
+    const terms = rawQuery.trim().split(/\s+/).filter(Boolean).map(normalizeKoreanSearch);
+    if(!terms.length) return true;
+    const haystack = normalizeKoreanSearch([item.category, item.title, item.desc].filter(Boolean).join(' '));
+    return terms.every(t => haystack.includes(t));
+  }
 
   const PORTFOLIO_BRAND_TERMS = [
     "동화자연마루","동화마루","노바마루","한솔홈데코","한솔마루","구정마루","네스트","이건","성원",
@@ -3496,14 +3490,30 @@
   window.goToPortfolioPage = goToPortfolioPage;
 
   function renderPortfolio(){
-    const filtered = activeCategories.size === 0
+    const searchEmptyEl = document.getElementById('portfolioSearchEmpty');
+    const searchEmptyTermEl = document.getElementById('portfolioSearchEmptyTerm');
+
+    let filtered = activeCategories.size === 0
       ? portfolioItems
       : portfolioItems.filter(i=>activeCategories.has(i.category));
+
+    if(portfolioSearchTerm){
+      filtered = filtered.filter(i => portfolioMatchesSearch(i, portfolioSearchTerm));
+    }
+
     if(filtered.length===0){
-      portfolioGrid.innerHTML = '<p class="portfolio-empty">아직 등록된 시공 사례가 없습니다.</p>';
+      portfolioGrid.innerHTML = '';
       portfolioPagination.innerHTML = '';
+      if(portfolioSearchTerm){
+        if(searchEmptyTermEl) searchEmptyTermEl.textContent = portfolioSearchTerm;
+        if(searchEmptyEl) searchEmptyEl.style.display = '';
+      } else {
+        portfolioGrid.innerHTML = '<p class="portfolio-empty">아직 등록된 시공 사례가 없습니다.</p>';
+        if(searchEmptyEl) searchEmptyEl.style.display = 'none';
+      }
       return;
     }
+    if(searchEmptyEl) searchEmptyEl.style.display = 'none';
     const totalPages = Math.max(1, Math.ceil(filtered.length / PORTFOLIO_PAGE_SIZE));
     if(currentPage > totalPages) currentPage = totalPages;
     const start = (currentPage - 1) * PORTFOLIO_PAGE_SIZE;
@@ -3590,6 +3600,29 @@
     renderFilters();
     renderPortfolio();
   }
+
+  // ---------- 시공사례 검색 입력창 ----------
+  (function initPortfolioSearch(){
+    const input = document.getElementById('portfolioSearchInput');
+    const clearBtn = document.getElementById('portfolioSearchClear');
+    if(!input) return;
+    input.addEventListener('input', () => {
+      portfolioSearchTerm = input.value;
+      if(clearBtn) clearBtn.style.display = portfolioSearchTerm ? 'flex' : 'none';
+      currentPage = 1;
+      renderPortfolio();
+    });
+    if(clearBtn){
+      clearBtn.addEventListener('click', () => {
+        input.value = '';
+        portfolioSearchTerm = '';
+        clearBtn.style.display = 'none';
+        currentPage = 1;
+        renderPortfolio();
+        input.focus();
+      });
+    }
+  })();
 
   // ---------- 시공사례 라이트박스 ----------
   // 시공사례 카드를 누르면 바로 블로그로 나가는 대신, 사이트 안에서 사진을 크게 볼 수 있게 해줍니다.

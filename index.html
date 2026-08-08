@@ -1337,12 +1337,12 @@
   .portfolio-info h3{
     position:relative;font-size:17px;margin:0 0 8px;font-weight:700;line-height:1.3;transition:color 0.3s;
   }
-  .portfolio-info h3::after{
-    content:'';position:absolute;left:0;right:0;bottom:-6px;height:1px;
-    background:rgba(18,16,14,0.08);
-  }
   .portfolio-card:hover .portfolio-info h3{color:var(--copper);}
   .portfolio-info p{font-size:13.5px;color:var(--ink-soft);margin:0;line-height:1.5;}
+  .portfolio-search-hit{
+    background:rgba(217,96,31,0.16);color:var(--copper-deep);
+    font-weight:800;border-radius:3px;padding:0 2px;
+  }
   .portfolio-info p .model-tag{color:var(--copper-deep);font-weight:700;font-style:normal;}
   .portfolio-info p .brand-tag{color:var(--forest);font-weight:700;font-style:normal;}
   .portfolio-spec-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
@@ -3412,6 +3412,58 @@
     return terms.every(t => haystack.includes(t));
   }
 
+  // 검색어와 일치하는 부분을 원문 텍스트에 색깔로 표시합니다.
+  function highlightSearchMatches(text, rawQuery){
+    if(!rawQuery || !text) return text;
+    const terms = rawQuery.trim().split(/\s+/).filter(Boolean).map(normalizeKoreanSearch).filter(t => t.length > 0);
+    if(!terms.length) return text;
+
+    // 원문에서 공백을 뺀 "압축본"을 만들고, 압축본 각 글자가 원문의 몇 번째 글자였는지 기억해둡니다.
+    const indexMap = [];
+    let compact = '';
+    for(let i = 0; i < text.length; i++){
+      if(/\s/.test(text[i])) continue;
+      compact += text[i];
+      indexMap.push(i);
+    }
+    const normCompact = normalizeKoreanSearch(compact);
+    if(normCompact.length !== compact.length) return text; // 안전장치: 길이가 안 맞으면 원문 그대로
+
+    let ranges = [];
+    terms.forEach(term => {
+      let from = 0;
+      while(true){
+        const idx = normCompact.indexOf(term, from);
+        if(idx === -1) break;
+        ranges.push([idx, idx + term.length]);
+        from = idx + term.length;
+      }
+    });
+    if(!ranges.length) return text;
+
+    ranges.sort((a,b) => a[0]-b[0]);
+    const merged = [];
+    ranges.forEach(r => {
+      if(merged.length && r[0] <= merged[merged.length-1][1]){
+        merged[merged.length-1][1] = Math.max(merged[merged.length-1][1], r[1]);
+      } else {
+        merged.push(r.slice());
+      }
+    });
+
+    let result = '';
+    let lastEnd = 0;
+    merged.forEach(([cs, ce]) => {
+      const origStart = indexMap[cs];
+      const origEnd = indexMap[ce - 1] + 1;
+      result += text.slice(lastEnd, origStart);
+      result += '<mark class="portfolio-search-hit">' + text.slice(origStart, origEnd) + '</mark>';
+      lastEnd = origEnd;
+    });
+    result += text.slice(lastEnd);
+    return result;
+  }
+
   const PORTFOLIO_BRAND_TERMS = [
     "동화자연마루","동화마루","노바마루","한솔홈데코","한솔마루","구정마루","네스트","이건","성원",
     "시그니월","진그란데스퀘어","진 그란데 스퀘어","듀오텍스쳐맥스","마뷸러스젠","원목마루STK","콜렉트월",
@@ -3526,7 +3578,13 @@
       const specMatches = extractSpecGroups(i.desc);
       let descMain = i.desc;
       specMatches.forEach(m => { descMain = descMain.replace(m, ''); });
-      descMain = highlightPortfolioDesc(descMain.replace(/\s+([.,])/g, '$1').trim());
+      descMain = descMain.replace(/\s+([.,])/g, '$1').trim();
+      let titleHtml = i.title;
+      if(portfolioSearchTerm){
+        descMain = highlightSearchMatches(descMain, portfolioSearchTerm);
+        titleHtml = highlightSearchMatches(titleHtml, portfolioSearchTerm);
+      }
+      descMain = highlightPortfolioDesc(descMain);
       const specChips = specMatches
         .map(m => m.replace(/^[\(（]|[\)）]$/g, '').trim())
         .map(s => `<span class="portfolio-spec">${s}</span>`)
@@ -3539,7 +3597,7 @@
           ${i.link ? `<span class="portfolio-view">전체 사진 보기 →</span>` : ''}
         </div>
         <div class="portfolio-info">
-          <h3>${i.title}</h3>
+          <h3>${titleHtml}</h3>
           <p>${descMain}</p>
           ${specChips ? `<div class="portfolio-spec-row">${specChips}</div>` : ''}
         </div>

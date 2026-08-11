@@ -483,6 +483,24 @@
   .navlinks a:hover{color:var(--copper);}
   .navlinks a:hover::after{left:0;right:0;}
 
+  .nav-hot-link{color:var(--copper-deep) !important;display:inline-flex;align-items:center;}
+  .nav-hot-badge{
+    display:inline-flex;align-items:center;justify-content:center;
+    margin-left:5px;padding:2px 6px;border-radius:20px;
+    background:linear-gradient(120deg, var(--copper), var(--copper-deep));
+    color:#fff;font-size:9.5px;font-weight:800;letter-spacing:.02em;
+    line-height:1.4;transform:translateY(-1px);
+    animation:navHotPulse 2.2s ease-in-out infinite;
+  }
+  .mobile-menu .nav-hot-link{color:var(--copper-deep) !important;}
+  @keyframes navHotPulse{
+    0%, 100%{box-shadow:0 0 0 0 rgba(217,96,31,0.45);}
+    50%{box-shadow:0 0 0 4px rgba(217,96,31,0);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .nav-hot-badge{animation-duration:0.01ms !important;}
+  }
+
   .btn{
     display:inline-flex;align-items:center;gap:12px;white-space:nowrap;
     background:var(--copper);color:#fff;
@@ -1656,41 +1674,37 @@
     content:'';position:absolute;inset:0;
     background:radial-gradient(ellipse at 20% 30%, rgba(230,190,120,0.1), transparent 60%);
   }
-  .toon-grid{
+  .toon-stack{
     position:relative;z-index:1;
-    display:grid;grid-template-columns:440px 1fr;gap:56px;align-items:center;
+    display:flex;flex-direction:column;align-items:center;
   }
-  .toon-figure { position:relative; display:flex; align-items:center; justify-content:center; }
-  .toon-figure::before{
-    content:'';position:absolute;width:340px;height:340px;border-radius:50%;
-    background:radial-gradient(circle, rgba(230,190,120,0.15), transparent 70%);
-  }
-  .toon-figure img{
-    position:relative;z-index:1;width:340px;
-    filter:drop-shadow(0 30px 50px rgba(0,0,0,0.5));
-  }
-  .youtube-playlist-embed{
-    position:relative;z-index:1;width:100%;height:380px;
-    border-radius:var(--radius);border:1px solid rgba(255,255,255,0.12);
-    box-shadow:0 30px 60px -20px rgba(0,0,0,0.55);
-    background:#000;
-  }
-  .toon-copy .k{
-    display:flex;align-items:center;gap:12px;
+  .toon-copy-top{text-align:center;max-width:720px;margin:0 auto 48px;}
+  .toon-copy-top .k{
+    display:inline-flex;align-items:center;gap:12px;justify-content:center;
     font-size:14.5px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
     color:#E4C98A;margin:0 0 20px;
   }
-  .toon-copy .k::before{content:'';width:32px;height:2px;background:#E4C98A;display:inline-block;}
-  .toon-copy h2{font-size:clamp(30px,3.6vw,44px);margin:0 0 24px;color:#fff;font-weight:700;letter-spacing:-0.02em;}
-  
-  .toon-copy p { color:rgba(246,241,231,0.8);font-size:16.5px;margin:0 0 36px;max-width:54ch;line-height:1.85; }
-  
-  .toon-tags{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 40px;}
+  .toon-copy-top .k::before{content:'';width:32px;height:2px;background:#E4C98A;display:inline-block;}
+  .toon-copy-top h2{font-size:clamp(30px,3.6vw,44px);margin:0 0 20px;color:#fff;font-weight:700;letter-spacing:-0.02em;}
+  .toon-copy-top p{color:rgba(246,241,231,0.8);font-size:16.5px;margin:0 auto 28px;max-width:56ch;line-height:1.85;}
+  .toon-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:0 0 8px;}
   .toon-tags span{
     border:1px solid rgba(255,255,255,0.18);
     padding:8px 20px;border-radius:30px;font-size:13.5px;color:rgba(246,241,231,0.85);
   }
-  .toon-social{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+  .toon-video-wrap{
+    position:relative;width:100%;max-width:980px;margin:36px auto 48px;
+  }
+  .youtube-playlist-embed{
+    display:block;width:100%;height:560px;
+    border-radius:var(--radius);border:1px solid rgba(255,255,255,0.12);
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.55);
+    background:#000;
+  }
+  .toon-social{
+    width:100%;max-width:900px;margin:0 auto;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;
+  }
   .toon-social a{
     --mc:#fff;
     display:flex;align-items:center;gap:16px;
@@ -1813,12 +1827,7 @@
     .partner-personal-note{flex-direction:column;gap:8px;}
     .requirement-list{gap:8px;}
     .partner-kakao-final{width:100%;justify-content:center;}
-    .toon-grid{grid-template-columns:1fr;text-align:center;gap:40px;}
-    .toon-figure img{width:260px;}
     .youtube-playlist-embed{height:280px;}
-    .toon-copy .k{justify-content:center;}
-    .toon-copy p{margin-left:auto;margin-right:auto;}
-    .toon-tags{justify-content:center;}
     .toon-social{grid-template-columns:1fr;max-width:420px;margin:0 auto;}
     .navlinks{display:none;}
     
@@ -1968,7 +1977,7 @@
       <a href="#brands">브랜드</a>
       <a href="#services">시공서비스</a>
       <a href="#process">시공과정</a>
-      <a href="#portfolio">시공사례</a>
+      <a href="#portfolio" class="nav-hot-link">시공사례<span class="nav-hot-badge">HOT</span></a>
       <a href="#reviews">고객후기</a>
       <a href="#faq">자주묻는질문</a>
       <a href="#marutoon">미디어</a>
@@ -2019,7 +2028,7 @@
       <a href="#svc-6">벽장재 시공</a>
     </div>
     <a href="#process">시공과정</a>
-    <a href="#portfolio">시공사례</a>
+    <a href="#portfolio" class="nav-hot-link">시공사례<span class="nav-hot-badge">HOT</span></a>
     <a href="#reviews">고객후기</a>
     <a href="#faq">자주묻는질문</a>
     <div class="mobile-menu-row">
@@ -3130,10 +3139,19 @@
 
   <!-- MEDIA BANNER -->
   <section class="toon-section reveal" id="marutoon">
-    <div class="wrap toon-grid">
-      <div class="toon-figure">
-        <!-- 유튜브 '마루아빠' 채널 최신 영상이 자동으로 여기 뜹니다. -->
-        <!-- 새 영상을 올리시면 손댈 필요 없이 자동으로 반영돼요. -->
+    <div class="wrap toon-stack">
+      <div class="toon-copy-top">
+        <p class="k">MEDIA</p>
+        <h2>정직한 현장 기록, 유튜브 《마루아빠》</h2>
+        <p>현장의 생생한 마루 시공 브이로그와 유익한 인테리어 팁을 유튜브 채널에서 확인해 보세요. 인스타그램 공식 계정을 통해서도 다양한 시공 현장과 자재 트렌드를 실시간으로 전해드립니다. 웹툰 '마루니 루루' 계정에서는 시공 에피소드를 재미있는 툰으로도 만나보실 수 있어요.</p>
+        <div class="toon-tags">
+          <span>#마루아빠</span><span>#시공브이로그</span><span>#인테리어팁</span><span>#송도인테리어</span><span>#마루니루루</span>
+        </div>
+      </div>
+
+      <!-- 유튜브 '마루아빠' 채널 최신 영상이 자동으로 여기 뜹니다. -->
+      <!-- 새 영상을 올리시면 손댈 필요 없이 자동으로 반영돼요. 옆에 목록이 같이 보이도록 폭을 넓게 잡았어요. -->
+      <div class="toon-video-wrap">
         <iframe
           class="youtube-playlist-embed"
           src="https://www.youtube.com/embed/videoseries?list=UUvygAHu_cZ5hqtlAwbJBaCw"
@@ -3144,34 +3162,27 @@
           allowfullscreen>
         </iframe>
       </div>
-      <div class="toon-copy">
-        <p class="k">MEDIA</p>
-        <h2>정직한 현장 기록, 유튜브 《마루아빠》</h2>
-        <p>현장의 생생한 마루 시공 브이로그와 유익한 인테리어 팁을 유튜브 채널에서 확인해 보세요. 인스타그램 공식 계정을 통해서도 다양한 시공 현장과 자재 트렌드를 실시간으로 전해드립니다. 웹툰 '마루니 루루' 계정에서는 시공 에피소드를 재미있는 툰으로도 만나보실 수 있어요.</p>
-        <div class="toon-tags">
-          <span>#마루아빠</span><span>#시공브이로그</span><span>#인테리어팁</span><span>#송도인테리어</span><span>#마루니루루</span>
+
+      <div class="toon-social">
+        <a href="https://www.youtube.com/@wonmigood" target="_blank" rel="noopener" style="--mc:#FF0000">
+          <span class="media-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor" stroke="none"/></svg>
+          </span>
+          <span class="media-text"><b>유튜브 마루아빠</b><span class="handle">@wonmigood</span></span>
+        </a>
+        <a href="https://www.instagram.com/cheonginmaru" target="_blank" rel="noopener" style="--mc:#DD2A7B">
+          <span class="media-icon" style="background:linear-gradient(135deg,#F58529,#FEDA77,#DD2A7B,#8134AF,#515BD4);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </span>
+          <span class="media-text"><b>공식 인스타그램</b><span class="handle">@cheonginmaru</span></span>
+        </a>
+        <a href="https://www.instagram.com/cheongin_maru_" target="_blank" rel="noopener" style="--mc:#D9601F">
+          <span class="media-icon" style="background:linear-gradient(135deg,#E4C98A,#D9601F);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </span>
+          <span class="media-text"><b>마루니 루루 시공에피소드</b><span class="handle">@cheongin_maru_</span></span>
+        </a>
         </div>
-        <div class="toon-social">
-          <a href="https://www.youtube.com/@wonmigood" target="_blank" rel="noopener" style="--mc:#FF0000">
-            <span class="media-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor" stroke="none"/></svg>
-            </span>
-            <span class="media-text"><b>유튜브 마루아빠</b><span class="handle">@wonmigood</span></span>
-          </a>
-          <a href="https://www.instagram.com/cheonginmaru" target="_blank" rel="noopener" style="--mc:#DD2A7B">
-            <span class="media-icon" style="background:linear-gradient(135deg,#F58529,#FEDA77,#DD2A7B,#8134AF,#515BD4);">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-            </span>
-            <span class="media-text"><b>공식 인스타그램</b><span class="handle">@cheonginmaru</span></span>
-          </a>
-          <a href="https://www.instagram.com/cheongin_maru_" target="_blank" rel="noopener" style="--mc:#D9601F">
-            <span class="media-icon" style="background:linear-gradient(135deg,#E4C98A,#D9601F);">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-            </span>
-            <span class="media-text"><b>마루니 루루 시공에피소드</b><span class="handle">@cheongin_maru_</span></span>
-          </a>
-        </div>
-      </div>
     </div>
   </section>
 

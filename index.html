@@ -1692,13 +1692,14 @@
     border:1px solid rgba(255,255,255,0.18);
     padding:8px 20px;border-radius:30px;font-size:13.5px;color:rgba(246,241,231,0.85);
   }
-  .toon-video-wrap{
-    position:relative;width:100%;max-width:980px;margin:36px auto 48px;
+  .toon-video-grid{
+    width:100%;max-width:1100px;margin:36px auto 48px;
+    display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
   }
-  .youtube-playlist-embed{
-    display:block;width:100%;height:560px;
+  .youtube-video-embed{
+    display:block;width:100%;aspect-ratio:16/9;
     border-radius:var(--radius);border:1px solid rgba(255,255,255,0.12);
-    box-shadow:0 30px 60px -20px rgba(0,0,0,0.55);
+    box-shadow:0 24px 48px -18px rgba(0,0,0,0.55);
     background:#000;
   }
   .toon-social{
@@ -1827,7 +1828,7 @@
     .partner-personal-note{flex-direction:column;gap:8px;}
     .requirement-list{gap:8px;}
     .partner-kakao-final{width:100%;justify-content:center;}
-    .youtube-playlist-embed{height:280px;}
+    .toon-video-grid{grid-template-columns:repeat(2,1fr);gap:16px;}
     .toon-social{grid-template-columns:1fr;max-width:420px;margin:0 auto;}
     .navlinks{display:none;}
     
@@ -1903,7 +1904,7 @@
     }
   }
   @media (max-width:480px) {
-    .service-grid, .brand-grid, .portfolio-grid, .process-list {grid-template-columns: 1fr;}
+    .service-grid, .brand-grid, .portfolio-grid, .process-list, .toon-video-grid {grid-template-columns: 1fr;}
     .hero-ctas .btn {width:100%;}
   }
 
@@ -2452,84 +2453,6 @@
       <div class="portfolio-toolbar" id="portfolioFilters"></div>
       <p class="portfolio-search-empty" id="portfolioSearchEmpty" style="display:none;">"<span id="portfolioSearchEmptyTerm"></span>"에 대한 검색 결과가 없어요.</p>
       <div class="portfolio-grid" id="portfolioGrid"><!-- SSR:PORTFOLIO:START -->
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224371127883" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_60.jpg" alt="인천 송도 베르디움더퍼스트 34평형 아트월시공" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">벽장재_디자인월</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 송도 베르디움더퍼스트 34평형 아트월시공</h3>
-          <p><b class="brand-tag">동화</b> 디자인월그란데 <b class="model-tag">사하라라이트</b> 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격: 590 × 1,200 × 9T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224370159883" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_59.jpg" alt="인천 송도 더프라우 52평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">타일(스톤)형 마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 송도 더프라우 52평형</h3>
-          <p>LX 에디톤 <b class="model-tag">솔티애쉬</b> 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:  450*900*5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224362748135" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_58.jpg" alt="인천 연수구 송도 더샵그린스퀘어 38평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">우드형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 연수구 송도 더샵그린스퀘어 38평형</h3>
-          <p><b class="brand-tag">동화</b> 합판 베이스 강마루 강 텍스쳐 165 <b class="model-tag">리네아내추럴</b> 제품 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:165*1205*7.5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224355095311" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_57.jpg" alt="인천 연수구 송도 글로벌캠퍼스 푸르지오" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">우드형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 연수구 송도 글로벌캠퍼스 푸르지오</h3>
-          <p><b class="brand-tag">구정</b> 합판 베이스 강마루 그랜드 텍스쳐 165 <b class="model-tag">본오크</b> 제품 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:165*1200*7.5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224361958424" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_56.jpg" alt="경기 의왕 대원칸타빌 35평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">타일형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>경기 의왕 대원칸타빌 35평형</h3>
-          <p>보드 타일형 강마루 패턴의 <b class="brand-tag">한솔마루</b> <b class="brand-tag">sb스퀘어</b> <b class="model-tag">마테라베이지</b> 마루 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:600*600*7.5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224357339481" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_55.jpg" alt="인천 영종도 운남도 단독주택" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">타일형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 영종도 운남도 단독주택</h3>
-          <p>보드 타일형 강마루 패턴의 <b class="brand-tag">한솔마루</b> <b class="brand-tag">sb스톤</b> <b class="model-tag">마테라베이지</b> 마루 시공 완료 건입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:395*795*7.5T</span></div>
-        </div>
-      </a>
 
       <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224352109468" target="_blank" rel="noopener">
         <div class="portfolio-thumb" >
@@ -3227,13 +3150,31 @@
         </div>
       </div>
 
-      <!-- 유튜브 '마루아빠' 채널 최신 영상이 자동으로 여기 뜹니다. -->
-      <!-- 새 영상을 올리시면 손댈 필요 없이 자동으로 반영돼요. 옆에 목록이 같이 보이도록 폭을 넓게 잡았어요. -->
-      <div class="toon-video-wrap">
+      <!-- 유튜브 '마루아빠' 채널 최신 영상 3개가 자동으로 여기 뜹니다. -->
+      <!-- 새 영상을 올리시면 손댈 필요 없이 자동으로 최신 영상으로 반영돼요. -->
+      <div class="toon-video-grid">
         <iframe
-          class="youtube-playlist-embed"
-          src="https://www.youtube.com/embed/videoseries?list=UUvygAHu_cZ5hqtlAwbJBaCw"
-          title="청인마루 마루아빠 유튜브 최신 영상"
+          class="youtube-video-embed"
+          src="https://www.youtube.com/embed/videoseries?list=UUvygAHu_cZ5hqtlAwbJBaCw&index=1"
+          title="청인마루 마루아빠 유튜브 최신 영상 1"
+          loading="lazy"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen>
+        </iframe>
+        <iframe
+          class="youtube-video-embed"
+          src="https://www.youtube.com/embed/videoseries?list=UUvygAHu_cZ5hqtlAwbJBaCw&index=2"
+          title="청인마루 마루아빠 유튜브 최신 영상 2"
+          loading="lazy"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen>
+        </iframe>
+        <iframe
+          class="youtube-video-embed"
+          src="https://www.youtube.com/embed/videoseries?list=UUvygAHu_cZ5hqtlAwbJBaCw&index=3"
+          title="청인마루 마루아빠 유튜브 최신 영상 3"
           loading="lazy"
           frameborder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

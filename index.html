@@ -1696,11 +1696,42 @@
     width:100%;max-width:1100px;margin:36px auto 48px;
     display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
   }
-  .youtube-video-embed{
-    display:block;width:100%;aspect-ratio:16/9;
-    border-radius:var(--radius);border:1px solid rgba(255,255,255,0.12);
+  .toon-video-card{
+    position:relative;display:block;border-radius:var(--radius);overflow:hidden;
+    aspect-ratio:16/9;background:#111;
     box-shadow:0 24px 48px -18px rgba(0,0,0,0.55);
-    background:#000;
+    border:1px solid rgba(255,255,255,0.12);
+    transition:transform .35s var(--ease), box-shadow .35s var(--ease);
+  }
+  .toon-video-card:hover{transform:translateY(-4px);box-shadow:0 30px 56px -16px rgba(0,0,0,0.65);}
+  .toon-video-card img{
+    width:100%;height:100%;object-fit:cover;display:block;
+    transition:transform .5s var(--ease), filter .5s var(--ease);
+    filter:brightness(0.82);
+  }
+  .toon-video-card:hover img{transform:scale(1.06);filter:brightness(0.62);}
+  .toon-video-card::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(13,22,18,0) 45%, rgba(13,22,18,0.75) 100%);
+  }
+  .toon-video-play{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;
+    width:52px;height:52px;border-radius:50%;
+    background:rgba(255,0,0,0.88);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 20px -4px rgba(0,0,0,0.5);
+    transition:transform .3s var(--ease);
+  }
+  .toon-video-card:hover .toon-video-play{transform:translate(-50%,-50%) scale(1.12);}
+  .toon-video-title{
+    position:absolute;left:14px;right:14px;bottom:12px;z-index:2;
+    color:#fff;font-size:13.5px;font-weight:700;line-height:1.4;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+    text-shadow:0 2px 8px rgba(0,0,0,0.4);
+  }
+  .toon-video-empty{
+    grid-column:1 / -1;text-align:center;color:rgba(246,241,231,0.5);
+    font-size:14px;padding:20px 0;
   }
   .toon-social{
     width:100%;max-width:900px;margin:0 auto;
@@ -2454,84 +2485,6 @@
       <p class="portfolio-search-empty" id="portfolioSearchEmpty" style="display:none;">"<span id="portfolioSearchEmptyTerm"></span>"에 대한 검색 결과가 없어요.</p>
       <div class="portfolio-grid" id="portfolioGrid"><!-- SSR:PORTFOLIO:START -->
 
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224371127883" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_60.jpg" alt="인천 송도 베르디움더퍼스트 34평형 아트월시공" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">벽장재_디자인월</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 송도 베르디움더퍼스트 34평형 아트월시공</h3>
-          <p><b class="brand-tag">동화</b> 디자인월그란데 <b class="model-tag">사하라라이트</b> 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격: 590 × 1,200 × 9T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224370159883" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_59.jpg" alt="인천 송도 더프라우 52평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">타일(스톤)형 마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 송도 더프라우 52평형</h3>
-          <p>LX 에디톤 <b class="model-tag">솔티애쉬</b> 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:  450*900*5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224362748135" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_58.jpg" alt="인천 연수구 송도 더샵그린스퀘어 38평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">우드형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 연수구 송도 더샵그린스퀘어 38평형</h3>
-          <p><b class="brand-tag">동화</b> 합판 베이스 강마루 강 텍스쳐 165 <b class="model-tag">리네아내추럴</b> 제품 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:165*1205*7.5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224355095311" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_57.jpg" alt="인천 연수구 송도 글로벌캠퍼스 푸르지오" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">우드형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 연수구 송도 글로벌캠퍼스 푸르지오</h3>
-          <p><b class="brand-tag">구정</b> 합판 베이스 강마루 그랜드 텍스쳐 165 <b class="model-tag">본오크</b> 제품 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:165*1200*7.5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224361958424" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_56.jpg" alt="경기 의왕 대원칸타빌 35평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">타일형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>경기 의왕 대원칸타빌 35평형</h3>
-          <p>보드 타일형 강마루 패턴의 <b class="brand-tag">한솔마루</b> <b class="brand-tag">sb스퀘어</b> <b class="model-tag">마테라베이지</b> 마루 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:600*600*7.5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224357339481" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_55.jpg" alt="인천 영종도 운남도 단독주택" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">타일형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 영종도 운남도 단독주택</h3>
-          <p>보드 타일형 강마루 패턴의 <b class="brand-tag">한솔마루</b> <b class="brand-tag">sb스톤</b> <b class="model-tag">마테라베이지</b> 마루 시공 완료 건입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:395*795*7.5T</span></div>
-        </div>
-      </a>
-
       <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224352109468" target="_blank" rel="noopener">
         <div class="portfolio-thumb" >
           <img src="images/portfolio/portfolio_54.jpg" alt="인천 부평구 삼산타운1단지 24평 아파트" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
@@ -3228,37 +3181,9 @@
         </div>
       </div>
 
-      <!-- 유튜브 '마루아빠' 채널 최신 영상 3개가 자동으로 여기 뜹니다. -->
-      <!-- 새 영상을 올리시면 손댈 필요 없이 자동으로 최신 영상으로 반영돼요. -->
-      <div class="toon-video-grid">
-        <iframe
-          class="youtube-video-embed"
-          src="https://www.youtube.com/embed/videoseries?list=UUvygAHu_cZ5hqtlAwbJBaCw&index=1"
-          title="청인마루 마루아빠 유튜브 최신 영상 1"
-          loading="lazy"
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen>
-        </iframe>
-        <iframe
-          class="youtube-video-embed"
-          src="https://www.youtube.com/embed/videoseries?list=UUvygAHu_cZ5hqtlAwbJBaCw&index=2"
-          title="청인마루 마루아빠 유튜브 최신 영상 2"
-          loading="lazy"
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen>
-        </iframe>
-        <iframe
-          class="youtube-video-embed"
-          src="https://www.youtube.com/embed/videoseries?list=UUvygAHu_cZ5hqtlAwbJBaCw&index=3"
-          title="청인마루 마루아빠 유튜브 최신 영상 3"
-          loading="lazy"
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen>
-        </iframe>
-      </div>
+      <!-- 유튜브 영상 카드: 구글시트 "미디어" 탭에서 관리합니다. 열: 유튜브링크 / 제목 -->
+      <!-- 링크만 붙여넣으면 자동으로 썸네일이 뜨고, 클릭하면 유튜브로 연결됩니다. -->
+      <div class="toon-video-grid" id="toonVideoGrid"></div>
 
       <div class="toon-social">
         <a href="https://www.youtube.com/@wonmigood" target="_blank" rel="noopener" style="--mc:#FF0000">
@@ -4305,6 +4230,76 @@
   try {
     loadPartnersFromSheet();
   } catch(e){}
+
+  // ---------- 미디어 섹션 유튜브 카드 (구글시트 연동) ----------
+  // 메인 구글시트에 "미디어" 탭을 만들고, 열: 유튜브링크 / 제목
+  // - 유튜브링크: 영상 주소를 그대로 붙여넣으면 됩니다 (일반 영상, 쇼츠 링크 모두 가능)
+  // - 최신 줄(가장 아래)부터 최대 3개까지 자동으로 카드에 표시됩니다.
+  const MEDIA_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1rt4nMI1JAhLFvk3WWz6IyvlnmUExlbgLj6yGK9Ta0MA/gviz/tq?tqx=out:csv&sheet=" + encodeURIComponent("미디어");
+
+  function extractYoutubeId(url){
+    if(!url) return null;
+    const patterns = [
+      /youtu\.be\/([^?&#]+)/,
+      /[?&]v=([^?&#]+)/,
+      /youtube\.com\/shorts\/([^?&#]+)/,
+      /youtube\.com\/embed\/([^?&#]+)/
+    ];
+    for(const p of patterns){
+      const m = url.match(p);
+      if(m) return m[1];
+    }
+    return null;
+  }
+
+  function renderToonVideos(items){
+    const grid = document.getElementById('toonVideoGrid');
+    if(!grid) return;
+    if(!items.length){
+      grid.innerHTML = '<p class="toon-video-empty">준비 중이에요. 유튜브 채널에서 최신 영상을 확인해 보세요.</p>';
+      return;
+    }
+    grid.innerHTML = items.map(item => `
+      <a class="toon-video-card" href="${item.url}" target="_blank" rel="noopener">
+        <img src="https://img.youtube.com/vi/${item.id}/hqdefault.jpg" alt="${item.title}" loading="lazy">
+        <span class="toon-video-play" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+        </span>
+        <span class="toon-video-title">${item.title}</span>
+      </a>
+    `).join('');
+  }
+
+  function loadToonVideosFromSheet(){
+    if(typeof Papa === 'undefined') return;
+    Papa.parse(MEDIA_SHEET_CSV_URL, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results){
+        const rows = results.data
+          .map(r => {
+            const link = (r['유튜브링크'] || '').trim();
+            const title = (r['제목'] || '').trim();
+            const id = extractYoutubeId(link);
+            return id ? { id, title: title || '마루아빠 영상 보기', url: link } : null;
+          })
+          .filter(Boolean)
+          .reverse()
+          .slice(0, 3);
+        renderToonVideos(rows);
+      },
+      error: function(){
+        renderToonVideos([]);
+      }
+    });
+  }
+
+  try {
+    loadToonVideosFromSheet();
+  } catch(e){
+    renderToonVideos([]);
+  }
 
   const reviewItems = [
     {

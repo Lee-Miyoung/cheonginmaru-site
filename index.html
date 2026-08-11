@@ -1291,6 +1291,19 @@
   .portfolio-search-empty{
     color:var(--ink-soft);font-size:15px;padding:60px 0;text-align:center;
   }
+  .portfolio-search-suggest{
+    display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:-6px 0 24px;
+  }
+  .portfolio-search-suggest-label{
+    font-size:12.5px;color:var(--ink-faint);margin-right:2px;
+  }
+  .portfolio-search-chip{
+    border:1px solid rgba(18,16,14,0.1);background:#fff;
+    padding:6px 14px;border-radius:30px;
+    font-size:12.5px;font-weight:600;color:var(--ink-soft);
+    cursor:pointer;transition:all .2s var(--ease);
+  }
+  .portfolio-search-chip:hover{border-color:var(--copper);color:var(--copper-deep);background:rgba(217,96,31,0.06);}
   .portfolio-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:44px;}
   .filter-btn{
     background:#fff;border:1px solid rgba(18,16,14,0.1);
@@ -1645,7 +1658,7 @@
   }
   .toon-grid{
     position:relative;z-index:1;
-    display:grid;grid-template-columns:380px 1fr;gap:72px;align-items:center;
+    display:grid;grid-template-columns:440px 1fr;gap:56px;align-items:center;
   }
   .toon-figure { position:relative; display:flex; align-items:center; justify-content:center; }
   .toon-figure::before{
@@ -1655,6 +1668,12 @@
   .toon-figure img{
     position:relative;z-index:1;width:340px;
     filter:drop-shadow(0 30px 50px rgba(0,0,0,0.5));
+  }
+  .youtube-playlist-embed{
+    position:relative;z-index:1;width:100%;height:380px;
+    border-radius:var(--radius);border:1px solid rgba(255,255,255,0.12);
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.55);
+    background:#000;
   }
   .toon-copy .k{
     display:flex;align-items:center;gap:12px;
@@ -1796,6 +1815,7 @@
     .partner-kakao-final{width:100%;justify-content:center;}
     .toon-grid{grid-template-columns:1fr;text-align:center;gap:40px;}
     .toon-figure img{width:260px;}
+    .youtube-playlist-embed{height:280px;}
     .toon-copy .k{justify-content:center;}
     .toon-copy p{margin-left:auto;margin-right:auto;}
     .toon-tags{justify-content:center;}
@@ -2412,87 +2432,17 @@
         <input type="search" id="portfolioSearchInput" class="portfolio-search-input" placeholder="검색 (예: 송도, 원목마루, 34평)" autocomplete="off" autocorrect="off" spellcheck="false" name="portfolio-search-nofill">
         <button type="button" id="portfolioSearchClear" class="portfolio-search-clear" aria-label="검색어 지우기" style="display:none;">✕</button>
       </div>
+      <div class="portfolio-search-suggest">
+        <span class="portfolio-search-suggest-label">이렇게 검색해보세요</span>
+        <button type="button" class="portfolio-search-chip">송도</button>
+        <button type="button" class="portfolio-search-chip">동화</button>
+        <button type="button" class="portfolio-search-chip">노바</button>
+        <button type="button" class="portfolio-search-chip">원목마루</button>
+        <button type="button" class="portfolio-search-chip">벽장재</button>
+      </div>
       <div class="portfolio-toolbar" id="portfolioFilters"></div>
       <p class="portfolio-search-empty" id="portfolioSearchEmpty" style="display:none;">"<span id="portfolioSearchEmptyTerm"></span>"에 대한 검색 결과가 없어요.</p>
       <div class="portfolio-grid" id="portfolioGrid"><!-- SSR:PORTFOLIO:START -->
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224371127883" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_60.jpg" alt="인천 송도 베르디움더퍼스트 34평형 아트월시공" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">벽장재_디자인월</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 송도 베르디움더퍼스트 34평형 아트월시공</h3>
-          <p><b class="brand-tag">동화</b> 디자인월그란데 <b class="model-tag">사하라라이트</b> 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격: 590 × 1,200 × 9T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224370159883" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_59.jpg" alt="인천 송도 더프라우 52평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">타일(스톤)형 마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 송도 더프라우 52평형</h3>
-          <p>LX 에디톤 <b class="model-tag">솔티애쉬</b> 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:  450*900*5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224362748135" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_58.jpg" alt="인천 연수구 송도 더샵그린스퀘어 38평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">우드형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 연수구 송도 더샵그린스퀘어 38평형</h3>
-          <p><b class="brand-tag">동화</b> 합판 베이스 강마루 강 텍스쳐 165 <b class="model-tag">리네아내추럴</b> 제품 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:165*1205*7.5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224355095311" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_57.jpg" alt="인천 연수구 송도 글로벌캠퍼스 푸르지오" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">우드형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 연수구 송도 글로벌캠퍼스 푸르지오</h3>
-          <p><b class="brand-tag">구정</b> 합판 베이스 강마루 그랜드 텍스쳐 165 <b class="model-tag">본오크</b> 제품 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:165*1200*7.5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224361958424" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_56.jpg" alt="경기 의왕 대원칸타빌 35평형" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">타일형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>경기 의왕 대원칸타빌 35평형</h3>
-          <p>보드 타일형 강마루 패턴의 <b class="brand-tag">한솔마루</b> <b class="brand-tag">sb스퀘어</b> <b class="model-tag">마테라베이지</b> 마루 시공 현장입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:600*600*7.5T</span></div>
-        </div>
-      </a>
-
-      <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224357339481" target="_blank" rel="noopener">
-        <div class="portfolio-thumb" >
-          <img src="images/portfolio/portfolio_55.jpg" alt="인천 영종도 운남도 단독주택" loading="lazy" onerror="onPortfolioThumbError(this,'#C99456')">
-          <span class="pill">타일형 강마루</span>
-          <span class="portfolio-view">전체 사진 보기 →</span>
-        </div>
-        <div class="portfolio-info">
-          <h3>인천 영종도 운남도 단독주택</h3>
-          <p>보드 타일형 강마루 패턴의 <b class="brand-tag">한솔마루</b> <b class="brand-tag">sb스톤</b> <b class="model-tag">마테라베이지</b> 마루 시공 완료 건입니다.</p>
-          <div class="portfolio-spec-row"><span class="portfolio-spec">규격:395*795*7.5T</span></div>
-        </div>
-      </a>
 
       <a class="portfolio-card" href="https://blog.naver.com/chonginmaru/224352109468" target="_blank" rel="noopener">
         <div class="portfolio-thumb" >
@@ -3182,7 +3132,17 @@
   <section class="toon-section reveal" id="marutoon">
     <div class="wrap toon-grid">
       <div class="toon-figure">
-        <img src="images/mascot/love.gif" alt="마루아빠 시공 브이로그">
+        <!-- 유튜브 '마루아빠' 채널 최신 영상이 자동으로 여기 뜹니다. -->
+        <!-- 새 영상을 올리시면 손댈 필요 없이 자동으로 반영돼요. -->
+        <iframe
+          class="youtube-playlist-embed"
+          src="https://www.youtube.com/embed/videoseries?list=UUvygAHu_cZ5hqtlAwbJBaCw"
+          title="청인마루 마루아빠 유튜브 최신 영상"
+          loading="lazy"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen>
+        </iframe>
       </div>
       <div class="toon-copy">
         <p class="k">MEDIA</p>
@@ -3760,6 +3720,16 @@
         input.focus();
       });
     }
+    document.querySelectorAll('.portfolio-search-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        input.value = chip.textContent.trim();
+        portfolioSearchTerm = input.value;
+        if(clearBtn) clearBtn.style.display = 'flex';
+        currentPage = 1;
+        renderPortfolio();
+        document.getElementById('portfolio').scrollIntoView({behavior:'smooth', block:'start'});
+      });
+    });
   })();
 
   // ---------- 시공사례 라이트박스 ----------

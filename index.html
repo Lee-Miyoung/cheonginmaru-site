@@ -3776,16 +3776,18 @@
           }))
           .filter(r => r.title);
 
-        // "대표사례" 칸에 한 줄이라도 표시해두면, 그 줄과 같은 "카테고리"에 속한 시공사례 전부를
-        // 시트에 적힌 순서 그대로 홈페이지에 고정해서 보여줍니다.
-        // (아무 표시도 안 하셨으면, 예전처럼 전체 시공사례를 최신순으로 보여줘요)
+        // "대표사례" 칸에 표시해둔 카테고리는 맨 앞쪽에 우선 노출되고,
+        // 표시 안 한 카테고리도 전부 그 뒤에 최신순으로 계속 나옵니다. (아무것도 숨겨지지 않아요)
         const featuredCategories = new Set(
           rows.filter(r => r.featured).map(r => r.category)
         );
-        const featuredRows = featuredCategories.size
-          ? rows.filter(r => featuredCategories.has(r.category)).reverse()
-          : [];
-        const sourceRows = featuredRows.length ? featuredRows : rows.slice().reverse();
+        const allNewestFirst = rows.slice().reverse();
+        const sourceRows = featuredCategories.size
+          ? [
+              ...allNewestFirst.filter(r => featuredCategories.has(r.category)),
+              ...allNewestFirst.filter(r => !featuredCategories.has(r.category))
+            ]
+          : allNewestFirst;
 
         portfolioItems = sourceRows.length ? sourceRows : FALLBACK_PORTFOLIO_ITEMS;
         renderFilters();

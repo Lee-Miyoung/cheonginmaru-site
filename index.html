@@ -3458,6 +3458,7 @@
   const portfolioFilters = document.getElementById('portfolioFilters');
   const portfolioPagination = document.getElementById('portfolioPagination');
   let activeCategories = new Set(); 
+  let portfolioFeaturedCategories = new Set();
   const PORTFOLIO_PAGE_SIZE = 9;
   let currentPage = 1;
   let portfolioSearchTerm = '';
@@ -3637,7 +3638,12 @@
   }
 
   function renderFilters(){
-    const cats = ['전체', ...new Set(portfolioItems.map(i=>i.category))];
+    // "대표사례"로 고정해둔 카테고리가 있으면, 필터 버튼은 그 카테고리들만 깔끔하게 보여줍니다.
+    // (카드 목록 자체는 항상 전체 시공사례가 다 나와요 — 이건 필터 "버튼" 개수만 줄이는 거예요)
+    const availableCats = portfolioFeaturedCategories.size
+      ? [...new Set(portfolioItems.map(i=>i.category))].filter(c => portfolioFeaturedCategories.has(c))
+      : [...new Set(portfolioItems.map(i=>i.category))];
+    const cats = ['전체', ...availableCats];
     portfolioFilters.innerHTML = cats.map(c=>{
       const isActive = c === '전체' ? activeCategories.size === 0 : activeCategories.has(c);
       return `<button class="filter-btn ${isActive?'active':''}" data-cat="${c}">${c}</button>`;
@@ -3781,6 +3787,7 @@
         const featuredCategories = new Set(
           rows.filter(r => r.featured).map(r => r.category)
         );
+        portfolioFeaturedCategories = featuredCategories;
         const allNewestFirst = rows.slice().reverse();
         const sourceRows = featuredCategories.size
           ? [

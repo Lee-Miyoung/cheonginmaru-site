@@ -354,8 +354,8 @@
   .new-badge{
     display:inline-flex; align-items:center; justify-content:center;
     background:#16a34a; color:#fff; font-size:9.5px; font-weight:900;
-    padding:1px 6px; border-radius:100px; letter-spacing:.03em; margin:0 2px;
-    vertical-align:1px; line-height:1.4;
+    padding:1px 6px; border-radius:100px; letter-spacing:.03em; margin-left:4px;
+    vertical-align:middle; line-height:1.35;
   }
 
   /* ═══ 기타 ═══ */
@@ -632,12 +632,14 @@ function highlightMatch(text, query){
   return text.slice(0, s) + '<mark class="hl">' + text.slice(s, e + 1) + '</mark>' + text.slice(e + 1);
 }
 
-/* NEW 배지 변환 유틸 (대소문자 구분 없이 (new), NEW, new 등 감지) */
-function renderNewBadge(text){
-  if (!text) return '';
-  return String(text)
-    .replace(/\s*\(\s*new\s*\)/gi, '<span class="new-badge">NEW</span>')
-    .replace(/\bNEW\b/gi, '<span class="new-badge">NEW</span>');
+/* NEW 텍스트를 제거하고 초록색 뱃지로만 치환 (대소문자 무관, (New) 등 포함) */
+function parseAndApplyBadge(rawName, q){
+  if (!rawName) return '';
+  const str = String(rawName);
+  const hasNew = /\(?\bnew\b\)?/i.test(str);
+  const cleanedName = str.replace(/\s*\(?\bnew\b\)?/gi, '').trim();
+  const highlighted = highlightMatch(cleanedName, q);
+  return hasNew ? `${highlighted}<span class="new-badge">NEW</span>` : highlighted;
 }
 
 /* 단종 상태 판별: "단종예정"이면 planned(색만 다름, 취소선 없음), 진짜 "단종"이거나
@@ -785,7 +787,7 @@ function renderNoticeText(text){
   let t = String(text);
   t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a class="notice-link" href="$2" target="_blank" rel="noopener">$1</a>');
   t = t.replace(/(?<!href=["'])(https?:\/\/[^\s<]+)/g, '<a class="notice-link" href="$1" target="_blank" rel="noopener">[상세보기]</a>');
-  t = renderNewBadge(t);
+  t = t.replace(/\s*\(?\bnew\b\)?/gi, '<span class="new-badge">NEW</span>');
   t = t.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
   return t;
 }
@@ -893,7 +895,7 @@ function renderPatternCard(p, id, q){
     <div class="pattern-card ${isOpen ? 'open' : ''}" data-id="${id}">
       <div class="pattern-row" onclick="toggleCard('${id}')">
         <div class="pattern-main">
-          <div class="pattern-name${p.discStatus === 'discontinued' ? ' name-disc' : p.discStatus === 'planned' ? ' name-planned' : ''}">${renderNewBadge(highlightMatch(p.name, q))}</div>
+          <div class="pattern-name${p.discStatus === 'discontinued' ? ' name-disc' : p.discStatus === 'planned' ? ' name-planned' : ''}">${parseAndApplyBadge(p.name, q)}</div>
           <div class="pattern-spec">${specLine}</div>
         </div>
         <div class="pattern-price">${priceHTML}</div>
@@ -905,7 +907,7 @@ function renderPatternCard(p, id, q){
             const factorTxt = fmtFactor(v.factor);
             const chipsHTML = `
               <div class="chips">
-                ${v.models.length ? v.models.map(m => `<span class="model-chip${m.discStatus === 'discontinued' ? ' chip-disc' : m.discStatus === 'planned' ? ' chip-planned' : ''}">${renderNewBadge(highlightMatch(m.name, q))}</span>`).join('') : '<span class="model-chip">모델 정보 없음</span>'}
+                ${v.models.length ? v.models.map(m => `<span class="model-chip${m.discStatus === 'discontinued' ? ' chip-disc' : m.discStatus === 'planned' ? ' chip-planned' : ''}">${parseAndApplyBadge(m.name, q)}</span>`).join('') : '<span class="model-chip">모델 정보 없음</span>'}
               </div>`;
             if (!isMulti) return `<div class="variant-block">${chipsHTML}</div>`;
             return `

@@ -295,6 +295,9 @@
     text-decoration:line-through; text-decoration-thickness:2px; text-decoration-color:var(--red);
     color:#a89d8d;
   }
+  .pattern-name.name-planned{
+    color:#b45309; font-style:italic;
+  }
   .pattern-spec{font-size:12.5px; font-weight:700; display:flex; align-items:center; gap:6px; flex-wrap:wrap; color:#63594a;}
   .box-chip{
     display:inline-flex; align-items:center; gap:3px; font-size:11.5px; font-weight:900; color:var(--wood);
@@ -339,7 +342,21 @@
     text-decoration:line-through; text-decoration-thickness:1.5px; text-decoration-color:var(--red);
     color:#ab9f8e; background:#f5f1e8; border-style:dashed;
   }
+  .model-chip.chip-planned{
+    color:#b45309; background:#fef3e0; border-color:#f3ce8f; font-style:italic; font-weight:800;
+  }
   mark.hl{background:#ffe9b8; color:var(--wood); padding:0 1px; border-radius:3px; font-weight:900;}
+
+  /* ═══ 공지 문구 안 링크 / NEW 배지 ═══ */
+  .notice-link{
+    color:#1d5fd6; font-weight:900; text-decoration:underline; text-underline-offset:2px;
+  }
+  .new-badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    background:#dc2626; color:#fff; font-size:9.5px; font-weight:900;
+    padding:1px 7px; border-radius:100px; letter-spacing:.03em; margin:0 1px;
+    vertical-align:1px;
+  }
 
   /* ═══ 기타 ═══ */
   .empty{text-align:center; padding:70px 20px; color:#a1957d; font-size:13px; font-weight:600;}
@@ -615,6 +632,15 @@ function highlightMatch(text, query){
   return text.slice(0, s) + '<mark class="hl">' + text.slice(s, e + 1) + '</mark>' + text.slice(e + 1);
 }
 
+/* 단종 상태 판별: "단종예정"이면 planned(색만 다름, 취소선 없음), 진짜 "단종"이거나
+   시트 취소선 서식이면 discontinued(취소선), 그 외엔 none */
+function getDiscStatus(text, fontFlag){
+  const t = String(text || '');
+  if (t.includes('단종예정')) return 'planned';
+  if (fontFlag || t.includes('단종')) return 'discontinued';
+  return 'none';
+}
+
 /* ============================================================
    데이터 그룹핑
    - 1차: brand+name+price+spec+factor 동일 행 → variant (가격 다르면 분리)
@@ -624,12 +650,12 @@ function groupData(data){
   const variantMap = new Map();
   data.forEach(row => {
     const vKey = [row.brand, row.name, row.firm_price, row.spec, row.factor].join('__');
-    const modelObj = row.model ? { name: row.model, discontinued: !!row.discontinued || String(row.model).includes('단종') } : null;
+    const modelObj = row.model ? { name: row.model, discStatus: getDiscStatus(row.model, row.discontinued) } : null;
     if (!variantMap.has(vKey)) {
       variantMap.set(vKey, {
         brand: row.brand, name: row.name, firm_price: row.firm_price,
         spec: row.spec, factor: row.factor,
-        nameDiscontinued: !!row.name_discontinued || String(row.name||'').includes('단종'),
+        nameDiscStatus: getDiscStatus(row.name, row.name_discontinued),
         models: modelObj ? [modelObj] : []
       });
     } else if (modelObj) {
@@ -637,10 +663,15 @@ function groupData(data){
     }
   });
   const patternMap = new Map(); const patterns = [];
+  const rank = { none: 0, planned: 1, discontinued: 2 }; // 더 심한 상태로 덮어씀 (discontinued > planned > none)
   variantMap.forEach(v => {
     const pKey = v.brand + '__' + v.name;
-    if (!patternMap.has(pKey)) { const p = { brand: v.brand, name: v.name, discontinued: v.nameDiscontinued, variants: [v] }; patternMap.set(pKey, p); patterns.push(p); }
-    else { patternMap.get(pKey).variants.push(v); if (v.nameDiscontinued) patternMap.get(pKey).discontinued = true; }
+    if (!patternMap.has(pKey)) { const p = { brand: v.brand, name: v.name, discStatus: v.nameDiscStatus, variants: [v] }; patternMap.set(pKey, p); patterns.push(p); }
+    else {
+      const p = patternMap.get(pKey);
+      p.variants.push(v);
+      if (rank[v.nameDiscStatus] > rank[p.discStatus]) p.discStatus = v.nameDiscStatus;
+    }
   });
   return patterns;
 }
@@ -736,21 +767,17 @@ async function loadData(){
   }
 }
 
-/* ============================================================
-   ★ 수정됨: 문구 안 **볼드** 및 URL 링크 자동 인식 처리 함수
-   ============================================================ */
-function mdBold(text){
+/* 공지 문구 서식 처리:
+   **굵게**  →  <b>
+   [텍스트](URL)  →  파란색 링크 (새 탭 열림)
+   "NEW" 글자  →  빨간 NEW 배지 */
+function renderNoticeText(text){
   if (!text) return '';
-  let parsed = String(text);
-
-  // 1) [문구](https://...) 마크다운 형태 지원
-  parsed = parsed.replace(/\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline; font-weight:bold;">$1</a>');
-
-  // 2) 일반 https://... 링크 자동감지 -> [상세보기] 태그로 전환
-  parsed = parsed.replace(/(^|[^"'])((https?:\/\/[^\s<]+))/g, '$1<a href="$2" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline; font-weight:bold; margin-left:4px;">[상세보기]</a>');
-
-  // 3) **텍스트** 감싸기 -> 볼드(<b>) 처리
-  return parsed.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  let t = String(text);
+  t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a class="notice-link" href="$2" target="_blank" rel="noopener">$1</a>');
+  t = t.replace(/\bNEW\b/gi, '<span class="new-badge">NEW</span>');
+  t = t.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  return t;
 }
 
 let urgentPanelOpen = false;
@@ -768,7 +795,7 @@ function renderNotices(){
   if (list.length > 0) {
     bell.style.display = 'inline-flex';
     badge.innerText = list.length;
-    panelInner.innerHTML = list.map(t => `<div class="up-item">🚨 ${mdBold(t)}</div>`).join('');
+    panelInner.innerHTML = list.map(t => `<div class="up-item">🚨 ${renderNoticeText(t)}</div>`).join('');
   } else {
     bell.style.display = 'none';
     urgentPanelOpen = false;
@@ -778,7 +805,7 @@ function renderNotices(){
   const infoEl = document.getElementById('infoList');
   if (infoEl) {
     if (NOTICES && NOTICES.info && NOTICES.info.length) {
-      infoEl.innerHTML = NOTICES.info.map(t => '* ' + mdBold(t)).join('<br>');
+      infoEl.innerHTML = NOTICES.info.map(t => '* ' + renderNoticeText(t)).join('<br>');
     } else {
       infoEl.innerHTML = '';
     }
@@ -856,7 +883,7 @@ function renderPatternCard(p, id, q){
     <div class="pattern-card ${isOpen ? 'open' : ''}" data-id="${id}">
       <div class="pattern-row" onclick="toggleCard('${id}')">
         <div class="pattern-main">
-          <div class="pattern-name${p.discontinued ? ' name-disc' : ''}">${highlightMatch(p.name, q)}</div>
+          <div class="pattern-name${p.discStatus === 'discontinued' ? ' name-disc' : p.discStatus === 'planned' ? ' name-planned' : ''}">${highlightMatch(p.name, q)}</div>
           <div class="pattern-spec">${specLine}</div>
         </div>
         <div class="pattern-price">${priceHTML}</div>
@@ -868,7 +895,7 @@ function renderPatternCard(p, id, q){
             const factorTxt = fmtFactor(v.factor);
             const chipsHTML = `
               <div class="chips">
-                ${v.models.length ? v.models.map(m => `<span class="model-chip${m.discontinued ? ' chip-disc' : ''}">${highlightMatch(m.name, q)}</span>`).join('') : '<span class="model-chip">모델 정보 없음</span>'}
+                ${v.models.length ? v.models.map(m => `<span class="model-chip${m.discStatus === 'discontinued' ? ' chip-disc' : m.discStatus === 'planned' ? ' chip-planned' : ''}">${highlightMatch(m.name, q)}</span>`).join('') : '<span class="model-chip">모델 정보 없음</span>'}
               </div>`;
             if (!isMulti) return `<div class="variant-block">${chipsHTML}</div>`;
             return `

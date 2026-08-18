@@ -347,15 +347,15 @@
   }
   mark.hl{background:#ffe9b8; color:var(--wood); padding:0 1px; border-radius:3px; font-weight:900;}
 
-  /* ═══ 공지 문구 안 링크 / NEW 배지 ═══ */
+  /* ═══ 공지 문구 및 모델명 안 링크 / NEW 배지 (초록색) ═══ */
   .notice-link{
     color:#1d5fd6; font-weight:900; text-decoration:underline; text-underline-offset:2px;
   }
   .new-badge{
     display:inline-flex; align-items:center; justify-content:center;
-    background:#dc2626; color:#fff; font-size:9.5px; font-weight:900;
-    padding:1px 7px; border-radius:100px; letter-spacing:.03em; margin:0 1px;
-    vertical-align:1px;
+    background:#16a34a; color:#fff; font-size:9.5px; font-weight:900;
+    padding:1px 6px; border-radius:100px; letter-spacing:.03em; margin:0 2px;
+    vertical-align:1px; line-height:1.4;
   }
 
   /* ═══ 기타 ═══ */
@@ -632,6 +632,14 @@ function highlightMatch(text, query){
   return text.slice(0, s) + '<mark class="hl">' + text.slice(s, e + 1) + '</mark>' + text.slice(e + 1);
 }
 
+/* NEW 배지 변환 유틸 (대소문자 구분 없이 (new), NEW, new 등 감지) */
+function renderNewBadge(text){
+  if (!text) return '';
+  return String(text)
+    .replace(/\s*\(\s*new\s*\)/gi, '<span class="new-badge">NEW</span>')
+    .replace(/\bNEW\b/gi, '<span class="new-badge">NEW</span>');
+}
+
 /* 단종 상태 판별: "단종예정"이면 planned(색만 다름, 취소선 없음), 진짜 "단종"이거나
    시트 취소선 서식이면 discontinued(취소선), 그 외엔 none */
 function getDiscStatus(text, fontFlag){
@@ -771,13 +779,13 @@ async function loadData(){
    **굵게**  →  <b>
    [텍스트](URL)  →  파란색 링크 (새 탭 열림)
    단독 URL(http...) →  파란색 [상세보기] 링크 (새 탭 열림)
-   "NEW" 글자  →  빨간 NEW 배지 */
+   "NEW" 글자  →  초록색 NEW 배지 */
 function renderNoticeText(text){
   if (!text) return '';
   let t = String(text);
   t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a class="notice-link" href="$2" target="_blank" rel="noopener">$1</a>');
   t = t.replace(/(?<!href=["'])(https?:\/\/[^\s<]+)/g, '<a class="notice-link" href="$1" target="_blank" rel="noopener">[상세보기]</a>');
-  t = t.replace(/\bNEW\b/gi, '<span class="new-badge">NEW</span>');
+  t = renderNewBadge(t);
   t = t.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
   return t;
 }
@@ -885,7 +893,7 @@ function renderPatternCard(p, id, q){
     <div class="pattern-card ${isOpen ? 'open' : ''}" data-id="${id}">
       <div class="pattern-row" onclick="toggleCard('${id}')">
         <div class="pattern-main">
-          <div class="pattern-name${p.discStatus === 'discontinued' ? ' name-disc' : p.discStatus === 'planned' ? ' name-planned' : ''}">${highlightMatch(p.name, q)}</div>
+          <div class="pattern-name${p.discStatus === 'discontinued' ? ' name-disc' : p.discStatus === 'planned' ? ' name-planned' : ''}">${renderNewBadge(highlightMatch(p.name, q))}</div>
           <div class="pattern-spec">${specLine}</div>
         </div>
         <div class="pattern-price">${priceHTML}</div>
@@ -897,7 +905,7 @@ function renderPatternCard(p, id, q){
             const factorTxt = fmtFactor(v.factor);
             const chipsHTML = `
               <div class="chips">
-                ${v.models.length ? v.models.map(m => `<span class="model-chip${m.discStatus === 'discontinued' ? ' chip-disc' : m.discStatus === 'planned' ? ' chip-planned' : ''}">${highlightMatch(m.name, q)}</span>`).join('') : '<span class="model-chip">모델 정보 없음</span>'}
+                ${v.models.length ? v.models.map(m => `<span class="model-chip${m.discStatus === 'discontinued' ? ' chip-disc' : m.discStatus === 'planned' ? ' chip-planned' : ''}">${renderNewBadge(highlightMatch(m.name, q))}</span>`).join('') : '<span class="model-chip">모델 정보 없음</span>'}
               </div>`;
             if (!isMulti) return `<div class="variant-block">${chipsHTML}</div>`;
             return `

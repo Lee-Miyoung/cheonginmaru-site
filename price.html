@@ -770,11 +770,13 @@ async function loadData(){
 /* 공지 문구 서식 처리:
    **굵게**  →  <b>
    [텍스트](URL)  →  파란색 링크 (새 탭 열림)
+   단독 URL(http...) →  파란색 [상세보기] 링크 (새 탭 열림)
    "NEW" 글자  →  빨간 NEW 배지 */
 function renderNoticeText(text){
   if (!text) return '';
   let t = String(text);
   t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a class="notice-link" href="$2" target="_blank" rel="noopener">$1</a>');
+  t = t.replace(/(?<!href=["'])(https?:\/\/[^\s<]+)/g, '<a class="notice-link" href="$1" target="_blank" rel="noopener">[상세보기]</a>');
   t = t.replace(/\bNEW\b/gi, '<span class="new-badge">NEW</span>');
   t = t.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
   return t;

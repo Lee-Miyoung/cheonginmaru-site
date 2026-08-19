@@ -11,17 +11,34 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-  body { font-family:'Pretendard Variable','Noto Sans KR',sans-serif; background:#f1f5f9; color:#0f172a; -webkit-tap-highlight-color:transparent; }
-  .premium-shadow { box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 12px 32px -12px rgba(15,23,42,.12); }
-  .input-premium { width:100%; padding:12px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#334155; outline:none; }
-  .input-premium:focus { background:#fff; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.1); }
-  #login-gate { display:flex; position:fixed; inset:0; background:#0f172a; z-index:999; align-items:center; justify-content:center; }
-  #toast { visibility:hidden; min-width:200px; background:#334155; color:#fff; text-align:center; border-radius:50px; padding:12px 24px; position:fixed; z-index:1000; left:50%; bottom:100px; transform:translateX(-50%); font-size:14px; font-weight:700; }
+  :root {
+    --ink: #2B2622;
+    --wood: #8B5E34;
+    --wood-dark: #6E4A29;
+    --paper: #F3F0EA;
+    --paper-card: #FFFDF9;
+    --line: #E3DCCE;
+    --rust: #B3452B;
+    --ochre: #C08A2E;
+    --moss: #4B6B4F;
+  }
+  body { font-family:'Pretendard Variable','Noto Sans KR',sans-serif; background:var(--paper); color:var(--ink); -webkit-tap-highlight-color:transparent; }
+  .num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .premium-shadow { box-shadow: 0 1px 2px rgba(43,38,34,.05), 0 12px 28px -14px rgba(43,38,34,.18); }
+  .input-premium { width:100%; padding:12px 14px; background:#FBF9F5; border:1px solid var(--line); border-radius:12px; font-weight:700; color:#3A342C; outline:none; font-variant-numeric: tabular-nums; }
+  .input-premium:focus { background:#fff; border-color:var(--wood); box-shadow:0 0 0 3px rgba(139,94,52,.12); }
+  #login-gate { display:flex; position:fixed; inset:0; background:var(--ink); z-index:999; align-items:center; justify-content:center; }
+  #toast { visibility:hidden; min-width:200px; background:#3A342C; color:#fff; text-align:center; border-radius:50px; padding:12px 24px; position:fixed; z-index:1000; left:50%; bottom:100px; transform:translateX(-50%); font-size:14px; font-weight:700; }
   #toast.show { visibility:visible; animation:fadein .3s, fadeout .3s 1.7s; }
   @keyframes fadein { from{opacity:0} to{opacity:1} }
   @keyframes fadeout { from{opacity:1} to{opacity:0} }
-  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:900; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
-  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px;}
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(30,26,20,.55); z-index:900; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px;}
+  .card { background:var(--paper-card); border:1px solid var(--line); border-radius:1.75rem; }
+  .eyebrow { font-size:10px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; color:#8B8477; }
+  .brand-dot { width:8px; height:8px; border-radius:50%; background:var(--wood); flex-shrink:0; }
+  .brand-accordion-arrow { transition: transform .2s; }
+  .brand-accordion-arrow.open { transform: rotate(180deg); }
 </style>
 </head>
 <body class="antialiased">
@@ -30,70 +47,70 @@
 
 <div id="login-gate">
   <div class="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-sm text-center mx-4">
-    <h2 class="text-xl font-black text-slate-900 mb-1">청인마루 재고 관리</h2>
-    <p class="text-xs text-slate-400 font-bold mb-1">Stock System</p>
-    <p id="fb-badge" class="text-[9px] font-bold text-slate-300 mb-6">연결 확인 중...</p>
-    <input type="password" id="app-password" class="w-full p-4 bg-slate-100 rounded-xl text-center text-lg font-black outline-none focus:ring-2 ring-blue-500 mb-4" placeholder="PASSWORD" onkeyup="if(event.keyCode==13) checkLogin()">
-    <button onclick="checkLogin()" class="w-full py-4 bg-slate-900 text-white rounded-xl font-black text-lg">접속하기</button>
+    <h2 class="text-xl font-black text-[#2B2622] mb-1">청인마루 재고 관리</h2>
+    <p class="text-xs text-[#8B8477] font-bold mb-1">Stock System</p>
+    <p id="fb-badge" class="text-[9px] font-bold text-[#B8B2A3] mb-6">연결 확인 중...</p>
+    <input type="password" id="app-password" class="w-full p-4 bg-[#F3F0EA] rounded-xl text-center text-lg font-black outline-none focus:ring-2 ring-[#8B5E34] mb-4" placeholder="PASSWORD" onkeyup="if(event.keyCode==13) checkLogin()">
+    <button onclick="checkLogin()" class="w-full py-4 bg-[#2B2622] text-white rounded-xl font-black text-lg">접속하기</button>
   </div>
 </div>
 
 <div id="log-modal" class="modal-overlay">
-  <div class="bg-white rounded-[1.5rem] w-full max-w-lg mx-4 h-[80vh] flex flex-col overflow-hidden">
-    <div class="p-4 border-b flex justify-between items-center bg-slate-50">
-      <h3 class="font-black text-slate-900"><i class="fas fa-history text-blue-600 mr-1.5"></i>입출고 기록 <span id="fb-status-badge" class="text-[9px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-600 ml-1">실시간 연결됨</span></h3>
-      <button onclick="closeModal('log-modal')" class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center"><i class="fas fa-times"></i></button>
+  <div class="card rounded-[1.5rem] w-full max-w-lg mx-4 h-[80vh] flex flex-col overflow-hidden">
+    <div class="p-4 border-b flex justify-between items-center bg-[#FBF9F5]">
+      <h3 class="font-black text-[#2B2622]"><i class="fas fa-history text-[#8B5E34] mr-1.5"></i>입출고 기록 <span id="fb-status-badge" class="text-[9px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-[var(--moss)] ml-1">실시간 연결됨</span></h3>
+      <button onclick="closeModal('log-modal')" class="w-8 h-8 rounded-full bg-[#E7E1D3] flex items-center justify-center"><i class="fas fa-times"></i></button>
     </div>
     <div class="p-3 border-b">
       <input type="text" id="log-search" class="input-premium text-sm" placeholder="브랜드/제품/모델 검색..." oninput="renderLog()">
     </div>
     <div class="px-3 pt-2 flex gap-2">
-      <button id="log-tab-active" onclick="setLogTab('active')" class="flex-1 py-2 rounded-lg text-xs font-black bg-slate-900 text-white">전체 기록</button>
-      <button id="log-tab-trash" onclick="setLogTab('trash')" class="flex-1 py-2 rounded-lg text-xs font-black bg-slate-100 text-slate-400"><i class="fas fa-trash-can mr-1"></i>휴지통</button>
+      <button id="log-tab-active" onclick="setLogTab('active')" class="flex-1 py-2 rounded-lg text-xs font-black bg-[#2B2622] text-white">전체 기록</button>
+      <button id="log-tab-trash" onclick="setLogTab('trash')" class="flex-1 py-2 rounded-lg text-xs font-black bg-[#F3F0EA] text-[#B8B2A3]"><i class="fas fa-trash-can mr-1"></i>휴지통</button>
     </div>
-    <div id="log-list" class="p-3 overflow-y-auto flex-1 space-y-2 bg-slate-50/50"></div>
+    <div id="log-list" class="p-3 overflow-y-auto flex-1 space-y-2 bg-[#FAF8F4]"></div>
   </div>
 </div>
 
 <!-- 거래처 관리 모달 -->
 <div id="vendor-modal" class="modal-overlay">
-  <div class="bg-white rounded-[1.5rem] w-full max-w-lg mx-4 h-[85vh] flex flex-col overflow-hidden">
-    <div class="p-4 border-b flex justify-between items-center bg-slate-50">
-      <h3 class="font-black text-slate-900"><i class="fas fa-address-book text-blue-600 mr-1.5"></i>거래처 관리</h3>
-      <button onclick="closeModal('vendor-modal')" class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center"><i class="fas fa-times"></i></button>
+  <div class="card rounded-[1.5rem] w-full max-w-lg mx-4 h-[85vh] flex flex-col overflow-hidden">
+    <div class="p-4 border-b flex justify-between items-center bg-[#FBF9F5]">
+      <h3 class="font-black text-[#2B2622]"><i class="fas fa-address-book text-[#8B5E34] mr-1.5"></i>거래처 관리</h3>
+      <button onclick="closeModal('vendor-modal')" class="w-8 h-8 rounded-full bg-[#E7E1D3] flex items-center justify-center"><i class="fas fa-times"></i></button>
     </div>
 
     <!-- 거래처 목록 화면 -->
     <div id="vendor-list-view" class="flex-1 flex flex-col overflow-hidden">
       <div class="p-3 border-b space-y-2">
         <input type="text" id="vendor-search" class="input-premium text-sm" placeholder="거래처명 검색..." oninput="renderVendorList()">
-        <button onclick="showVendorForm()" class="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-black"><i class="fas fa-plus mr-1"></i> 새 거래처 추가</button>
+        <button onclick="showVendorForm()" class="w-full py-2.5 bg-[#8B5E34] text-white rounded-xl text-sm font-black"><i class="fas fa-plus mr-1"></i> 새 거래처 추가</button>
       </div>
-      <div id="vendor-list" class="p-3 overflow-y-auto flex-1 space-y-2 bg-slate-50/50"></div>
+      <div id="vendor-list" class="p-3 overflow-y-auto flex-1 space-y-2 bg-[#FAF8F4]"></div>
     </div>
 
     <!-- 새 거래처 입력 화면 -->
     <div id="vendor-form-view" class="hidden flex-1 flex flex-col overflow-hidden">
       <div class="p-4 overflow-y-auto flex-1 space-y-3">
-        <button onclick="hideVendorForm()" class="text-xs font-bold text-slate-400"><i class="fas fa-arrow-left mr-1"></i> 목록으로</button>
-        <div><label class="text-[10px] font-black text-slate-400 pl-1">거래처명</label><input type="text" id="vf-name" class="input-premium mt-1" placeholder="예: OO인테리어"></div>
-        <div><label class="text-[10px] font-black text-slate-400 pl-1">담당자/연락처</label><input type="text" id="vf-phone" class="input-premium mt-1" placeholder="이름 010-0000-0000"></div>
-        <div><label class="text-[10px] font-black text-slate-400 pl-1">주소</label><input type="text" id="vf-addr" class="input-premium mt-1" placeholder="선택 입력"></div>
-        <div><label class="text-[10px] font-black text-slate-400 pl-1">메모</label><input type="text" id="vf-memo" class="input-premium mt-1" placeholder="선택 입력"></div>
-        <button onclick="saveVendor()" class="w-full py-3.5 bg-blue-600 text-white rounded-xl text-sm font-black"><i class="fas fa-save mr-1"></i> 저장</button>
+        <button onclick="hideVendorForm()" class="text-xs font-bold text-[#B8B2A3]"><i class="fas fa-arrow-left mr-1"></i> 목록으로</button>
+        <div><label class="text-[10px] font-black text-[#B8B2A3] pl-1">거래처명</label><input type="text" id="vf-name" class="input-premium mt-1" placeholder="예: OO인테리어"></div>
+        <div><label class="text-[10px] font-black text-[#B8B2A3] pl-1">담당자/연락처</label><input type="text" id="vf-phone" class="input-premium mt-1" placeholder="이름 010-0000-0000"></div>
+        <div><label class="text-[10px] font-black text-[#B8B2A3] pl-1">주소</label><input type="text" id="vf-addr" class="input-premium mt-1" placeholder="선택 입력"></div>
+        <div><label class="text-[10px] font-black text-[#B8B2A3] pl-1">메모</label><input type="text" id="vf-memo" class="input-premium mt-1" placeholder="선택 입력"></div>
+        <button onclick="saveVendor()" class="w-full py-3.5 bg-[#8B5E34] text-white rounded-xl text-sm font-black"><i class="fas fa-save mr-1"></i> 저장</button>
       </div>
     </div>
 
     <!-- 거래처 상세(타임라인) 화면 -->
     <div id="vendor-detail-view" class="hidden flex-1 flex flex-col overflow-hidden">
       <div class="p-4 border-b space-y-1">
-        <button onclick="hideVendorDetail()" class="text-xs font-bold text-slate-400 mb-1"><i class="fas fa-arrow-left mr-1"></i> 목록으로</button>
-        <h4 id="vd-name" class="text-lg font-black text-slate-900">-</h4>
-        <p id="vd-phone" class="text-[12px] text-slate-500 font-bold"></p>
-        <p id="vd-addr" class="text-[12px] text-slate-400"></p>
-        <p id="vd-memo" class="text-[12px] text-slate-400 italic"></p>
+        <button onclick="hideVendorDetail()" class="text-xs font-bold text-[#B8B2A3] mb-1"><i class="fas fa-arrow-left mr-1"></i> 목록으로</button>
+        <h4 id="vd-name" class="text-lg font-black text-[#2B2622]">-</h4>
+        <p id="vd-phone" class="text-[12px] text-[#8B8477] font-bold"></p>
+        <p id="vd-addr" class="text-[12px] text-[#B8B2A3]"></p>
+        <p id="vd-memo" class="text-[12px] text-[#B8B2A3] italic"></p>
       </div>
-      <div class="p-3 border-b bg-slate-50 space-y-2">
+      <div class="p-3 border-b bg-[#FBF9F5] space-y-2">
         <div class="grid grid-cols-2 gap-2">
           <select id="vl-type" class="input-premium text-sm">
             <option value="샘플북 전달">샘플북 전달</option>
@@ -104,36 +121,63 @@
           <input type="date" id="vl-date" class="input-premium text-sm">
         </div>
         <input type="text" id="vl-note" class="input-premium text-sm" placeholder="메모 (예: 노바마루 신제품 샘플북 전달)">
-        <button onclick="addVendorLog()" class="w-full py-2.5 bg-slate-900 text-white rounded-xl text-sm font-black"><i class="fas fa-plus mr-1"></i> 기록 추가</button>
+        <button onclick="addVendorLog()" class="w-full py-2.5 bg-[#2B2622] text-white rounded-xl text-sm font-black"><i class="fas fa-plus mr-1"></i> 기록 추가</button>
       </div>
       <div id="vendor-timeline" class="p-3 overflow-y-auto flex-1 space-y-2 bg-white"></div>
-    <div class="p-2 border-t bg-slate-50">
-      <button onclick="toggleVendorLogTrash()" id="vendor-trash-toggle-btn" class="w-full py-2 text-xs font-black text-slate-400"><i class="fas fa-trash-can mr-1"></i>삭제된 기록 보기 (복구 가능)</button>
+    <div class="p-2 border-t bg-[#FBF9F5]">
+      <button onclick="toggleVendorLogTrash()" id="vendor-trash-toggle-btn" class="w-full py-2 text-xs font-black text-[#B8B2A3]"><i class="fas fa-trash-can mr-1"></i>삭제된 기록 보기 (복구 가능)</button>
     </div>
+    </div>
+  </div>
+</div>
+
+<!-- 월별 매입 통계 모달 -->
+<div id="monthly-modal" class="modal-overlay">
+  <div class="card rounded-[1.5rem] w-full max-w-lg mx-4 h-[85vh] flex flex-col overflow-hidden">
+    <div class="p-4 border-b flex justify-between items-center bg-[#FBF9F5]">
+      <h3 class="font-black text-[#2B2622]"><i class="fas fa-chart-column text-[#8B5E34] mr-1.5"></i>월별 매입 통계</h3>
+      <button onclick="closeModal('monthly-modal')" class="w-8 h-8 rounded-full bg-[#E7E1D3] flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-3 border-b flex items-center justify-between gap-2">
+      <button onclick="shiftMonth(-1)" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B5E34] flex items-center justify-center"><i class="fas fa-chevron-left"></i></button>
+      <span id="monthly-current-label" class="text-base font-black text-[#2B2622]">-</span>
+      <button onclick="shiftMonth(1)" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B5E34] flex items-center justify-center"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    <div class="p-4 overflow-y-auto flex-1 space-y-3">
+      <div class="rounded-2xl bg-[#2B2622] text-white p-4">
+        <p class="eyebrow text-[#C9A57C]">이 달 총 매입액 (VAT별도)</p>
+        <p id="monthly-total-amount" class="text-2xl font-black mt-1 num">0원</p>
+        <p id="monthly-total-qty" class="text-[11px] text-[#B8B2A3] font-bold mt-1">0 BOX · 0건</p>
+      </div>
+      <div>
+        <p class="eyebrow mb-2">브랜드별 매입액</p>
+        <div id="monthly-brand-list" class="space-y-1.5"></div>
+      </div>
     </div>
   </div>
 </div>
 
 <div class="max-w-2xl mx-auto p-4 md:p-6">
 
-  <header class="bg-white rounded-2xl premium-shadow px-4 py-3 flex items-center justify-between mb-5">
+  <header class="card premium-shadow px-4 py-3 flex items-center justify-between mb-5">
     <div>
-      <h1 class="text-lg font-black text-slate-900">청인마루<span class="text-blue-600">.</span> 재고관리</h1>
-      <p class="text-[10px] text-slate-400 font-bold">Stock System · 실시간 공유 <span id="debug-count" class="text-blue-400"></span></p>
+      <h1 class="text-lg font-black text-[#2B2622]">청인마루<span class="text-[#8B5E34]">.</span> 재고관리</h1>
+      <p class="text-[10px] text-[#8B8477] font-bold">Stock System · 실시간 공유 <span id="debug-count" class="text-[#A9784F]"></span></p>
     </div>
     <div class="flex items-center gap-1.5">
-      <button onclick="exportBackup()" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 hover:text-emerald-600 flex items-center justify-center" title="전체 데이터 백업"><i class="fas fa-download"></i></button>
-      <button onclick="loadMasterCSV(true)" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 hover:text-blue-600 flex items-center justify-center" title="품목목록 새로고침"><i class="fas fa-sync-alt"></i></button>
-      <button onclick="openVendorModal()" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 hover:text-blue-600 flex items-center justify-center" title="거래처 관리"><i class="fas fa-address-book"></i></button>
-      <button onclick="openLogModal()" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 hover:text-blue-600 flex items-center justify-center" title="입출고 기록"><i class="fas fa-list-ul"></i></button>
+      <button onclick="exportBackup()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[var(--moss)] flex items-center justify-center" title="전체 데이터 백업"><i class="fas fa-download"></i></button>
+      <button onclick="loadMasterCSV(true)" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="품목목록 새로고침"><i class="fas fa-sync-alt"></i></button>
+      <button onclick="openMonthlyModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="월별 매입 통계"><i class="fas fa-chart-column"></i></button>
+      <button onclick="openVendorModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="거래처 관리"><i class="fas fa-address-book"></i></button>
+      <button onclick="openLogModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="입출고 기록"><i class="fas fa-list-ul"></i></button>
     </div>
   </header>
 
-  <div class="bg-white rounded-[2rem] p-5 premium-shadow space-y-4 mb-5">
-    <div class="grid grid-cols-3 bg-slate-900 p-1 rounded-2xl gap-1">
-      <button id="type-in" class="py-3 rounded-xl text-[13px] font-black text-white bg-blue-600" onclick="setType('입고')"><i class="fas fa-arrow-down mr-1"></i>입고</button>
-      <button id="type-out" class="py-3 rounded-xl text-[13px] font-black text-slate-400" onclick="setType('출고')"><i class="fas fa-arrow-up mr-1"></i>출고</button>
-      <button id="type-return" class="py-3 rounded-xl text-[13px] font-black text-slate-400" onclick="setType('반품')"><i class="fas fa-rotate-left mr-1"></i>반품</button>
+  <div class="card p-5 premium-shadow space-y-4 mb-5">
+    <div class="grid grid-cols-3 bg-[#2B2622] p-1 rounded-2xl gap-1">
+      <button id="type-in" class="py-3 rounded-xl text-[13px] font-black text-white bg-[#8B5E34]" onclick="setType('입고')"><i class="fas fa-arrow-down mr-1"></i>입고</button>
+      <button id="type-out" class="py-3 rounded-xl text-[13px] font-black text-[#B8B2A3]" onclick="setType('출고')"><i class="fas fa-arrow-up mr-1"></i>출고</button>
+      <button id="type-return" class="py-3 rounded-xl text-[13px] font-black text-[#B8B2A3]" onclick="setType('반품')"><i class="fas fa-rotate-left mr-1"></i>반품</button>
     </div>
 
     <div class="grid grid-cols-2 gap-2.5">
@@ -143,46 +187,42 @@
     <select id="sel-model" class="input-premium" onchange="onModelChange(); autoFillCostPrice();"></select>
 
     <div class="grid grid-cols-2 gap-2.5">
-      <div><label class="text-[10px] font-black text-slate-400 pl-1">로트번호</label><input type="text" id="in-lot" class="input-premium mt-1" placeholder="예: L20260819-01" oninput="onModelChange()"></div>
-      <div><label class="text-[10px] font-black text-slate-400 pl-1">생산일자</label><input type="date" id="in-prod-date" class="input-premium mt-1"></div>
+      <div><label class="eyebrow pl-1">로트번호</label><input type="text" id="in-lot" class="input-premium mt-1" placeholder="예: L20260819-01" oninput="onModelChange()"></div>
+      <div><label class="eyebrow pl-1">생산일자</label><input type="date" id="in-prod-date" class="input-premium mt-1"></div>
     </div>
 
-    <div id="current-stock-box" class="hidden bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2.5 flex justify-between items-center">
-      <span class="text-[11px] font-black text-emerald-700"><i class="fas fa-warehouse mr-1"></i><span id="current-stock-label">현재 재고</span></span>
-      <span id="current-stock-val" class="text-sm font-black text-emerald-600">-</span>
+    <div id="current-stock-box" class="hidden bg-[#F1F5F1] border border-[#D9E4D9] rounded-xl px-4 py-2.5 flex justify-between items-center">
+      <span class="text-[11px] font-black text-[var(--moss)]"><i class="fas fa-warehouse mr-1"></i><span id="current-stock-label">현재 재고</span></span>
+      <span id="current-stock-val" class="text-sm font-black text-[var(--moss)] num">-</span>
     </div>
 
     <div class="grid grid-cols-2 gap-2.5">
-      <div><label class="text-[10px] font-black text-slate-400 pl-1">수량 (박스)</label><input type="number" id="in-qty" class="input-premium mt-1" placeholder="0"></div>
-      <div></div>
+      <div><label class="eyebrow pl-1">수량 (박스)</label><input type="number" id="in-qty" class="input-premium mt-1 num" placeholder="0"></div>
+      <div><label class="eyebrow pl-1">거래처</label><input type="text" id="in-vendor" class="input-premium mt-1" placeholder="동화자연마루 등"></div>
     </div>
     <div id="price-field" class="grid grid-cols-2 gap-2.5">
-      <div><label class="text-[10px] font-black text-slate-400 pl-1">매입단가(VAT별도) <span class="text-blue-400 font-medium">· 원가자동</span></label><input type="text" id="in-price" class="input-premium mt-1" placeholder="0" oninput="formatMoney(this); syncPriceFromExVat();"></div>
-      <div><label class="text-[10px] font-black text-slate-400 pl-1">매입단가(VAT포함)</label><input type="text" id="in-price-vat" class="input-premium mt-1" placeholder="0" oninput="formatMoney(this); syncPriceFromIncVat();"></div>
+      <div><label class="eyebrow pl-1">매입단가(VAT별도) <span class="text-[#A9784F] normal-case font-medium tracking-normal">· 원가자동</span></label><input type="text" id="in-price" class="input-premium mt-1 num" placeholder="0" oninput="formatMoney(this); syncPriceFromExVat();"></div>
+      <div><label class="eyebrow pl-1">매입단가(VAT포함)</label><input type="text" id="in-price-vat" class="input-premium mt-1 num" placeholder="0" oninput="formatMoney(this); syncPriceFromIncVat();"></div>
     </div>
     <div class="grid grid-cols-2 gap-2.5">
-      <div><label class="text-[10px] font-black text-slate-400 pl-1">거래처</label><input type="text" id="in-vendor" class="input-premium mt-1" placeholder="동화자연마루 등"></div>
-      <div><label class="text-[10px] font-black text-slate-400 pl-1">발주일자</label><input type="date" id="in-order-date" class="input-premium mt-1"></div>
+      <div><label class="eyebrow pl-1">발주일자</label><input type="date" id="in-order-date" class="input-premium mt-1"></div>
+      <div><label class="eyebrow pl-1">입고일자</label><input type="date" id="in-date" class="input-premium mt-1"></div>
     </div>
-    <div class="grid grid-cols-2 gap-2.5">
-      <div><label class="text-[10px] font-black text-slate-400 pl-1">입고일자</label><input type="date" id="in-date" class="input-premium mt-1"></div>
-      <div></div>
-    </div>
-    <div><label class="text-[10px] font-black text-slate-400 pl-1">메모 <span id="memo-hint" class="text-slate-300 font-medium"></span></label><input type="text" id="in-memo" class="input-premium mt-1" placeholder="선택 입력 (반품 사유 등)"></div>
+    <div><label class="eyebrow pl-1">메모 <span id="memo-hint" class="text-[#B8B2A3] normal-case font-medium tracking-normal"></span></label><input type="text" id="in-memo" class="input-premium mt-1" placeholder="선택 입력 (반품 사유 등)"></div>
 
-    <button onclick="submitMovement()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-base shadow-lg shadow-blue-100 active:scale-95 transition-transform">
+    <button onclick="submitMovement()" class="w-full py-4 bg-[#8B5E34] text-white rounded-2xl font-black text-base shadow-lg shadow-[#EFE2CF] active:scale-95 transition-transform">
       <i class="fas fa-save mr-1.5"></i> 저장 (모든 기기에 즉시 반영)
     </button>
     <div id="save-status" class="text-center text-xs font-bold py-1"></div>
   </div>
 
-  <div class="bg-white rounded-[2rem] p-5 premium-shadow">
+  <div class="card p-5 premium-shadow">
     <div class="flex justify-between items-center mb-3">
-      <h3 class="text-sm font-black text-slate-800"><i class="fas fa-boxes-stacked text-blue-500 mr-1.5"></i>재고 현황</h3>
-      <span id="stock-count" class="text-[10px] font-bold text-slate-400"></span>
+      <h3 class="text-sm font-black text-[#3A342C]"><i class="fas fa-boxes-stacked text-[#8B5E34] mr-1.5"></i>재고 현황 <span class="eyebrow font-bold normal-case ml-1">브랜드별</span></h3>
+      <span id="stock-count" class="text-[10px] font-bold text-[#8B8477]"></span>
     </div>
     <input type="text" id="stock-search" class="input-premium text-sm mb-3" placeholder="브랜드/제품/모델 검색..." oninput="renderStockList()">
-    <div id="stock-list" class="space-y-1.5 max-h-[60vh] overflow-y-auto"></div>
+    <div id="stock-list" class="space-y-2 max-h-[65vh] overflow-y-auto"></div>
   </div>
 
 </div>
@@ -260,6 +300,7 @@
       const dbg = document.getElementById('debug-count');
       if (dbg) dbg.innerText = `(서버상 ${Object.keys(movements).length}건)`;
       if (document.getElementById('log-modal').style.display === 'flex') renderLog();
+      if (document.getElementById('monthly-modal').style.display === 'flex') renderMonthlyStats();
     }, err => {
       const dbg = document.getElementById('debug-count');
       if (dbg) dbg.innerText = '(읽기 실패: ' + err.code + ')';
@@ -348,9 +389,9 @@
   function setType(t) {
     currentType = t;
     const styles = {
-      '입고': ['text-white bg-blue-600','text-slate-400','text-slate-400'],
-      '출고': ['text-slate-400','text-white bg-rose-500','text-slate-400'],
-      '반품': ['text-slate-400','text-slate-400','text-white bg-amber-500']
+      '입고': ['text-white bg-[#8B5E34]','text-[#B8B2A3]','text-[#B8B2A3]'],
+      '출고': ['text-[#B8B2A3]','text-white bg-rose-500','text-[#B8B2A3]'],
+      '반품': ['text-[#B8B2A3]','text-[#B8B2A3]','text-white bg-amber-500']
     };
     const s = styles[t];
     document.getElementById('type-in').className = 'py-3 rounded-xl text-[13px] font-black transition-all ' + s[0];
@@ -456,12 +497,12 @@
       const stock = found ? found.stock : 0;
       document.getElementById('current-stock-label').innerText = `현재 재고 (로트: ${lot})`;
       document.getElementById('current-stock-val').innerText = stock.toLocaleString() + ' BOX';
-      document.getElementById('current-stock-val').className = 'text-sm font-black ' + (stock <= 0 ? 'text-rose-500' : 'text-emerald-600');
+      document.getElementById('current-stock-val').className = 'text-sm font-black ' + (stock <= 0 ? 'text-rose-500' : 'text-[var(--moss)]');
     } else {
       const total = stockSummary.filter(s => s.brand===b && s.name===p && s.model===m).reduce((a,s)=>a+s.stock,0);
       document.getElementById('current-stock-label').innerText = '현재 재고 (전체 로트 합계)';
       document.getElementById('current-stock-val').innerText = total.toLocaleString() + ' BOX';
-      document.getElementById('current-stock-val').className = 'text-sm font-black ' + (total <= 0 ? 'text-rose-500' : 'text-emerald-600');
+      document.getElementById('current-stock-val').className = 'text-sm font-black ' + (total <= 0 ? 'text-rose-500' : 'text-[var(--moss)]');
     }
   }
 
@@ -481,26 +522,72 @@
     stockSummary = Object.values(map).sort((a,b) => a.stock - b.stock);
   }
 
+  let expandedBrands = new Set();
+  function toggleBrandGroup(brand) {
+    if (expandedBrands.has(brand)) expandedBrands.delete(brand); else expandedBrands.add(brand);
+    renderStockList();
+  }
+
   function renderStockList() {
     const q = (document.getElementById('stock-search').value || '').toLowerCase();
     const box = document.getElementById('stock-list');
     const filtered = stockSummary.filter(s => !q || (s.brand+s.name+s.model).toLowerCase().includes(q));
     document.getElementById('stock-count').innerText = `${filtered.length}개 품목`;
     box.innerHTML = '';
-    if (!filtered.length) { box.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">기록이 없습니다</div>'; return; }
-    filtered.forEach(s => {
-      const low = s.stock <= 0;
-      const row = document.createElement('div');
-      row.className = 'flex justify-between items-center px-3 py-2.5 rounded-xl border ' + (low ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-100');
-      row.innerHTML = `
-        <div class="min-w-0 flex-1">
-          <p class="text-[10px] font-bold text-slate-400">${s.brand} · ${s.name}</p>
-          <p class="text-sm font-black text-slate-800 truncate">${s.model}</p>
-          <p class="text-[10px] text-slate-400 font-bold mt-0.5">${s.lot ? ('로트: '+s.lot) : '로트 미기재'}${s.prodDate ? (' · 생산일 '+s.prodDate) : ''}</p>
-        </div>
-        <span class="text-base font-black ${low ? 'text-rose-500' : 'text-slate-800'} shrink-0 ml-2">${s.stock.toLocaleString()} <span class="text-[10px] font-bold">BOX</span></span>
+    if (!filtered.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-sm">기록이 없습니다</div>'; return; }
+
+    // 브랜드별로 그룹핑
+    const groups = {};
+    filtered.forEach(s => { (groups[s.brand] = groups[s.brand] || []).push(s); });
+    const brandNames = Object.keys(groups).sort((a,b) => a.localeCompare(b, 'ko'));
+
+    // 검색 중일 때는 자동으로 다 펼쳐서 보여줌
+    const autoExpand = !!q;
+
+    brandNames.forEach(brand => {
+      const items = groups[brand].sort((a,b) => (a.name+a.model).localeCompare(b.name+b.model, 'ko'));
+      const totalBox = items.reduce((sum, s) => sum + s.stock, 0);
+      const lowCount = items.filter(s => s.stock <= 0).length;
+      const isOpen = autoExpand || expandedBrands.has(brand);
+
+      const groupWrap = document.createElement('div');
+      groupWrap.className = 'rounded-2xl border border-[var(--line)] overflow-hidden';
+
+      const header = document.createElement('button');
+      header.type = 'button';
+      header.className = 'w-full flex items-center justify-between px-3.5 py-3 bg-[#FBF9F5]';
+      header.onclick = () => toggleBrandGroup(brand);
+      header.innerHTML = `
+        <span class="flex items-center gap-2 min-w-0">
+          <span class="brand-dot"></span>
+          <span class="text-sm font-black text-[#2B2622] truncate">${brand}</span>
+          <span class="text-[10px] font-bold text-[#B8B2A3] shrink-0">${items.length}개 품목${lowCount ? ' · 부족 ' + lowCount : ''}</span>
+        </span>
+        <span class="flex items-center gap-2 shrink-0">
+          <span class="text-sm font-black text-[#3A342C] num">${totalBox.toLocaleString()} <span class="text-[10px] font-bold text-[#8B8477]">BOX</span></span>
+          <i class="fas fa-chevron-down text-[10px] text-[#B8B2A3] brand-accordion-arrow${isOpen ? ' open' : ''}"></i>
+        </span>
       `;
-      box.appendChild(row);
+      groupWrap.appendChild(header);
+
+      const body = document.createElement('div');
+      body.className = isOpen ? 'divide-y divide-[var(--line)]' : 'hidden';
+      items.forEach(s => {
+        const low = s.stock <= 0;
+        const row = document.createElement('div');
+        row.className = 'flex justify-between items-center gap-2 px-3.5 py-2.5 bg-white ' + (low ? 'bg-[#FBF1EE]' : '');
+        row.innerHTML = `
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] font-bold text-[#B8B2A3] truncate">${s.name}</p>
+            <p class="text-[13px] font-black text-[#3A342C] truncate">${s.model}</p>
+            <p class="text-[10px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · '+s.prodDate) : ''}</p>
+          </div>
+          <span class="text-[15px] font-black ${low ? 'text-[var(--rust)]' : 'text-[#3A342C]'} shrink-0 num">${s.stock.toLocaleString()} <span class="text-[10px] font-bold text-[#B8B2A3]">BOX</span></span>
+        `;
+        body.appendChild(row);
+      });
+      groupWrap.appendChild(body);
+      box.appendChild(groupWrap);
     });
   }
 
@@ -508,7 +595,7 @@
     const el = document.getElementById('save-status');
     if (!el) return;
     el.innerText = msg;
-    el.className = 'text-center text-xs font-bold py-1 ' + (ok ? 'text-emerald-600' : 'text-rose-500');
+    el.className = 'text-center text-xs font-bold py-1 ' + (ok ? 'text-[var(--moss)]' : 'text-rose-500');
   }
 
   function submitMovement() {
@@ -566,8 +653,8 @@
   let movementsTrash = {};
   function setLogTab(tab) {
     logTab = tab;
-    document.getElementById('log-tab-active').className = 'flex-1 py-2 rounded-lg text-xs font-black ' + (tab==='active' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400');
-    document.getElementById('log-tab-trash').className = 'flex-1 py-2 rounded-lg text-xs font-black ' + (tab==='trash' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-400') + ' flex items-center justify-center';
+    document.getElementById('log-tab-active').className = 'flex-1 py-2 rounded-lg text-xs font-black ' + (tab==='active' ? 'bg-[#2B2622] text-white' : 'bg-[#F3F0EA] text-[#B8B2A3]');
+    document.getElementById('log-tab-trash').className = 'flex-1 py-2 rounded-lg text-xs font-black ' + (tab==='trash' ? 'bg-rose-500 text-white' : 'bg-[#F3F0EA] text-[#B8B2A3]') + ' flex items-center justify-center';
     if (tab === 'trash') {
       fbDatabase.ref('stock_movements_trash').once('value').then(snap => { movementsTrash = snap.val() || {}; renderLog(); });
     } else { renderLog(); }
@@ -581,24 +668,24 @@
       .sort((a,b) => (b.ts||0) - (a.ts||0))
       .filter(r => !q || (r.brand+r.name+r.model).toLowerCase().includes(q));
     box.innerHTML = '';
-    if (!list.length) { box.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">${logTab==='trash'?'휴지통이 비어있습니다':'기록이 없습니다'}</div>`; return; }
+    if (!list.length) { box.innerHTML = `<div class="text-center py-8 text-[#B8B2A3] text-sm">${logTab==='trash'?'휴지통이 비어있습니다':'기록이 없습니다'}</div>`; return; }
     list.forEach(r => {
-      const badgeStyle = r.type==='입고' ? 'bg-blue-100 text-blue-600' : r.type==='반품' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600';
+      const badgeStyle = r.type==='입고' ? 'bg-[#EFE2CF] text-[#8B5E34]' : r.type==='반품' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600';
       const row = document.createElement('div');
-      row.className = 'bg-white border border-slate-100 rounded-xl p-3 flex justify-between items-center';
+      row.className = 'bg-white border border-[var(--line)] rounded-xl p-3 flex justify-between items-center';
       row.innerHTML = `
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 mb-0.5">
             <span class="text-[9px] font-black px-1.5 py-0.5 rounded-full ${badgeStyle}">${r.type}</span>
-            <span class="text-[10px] text-slate-400 font-bold">입고 ${r.date||''}${r.orderDate?(' · 발주 '+r.orderDate):''}</span>
+            <span class="text-[10px] text-[#B8B2A3] font-bold">입고 ${r.date||''}${r.orderDate?(' · 발주 '+r.orderDate):''}</span>
           </div>
-          <p class="text-sm font-black text-slate-800 truncate">${r.brand} · ${r.name} · ${r.model}</p>
-          <p class="text-[11px] text-slate-400 font-bold">${r.qty}BOX ${r.price?('· '+Number(r.price).toLocaleString()+'원(VAT별도)'):''}${r.priceIncVat?(' / '+Number(r.priceIncVat).toLocaleString()+'원(VAT포함)'):''} ${r.vendor?('· '+r.vendor):''}</p>
-          <p class="text-[10px] text-slate-300 font-bold">${r.lot?('로트: '+r.lot):''} ${r.prodDate?('· 생산일 '+r.prodDate):''} ${r.memo?('· '+r.memo):''}</p>
+          <p class="text-sm font-black text-[#3A342C] truncate">${r.brand} · ${r.name} · ${r.model}</p>
+          <p class="text-[11px] text-[#B8B2A3] font-bold">${r.qty}BOX ${r.price?('· '+Number(r.price).toLocaleString()+'원(VAT별도)'):''}${r.priceIncVat?(' / '+Number(r.priceIncVat).toLocaleString()+'원(VAT포함)'):''} ${r.vendor?('· '+r.vendor):''}</p>
+          <p class="text-[10px] text-[#CFC9BB] font-bold">${r.lot?('로트: '+r.lot):''} ${r.prodDate?('· 생산일 '+r.prodDate):''} ${r.memo?('· '+r.memo):''}</p>
         </div>
         ${ logTab === 'trash'
-          ? `<div class="flex flex-col gap-1 shrink-0"><button onclick="restoreLog('${r.key}')" class="text-emerald-500 hover:text-emerald-700 text-xs px-2 py-1 bg-emerald-50 rounded-lg font-bold"><i class="fas fa-rotate-left mr-1"></i>복구</button><button onclick="permanentDeleteLog('${r.key}')" class="text-slate-400 hover:text-rose-500 text-[10px] px-2">완전삭제</button></div>`
-          : `<button onclick="deleteLog('${r.key}')" class="text-slate-300 hover:text-rose-500 px-2 shrink-0"><i class="fas fa-trash"></i></button>`
+          ? `<div class="flex flex-col gap-1 shrink-0"><button onclick="restoreLog('${r.key}')" class="text-emerald-500 hover:text-[var(--moss)] text-xs px-2 py-1 bg-[#F1F5F1] rounded-lg font-bold"><i class="fas fa-rotate-left mr-1"></i>복구</button><button onclick="permanentDeleteLog('${r.key}')" class="text-[#B8B2A3] hover:text-rose-500 text-[10px] px-2">완전삭제</button></div>`
+          : `<button onclick="deleteLog('${r.key}')" class="text-[#CFC9BB] hover:text-rose-500 px-2 shrink-0"><i class="fas fa-trash"></i></button>`
         }
       `;
       box.appendChild(row);
@@ -677,20 +764,20 @@
       .filter(v => !q || (v.name||'').toLowerCase().includes(q))
       .sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ko'));
     box.innerHTML = '';
-    if (!list.length) { box.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">등록된 거래처가 없습니다</div>'; return; }
+    if (!list.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-sm">등록된 거래처가 없습니다</div>'; return; }
     list.forEach(v => {
       const last = lastVendorLogDate(v.key);
       const row = document.createElement('div');
-      row.className = 'bg-white border border-slate-100 rounded-xl p-3 flex justify-between items-center cursor-pointer active:bg-slate-50';
+      row.className = 'bg-white border border-[var(--line)] rounded-xl p-3 flex justify-between items-center cursor-pointer active:bg-[#FBF9F5]';
       row.onclick = () => openVendorDetail(v.key);
       row.innerHTML = `
         <div class="min-w-0 flex-1">
-          <p class="text-sm font-black text-slate-800 truncate">${v.name}</p>
-          <p class="text-[11px] text-slate-400 font-bold">${v.phone||''}</p>
+          <p class="text-sm font-black text-[#3A342C] truncate">${v.name}</p>
+          <p class="text-[11px] text-[#B8B2A3] font-bold">${v.phone||''}</p>
         </div>
         <div class="text-right shrink-0 ml-2">
-          <p class="text-[10px] text-slate-400 font-bold">${last ? last.type : '기록 없음'}</p>
-          <p class="text-[10px] text-blue-500 font-black">${last ? last.date : '-'}</p>
+          <p class="text-[10px] text-[#B8B2A3] font-bold">${last ? last.type : '기록 없음'}</p>
+          <p class="text-[10px] text-[#8B5E34] font-black">${last ? last.date : '-'}</p>
         </div>
       `;
       box.appendChild(row);
@@ -736,18 +823,18 @@
         .map(k => ({ key:k, ...vendorLogsTrash[k] })).sort((a,b) => (b.ts||0)-(a.ts||0));
       const box = document.getElementById('vendor-timeline');
       box.innerHTML = '';
-      if (!trashLogs.length) { box.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">삭제된 기록이 없습니다</div>'; return; }
+      if (!trashLogs.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-sm">삭제된 기록이 없습니다</div>'; return; }
       trashLogs.forEach(l => {
         const row = document.createElement('div');
         row.className = 'flex gap-3';
         row.innerHTML = `
-          <div class="w-1.5 shrink-0 rounded-full bg-slate-200"></div>
+          <div class="w-1.5 shrink-0 rounded-full bg-[#E7E1D3]"></div>
           <div class="flex-1 pb-3 border-b border-slate-50">
             <div class="flex justify-between items-start">
-              <div><span class="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">${l.type}</span><span class="text-[10px] text-slate-400 font-bold ml-1">${l.date}</span></div>
-              <div class="flex gap-1"><button onclick="restoreVendorLog('${l.key}')" class="text-emerald-500 text-[10px] font-bold px-1.5 py-0.5 bg-emerald-50 rounded"><i class="fas fa-rotate-left mr-0.5"></i>복구</button><button onclick="permanentDeleteVendorLog('${l.key}')" class="text-slate-300 hover:text-rose-500 text-[10px] px-1">완전삭제</button></div>
+              <div><span class="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-[#F3F0EA] text-[#8B8477]">${l.type}</span><span class="text-[10px] text-[#B8B2A3] font-bold ml-1">${l.date}</span></div>
+              <div class="flex gap-1"><button onclick="restoreVendorLog('${l.key}')" class="text-emerald-500 text-[10px] font-bold px-1.5 py-0.5 bg-[#F1F5F1] rounded"><i class="fas fa-rotate-left mr-0.5"></i>복구</button><button onclick="permanentDeleteVendorLog('${l.key}')" class="text-[#CFC9BB] hover:text-rose-500 text-[10px] px-1">완전삭제</button></div>
             </div>
-            <p class="text-sm font-bold text-slate-500 mt-1">${l.note||''}</p>
+            <p class="text-sm font-bold text-[#8B8477] mt-1">${l.note||''}</p>
           </div>
         `;
         box.appendChild(row);
@@ -760,21 +847,21 @@
       .sort((a,b) => (b.ts||0) - (a.ts||0));
     const box = document.getElementById('vendor-timeline');
     box.innerHTML = '';
-    if (!logs.length) { box.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">아직 기록이 없습니다</div>'; return; }
+    if (!logs.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-sm">아직 기록이 없습니다</div>'; return; }
     logs.forEach(l => {
       const row = document.createElement('div');
       row.className = 'flex gap-3';
       row.innerHTML = `
-        <div class="w-1.5 shrink-0 rounded-full bg-blue-200"></div>
+        <div class="w-1.5 shrink-0 rounded-full bg-[#D9C4A3]"></div>
         <div class="flex-1 pb-3 border-b border-slate-50">
           <div class="flex justify-between items-start">
             <div>
-              <span class="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600">${l.type}</span>
-              <span class="text-[10px] text-slate-400 font-bold ml-1">${l.date}</span>
+              <span class="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-[#EFE2CF] text-[#8B5E34]">${l.type}</span>
+              <span class="text-[10px] text-[#B8B2A3] font-bold ml-1">${l.date}</span>
             </div>
-            <button onclick="deleteVendorLog('${l.key}')" class="text-slate-300 hover:text-rose-500 text-xs px-1"><i class="fas fa-trash"></i></button>
+            <button onclick="deleteVendorLog('${l.key}')" class="text-[#CFC9BB] hover:text-rose-500 text-xs px-1"><i class="fas fa-trash"></i></button>
           </div>
-          <p class="text-sm font-bold text-slate-700 mt-1">${l.note||''}</p>
+          <p class="text-sm font-bold text-[#4A4238] mt-1">${l.note||''}</p>
         </div>
       `;
       box.appendChild(row);
@@ -833,6 +920,73 @@
     fbDatabase.ref('vendor_logs_trash/' + key).remove()
       .then(() => { showToast('완전 삭제되었습니다'); fbDatabase.ref('vendor_logs_trash').once('value').then(snap => { vendorLogsTrash = snap.val() || {}; renderVendorDetail(); }); })
       .catch((err) => showToast('삭제 실패: ' + (err && err.message ? err.message : err), true));
+  }
+
+  // ===== 월별 매입 통계 =====
+  let monthlyCursor = new Date(); // 현재 보고 있는 달
+  function openMonthlyModal() {
+    document.getElementById('monthly-modal').style.display = 'flex';
+    monthlyCursor = new Date();
+    renderMonthlyStats();
+  }
+
+  function shiftMonth(delta) {
+    monthlyCursor.setMonth(monthlyCursor.getMonth() + delta);
+    renderMonthlyStats();
+  }
+
+  function renderMonthlyStats() {
+    const y = monthlyCursor.getFullYear();
+    const m = monthlyCursor.getMonth(); // 0-indexed
+    const monthKey = `${y}-${String(m+1).padStart(2,'0')}`;
+    document.getElementById('monthly-current-label').innerText = `${y}년 ${m+1}월`;
+
+    // 입고 건만 집계 (매입 지출 기준)
+    const records = Object.values(movements).filter(r => r.type === '입고' && r.date && r.date.startsWith(monthKey));
+
+    let totalAmount = 0, totalQty = 0;
+    const byBrand = {};
+    records.forEach(r => {
+      const qty = Number(r.qty) || 0;
+      const price = Number(r.price) || 0;
+      const amount = qty * price;
+      totalAmount += amount;
+      totalQty += qty;
+      const b = r.brand || '미분류';
+      if (!byBrand[b]) byBrand[b] = { amount: 0, qty: 0, count: 0 };
+      byBrand[b].amount += amount;
+      byBrand[b].qty += qty;
+      byBrand[b].count += 1;
+    });
+
+    document.getElementById('monthly-total-amount').innerText = totalAmount.toLocaleString() + '원';
+    document.getElementById('monthly-total-qty').innerText = `${totalQty.toLocaleString()} BOX · ${records.length}건`;
+
+    const brandList = document.getElementById('monthly-brand-list');
+    brandList.innerHTML = '';
+    const brands = Object.keys(byBrand).sort((a,b) => byBrand[b].amount - byBrand[a].amount);
+    if (!brands.length) {
+      brandList.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-sm">이 달 입고 기록이 없습니다</div>';
+      return;
+    }
+    const maxAmount = Math.max(...brands.map(b => byBrand[b].amount), 1);
+    brands.forEach(b => {
+      const d = byBrand[b];
+      const pct = Math.max(4, Math.round((d.amount / maxAmount) * 100));
+      const row = document.createElement('div');
+      row.className = 'rounded-xl border border-[var(--line)] p-3';
+      row.innerHTML = `
+        <div class="flex justify-between items-baseline mb-1.5">
+          <span class="text-[13px] font-black text-[#2B2622]">${b}</span>
+          <span class="text-sm font-black text-[#3A342C] num">${d.amount.toLocaleString()}원</span>
+        </div>
+        <div class="h-1.5 rounded-full bg-[#F3F0EA] overflow-hidden mb-1.5">
+          <div class="h-full bg-[#8B5E34] rounded-full" style="width:${pct}%"></div>
+        </div>
+        <p class="text-[10px] text-[#B8B2A3] font-bold">${d.qty.toLocaleString()} BOX · ${d.count}건</p>
+      `;
+      brandList.appendChild(row);
+    });
   }
 </script>
 </body>

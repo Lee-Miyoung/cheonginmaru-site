@@ -204,7 +204,14 @@
 
   firebase.initializeApp(firebaseConfig);
   fbDatabase = firebase.database();
-  firebase.auth().signInAnonymously().catch(err => console.error('Firebase 인증 실패', err));
+  let authReady = false;
+  firebase.auth().signInAnonymously()
+    .then(() => { authReady = true; document.getElementById('fb-badge').innerText = '🟢 실시간 연결됨 (전체 기기 공유)'; })
+    .catch(err => {
+      console.error('Firebase 인증 실패', err);
+      document.getElementById('fb-badge').innerText = '🔴 연결 실패: ' + (err && err.code ? err.code : err);
+      showToast('⚠️ 로그인 연결 실패: ' + (err && err.code ? err.code : err), true);
+    });
 
   let masterData = {}; // { brand: { product: [model,...] } }
   let costDataMap = {}; // { "brand||name||model": {ex, inc} } - 매입단가(비밀 단가), VAT별도/포함
@@ -214,7 +221,6 @@
 
   window.onload = function() {
     document.getElementById('in-date').value = new Date().toISOString().slice(0,10);
-    document.getElementById('fb-badge').innerText = '🟢 실시간 연결됨 (전체 기기 공유)';
     if (localStorage.getItem('cm_stock_auth') === 'valid') {
       document.getElementById('login-gate').style.display = 'none';
       init();
@@ -490,6 +496,7 @@
     if (!brand || !name || !model) return showToast('브랜드/제품/모델을 선택하세요');
     if (qty <= 0) return showToast('수량을 입력하세요');
     if (currentType === '반품' && !document.getElementById('in-memo').value.trim()) return showToast('반품 사유를 메모에 적어주세요');
+    if (!authReady) return showToast('⚠️ 아직 서버 연결 중입니다. 5초 후 다시 눌러주세요', true);
 
     const record = {
       date: document.getElementById('in-date').value,

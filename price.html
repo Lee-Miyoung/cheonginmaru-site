@@ -524,9 +524,20 @@ try {
   }
 } catch(e){}
 
+// 실패하면 잠깐 쉬었다가 자동으로 재시도 (순간적인 네트워크 끊김 대응, 최대 3회)
+function fetchWithRetry(url, attemptsLeft){
+  attemptsLeft = attemptsLeft === undefined ? 3 : attemptsLeft;
+  return fetch(url)
+    .then(res => { if (!res.ok) throw new Error('네트워크 오류'); return res.json(); })
+    .catch(err => {
+      if (attemptsLeft <= 1) throw err;
+      return new Promise(resolve => setTimeout(resolve, 700))
+        .then(() => fetchWithRetry(url, attemptsLeft - 1));
+    });
+}
+
 // 백그라운드에서 최신 데이터 가져오기
-dataFetchPromise = fetch(FEED_URL)
-  .then(res => { if (!res.ok) throw new Error('네트워크 오류'); return res.json(); })
+dataFetchPromise = fetchWithRetry(FEED_URL)
   .then(json => {
     RAW_DATA = json.prices || [];
     NOTICES = json.notices || { info: [], urgentList: [] };

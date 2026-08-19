@@ -162,7 +162,11 @@
     </div>
     <div class="grid grid-cols-2 gap-2.5">
       <div><label class="text-[10px] font-black text-slate-400 pl-1">거래처</label><input type="text" id="in-vendor" class="input-premium mt-1" placeholder="동화자연마루 등"></div>
-      <div><label class="text-[10px] font-black text-slate-400 pl-1">날짜</label><input type="date" id="in-date" class="input-premium mt-1"></div>
+      <div><label class="text-[10px] font-black text-slate-400 pl-1">발주일자</label><input type="date" id="in-order-date" class="input-premium mt-1"></div>
+    </div>
+    <div class="grid grid-cols-2 gap-2.5">
+      <div><label class="text-[10px] font-black text-slate-400 pl-1">입고일자</label><input type="date" id="in-date" class="input-premium mt-1"></div>
+      <div></div>
     </div>
     <div><label class="text-[10px] font-black text-slate-400 pl-1">메모 <span id="memo-hint" class="text-slate-300 font-medium"></span></label><input type="text" id="in-memo" class="input-premium mt-1" placeholder="선택 입력 (반품 사유 등)"></div>
 
@@ -222,6 +226,7 @@
 
   window.onload = function() {
     document.getElementById('in-date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('in-order-date').value = new Date().toISOString().slice(0,10);
     if (localStorage.getItem('cm_stock_auth') === 'valid') {
       document.getElementById('login-gate').style.display = 'none';
       init();
@@ -520,6 +525,7 @@
 
     const record = {
       date: document.getElementById('in-date').value,
+      orderDate: document.getElementById('in-order-date').value,
       type: currentType,
       brand, name, model,
       lot: document.getElementById('in-lot').value.trim(),
@@ -584,7 +590,7 @@
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 mb-0.5">
             <span class="text-[9px] font-black px-1.5 py-0.5 rounded-full ${badgeStyle}">${r.type}</span>
-            <span class="text-[10px] text-slate-400 font-bold">${r.date||''}</span>
+            <span class="text-[10px] text-slate-400 font-bold">입고 ${r.date||''}${r.orderDate?(' · 발주 '+r.orderDate):''}</span>
           </div>
           <p class="text-sm font-black text-slate-800 truncate">${r.brand} · ${r.name} · ${r.model}</p>
           <p class="text-[11px] text-slate-400 font-bold">${r.qty}BOX ${r.price?('· '+Number(r.price).toLocaleString()+'원(VAT별도)'):''}${r.priceIncVat?(' / '+Number(r.priceIncVat).toLocaleString()+'원(VAT포함)'):''} ${r.vendor?('· '+r.vendor):''}</p>

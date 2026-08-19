@@ -47,6 +47,10 @@
     <div class="p-3 border-b">
       <input type="text" id="log-search" class="input-premium text-sm" placeholder="브랜드/제품/모델 검색..." oninput="renderLog()">
     </div>
+    <div class="px-3 pt-2 flex gap-2">
+      <button id="log-tab-active" onclick="setLogTab('active')" class="flex-1 py-2 rounded-lg text-xs font-black bg-slate-900 text-white">전체 기록</button>
+      <button id="log-tab-trash" onclick="setLogTab('trash')" class="flex-1 py-2 rounded-lg text-xs font-black bg-slate-100 text-slate-400"><i class="fas fa-trash-can mr-1"></i>휴지통</button>
+    </div>
     <div id="log-list" class="p-3 overflow-y-auto flex-1 space-y-2 bg-slate-50/50"></div>
   </div>
 </div>
@@ -103,6 +107,9 @@
         <button onclick="addVendorLog()" class="w-full py-2.5 bg-slate-900 text-white rounded-xl text-sm font-black"><i class="fas fa-plus mr-1"></i> 기록 추가</button>
       </div>
       <div id="vendor-timeline" class="p-3 overflow-y-auto flex-1 space-y-2 bg-white"></div>
+    <div class="p-2 border-t bg-slate-50">
+      <button onclick="toggleVendorLogTrash()" id="vendor-trash-toggle-btn" class="w-full py-2 text-xs font-black text-slate-400"><i class="fas fa-trash-can mr-1"></i>삭제된 기록 보기 (복구 가능)</button>
+    </div>
     </div>
   </div>
 </div>
@@ -115,6 +122,7 @@
       <p class="text-[10px] text-slate-400 font-bold">Stock System · 실시간 공유</p>
     </div>
     <div class="flex items-center gap-1.5">
+      <button onclick="exportBackup()" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 hover:text-emerald-600 flex items-center justify-center" title="전체 데이터 백업"><i class="fas fa-download"></i></button>
       <button onclick="loadMasterCSV(true)" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 hover:text-blue-600 flex items-center justify-center" title="품목목록 새로고침"><i class="fas fa-sync-alt"></i></button>
       <button onclick="openVendorModal()" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 hover:text-blue-600 flex items-center justify-center" title="거래처 관리"><i class="fas fa-address-book"></i></button>
       <button onclick="openLogModal()" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 hover:text-blue-600 flex items-center justify-center" title="입출고 기록"><i class="fas fa-list-ul"></i></button>
@@ -225,6 +233,7 @@
     loadMasterCSV(false);
     loadCostData();
     setType('입고');
+    checkBackupReminder();
     // 실시간 리스너: 다른 기기에서 저장/삭제하면 여기도 즉시 자동 갱신됨
     fbDatabase.ref('stock_movements').on('value', snap => {
       movements = snap.val() || {};
@@ -233,6 +242,45 @@
       onModelChange();
       if (document.getElementById('log-modal').style.display === 'flex') renderLog();
     });
+  }
+
+  // ===== ① 정기 백업 =====
+  function checkBackupReminder() {
+    const last = parseInt(localStorage.getItem('cm_stock_last_backup') || '0');
+    const days = (Date.now() - last) / (1000*60*60*24);
+    if (!last || days > 14) {
+      setTimeout(() => showToast('⚠️ 백업한 지 오래됐어요. 상단 다운로드 버튼으로 백업해주세요'), 1200);
+    }
+  }
+
+  async function exportBackup() {
+    showToast('백업 파일 생성 중...');
+    try {
+      const [mv, mvTrash, vd, vdTrash, vl, vlTrash] = await Promise.all([
+        fbDatabase.ref('stock_movements').once('value'),
+        fbDatabase.ref('stock_movements_trash').once('value'),
+        fbDatabase.ref('vendors').once('value'),
+        fbDatabase.ref('vendors_trash').once('value'),
+        fbDatabase.ref('vendor_logs').once('value'),
+        fbDatabase.ref('vendor_logs_trash').once('value')
+      ]);
+      const backup = {
+        backupDate: new Date().toISOString(),
+        stock_movements: mv.val() || {},
+        stock_movements_trash: mvTrash.val() || {},
+        vendors: vd.val() || {},
+        vendors_trash: vdTrash.val() || {},
+        vendor_logs: vl.val() || {},
+        vendor_logs_trash: vlTrash.val() || {}
+      };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `청인마루_재고백업_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      localStorage.setItem('cm_stock_last_backup', String(Date.now()));
+      showToast('백업 완료! 다운로드 폴더를 확인하세요');
+    } catch(e) { showToast('백업 실패'); }
   }
 
   // ===== 매입단가(비밀 단가) 불러오기 - 견적서 관리패널과 같은 데이터, 로그인(1306)한 직원은 바로 조회됨 =====
@@ -271,7 +319,7 @@
     document.getElementById('in-price').value = inc ? Math.round(inc / 1.1).toLocaleString() : '';
   }
 
-  function showToast(msg) { const t=document.getElementById('toast'); t.innerText=msg; t.className='show'; setTimeout(()=>t.className='',2000); }
+  function showToast(msg, long) { const t=document.getElementById('toast'); t.innerText=msg; t.className='show'; setTimeout(()=>t.className='', long ? 5000 : 2000); }
   function closeModal(id){ document.getElementById(id).style.display='none'; }
   function formatMoney(el){ let v=el.value.replace(/[^0-9]/g,''); el.value = v? parseInt(v).toLocaleString():''; }
 
@@ -466,22 +514,34 @@
       document.getElementById('in-memo').value = '';
       document.getElementById('in-lot').value = '';
       document.getElementById('in-prod-date').value = '';
-    }).catch(() => showToast('저장 실패, 다시 시도해주세요'));
+    }).catch((err) => showToast('저장 실패: ' + (err && err.message ? err.message : err), true));
   }
 
   function openLogModal() {
     document.getElementById('log-modal').style.display = 'flex';
-    renderLog();
+    setLogTab('active');
+  }
+
+  let logTab = 'active';
+  let movementsTrash = {};
+  function setLogTab(tab) {
+    logTab = tab;
+    document.getElementById('log-tab-active').className = 'flex-1 py-2 rounded-lg text-xs font-black ' + (tab==='active' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400');
+    document.getElementById('log-tab-trash').className = 'flex-1 py-2 rounded-lg text-xs font-black ' + (tab==='trash' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-400') + ' flex items-center justify-center';
+    if (tab === 'trash') {
+      fbDatabase.ref('stock_movements_trash').once('value').then(snap => { movementsTrash = snap.val() || {}; renderLog(); });
+    } else { renderLog(); }
   }
 
   function renderLog() {
     const q = (document.getElementById('log-search').value || '').toLowerCase();
     const box = document.getElementById('log-list');
-    const list = Object.keys(movements).map(key => ({ key, ...movements[key] }))
+    const source = logTab === 'trash' ? movementsTrash : movements;
+    const list = Object.keys(source).map(key => ({ key, ...source[key] }))
       .sort((a,b) => (b.ts||0) - (a.ts||0))
       .filter(r => !q || (r.brand+r.name+r.model).toLowerCase().includes(q));
     box.innerHTML = '';
-    if (!list.length) { box.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">기록이 없습니다</div>'; return; }
+    if (!list.length) { box.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">${logTab==='trash'?'휴지통이 비어있습니다':'기록이 없습니다'}</div>`; return; }
     list.forEach(r => {
       const badgeStyle = r.type==='입고' ? 'bg-blue-100 text-blue-600' : r.type==='반품' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600';
       const row = document.createElement('div');
@@ -496,15 +556,41 @@
           <p class="text-[11px] text-slate-400 font-bold">${r.qty}BOX ${r.price?('· '+Number(r.price).toLocaleString()+'원(VAT별도)'):''}${r.priceIncVat?(' / '+Number(r.priceIncVat).toLocaleString()+'원(VAT포함)'):''} ${r.vendor?('· '+r.vendor):''}</p>
           <p class="text-[10px] text-slate-300 font-bold">${r.lot?('로트: '+r.lot):''} ${r.prodDate?('· 생산일 '+r.prodDate):''} ${r.memo?('· '+r.memo):''}</p>
         </div>
-        <button onclick="deleteLog('${r.key}')" class="text-slate-300 hover:text-rose-500 px-2 shrink-0"><i class="fas fa-trash"></i></button>
+        ${ logTab === 'trash'
+          ? `<div class="flex flex-col gap-1 shrink-0"><button onclick="restoreLog('${r.key}')" class="text-emerald-500 hover:text-emerald-700 text-xs px-2 py-1 bg-emerald-50 rounded-lg font-bold"><i class="fas fa-rotate-left mr-1"></i>복구</button><button onclick="permanentDeleteLog('${r.key}')" class="text-slate-400 hover:text-rose-500 text-[10px] px-2">완전삭제</button></div>`
+          : `<button onclick="deleteLog('${r.key}')" class="text-slate-300 hover:text-rose-500 px-2 shrink-0"><i class="fas fa-trash"></i></button>`
+        }
       `;
       box.appendChild(row);
     });
   }
 
+  // 삭제 = 휴지통으로 이동 (완전 삭제 아님, 복구 가능)
   function deleteLog(key) {
-    if (!confirm('이 기록을 삭제할까요?')) return;
-    fbDatabase.ref('stock_movements/' + key).remove().then(() => showToast('삭제 완료')).catch(() => showToast('삭제 실패'));
+    if (!confirm('이 기록을 휴지통으로 이동할까요?\\n(휴지통에서 언제든 복구할 수 있습니다)')) return;
+    const record = movements[key];
+    if (!record) return;
+    fbDatabase.ref('stock_movements_trash/' + key).set({ ...record, deletedAt: Date.now() })
+      .then(() => fbDatabase.ref('stock_movements/' + key).remove())
+      .then(() => showToast('휴지통으로 이동했습니다'))
+      .catch((err) => showToast('삭제 실패: ' + (err && err.message ? err.message : err), true));
+  }
+
+  function restoreLog(key) {
+    const record = movementsTrash[key];
+    if (!record) return;
+    const { deletedAt, ...clean } = record;
+    fbDatabase.ref('stock_movements/' + key).set(clean)
+      .then(() => fbDatabase.ref('stock_movements_trash/' + key).remove())
+      .then(() => { showToast('복구 완료'); setLogTab('trash'); })
+      .catch((err) => showToast('복구 실패: ' + (err && err.message ? err.message : err), true));
+  }
+
+  function permanentDeleteLog(key) {
+    if (!confirm('완전히 삭제하면 복구할 수 없습니다. 정말 삭제할까요?')) return;
+    fbDatabase.ref('stock_movements_trash/' + key).remove()
+      .then(() => { showToast('완전 삭제되었습니다'); setLogTab('trash'); })
+      .catch((err) => showToast('삭제 실패: ' + (err && err.message ? err.message : err), true));
   }
 
   // ===== 거래처 관리 =====
@@ -582,11 +668,13 @@
       ts: Date.now()
     };
     fbDatabase.ref('vendors').push(record).then(() => { showToast('거래처 등록 완료'); showVendorList(); })
-      .catch(() => showToast('저장 실패'));
+      .catch((err) => showToast('저장 실패: ' + (err && err.message ? err.message : err), true));
   }
 
   function openVendorDetail(key) {
     currentVendorKey = key;
+    showingVendorTrash = false;
+    document.getElementById('vendor-trash-toggle-btn').innerHTML = '<i class="fas fa-trash-can mr-1"></i>삭제된 기록 보기 (복구 가능)';
     document.getElementById('vendor-list-view').classList.add('hidden');
     document.getElementById('vendor-form-view').classList.add('hidden');
     document.getElementById('vendor-detail-view').classList.remove('hidden');
@@ -602,6 +690,30 @@
     document.getElementById('vd-phone').innerText = v.phone || '';
     document.getElementById('vd-addr').innerText = v.addr || '';
     document.getElementById('vd-memo').innerText = v.memo || '';
+
+    if (showingVendorTrash) {
+      const trashLogs = Object.keys(vendorLogsTrash).filter(k => vendorLogsTrash[k].vendorKey === currentVendorKey)
+        .map(k => ({ key:k, ...vendorLogsTrash[k] })).sort((a,b) => (b.ts||0)-(a.ts||0));
+      const box = document.getElementById('vendor-timeline');
+      box.innerHTML = '';
+      if (!trashLogs.length) { box.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">삭제된 기록이 없습니다</div>'; return; }
+      trashLogs.forEach(l => {
+        const row = document.createElement('div');
+        row.className = 'flex gap-3';
+        row.innerHTML = `
+          <div class="w-1.5 shrink-0 rounded-full bg-slate-200"></div>
+          <div class="flex-1 pb-3 border-b border-slate-50">
+            <div class="flex justify-between items-start">
+              <div><span class="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">${l.type}</span><span class="text-[10px] text-slate-400 font-bold ml-1">${l.date}</span></div>
+              <div class="flex gap-1"><button onclick="restoreVendorLog('${l.key}')" class="text-emerald-500 text-[10px] font-bold px-1.5 py-0.5 bg-emerald-50 rounded"><i class="fas fa-rotate-left mr-0.5"></i>복구</button><button onclick="permanentDeleteVendorLog('${l.key}')" class="text-slate-300 hover:text-rose-500 text-[10px] px-1">완전삭제</button></div>
+            </div>
+            <p class="text-sm font-bold text-slate-500 mt-1">${l.note||''}</p>
+          </div>
+        `;
+        box.appendChild(row);
+      });
+      return;
+    }
 
     const logs = Object.keys(vendorLogs).filter(k => vendorLogs[k].vendorKey === currentVendorKey)
       .map(k => ({ key:k, ...vendorLogs[k] }))
@@ -629,6 +741,17 @@
     });
   }
 
+  let showingVendorTrash = false;
+  let vendorLogsTrash = {};
+  function toggleVendorLogTrash() {
+    showingVendorTrash = !showingVendorTrash;
+    const btn = document.getElementById('vendor-trash-toggle-btn');
+    btn.innerHTML = showingVendorTrash ? '<i class="fas fa-arrow-left mr-1"></i>전체 기록으로' : '<i class="fas fa-trash-can mr-1"></i>삭제된 기록 보기 (복구 가능)';
+    if (showingVendorTrash) {
+      fbDatabase.ref('vendor_logs_trash').once('value').then(snap => { vendorLogsTrash = snap.val() || {}; renderVendorDetail(); });
+    } else { renderVendorDetail(); }
+  }
+
   function addVendorLog() {
     if (!currentVendorKey) return;
     const record = {
@@ -641,12 +764,35 @@
     fbDatabase.ref('vendor_logs').push(record).then(() => {
       showToast('기록 저장 완료');
       document.getElementById('vl-note').value = '';
-    }).catch(() => showToast('저장 실패'));
+    }).catch((err) => showToast('저장 실패: ' + (err && err.message ? err.message : err), true));
   }
 
+  // 삭제 = 휴지통으로 이동 (복구 가능)
   function deleteVendorLog(key) {
-    if (!confirm('이 기록을 삭제할까요?')) return;
-    fbDatabase.ref('vendor_logs/' + key).remove().then(() => showToast('삭제 완료')).catch(() => showToast('삭제 실패'));
+    if (!confirm('이 기록을 휴지통으로 이동할까요?\\n(휴지통에서 언제든 복구할 수 있습니다)')) return;
+    fbDatabase.ref('vendor_logs/' + key).once('value').then(snap => {
+      const record = snap.val();
+      if (!record) return;
+      return fbDatabase.ref('vendor_logs_trash/' + key).set({ ...record, deletedAt: Date.now() })
+        .then(() => fbDatabase.ref('vendor_logs/' + key).remove());
+    }).then(() => showToast('휴지통으로 이동했습니다')).catch((err) => showToast('삭제 실패: ' + (err && err.message ? err.message : err), true));
+  }
+
+  function restoreVendorLog(key) {
+    const record = vendorLogsTrash[key];
+    if (!record) return;
+    const { deletedAt, ...clean } = record;
+    fbDatabase.ref('vendor_logs/' + key).set(clean)
+      .then(() => fbDatabase.ref('vendor_logs_trash/' + key).remove())
+      .then(() => { showToast('복구 완료'); toggleVendorLogTrash(); toggleVendorLogTrash(); })
+      .catch((err) => showToast('복구 실패: ' + (err && err.message ? err.message : err), true));
+  }
+
+  function permanentDeleteVendorLog(key) {
+    if (!confirm('완전히 삭제하면 복구할 수 없습니다. 정말 삭제할까요?')) return;
+    fbDatabase.ref('vendor_logs_trash/' + key).remove()
+      .then(() => { showToast('완전 삭제되었습니다'); fbDatabase.ref('vendor_logs_trash').once('value').then(snap => { vendorLogsTrash = snap.val() || {}; renderVendorDetail(); }); })
+      .catch((err) => showToast('삭제 실패: ' + (err && err.message ? err.message : err), true));
   }
 </script>
 </body>

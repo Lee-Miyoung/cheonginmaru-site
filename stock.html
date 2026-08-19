@@ -51,6 +51,62 @@
   </div>
 </div>
 
+<!-- 거래처 관리 모달 -->
+<div id="vendor-modal" class="modal-overlay">
+  <div class="bg-white rounded-[1.5rem] w-full max-w-lg mx-4 h-[85vh] flex flex-col overflow-hidden">
+    <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+      <h3 class="font-black text-slate-900"><i class="fas fa-address-book text-blue-600 mr-1.5"></i>거래처 관리</h3>
+      <button onclick="closeModal('vendor-modal')" class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- 거래처 목록 화면 -->
+    <div id="vendor-list-view" class="flex-1 flex flex-col overflow-hidden">
+      <div class="p-3 border-b space-y-2">
+        <input type="text" id="vendor-search" class="input-premium text-sm" placeholder="거래처명 검색..." oninput="renderVendorList()">
+        <button onclick="showVendorForm()" class="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-black"><i class="fas fa-plus mr-1"></i> 새 거래처 추가</button>
+      </div>
+      <div id="vendor-list" class="p-3 overflow-y-auto flex-1 space-y-2 bg-slate-50/50"></div>
+    </div>
+
+    <!-- 새 거래처 입력 화면 -->
+    <div id="vendor-form-view" class="hidden flex-1 flex flex-col overflow-hidden">
+      <div class="p-4 overflow-y-auto flex-1 space-y-3">
+        <button onclick="hideVendorForm()" class="text-xs font-bold text-slate-400"><i class="fas fa-arrow-left mr-1"></i> 목록으로</button>
+        <div><label class="text-[10px] font-black text-slate-400 pl-1">거래처명</label><input type="text" id="vf-name" class="input-premium mt-1" placeholder="예: OO인테리어"></div>
+        <div><label class="text-[10px] font-black text-slate-400 pl-1">담당자/연락처</label><input type="text" id="vf-phone" class="input-premium mt-1" placeholder="이름 010-0000-0000"></div>
+        <div><label class="text-[10px] font-black text-slate-400 pl-1">주소</label><input type="text" id="vf-addr" class="input-premium mt-1" placeholder="선택 입력"></div>
+        <div><label class="text-[10px] font-black text-slate-400 pl-1">메모</label><input type="text" id="vf-memo" class="input-premium mt-1" placeholder="선택 입력"></div>
+        <button onclick="saveVendor()" class="w-full py-3.5 bg-blue-600 text-white rounded-xl text-sm font-black"><i class="fas fa-save mr-1"></i> 저장</button>
+      </div>
+    </div>
+
+    <!-- 거래처 상세(타임라인) 화면 -->
+    <div id="vendor-detail-view" class="hidden flex-1 flex flex-col overflow-hidden">
+      <div class="p-4 border-b space-y-1">
+        <button onclick="hideVendorDetail()" class="text-xs font-bold text-slate-400 mb-1"><i class="fas fa-arrow-left mr-1"></i> 목록으로</button>
+        <h4 id="vd-name" class="text-lg font-black text-slate-900">-</h4>
+        <p id="vd-phone" class="text-[12px] text-slate-500 font-bold"></p>
+        <p id="vd-addr" class="text-[12px] text-slate-400"></p>
+        <p id="vd-memo" class="text-[12px] text-slate-400 italic"></p>
+      </div>
+      <div class="p-3 border-b bg-slate-50 space-y-2">
+        <div class="grid grid-cols-2 gap-2">
+          <select id="vl-type" class="input-premium text-sm">
+            <option value="샘플북 전달">샘플북 전달</option>
+            <option value="방문">방문</option>
+            <option value="전화 통화">전화 통화</option>
+            <option value="기타">기타</option>
+          </select>
+          <input type="date" id="vl-date" class="input-premium text-sm">
+        </div>
+        <input type="text" id="vl-note" class="input-premium text-sm" placeholder="메모 (예: 노바마루 신제품 샘플북 전달)">
+        <button onclick="addVendorLog()" class="w-full py-2.5 bg-slate-900 text-white rounded-xl text-sm font-black"><i class="fas fa-plus mr-1"></i> 기록 추가</button>
+      </div>
+      <div id="vendor-timeline" class="p-3 overflow-y-auto flex-1 space-y-2 bg-white"></div>
+    </div>
+  </div>
+</div>
+
 <div class="max-w-2xl mx-auto p-4 md:p-6">
 
   <header class="bg-white rounded-2xl premium-shadow px-4 py-3 flex items-center justify-between mb-5">
@@ -60,36 +116,43 @@
     </div>
     <div class="flex items-center gap-1.5">
       <button onclick="loadMasterCSV(true)" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 hover:text-blue-600 flex items-center justify-center" title="품목목록 새로고침"><i class="fas fa-sync-alt"></i></button>
+      <button onclick="openVendorModal()" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 hover:text-blue-600 flex items-center justify-center" title="거래처 관리"><i class="fas fa-address-book"></i></button>
       <button onclick="openLogModal()" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 hover:text-blue-600 flex items-center justify-center" title="입출고 기록"><i class="fas fa-list-ul"></i></button>
     </div>
   </header>
 
   <div class="bg-white rounded-[2rem] p-5 premium-shadow space-y-4 mb-5">
-    <div class="grid grid-cols-2 bg-slate-900 p-1 rounded-2xl">
-      <button id="type-in" class="py-3 rounded-xl text-sm font-black text-white bg-blue-600" onclick="setType('입고')"><i class="fas fa-arrow-down mr-1.5"></i>입고</button>
-      <button id="type-out" class="py-3 rounded-xl text-sm font-black text-slate-400" onclick="setType('출고')"><i class="fas fa-arrow-up mr-1.5"></i>출고</button>
+    <div class="grid grid-cols-3 bg-slate-900 p-1 rounded-2xl gap-1">
+      <button id="type-in" class="py-3 rounded-xl text-[13px] font-black text-white bg-blue-600" onclick="setType('입고')"><i class="fas fa-arrow-down mr-1"></i>입고</button>
+      <button id="type-out" class="py-3 rounded-xl text-[13px] font-black text-slate-400" onclick="setType('출고')"><i class="fas fa-arrow-up mr-1"></i>출고</button>
+      <button id="type-return" class="py-3 rounded-xl text-[13px] font-black text-slate-400" onclick="setType('반품')"><i class="fas fa-rotate-left mr-1"></i>반품</button>
     </div>
 
     <div class="grid grid-cols-2 gap-2.5">
       <select id="sel-brand" class="input-premium" onchange="updateProducts()"></select>
       <select id="sel-product" class="input-premium" onchange="updateModels()"></select>
     </div>
-    <select id="sel-model" class="input-premium" onchange="onModelChange()"></select>
+    <select id="sel-model" class="input-premium" onchange="onModelChange(); autoFillCostPrice();"></select>
+
+    <div class="grid grid-cols-2 gap-2.5">
+      <div><label class="text-[10px] font-black text-slate-400 pl-1">로트번호</label><input type="text" id="in-lot" class="input-premium mt-1" placeholder="예: L20260819-01" oninput="onModelChange()"></div>
+      <div><label class="text-[10px] font-black text-slate-400 pl-1">생산일자</label><input type="date" id="in-prod-date" class="input-premium mt-1"></div>
+    </div>
 
     <div id="current-stock-box" class="hidden bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2.5 flex justify-between items-center">
-      <span class="text-[11px] font-black text-emerald-700"><i class="fas fa-warehouse mr-1"></i>현재 재고</span>
+      <span class="text-[11px] font-black text-emerald-700"><i class="fas fa-warehouse mr-1"></i><span id="current-stock-label">현재 재고</span></span>
       <span id="current-stock-val" class="text-sm font-black text-emerald-600">-</span>
     </div>
 
     <div class="grid grid-cols-2 gap-2.5">
       <div><label class="text-[10px] font-black text-slate-400 pl-1">수량 (박스)</label><input type="number" id="in-qty" class="input-premium mt-1" placeholder="0"></div>
-      <div id="price-field"><label class="text-[10px] font-black text-slate-400 pl-1">단가 (입고 시)</label><input type="text" id="in-price" class="input-premium mt-1" placeholder="0" oninput="formatMoney(this)"></div>
+      <div id="price-field"><label class="text-[10px] font-black text-slate-400 pl-1">단가 (입고 시) <span class="text-blue-400 font-medium">· 원가 자동입력, 수정가능</span></label><input type="text" id="in-price" class="input-premium mt-1" placeholder="0" oninput="formatMoney(this)"></div>
     </div>
     <div class="grid grid-cols-2 gap-2.5">
       <div><label class="text-[10px] font-black text-slate-400 pl-1">거래처</label><input type="text" id="in-vendor" class="input-premium mt-1" placeholder="동화자연마루 등"></div>
       <div><label class="text-[10px] font-black text-slate-400 pl-1">날짜</label><input type="date" id="in-date" class="input-premium mt-1"></div>
     </div>
-    <div><label class="text-[10px] font-black text-slate-400 pl-1">메모</label><input type="text" id="in-memo" class="input-premium mt-1" placeholder="선택 입력"></div>
+    <div><label class="text-[10px] font-black text-slate-400 pl-1">메모 <span id="memo-hint" class="text-slate-300 font-medium"></span></label><input type="text" id="in-memo" class="input-premium mt-1" placeholder="선택 입력 (반품 사유 등)"></div>
 
     <button onclick="submitMovement()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-base shadow-lg shadow-blue-100 active:scale-95 transition-transform">
       <i class="fas fa-save mr-1.5"></i> 저장 (모든 기기에 즉시 반영)
@@ -111,6 +174,8 @@
   // ===== 1) 900개 품목 조회 - 마루견적서(index.html)가 이미 쓰고 있는 공개 링크를 그대로 재사용 =====
   //     읽기 전용 GET 요청이라 견적서/파트너가격 쪽에는 전혀 영향 없음. 새로 만들 것도, 공개 설정할 것도 없음.
   const MASTER_SHEET_URL = "https://script.google.com/macros/s/AKfycbxHU1h6Vu2W5Yovgm8yRJKIoALUdpeLQULRdCKdVMtnER2QewMbFBAn0Q1s30hvtFpP/exec";
+  // 매입단가(비밀 단가) 조회용 - 견적서(index.html)의 ADMIN_KEY와 동일해야 시트의 원가 컬럼이 열림
+  const ADMIN_KEY = "cm_wondeok_7d3f9k";
 
   // ===== 2) Firebase - 견적서(index.html)와 동일한 프로젝트를 그대로 재사용 =====
   //     stock_movements 라는 새 저장공간만 씀. quote_history(견적기록)는 전혀 건드리지 않음.
@@ -130,6 +195,7 @@
   firebase.auth().signInAnonymously().catch(err => console.error('Firebase 인증 실패', err));
 
   let masterData = {}; // { brand: { product: [model,...] } }
+  let costDataMap = {}; // { "brand||name||model": costPrice } - 매입단가(비밀 단가)
   let movements = {};  // { fbKey: {날짜,구분,brand,name,model,수량,단가,거래처,메모} }
   let stockSummary = [];
   let currentType = '입고';
@@ -153,6 +219,8 @@
 
   function init() {
     loadMasterCSV(false);
+    loadCostData();
+    setType('입고');
     // 실시간 리스너: 다른 기기에서 저장/삭제하면 여기도 즉시 자동 갱신됨
     fbDatabase.ref('stock_movements').on('value', snap => {
       movements = snap.val() || {};
@@ -163,16 +231,48 @@
     });
   }
 
+  // ===== 매입단가(비밀 단가) 불러오기 - 견적서 관리패널과 같은 데이터, 로그인(1306)한 직원은 바로 조회됨 =====
+  async function loadCostData() {
+    try {
+      const res = await fetch(`${MASTER_SHEET_URL}?k=${encodeURIComponent(ADMIN_KEY)}`);
+      let jsonData = await res.json();
+      jsonData = fillMergedCells(jsonData);
+      costDataMap = {};
+      jsonData.forEach(item => {
+        const brand = String(item.brand || '').trim();
+        const name = String(item.name || '').trim();
+        const model = String(item.model || '').trim();
+        const exVatKey = Object.keys(item).find(k => k.replace(/\s/g,'') === '원가(vat미포함)' || k.replace(/\s/g,'') === '원가(vat별도)');
+        const costPrice = parseInt(String(item.cost ?? item.cost_ex_vat ?? item['원가'] ?? (exVatKey ? item[exVatKey] : '') ?? '').replace(/,/g,'')) || 0;
+        if (!brand || !name) return;
+        const key = `${brand}||${name}||${model}`;
+        if (costPrice) costDataMap[key] = costPrice;
+      });
+    } catch(e) { /* 원가 조회 실패해도 재고 입력 자체는 계속 가능하게 조용히 무시 */ }
+  }
+
+  function getCostPriceFor(brand, name, model) {
+    return costDataMap[`${brand}||${name}||${model}`] || costDataMap[`${brand}||${name}||`] || 0;
+  }
+
   function showToast(msg) { const t=document.getElementById('toast'); t.innerText=msg; t.className='show'; setTimeout(()=>t.className='',2000); }
   function closeModal(id){ document.getElementById(id).style.display='none'; }
   function formatMoney(el){ let v=el.value.replace(/[^0-9]/g,''); el.value = v? parseInt(v).toLocaleString():''; }
 
   function setType(t) {
     currentType = t;
-    document.getElementById('type-in').className = 'py-3 rounded-xl text-sm font-black transition-all ' + (t==='입고' ? 'text-white bg-blue-600' : 'text-slate-400');
-    document.getElementById('type-out').className = 'py-3 rounded-xl text-sm font-black transition-all ' + (t==='출고' ? 'text-white bg-rose-500' : 'text-slate-400');
-    document.getElementById('price-field').classList.toggle('opacity-30', t==='출고');
-    document.getElementById('price-field').classList.toggle('pointer-events-none', t==='출고');
+    const styles = {
+      '입고': ['text-white bg-blue-600','text-slate-400','text-slate-400'],
+      '출고': ['text-slate-400','text-white bg-rose-500','text-slate-400'],
+      '반품': ['text-slate-400','text-slate-400','text-white bg-amber-500']
+    };
+    const s = styles[t];
+    document.getElementById('type-in').className = 'py-3 rounded-xl text-[13px] font-black transition-all ' + s[0];
+    document.getElementById('type-out').className = 'py-3 rounded-xl text-[13px] font-black transition-all ' + s[1];
+    document.getElementById('type-return').className = 'py-3 rounded-xl text-[13px] font-black transition-all ' + s[2];
+    document.getElementById('price-field').classList.toggle('opacity-30', t!=='입고');
+    document.getElementById('price-field').classList.toggle('pointer-events-none', t!=='입고');
+    document.getElementById('memo-hint').innerText = t==='반품' ? '(반품 사유 꼭 적어주세요)' : '';
   }
 
   // ===== 900개 품목 읽기 (읽기 전용 GET, 구글시트 원본/견적서에 아무 영향 없음) =====
@@ -240,31 +340,53 @@
     sel.innerHTML = '<option value="">색상/모델 선택</option>';
     if (b && p && masterData[b] && masterData[b][p]) masterData[b][p].forEach(m => sel.add(new Option(m,m)));
     onModelChange();
+    autoFillCostPrice();
+  }
+
+  function autoFillCostPrice() {
+    if (currentType !== '입고') return;
+    const b = document.getElementById('sel-brand').value;
+    const p = document.getElementById('sel-product').value;
+    const m = document.getElementById('sel-model').value;
+    if (!b || !p) return;
+    const cost = getCostPriceFor(b, p, m);
+    if (cost) document.getElementById('in-price').value = cost.toLocaleString();
   }
 
   function onModelChange() {
     const b = document.getElementById('sel-brand').value;
     const p = document.getElementById('sel-product').value;
     const m = document.getElementById('sel-model').value;
+    const lot = (document.getElementById('in-lot').value || '').trim();
     const box = document.getElementById('current-stock-box');
     if (!b || !p || !m) { box.classList.add('hidden'); return; }
-    const found = stockSummary.find(s => s.brand===b && s.name===p && s.model===m);
-    const stock = found ? found.stock : 0;
     box.classList.remove('hidden');
-    document.getElementById('current-stock-val').innerText = stock.toLocaleString() + ' BOX';
-    document.getElementById('current-stock-val').className = 'text-sm font-black ' + (stock <= 0 ? 'text-rose-500' : 'text-emerald-600');
+    if (lot) {
+      const found = stockSummary.find(s => s.brand===b && s.name===p && s.model===m && s.lot===lot);
+      const stock = found ? found.stock : 0;
+      document.getElementById('current-stock-label').innerText = `현재 재고 (로트: ${lot})`;
+      document.getElementById('current-stock-val').innerText = stock.toLocaleString() + ' BOX';
+      document.getElementById('current-stock-val').className = 'text-sm font-black ' + (stock <= 0 ? 'text-rose-500' : 'text-emerald-600');
+    } else {
+      const total = stockSummary.filter(s => s.brand===b && s.name===p && s.model===m).reduce((a,s)=>a+s.stock,0);
+      document.getElementById('current-stock-label').innerText = '현재 재고 (전체 로트 합계)';
+      document.getElementById('current-stock-val').innerText = total.toLocaleString() + ' BOX';
+      document.getElementById('current-stock-val').className = 'text-sm font-black ' + (total <= 0 ? 'text-rose-500' : 'text-emerald-600');
+    }
   }
 
-  // ===== Firebase 실시간 데이터를 기반으로 brand+name+model별 현재재고 재계산 =====
+  // ===== Firebase 실시간 데이터를 기반으로 brand+name+model+로트번호별 현재재고 재계산 =====
   function recalcStockSummary() {
     const map = {};
     Object.values(movements).forEach(r => {
       if (!r.brand || !r.name || !r.model) return;
-      const key = `${r.brand}||${r.name}||${r.model}`;
-      if (!map[key]) map[key] = { brand:r.brand, name:r.name, model:r.model, stock:0 };
+      const lot = r.lot || '';
+      const key = `${r.brand}||${r.name}||${r.model}||${lot}`;
+      if (!map[key]) map[key] = { brand:r.brand, name:r.name, model:r.model, lot, prodDate:r.prodDate||'', stock:0 };
       const qty = Number(r.qty) || 0;
       if (r.type === '입고') map[key].stock += qty;
-      else if (r.type === '출고') map[key].stock -= qty;
+      else if (r.type === '출고' || r.type === '반품') map[key].stock -= qty;
+      if (r.type === '입고' && r.prodDate) map[key].prodDate = r.prodDate; // 최근 입고 기준 생산일자 표시
     });
     stockSummary = Object.values(map).sort((a,b) => a.stock - b.stock);
   }
@@ -284,6 +406,7 @@
         <div class="min-w-0 flex-1">
           <p class="text-[10px] font-bold text-slate-400">${s.brand} · ${s.name}</p>
           <p class="text-sm font-black text-slate-800 truncate">${s.model}</p>
+          <p class="text-[10px] text-slate-400 font-bold mt-0.5">${s.lot ? ('로트: '+s.lot) : '로트 미기재'}${s.prodDate ? (' · 생산일 '+s.prodDate) : ''}</p>
         </div>
         <span class="text-base font-black ${low ? 'text-rose-500' : 'text-slate-800'} shrink-0 ml-2">${s.stock.toLocaleString()} <span class="text-[10px] font-bold">BOX</span></span>
       `;
@@ -298,11 +421,14 @@
     const qty = parseFloat(document.getElementById('in-qty').value) || 0;
     if (!brand || !name || !model) return showToast('브랜드/제품/모델을 선택하세요');
     if (qty <= 0) return showToast('수량을 입력하세요');
+    if (currentType === '반품' && !document.getElementById('in-memo').value.trim()) return showToast('반품 사유를 메모에 적어주세요');
 
     const record = {
       date: document.getElementById('in-date').value,
       type: currentType,
       brand, name, model,
+      lot: document.getElementById('in-lot').value.trim(),
+      prodDate: document.getElementById('in-prod-date').value,
       qty,
       price: parseInt((document.getElementById('in-price').value||'0').replace(/,/g,'')) || 0,
       vendor: document.getElementById('in-vendor').value,
@@ -316,6 +442,8 @@
       document.getElementById('in-price').value = '';
       document.getElementById('in-vendor').value = '';
       document.getElementById('in-memo').value = '';
+      document.getElementById('in-lot').value = '';
+      document.getElementById('in-prod-date').value = '';
     }).catch(() => showToast('저장 실패, 다시 시도해주세요'));
   }
 
@@ -333,17 +461,18 @@
     box.innerHTML = '';
     if (!list.length) { box.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">기록이 없습니다</div>'; return; }
     list.forEach(r => {
-      const isIn = r.type === '입고';
+      const badgeStyle = r.type==='입고' ? 'bg-blue-100 text-blue-600' : r.type==='반품' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600';
       const row = document.createElement('div');
       row.className = 'bg-white border border-slate-100 rounded-xl p-3 flex justify-between items-center';
       row.innerHTML = `
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 mb-0.5">
-            <span class="text-[9px] font-black px-1.5 py-0.5 rounded-full ${isIn?'bg-blue-100 text-blue-600':'bg-rose-100 text-rose-600'}">${r.type}</span>
+            <span class="text-[9px] font-black px-1.5 py-0.5 rounded-full ${badgeStyle}">${r.type}</span>
             <span class="text-[10px] text-slate-400 font-bold">${r.date||''}</span>
           </div>
           <p class="text-sm font-black text-slate-800 truncate">${r.brand} · ${r.name} · ${r.model}</p>
           <p class="text-[11px] text-slate-400 font-bold">${r.qty}BOX ${r.price?('· '+Number(r.price).toLocaleString()+'원'):''} ${r.vendor?('· '+r.vendor):''}</p>
+          <p class="text-[10px] text-slate-300 font-bold">${r.lot?('로트: '+r.lot):''} ${r.prodDate?('· 생산일 '+r.prodDate):''} ${r.memo?('· '+r.memo):''}</p>
         </div>
         <button onclick="deleteLog('${r.key}')" class="text-slate-300 hover:text-rose-500 px-2 shrink-0"><i class="fas fa-trash"></i></button>
       `;
@@ -354,6 +483,148 @@
   function deleteLog(key) {
     if (!confirm('이 기록을 삭제할까요?')) return;
     fbDatabase.ref('stock_movements/' + key).remove().then(() => showToast('삭제 완료')).catch(() => showToast('삭제 실패'));
+  }
+
+  // ===== 거래처 관리 =====
+  let vendors = {};      // { key: {name, phone, addr, memo, ts} }
+  let vendorLogs = {};   // { key: {vendorKey, date, type, note, ts} }
+  let currentVendorKey = null;
+  let vendorListenersSet = false;
+
+  function openVendorModal() {
+    document.getElementById('vendor-modal').style.display = 'flex';
+    showVendorList();
+    if (!vendorListenersSet) {
+      vendorListenersSet = true;
+      fbDatabase.ref('vendors').on('value', snap => { vendors = snap.val() || {}; renderVendorList(); if (currentVendorKey) renderVendorDetail(); });
+      fbDatabase.ref('vendor_logs').on('value', snap => { vendorLogs = snap.val() || {}; renderVendorList(); if (currentVendorKey) renderVendorDetail(); });
+    }
+  }
+
+  function showVendorList() {
+    document.getElementById('vendor-list-view').classList.remove('hidden');
+    document.getElementById('vendor-form-view').classList.add('hidden');
+    document.getElementById('vendor-detail-view').classList.add('hidden');
+    currentVendorKey = null;
+  }
+  function showVendorForm() {
+    document.getElementById('vendor-list-view').classList.add('hidden');
+    document.getElementById('vendor-form-view').classList.remove('hidden');
+    document.getElementById('vf-name').value = ''; document.getElementById('vf-phone').value = '';
+    document.getElementById('vf-addr').value = ''; document.getElementById('vf-memo').value = '';
+  }
+  function hideVendorForm() { showVendorList(); }
+  function hideVendorDetail() { showVendorList(); }
+
+  function lastVendorLogDate(vendorKey) {
+    const logs = Object.values(vendorLogs).filter(l => l.vendorKey === vendorKey);
+    if (!logs.length) return null;
+    return logs.sort((a,b) => (b.ts||0)-(a.ts||0))[0];
+  }
+
+  function renderVendorList() {
+    const q = (document.getElementById('vendor-search').value || '').toLowerCase();
+    const box = document.getElementById('vendor-list');
+    const list = Object.keys(vendors).map(key => ({ key, ...vendors[key] }))
+      .filter(v => !q || (v.name||'').toLowerCase().includes(q))
+      .sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ko'));
+    box.innerHTML = '';
+    if (!list.length) { box.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">등록된 거래처가 없습니다</div>'; return; }
+    list.forEach(v => {
+      const last = lastVendorLogDate(v.key);
+      const row = document.createElement('div');
+      row.className = 'bg-white border border-slate-100 rounded-xl p-3 flex justify-between items-center cursor-pointer active:bg-slate-50';
+      row.onclick = () => openVendorDetail(v.key);
+      row.innerHTML = `
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-black text-slate-800 truncate">${v.name}</p>
+          <p class="text-[11px] text-slate-400 font-bold">${v.phone||''}</p>
+        </div>
+        <div class="text-right shrink-0 ml-2">
+          <p class="text-[10px] text-slate-400 font-bold">${last ? last.type : '기록 없음'}</p>
+          <p class="text-[10px] text-blue-500 font-black">${last ? last.date : '-'}</p>
+        </div>
+      `;
+      box.appendChild(row);
+    });
+  }
+
+  function saveVendor() {
+    const name = document.getElementById('vf-name').value.trim();
+    if (!name) return showToast('거래처명을 입력하세요');
+    const record = {
+      name,
+      phone: document.getElementById('vf-phone').value.trim(),
+      addr: document.getElementById('vf-addr').value.trim(),
+      memo: document.getElementById('vf-memo').value.trim(),
+      ts: Date.now()
+    };
+    fbDatabase.ref('vendors').push(record).then(() => { showToast('거래처 등록 완료'); showVendorList(); })
+      .catch(() => showToast('저장 실패'));
+  }
+
+  function openVendorDetail(key) {
+    currentVendorKey = key;
+    document.getElementById('vendor-list-view').classList.add('hidden');
+    document.getElementById('vendor-form-view').classList.add('hidden');
+    document.getElementById('vendor-detail-view').classList.remove('hidden');
+    document.getElementById('vl-date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('vl-note').value = '';
+    renderVendorDetail();
+  }
+
+  function renderVendorDetail() {
+    const v = vendors[currentVendorKey];
+    if (!v) { showVendorList(); return; }
+    document.getElementById('vd-name').innerText = v.name;
+    document.getElementById('vd-phone').innerText = v.phone || '';
+    document.getElementById('vd-addr').innerText = v.addr || '';
+    document.getElementById('vd-memo').innerText = v.memo || '';
+
+    const logs = Object.keys(vendorLogs).filter(k => vendorLogs[k].vendorKey === currentVendorKey)
+      .map(k => ({ key:k, ...vendorLogs[k] }))
+      .sort((a,b) => (b.ts||0) - (a.ts||0));
+    const box = document.getElementById('vendor-timeline');
+    box.innerHTML = '';
+    if (!logs.length) { box.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">아직 기록이 없습니다</div>'; return; }
+    logs.forEach(l => {
+      const row = document.createElement('div');
+      row.className = 'flex gap-3';
+      row.innerHTML = `
+        <div class="w-1.5 shrink-0 rounded-full bg-blue-200"></div>
+        <div class="flex-1 pb-3 border-b border-slate-50">
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600">${l.type}</span>
+              <span class="text-[10px] text-slate-400 font-bold ml-1">${l.date}</span>
+            </div>
+            <button onclick="deleteVendorLog('${l.key}')" class="text-slate-300 hover:text-rose-500 text-xs px-1"><i class="fas fa-trash"></i></button>
+          </div>
+          <p class="text-sm font-bold text-slate-700 mt-1">${l.note||''}</p>
+        </div>
+      `;
+      box.appendChild(row);
+    });
+  }
+
+  function addVendorLog() {
+    if (!currentVendorKey) return;
+    const record = {
+      vendorKey: currentVendorKey,
+      date: document.getElementById('vl-date').value || new Date().toISOString().slice(0,10),
+      type: document.getElementById('vl-type').value,
+      note: document.getElementById('vl-note').value.trim(),
+      ts: Date.now()
+    };
+    fbDatabase.ref('vendor_logs').push(record).then(() => {
+      showToast('기록 저장 완료');
+      document.getElementById('vl-note').value = '';
+    }).catch(() => showToast('저장 실패'));
+  }
+
+  function deleteVendorLog(key) {
+    if (!confirm('이 기록을 삭제할까요?')) return;
+    fbDatabase.ref('vendor_logs/' + key).remove().then(() => showToast('삭제 완료')).catch(() => showToast('삭제 실패'));
   }
 </script>
 </body>

@@ -35,7 +35,7 @@
   }
   .wrap{max-width:700px; margin:0 auto; padding:0 0 84px;}
 
-  /* ═══ 긴급 공지: 거래 안내 옆 작은 벨 아이콘, 클릭하면 펼쳐짐 ═══ */
+  /* ═══ 긴급 공지 ═══ */
   .fn-title-row{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px;}
   .urgent-bell{
     display:none; align-items:center; gap:5px; border:1px solid rgba(220,38,38,.35);
@@ -479,7 +479,7 @@
 
 <script>
 /* ============================================================
-   Firebase 초기화 (마루-calc과 동일 프로젝트의 토큰 노드만 사용)
+   Firebase 초기화
    ============================================================ */
 const firebaseConfig = {
   apiKey: "AIzaSyCHdMgp2clJ0y3L1GR-WubpAYKEVYvLcLA",
@@ -501,36 +501,39 @@ const fbDatabase = firebase.database();
 })();
 
 /* ============================================================
-   단가 데이터 + 공지사항: 토큰 확인과 "동시에" 미리 가져오기 + 5분 캐시
+   단가 데이터 + 공지사항 (초고속 SWR 캐시 적용)
    ============================================================ */
 const FEED_URL = 'https://script.google.com/macros/s/AKfycbzyafI_d2PZiE_AYS4Y5f9uBQjK5ULCxX21hk2Z5BMDcbktNT9NnF8mUb_HhA8hJqy9Fw/exec';
-const CACHE_KEY = 'cm_price_cache_v3';
-const CACHE_TTL = 5 * 60 * 1000;
+const CACHE_KEY = 'cm_price_cache_v4';
 
 let RAW_DATA = [];
 let NOTICES = { info: [], urgentList: [] };
+let PROCESSED_PATTERNS = [];
 let dataFetchPromise = null;
 
-(function startDataFetch(){
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      const { data, ts } = JSON.parse(cached);
-      if (data && (Date.now() - ts) < CACHE_TTL) {
-        RAW_DATA = data.prices || [];
-        NOTICES = data.notices || { info: [], urgentList: [] };
-      }
+// 로컬 캐시가 있으면 즉각 메모리에 로드
+try {
+  const cached = localStorage.getItem(CACHE_KEY);
+  if (cached) {
+    const { data } = JSON.parse(cached);
+    if (data && data.prices) {
+      RAW_DATA = data.prices;
+      NOTICES = data.notices || { info: [], urgentList: [] };
+      PROCESSED_PATTERNS = groupData(RAW_DATA);
     }
-  } catch(e){}
-  dataFetchPromise = fetch(FEED_URL)
-    .then(res => { if (!res.ok) throw new Error('네트워크 오류'); return res.json(); })
-    .then(json => {
-      RAW_DATA = json.prices || [];
-      NOTICES = json.notices || { info: [], urgentList: [] };
-      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: json, ts: Date.now() })); } catch(e){}
-      return json;
-    });
-})();
+  }
+} catch(e){}
+
+// 백그라운드에서 최신 데이터 패치
+dataFetchPromise = fetch(FEED_URL)
+  .then(res => { if (!res.ok) throw new Error('네트워크 오류'); return res.json(); })
+  .then(json => {
+    RAW_DATA = json.prices || [];
+    NOTICES = json.notices || { info: [], urgentList: [] };
+    PROCESSED_PATTERNS = groupData(RAW_DATA);
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: json, ts: Date.now() })); } catch(e){}
+    return json;
+  });
 
 /* ============================================================
    접근 게이트 (거래처 토큰 확인)
@@ -569,12 +572,11 @@ function grantAccess(clientName){
 })();
 
 /* ============================================================
-   상태
+   상태 & 최적화 유틸
    ============================================================ */
 let openState = {};
 let selectedBrand = null;
 
-/* 브랜드 색상 (차분한 보석톤 순환) */
 const BRAND_COLORS = ['#1e3a8a','#7f1d3a','#14532d','#78350f','#3730a3','#155e63'];
 const brandColorMap = {};
 function colorFor(brand){
@@ -588,14 +590,14 @@ function fmtFactor(f){
 }
 
 /* ============================================================
-   검색 유틸: 띄어쓰기 무시 + 유사 모음(폐/패 등) 통합 + 하이라이트
+   초고속 한글 검색 및 인덱싱 유틸
    ============================================================ */
+const VOWEL_MERGE = {1:1, 3:1, 5:1, 7:1, 10:10, 11:10, 15:10};
 function decomposeHangulChar(ch){
   const code = ch.charCodeAt(0) - 0xAC00;
   if (code < 0 || code > 11171) return null;
   return { L: Math.floor(code / 588), V: Math.floor((code % 588) / 28), T: code % 28 };
 }
-const VOWEL_MERGE = {1:1, 3:1, 5:1, 7:1, 10:10, 11:10, 15:10}; /* 애·얘·에·예 / 왜·외·웨 */
 function mergeVowelChar(ch){
   const d = decomposeHangulChar(ch);
   if (!d) return ch;
@@ -603,47 +605,38 @@ function mergeVowelChar(ch){
   if (v2 === d.V) return ch;
   return String.fromCharCode(0xAC00 + (d.L * 21 + v2) * 28 + d.T);
 }
-function foldForSearch(str){ return str.toLowerCase().split('').map(mergeVowelChar).join(''); }
+function foldForSearch(str){
+  return String(str || '').toLowerCase().split('').map(mergeVowelChar).join('');
+}
 function stripWithMap(str){
   let stripped = '', map = [];
+  str = String(str || '');
   for (let i = 0; i < str.length; i++){
     if (!/\s/.test(str[i])) { stripped += str[i]; map.push(i); }
   }
   return { stripped, map };
 }
-function fuzzyIncludes(text, query){
-  if (!query) return true;
-  if (!text) return false;
-  const nT = foldForSearch(stripWithMap(String(text)).stripped);
-  const nQ = foldForSearch(stripWithMap(query).stripped);
-  return !nQ || nT.includes(nQ);
-}
-function highlightMatch(text, query){
-  if (!text) return '';
-  text = String(text);
-  if (!query) return text;
-  const { stripped, map } = stripWithMap(text);
-  const nT = foldForSearch(stripped);
-  const nQ = foldForSearch(stripWithMap(query).stripped);
-  if (!nQ) return text;
-  const idx = nT.indexOf(nQ);
-  if (idx === -1) return text;
-  const s = map[idx], e = map[idx + nQ.length - 1];
-  return text.slice(0, s) + '<mark class="hl">' + text.slice(s, e + 1) + '</mark>' + text.slice(e + 1);
+
+// 사전 처리(Pre-computed)된 검색 인덱스 생성
+function makeSearchIndex(str){
+  const s = stripWithMap(str);
+  return {
+    raw: str,
+    stripped: s.stripped,
+    map: s.map,
+    folded: foldForSearch(s.stripped)
+  };
 }
 
-/* NEW 텍스트를 제거하고 초록색 뱃지로만 치환 (대소문자 무관, (New) 등 포함) */
-function parseAndApplyBadge(rawName, q){
-  if (!rawName) return '';
-  const str = String(rawName);
-  const hasNew = /\(?\bnew\b\)?/i.test(str);
-  const cleanedName = str.replace(/\s*\(?\bnew\b\)?/gi, '').trim();
-  const highlighted = highlightMatch(cleanedName, q);
-  return hasNew ? `${highlighted}<span class="new-badge">NEW</span>` : highlighted;
+function highlightWithIndex(indexObj, qFolded, qLen){
+  if (!qFolded || !indexObj) return indexObj.raw;
+  const idx = indexObj.folded.indexOf(qFolded);
+  if (idx === -1) return indexObj.raw;
+  const s = indexObj.map[idx];
+  const e = indexObj.map[idx + qLen - 1];
+  return indexObj.raw.slice(0, s) + '<mark class="hl">' + indexObj.raw.slice(s, e + 1) + '</mark>' + indexObj.raw.slice(e + 1);
 }
 
-/* 단종 상태 판별: "단종예정"이면 planned(색만 다름, 취소선 없음), 진짜 "단종"이거나
-   시트 취소선 서식이면 discontinued(취소선), 그 외엔 none */
 function getDiscStatus(text, fontFlag){
   const t = String(text || '');
   if (t.includes('단종예정')) return 'planned';
@@ -652,32 +645,66 @@ function getDiscStatus(text, fontFlag){
 }
 
 /* ============================================================
-   데이터 그룹핑
-   - 1차: brand+name+price+spec+factor 동일 행 → variant (가격 다르면 분리)
-   - 2차: variant → 패턴(brand+name) 묶음
+   데이터 그룹핑 및 1회성 사전 최적화 (인덱싱)
    ============================================================ */
 function groupData(data){
   const variantMap = new Map();
   data.forEach(row => {
     const vKey = [row.brand, row.name, row.firm_price, row.spec, row.factor].join('__');
-    const modelObj = row.model ? { name: row.model, discStatus: getDiscStatus(row.model, row.discontinued) } : null;
+    let modelObj = null;
+    if (row.model) {
+      const rawModel = String(row.model);
+      const hasNew = /\(?\bnew\b\)?/i.test(rawModel);
+      const cleanName = rawModel.replace(/\s*\(?\bnew\b\)?/gi, '').trim();
+      modelObj = {
+        name: cleanName,
+        hasNew: hasNew,
+        discStatus: getDiscStatus(rawModel, row.discontinued),
+        searchIndex: makeSearchIndex(cleanName)
+      };
+    }
+
     if (!variantMap.has(vKey)) {
+      const rawName = String(row.name || '');
+      const hasNew = /\(?\bnew\b\)?/i.test(rawName);
+      const cleanName = rawName.replace(/\s*\(?\bnew\b\)?/gi, '').trim();
+
       variantMap.set(vKey, {
-        brand: row.brand, name: row.name, firm_price: row.firm_price,
-        spec: row.spec, factor: row.factor,
-        nameDiscStatus: getDiscStatus(row.name, row.name_discontinued),
+        brand: row.brand,
+        name: cleanName,
+        hasNew: hasNew,
+        firm_price: row.firm_price,
+        spec: row.spec,
+        factor: row.factor,
+        nameDiscStatus: getDiscStatus(rawName, row.name_discontinued),
+        brandIndex: makeSearchIndex(row.brand),
+        nameIndex: makeSearchIndex(cleanName),
         models: modelObj ? [modelObj] : []
       });
     } else if (modelObj) {
       variantMap.get(vKey).models.push(modelObj);
     }
   });
-  const patternMap = new Map(); const patterns = [];
-  const rank = { none: 0, planned: 1, discontinued: 2 }; // 더 심한 상태로 덮어씀 (discontinued > planned > none)
+
+  const patternMap = new Map();
+  const patterns = [];
+  const rank = { none: 0, planned: 1, discontinued: 2 };
+
   variantMap.forEach(v => {
     const pKey = v.brand + '__' + v.name;
-    if (!patternMap.has(pKey)) { const p = { brand: v.brand, name: v.name, discStatus: v.nameDiscStatus, variants: [v] }; patternMap.set(pKey, p); patterns.push(p); }
-    else {
+    if (!patternMap.has(pKey)) {
+      const p = {
+        brand: v.brand,
+        name: v.name,
+        hasNew: v.hasNew,
+        brandIndex: v.brandIndex,
+        nameIndex: v.nameIndex,
+        discStatus: v.nameDiscStatus,
+        variants: [v]
+      };
+      patternMap.set(pKey, p);
+      patterns.push(p);
+    } else {
       const p = patternMap.get(pKey);
       p.variants.push(v);
       if (rank[v.nameDiscStatus] > rank[p.discStatus]) p.discStatus = v.nameDiscStatus;
@@ -687,7 +714,7 @@ function groupData(data){
 }
 
 /* ============================================================
-   렌더링
+   렌더링 함수군
    ============================================================ */
 function renderBrandFilter(patterns){
   const counts = {};
@@ -724,9 +751,8 @@ function renderBrandAccordion(patterns){
 function toggleBrandAccordion(){
   brandAccordionOpen = !brandAccordionOpen;
   selectedBrand = null;
-  const patterns = groupData(RAW_DATA);
-  renderBrandFilter(patterns);
-  renderBrandAccordion(patterns);
+  renderBrandFilter(PROCESSED_PATTERNS);
+  renderBrandAccordion(PROCESSED_PATTERNS);
   renderList();
 }
 
@@ -739,14 +765,17 @@ function selectBrand(brand){
   selectedBrand = (selectedBrand === brand) ? null : brand;
   brandAccordionOpen = false;
   document.getElementById('brandAccordion').classList.remove('open');
-  renderBrandFilter(groupData(RAW_DATA));
+  renderBrandFilter(PROCESSED_PATTERNS);
   renderList();
   document.getElementById('listRoot').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 let searchDebounceTimer = null;
+function onSearchInput(){
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(renderList, 150); // 반응성 대폭 향상
+}
 
-/* 컴퓨터(마우스)에서도 브랜드 칩 줄을 좌우로 넘길 수 있게, 세로 휠 스크롤을 가로 스크롤로 변환 */
 (function(){
   const bf = document.getElementById('brandFilter');
   if (!bf) return;
@@ -757,31 +786,27 @@ let searchDebounceTimer = null;
     }
   }, { passive: false });
 })();
-function onSearchInput(){
-  clearTimeout(searchDebounceTimer);
-  searchDebounceTimer = setTimeout(renderList, 250);
-}
 
 async function loadData(){
   const root = document.getElementById('listRoot');
-  if (RAW_DATA.length) { renderBrandFilter(groupData(RAW_DATA)); renderList(); renderNotices(); }
-  else root.innerHTML = '<div class="empty">단가 정보를 불러오는 중입니다...</div>';
+  if (PROCESSED_PATTERNS.length) {
+    renderBrandFilter(PROCESSED_PATTERNS);
+    renderList();
+    renderNotices();
+  } else {
+    root.innerHTML = '<div class="empty">단가 정보를 불러오는 중입니다...</div>';
+  }
   try {
     await dataFetchPromise;
-    renderBrandFilter(groupData(RAW_DATA));
+    renderBrandFilter(PROCESSED_PATTERNS);
     renderList();
     renderNotices();
   } catch (e) {
-    if (!RAW_DATA.length) root.innerHTML = '<div class="empty">단가 정보를 불러오지 못했습니다.<br>잠시 후 새로고침 해주세요.</div>';
+    if (!PROCESSED_PATTERNS.length) root.innerHTML = '<div class="empty">단가 정보를 불러오지 못했습니다.<br>잠시 후 새로고침 해주세요.</div>';
     console.error(e);
   }
 }
 
-/* 공지 문구 서식 처리:
-   **굵게**  →  <b>
-   [텍스트](URL)  →  파란색 링크 (새 탭 열림)
-   단독 URL(http...) →  파란색 [상세보기] 링크 (새 탭 열림)
-   "NEW" 글자  →  초록색 NEW 배지 */
 function renderNoticeText(text){
   if (!text) return '';
   let t = String(text);
@@ -825,11 +850,20 @@ function renderNotices(){
 }
 
 function renderList(){
-  const q = document.getElementById('searchInput').value.trim();
-  const patterns = groupData(RAW_DATA);
+  const rawQ = document.getElementById('searchInput').value.trim();
+  const qObj = rawQ ? stripWithMap(rawQ) : null;
+  const qFolded = qObj ? foldForSearch(qObj.stripped) : '';
+  const qLen = qFolded.length;
 
-  const brandSet = new Set(); let modelCount = 0;
-  patterns.forEach(p => { brandSet.add(p.brand); p.variants.forEach(v => modelCount += Math.max(v.models.length,1)); });
+  const patterns = PROCESSED_PATTERNS;
+  const brandSet = new Set();
+  let modelCount = 0;
+
+  patterns.forEach(p => {
+    brandSet.add(p.brand);
+    p.variants.forEach(v => modelCount += Math.max(v.models.length, 1));
+  });
+
   document.getElementById('statBrand').innerText = brandSet.size;
   document.getElementById('statPattern').innerText = patterns.length;
   document.getElementById('statModel').innerText = modelCount;
@@ -837,37 +871,48 @@ function renderList(){
   const byBrand = {};
   patterns.forEach(p => {
     if (selectedBrand && p.brand !== selectedBrand) return;
-    const hit = !q
-      || fuzzyIncludes(p.brand, q)
-      || fuzzyIncludes(p.name, q)
-      || p.variants.some(v => v.models.some(m => fuzzyIncludes(m.name, q)));
+
+    let hit = !qFolded;
+    if (qFolded) {
+      hit = p.brandIndex.folded.includes(qFolded)
+        || p.nameIndex.folded.includes(qFolded)
+        || p.variants.some(v => v.models.some(m => m.searchIndex.folded.includes(qFolded)));
+    }
     if (!hit) return;
     (byBrand[p.brand] = byBrand[p.brand] || []).push(p);
   });
 
   const root = document.getElementById('listRoot');
   const brands = Object.keys(byBrand);
-  if (brands.length === 0) { root.innerHTML = '<div class="empty">검색 결과가 없습니다.</div>'; return; }
+  if (brands.length === 0) {
+    root.innerHTML = '<div class="empty">검색 결과가 없습니다.</div>';
+    return;
+  }
 
   root.innerHTML = brands.map(brand => {
     const items = byBrand[brand];
     const bc = colorFor(brand);
+    const brandTitleHL = qFolded ? highlightWithIndex(items[0].brandIndex, qFolded, qLen) : brand;
+
     return `
       <div class="brand-group" style="--bc:${bc}">
-        <div class="brand-title"><span class="dot"></span>${highlightMatch(brand, q)}<span class="count">${items.length}개 패턴</span></div>
+        <div class="brand-title"><span class="dot"></span>${brandTitleHL}<span class="count">${items.length}개 패턴</span></div>
         <div class="cards-wrap">
-          ${items.map((p,i) => renderPatternCard(p, brand + '_' + i, q)).join('')}
+          ${items.map((p, i) => renderPatternCard(p, brand + '_' + i, qFolded, qLen)).join('')}
         </div>
       </div>`;
   }).join('');
 }
 
-function renderPatternCard(p, id, q){
-  const matchOnlyInModels = q && !fuzzyIncludes(p.brand, q) && !fuzzyIncludes(p.name, q)
-    && p.variants.some(v => v.models.some(m => fuzzyIncludes(m.name, q)));
-  const isOpen = q ? matchOnlyInModels : !!openState[id];
+function renderPatternCard(p, id, qFolded, qLen){
+  const matchOnlyInModels = qFolded 
+    && !p.brandIndex.folded.includes(qFolded) 
+    && !p.nameIndex.folded.includes(qFolded)
+    && p.variants.some(v => v.models.some(m => m.searchIndex.folded.includes(qFolded)));
+
+  const isOpen = qFolded ? matchOnlyInModels : !!openState[id];
   const isMulti = p.variants.length > 1;
-  const totalModels = p.variants.reduce((s,v)=>s+Math.max(v.models.length,1),0);
+  const totalModels = p.variants.reduce((s, v) => s + Math.max(v.models.length, 1), 0);
   const isJangpan = String(p.brand).includes('장판');
   const unitLabel = isJangpan ? '/ 평 (부가세 별도)' : '/ BOX (부가세 별도)';
 
@@ -891,11 +936,14 @@ function renderPatternCard(p, id, q){
     ? `${firstSpec ? `<span>${firstSpec}</span>` : ''}${(!isJangpan && firstFactor) ? `<span class="box-chip">1BOX = ${firstFactor}㎡</span>` : ''}<span>· 색상 ${totalModels}종</span>`
     : `<span>색상 ${totalModels}종 · 규격은 펼쳐서 확인</span>`;
 
+  const highlightedName = qFolded ? highlightWithIndex(p.nameIndex, qFolded, qLen) : p.name;
+  const nameHTML = p.hasNew ? `${highlightedName}<span class="new-badge">NEW</span>` : highlightedName;
+
   return `
     <div class="pattern-card ${isOpen ? 'open' : ''}" data-id="${id}">
       <div class="pattern-row" onclick="toggleCard('${id}')">
         <div class="pattern-main">
-          <div class="pattern-name${p.discStatus === 'discontinued' ? ' name-disc' : p.discStatus === 'planned' ? ' name-planned' : ''}">${parseAndApplyBadge(p.name, q)}</div>
+          <div class="pattern-name${p.discStatus === 'discontinued' ? ' name-disc' : p.discStatus === 'planned' ? ' name-planned' : ''}">${nameHTML}</div>
           <div class="pattern-spec">${specLine}</div>
         </div>
         <div class="pattern-price">${priceHTML}</div>
@@ -907,7 +955,11 @@ function renderPatternCard(p, id, q){
             const factorTxt = fmtFactor(v.factor);
             const chipsHTML = `
               <div class="chips">
-                ${v.models.length ? v.models.map(m => `<span class="model-chip${m.discStatus === 'discontinued' ? ' chip-disc' : m.discStatus === 'planned' ? ' chip-planned' : ''}">${parseAndApplyBadge(m.name, q)}</span>`).join('') : '<span class="model-chip">모델 정보 없음</span>'}
+                ${v.models.length ? v.models.map(m => {
+                  const mHL = qFolded ? highlightWithIndex(m.searchIndex, qFolded, qLen) : m.name;
+                  const mHTML = m.hasNew ? `${mHL}<span class="new-badge">NEW</span>` : mHL;
+                  return `<span class="model-chip${m.discStatus === 'discontinued' ? ' chip-disc' : m.discStatus === 'planned' ? ' chip-planned' : ''}">${mHTML}</span>`;
+                }).join('') : '<span class="model-chip">모델 정보 없음</span>'}
               </div>`;
             if (!isMulti) return `<div class="variant-block">${chipsHTML}</div>`;
             return `

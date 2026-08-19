@@ -241,6 +241,11 @@
     loadCostData();
     setType('입고');
     checkBackupReminder();
+    // Firebase 전용 진단 경로: 이 기기가 실제로 서버와 연결돼 있는지 실시간 표시
+    fbDatabase.ref('.info/connected').on('value', snap => {
+      const dbg = document.getElementById('debug-count');
+      if (dbg && snap.val() !== true) dbg.innerText = '(⚠️ 서버 연결 끊김)';
+    });
     // 실시간 리스너: 다른 기기에서 저장/삭제하면 여기도 즉시 자동 갱신됨
     fbDatabase.ref('stock_movements').on('value', snap => {
       movements = snap.val() || {};
@@ -527,7 +532,9 @@
       ts: Date.now()
     };
 
-    fbDatabase.ref('stock_movements').push(record).then(() => {
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject({ code: 'timeout', message: '서버 응답 없음 (8초 초과) - 와이파이/네트워크를 확인하거나 데이터(LTE)로 시도해보세요' }), 8000));
+
+    Promise.race([fbDatabase.ref('stock_movements').push(record), timeoutPromise]).then(() => {
       showToast(currentType + ' 저장 완료 (전체 기기 즉시 반영)', true);
       setSaveStatus('✅ ' + new Date().toLocaleTimeString() + ' 저장 완료', true);
       document.getElementById('in-qty').value = '';

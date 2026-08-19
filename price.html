@@ -501,17 +501,17 @@ const fbDatabase = firebase.database();
 })();
 
 /* ============================================================
-   단가 데이터 + 공지사항 (초고속 SWR 캐시 적용)
+   단가 데이터 + 공지사항 (동시접속 대비 SWR 초고속 캐시)
    ============================================================ */
 const FEED_URL = 'https://script.google.com/macros/s/AKfycbzyafI_d2PZiE_AYS4Y5f9uBQjK5ULCxX21hk2Z5BMDcbktNT9NnF8mUb_HhA8hJqy9Fw/exec';
-const CACHE_KEY = 'cm_price_cache_v4';
+const CACHE_KEY = 'cm_price_cache_v5';
 
 let RAW_DATA = [];
 let NOTICES = { info: [], urgentList: [] };
 let PROCESSED_PATTERNS = [];
 let dataFetchPromise = null;
 
-// 로컬 캐시가 있으면 즉각 메모리에 로드
+// 로컬 캐시 즉각 메모리 로드 (0.01초 렌더링 준비)
 try {
   const cached = localStorage.getItem(CACHE_KEY);
   if (cached) {
@@ -524,7 +524,7 @@ try {
   }
 } catch(e){}
 
-// 백그라운드에서 최신 데이터 패치
+// 백그라운드에서 최신 데이터 가져오기
 dataFetchPromise = fetch(FEED_URL)
   .then(res => { if (!res.ok) throw new Error('네트워크 오류'); return res.json(); })
   .then(json => {
@@ -536,7 +536,7 @@ dataFetchPromise = fetch(FEED_URL)
   });
 
 /* ============================================================
-   접근 게이트 (거래처 토큰 확인)
+   접근 게이트 (동시 접속 지연 없는 비동기 권한 승인)
    ============================================================ */
 function showGate(title, msg){
   document.getElementById('gate-title').innerText = title;
@@ -551,20 +551,27 @@ function grantAccess(clientName){
   document.getElementById('clientName').innerText = clientName || '거래처';
   loadData();
 }
+
 (async function checkTokenAndStart(){
   const token = new URLSearchParams(window.location.search).get('t');
   if (!token) { denyAccess('링크에 접속 코드가 없습니다. 담당자에게 전달받은 링크 그대로 접속해주세요.'); return; }
   try {
+    // 1. 익명 로그인 및 토큰 확인
     await firebase.auth().signInAnonymously();
     const snap = await fbDatabase.ref('priceAccessTokens/' + token).once('value');
     const data = snap.val();
+    
     if (!data || data.active === false) { denyAccess('유효하지 않거나 비활성화된 링크입니다.'); return; }
     if (data.expiresAt && Date.now() > data.expiresAt) { denyAccess('이 링크의 유효기간이 만료되었습니다. 담당자에게 문의해주세요.'); return; }
+
+    // 2. 화면 즉시 오픈 (대기 시간 제거)
+    grantAccess(data.clientName);
+
+    // 3. 접속 통계는 백그라운드에서 비동기 처리 (사용자 화면 열리는 속도에 영향 없음)
     fbDatabase.ref('priceAccessTokens/' + token).update({
       lastAccessedAt: Date.now(),
       accessCount: (data.accessCount || 0) + 1
     }).catch(()=>{});
-    grantAccess(data.clientName);
   } catch (e) {
     console.error(e);
     denyAccess('접속 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
@@ -617,7 +624,6 @@ function stripWithMap(str){
   return { stripped, map };
 }
 
-// 사전 처리(Pre-computed)된 검색 인덱스 생성
 function makeSearchIndex(str){
   const s = stripWithMap(str);
   return {

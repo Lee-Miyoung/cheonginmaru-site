@@ -35,12 +35,8 @@
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(30,26,20,.55); z-index:900; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
   ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px;}
   .card { background:var(--paper-card); border:1px solid var(--line); border-radius:1.75rem; }
-  .eyebrow { font-size:12px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; color:#7A7364; }
-  input[type="date"] { font-size:14px; min-width:0; }
-  @media (max-width: 380px) {
-    input[type="date"] { font-size:13px; padding-left:10px; padding-right:6px; }
-    .date-row { grid-template-columns: 1fr; }
-  }
+  .eyebrow { font-size:13px; font-weight:800; letter-spacing:.02em; text-transform:uppercase; color:#7A7364; }
+  input[type="date"] { font-size:13px; min-width:0; padding-left:8px !important; padding-right:4px !important; overflow:hidden; }
   .brand-dot { width:8px; height:8px; border-radius:50%; background:var(--wood); flex-shrink:0; }
   .brand-accordion-arrow { transition: transform .2s; }
   .brand-accordion-arrow.open { transform: rotate(180deg); }
@@ -193,7 +189,7 @@
 
     <div class="date-row grid grid-cols-2 gap-2.5">
       <div><label class="eyebrow pl-1">로트번호</label><input type="text" id="in-lot" class="input-premium mt-1" placeholder="예: L20260819-01" oninput="onModelChange()"></div>
-      <div><label class="eyebrow pl-1">생산일자</label><input type="date" id="in-prod-date" class="input-premium mt-1"></div>
+      <div><label class="eyebrow pl-1">생산일자</label><div class="relative mt-1"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-prod-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-prod-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-prod-date')"></div></div>
     </div>
 
     <div id="current-stock-box" class="hidden bg-[#F1F5F1] border border-[#D9E4D9] rounded-xl px-4 py-2.5 flex justify-between items-center">
@@ -210,8 +206,8 @@
       <div><label class="eyebrow pl-1">매입단가(VAT포함)</label><input type="text" id="in-price-vat" class="input-premium mt-1 num" placeholder="0" oninput="formatMoney(this); syncPriceFromIncVat();"></div>
     </div>
     <div class="date-row grid grid-cols-2 gap-2.5">
-      <div><label class="eyebrow pl-1">발주일자</label><input type="date" id="in-order-date" class="input-premium mt-1"></div>
-      <div><label class="eyebrow pl-1">입고일자</label><input type="date" id="in-date" class="input-premium mt-1"></div>
+      <div><label class="eyebrow pl-1">발주일자</label><div class="relative mt-1"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-order-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-order-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-order-date')"></div></div>
+      <div><label class="eyebrow pl-1">입고일자</label><div class="relative mt-1"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-date')"></div></div>
     </div>
     <div><label class="eyebrow pl-1">메모 <span id="memo-hint" class="text-[#B8B2A3] normal-case font-medium tracking-normal"></span></label><input type="text" id="in-memo" class="input-premium mt-1" placeholder="선택 입력 (반품 사유 등)"></div>
 
@@ -269,9 +265,22 @@
   let stockSummary = [];
   let currentType = '입고';
 
+  function syncDateDisplay(id) {
+    const val = document.getElementById(id).value; // yyyy-mm-dd
+    const textEl = document.getElementById(id + '-text');
+    if (!textEl) return;
+    if (!val) { textEl.innerText = '날짜 선택'; textEl.classList.add('text-[#B8B2A3]'); return; }
+    const [y, m, d] = val.split('-');
+    textEl.innerText = `${y}.${parseInt(m)}.${parseInt(d)}`;
+    textEl.classList.remove('text-[#B8B2A3]');
+  }
+
   window.onload = function() {
     document.getElementById('in-date').value = new Date().toISOString().slice(0,10);
     document.getElementById('in-order-date').value = new Date().toISOString().slice(0,10);
+    syncDateDisplay('in-date');
+    syncDateDisplay('in-order-date');
+    syncDateDisplay('in-prod-date');
     if (localStorage.getItem('cm_stock_auth') === 'valid') {
       document.getElementById('login-gate').style.display = 'none';
       init();
@@ -533,13 +542,21 @@
     renderStockList();
   }
 
+  // 브랜드별 고유 색상 (가독성을 위해 늘 같은 브랜드는 항상 같은 색)
+  const BRAND_COLORS = ['#8B5E34','#4B6B4F','#B3452B','#5C7A99','#7D5A8C','#C08A2E','#3E7C7C','#9C5B5B','#5E7A3E','#8C4B6B'];
+  function getBrandColor(brand) {
+    let h = 0;
+    for (let i = 0; i < brand.length; i++) h = (h * 31 + brand.charCodeAt(i)) >>> 0;
+    return BRAND_COLORS[h % BRAND_COLORS.length];
+  }
+
   function renderStockList() {
     const q = (document.getElementById('stock-search').value || '').toLowerCase();
     const box = document.getElementById('stock-list');
     const filtered = stockSummary.filter(s => !q || (s.brand+s.name+s.model).toLowerCase().includes(q));
     document.getElementById('stock-count').innerText = `${filtered.length}개 품목`;
     box.innerHTML = '';
-    if (!filtered.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-sm">기록이 없습니다</div>'; return; }
+    if (!filtered.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-base">기록이 없습니다</div>'; return; }
 
     // 브랜드별로 그룹핑
     const groups = {};
@@ -554,22 +571,24 @@
       const totalBox = items.reduce((sum, s) => sum + s.stock, 0);
       const lowCount = items.filter(s => s.stock <= 0).length;
       const isOpen = autoExpand || expandedBrands.has(brand);
+      const color = getBrandColor(brand);
 
       const groupWrap = document.createElement('div');
       groupWrap.className = 'rounded-2xl border border-[var(--line)] overflow-hidden';
+      groupWrap.style.borderLeft = `5px solid ${color}`;
 
       const header = document.createElement('button');
       header.type = 'button';
-      header.className = 'w-full flex items-center justify-between px-3.5 py-3 bg-[#FBF9F5]';
+      header.className = 'w-full flex items-center justify-between px-3.5 py-3.5 bg-[#FBF9F5]';
       header.onclick = () => toggleBrandGroup(brand);
       header.innerHTML = `
         <span class="flex items-center gap-2 min-w-0">
-          <span class="brand-dot"></span>
-          <span class="text-sm font-black text-[#2B2622] truncate">${brand}</span>
-          <span class="text-[13px] font-bold text-[#B8B2A3] shrink-0">${items.length}개 품목${lowCount ? ' · 부족 ' + lowCount : ''}</span>
+          <span class="brand-dot" style="background:${color}"></span>
+          <span class="text-[17px] font-black truncate" style="color:${color}">${brand}</span>
+          <span class="text-[13px] font-bold text-[#B8B2A3] shrink-0">${items.length}개${lowCount ? ' · 부족 ' + lowCount : ''}</span>
         </span>
         <span class="flex items-center gap-2 shrink-0">
-          <span class="text-sm font-black text-[#3A342C] num">${totalBox.toLocaleString()} <span class="text-[13px] font-bold text-[#8B8477]">BOX</span></span>
+          <span class="text-base font-black text-[#3A342C] num">${totalBox.toLocaleString()} <span class="text-[13px] font-bold text-[#8B8477]">BOX</span></span>
           <i class="fas fa-chevron-down text-[13px] text-[#B8B2A3] brand-accordion-arrow${isOpen ? ' open' : ''}"></i>
         </span>
       `;
@@ -580,14 +599,14 @@
       items.forEach(s => {
         const low = s.stock <= 0;
         const row = document.createElement('div');
-        row.className = 'flex justify-between items-center gap-2 px-3.5 py-2.5 bg-white ' + (low ? 'bg-[#FBF1EE]' : '');
+        row.className = 'flex justify-between items-center gap-2 px-3.5 py-3 bg-white ' + (low ? 'bg-[#FBF1EE]' : '');
         row.innerHTML = `
           <div class="min-w-0 flex-1">
             <p class="text-[13px] font-bold text-[#B8B2A3] truncate">${s.name}</p>
-            <p class="text-[13px] font-black text-[#3A342C] truncate">${s.model}</p>
+            <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
             <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · '+s.prodDate) : ''}</p>
           </div>
-          <span class="text-[15px] font-black ${low ? 'text-[var(--rust)]' : 'text-[#3A342C]'} shrink-0 num">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
+          <span class="text-[17px] font-black ${low ? 'text-[var(--rust)]' : 'text-[#3A342C]'} shrink-0 num">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
         `;
         body.appendChild(row);
       });
@@ -642,6 +661,7 @@
       document.getElementById('in-memo').value = '';
       document.getElementById('in-lot').value = '';
       document.getElementById('in-prod-date').value = '';
+      syncDateDisplay('in-prod-date');
     }).catch((err) => {
       const msg = '저장 실패: ' + (err && err.message ? err.message : err);
       showToast(msg, true);
@@ -978,15 +998,17 @@
     brands.forEach(b => {
       const d = byBrand[b];
       const pct = Math.max(4, Math.round((d.amount / maxAmount) * 100));
+      const color = getBrandColor(b);
       const row = document.createElement('div');
-      row.className = 'rounded-xl border border-[var(--line)] p-3';
+      row.className = 'rounded-xl border border-[var(--line)] p-3.5';
+      row.style.borderLeft = `5px solid ${color}`;
       row.innerHTML = `
         <div class="flex justify-between items-baseline mb-1.5">
-          <span class="text-[13px] font-black text-[#2B2622]">${b}</span>
-          <span class="text-sm font-black text-[#3A342C] num">${d.amount.toLocaleString()}원</span>
+          <span class="text-[16px] font-black" style="color:${color}">${b}</span>
+          <span class="text-base font-black text-[#3A342C] num">${d.amount.toLocaleString()}원</span>
         </div>
-        <div class="h-1.5 rounded-full bg-[#F3F0EA] overflow-hidden mb-1.5">
-          <div class="h-full bg-[#8B5E34] rounded-full" style="width:${pct}%"></div>
+        <div class="h-2 rounded-full bg-[#F3F0EA] overflow-hidden mb-1.5">
+          <div class="h-full rounded-full" style="width:${pct}%;background:${color}"></div>
         </div>
         <p class="text-[13px] text-[#B8B2A3] font-bold">${d.qty.toLocaleString()} BOX · ${d.count}건</p>
       `;

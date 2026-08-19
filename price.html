@@ -360,6 +360,12 @@
 
   /* ═══ 기타 ═══ */
   .empty{text-align:center; padding:70px 20px; color:#a1957d; font-size:13px; font-weight:600;}
+  .retry-btn{
+    margin-top:16px; padding:11px 22px; border:none; border-radius:100px;
+    background:var(--navy); color:var(--gold); font-size:13px; font-weight:900;
+    cursor:pointer; box-shadow:var(--shadow-s);
+  }
+  .retry-btn:active{transform:scale(.95);}
   .header-notice{
     margin-top:14px; padding:12px 14px;
     font-size:13px; color:#dbe3f0; font-weight:700; line-height:1.75; text-align:center;
@@ -389,6 +395,17 @@
     color:#fff; text-align:center; padding:20px;
   }
   #gate .g-icon{font-size:36px;}
+  .kakao-warn{
+    background:var(--gold-soft); border:1px solid rgba(232,171,60,.4);
+    border-radius:var(--r-m); padding:16px 18px; max-width:340px;
+    text-align:center; margin-bottom:8px;
+  }
+  .kakao-warn .kw-text{font-size:12.5px; font-weight:700; color:#e8dcc0; line-height:1.6; margin-bottom:12px;}
+  .kakao-warn .kw-btn{
+    background:var(--gold); color:var(--navy); border:none; border-radius:100px;
+    padding:11px 20px; font-size:13px; font-weight:900; cursor:pointer; width:100%;
+  }
+  .kakao-warn .kw-btn:active{transform:scale(.97);}
   #gate h2{font-size:16.5px; font-weight:900; margin:0;}
   #gate p{font-size:12.5px; color:#93a2bd; font-weight:600; margin:0; line-height:1.7;}
   #gate.hidden{display:none;}
@@ -400,6 +417,10 @@
 <body>
 
 <div id="gate">
+  <div id="kakaoWarnBanner" class="kakao-warn" style="display:none">
+    <div class="kw-text">⚠️ 카카오톡 브라우저는 가끔 접속이 불안정할 수 있어요.<br>버튼을 눌러 외부 브라우저로 열어주세요.</div>
+    <button type="button" class="kw-btn" onclick="openInExternalBrowser()">Safari / Chrome으로 열기</button>
+  </div>
   <div class="g-icon">🔐</div>
   <h2 id="gate-title">접속 확인 중입니다...</h2>
   <p id="gate-msg">잠시만 기다려주세요.</p>
@@ -492,6 +513,19 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const fbDatabase = firebase.database();
+
+/* 카카오톡 인앱 브라우저 감지 → 외부 브라우저로 바로 넘어갈 수 있는 배너 표시 */
+(function(){
+  const ua = navigator.userAgent || '';
+  if (/kakaotalk/i.test(ua)) {
+    const banner = document.getElementById('kakaoWarnBanner');
+    if (banner) banner.style.display = 'block';
+  }
+})();
+function openInExternalBrowser(){
+  const url = encodeURIComponent(window.location.href);
+  window.location.href = 'kakaotalk://web/openExternal?url=' + url;
+}
 
 /* 조회일 자동 표시 */
 (function(){
@@ -811,6 +845,20 @@ function onSearchInput(){
   }, { passive: false });
 })();
 
+function retryLoad(){
+  const root = document.getElementById('listRoot');
+  root.innerHTML = '<div class="empty">다시 불러오는 중입니다...</div>';
+  dataFetchPromise = fetchWithRetry(FEED_URL)
+    .then(json => {
+      RAW_DATA = json.prices || [];
+      NOTICES = json.notices || { info: [], urgentList: [] };
+      PROCESSED_PATTERNS = groupData(RAW_DATA);
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: json, ts: Date.now() })); } catch(e){}
+      return json;
+    });
+  loadData();
+}
+
 async function loadData(){
   const root = document.getElementById('listRoot');
   if (PROCESSED_PATTERNS.length) {
@@ -826,7 +874,7 @@ async function loadData(){
     renderList();
     renderNotices();
   } catch (e) {
-    if (!PROCESSED_PATTERNS.length) root.innerHTML = '<div class="empty">단가 정보를 불러오지 못했습니다.<br>잠시 후 새로고침 해주세요.</div>';
+    if (!PROCESSED_PATTERNS.length) root.innerHTML = '<div class="empty">단가 정보를 불러오지 못했습니다.<br>잠시 후 다시 시도해주세요.<br><button type="button" class="retry-btn" onclick="retryLoad()">🔄 다시 시도</button></div>';
     console.error(e);
   }
 }

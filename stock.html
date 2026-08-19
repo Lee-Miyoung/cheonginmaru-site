@@ -169,6 +169,7 @@
     <button onclick="submitMovement()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-base shadow-lg shadow-blue-100 active:scale-95 transition-transform">
       <i class="fas fa-save mr-1.5"></i> 저장 (모든 기기에 즉시 반영)
     </button>
+    <div id="save-status" class="text-center text-xs font-bold py-1"></div>
   </div>
 
   <div class="bg-white rounded-[2rem] p-5 premium-shadow">
@@ -488,15 +489,24 @@
     });
   }
 
+  function setSaveStatus(msg, ok) {
+    const el = document.getElementById('save-status');
+    if (!el) return;
+    el.innerText = msg;
+    el.className = 'text-center text-xs font-bold py-1 ' + (ok ? 'text-emerald-600' : 'text-rose-500');
+  }
+
   function submitMovement() {
     const brand = document.getElementById('sel-brand').value;
     const name = document.getElementById('sel-product').value;
     const model = document.getElementById('sel-model').value;
     const qty = parseFloat(document.getElementById('in-qty').value) || 0;
-    if (!brand || !name || !model) return showToast('브랜드/제품/모델을 선택하세요');
-    if (qty <= 0) return showToast('수량을 입력하세요');
-    if (currentType === '반품' && !document.getElementById('in-memo').value.trim()) return showToast('반품 사유를 메모에 적어주세요');
-    if (!authReady) return showToast('⚠️ 아직 서버 연결 중입니다. 5초 후 다시 눌러주세요', true);
+    if (!brand || !name || !model) { showToast('브랜드/제품/모델을 선택하세요'); setSaveStatus('❌ 브랜드/제품/모델을 선택하세요', false); return; }
+    if (qty <= 0) { showToast('수량을 입력하세요'); setSaveStatus('❌ 수량을 입력하세요', false); return; }
+    if (currentType === '반품' && !document.getElementById('in-memo').value.trim()) { showToast('반품 사유를 메모에 적어주세요'); setSaveStatus('❌ 반품 사유를 메모에 적어주세요', false); return; }
+    if (!authReady) { showToast('⚠️ 아직 서버 연결 중입니다. 5초 후 다시 눌러주세요', true); setSaveStatus('⏳ 서버 연결 중... 5초 후 다시 눌러주세요', false); return; }
+
+    setSaveStatus('저장 중...', true);
 
     const record = {
       date: document.getElementById('in-date').value,
@@ -513,7 +523,8 @@
     };
 
     fbDatabase.ref('stock_movements').push(record).then(() => {
-      showToast(currentType + ' 저장 완료 (전체 기기 즉시 반영)');
+      showToast(currentType + ' 저장 완료 (전체 기기 즉시 반영)', true);
+      setSaveStatus('✅ ' + new Date().toLocaleTimeString() + ' 저장 완료', true);
       document.getElementById('in-qty').value = '';
       document.getElementById('in-price').value = '';
       document.getElementById('in-price-vat').value = '';
@@ -521,7 +532,11 @@
       document.getElementById('in-memo').value = '';
       document.getElementById('in-lot').value = '';
       document.getElementById('in-prod-date').value = '';
-    }).catch((err) => showToast('저장 실패: ' + (err && err.message ? err.message : err), true));
+    }).catch((err) => {
+      const msg = '저장 실패: ' + (err && err.message ? err.message : err);
+      showToast(msg, true);
+      setSaveStatus('❌ ' + msg, false);
+    });
   }
 
   function openLogModal() {

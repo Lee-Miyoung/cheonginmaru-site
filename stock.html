@@ -4,6 +4,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>청인마루 재고 관리</title>
+<script>
+  // ===== 카카오톡 등 인앱 브라우저에서 열렸으면 자동으로 기본 브라우저(사파리/크롬)로 전환 =====
+  (function() {
+    var ua = navigator.userAgent.toLowerCase();
+    var isKakao = ua.indexOf('kakaotalk') > -1;
+    var isLine = ua.indexOf('line/') > -1;
+    var isInstagram = ua.indexOf('instagram') > -1;
+    var isFacebook = ua.indexOf('fbav') > -1 || ua.indexOf('fban') > -1;
+    var url = location.href;
+    if (isKakao) {
+      location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
+    } else if (isLine) {
+      if (url.indexOf('openExternalBrowser=1') === -1) {
+        location.href = url + (url.indexOf('?') > -1 ? '&' : '?') + 'openExternalBrowser=1';
+      }
+    } else if (isInstagram || isFacebook) {
+      // 인스타/페이스북 인앱 브라우저는 강제 전환 스킴이 따로 없어, 우측상단 메뉴로 열도록 안내만 표시
+      window.addEventListener('DOMContentLoaded', function() {
+        var banner = document.createElement('div');
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#2B2622;color:#fff;padding:10px 16px;font-size:13px;font-weight:700;text-align:center;z-index:99999;';
+        banner.innerText = '우측 상단 메뉴에서 "다른 브라우저로 열기"를 눌러주세요';
+        document.body.prepend(banner);
+      });
+    }
+  })();
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -158,6 +184,25 @@
   </div>
 </div>
 
+<!-- 백업 관리 모달 -->
+<div id="backup-modal" class="modal-overlay">
+  <div class="card rounded-[1.5rem] w-full max-w-lg mx-4 h-[85vh] flex flex-col overflow-hidden">
+    <div class="p-4 border-b flex justify-between items-center bg-[#FBF9F5]">
+      <h3 class="font-black text-[#2B2622]"><i class="fas fa-shield-halved text-[#8B5E34] mr-1.5"></i>백업 관리</h3>
+      <button onclick="closeModal('backup-modal')" class="w-8 h-8 rounded-full bg-[#E7E1D3] flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-4 border-b bg-[#F1F5F1]">
+      <p class="text-[14px] font-bold text-[var(--moss)]"><i class="fas fa-check-circle mr-1"></i>변동 있는 날만 자동 저장돼요. 파일이 폰에 쌓이지 않아요.</p>
+      <p class="text-[13px] text-[#8B8477] font-bold mt-1">30일 지난 백업은 자동 정리되어 용량 걱정 없어요.</p>
+      <p class="text-[13px] text-[#8B8477] font-bold mt-1">실수로 데이터가 지워져도 아래 날짜 중 하나로 되돌릴 수 있어요.</p>
+    </div>
+    <div class="p-4 overflow-y-auto flex-1 space-y-2" id="backup-list"></div>
+    <div class="p-3 border-t">
+      <button onclick="exportBackup()" class="w-full py-2.5 text-[13px] font-black text-[#8B5E34] bg-[#F6EFE6] rounded-xl"><i class="fas fa-file-arrow-down mr-1"></i>지금 상태를 파일로도 저장 (선택)</button>
+    </div>
+  </div>
+</div>
+
 <div class="max-w-2xl mx-auto p-4 md:p-6">
 
   <header class="card premium-shadow px-4 py-3 flex items-center justify-between mb-5">
@@ -166,7 +211,7 @@
       <p class="text-[13px] text-[#8B8477] font-bold">Stock System · 실시간 공유 <span id="debug-count" class="text-[#A9784F]"></span></p>
     </div>
     <div class="flex items-center gap-1.5">
-      <button onclick="exportBackup()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[var(--moss)] flex items-center justify-center" title="전체 데이터 백업"><i class="fas fa-download"></i></button>
+      <button onclick="openBackupModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[var(--moss)] flex items-center justify-center" title="백업 관리"><i class="fas fa-shield-halved"></i></button>
       <button onclick="loadMasterCSV(true)" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="품목목록 새로고침"><i class="fas fa-sync-alt"></i></button>
       <button onclick="openMonthlyModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="월별 매입 통계"><i class="fas fa-chart-column"></i></button>
       <button onclick="openVendorModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="거래처 관리"><i class="fas fa-address-book"></i></button>
@@ -299,7 +344,7 @@
     loadMasterCSV(false);
     loadCostData();
     setType('입고');
-    checkBackupReminder();
+    autoCloudBackup();
     // Firebase 전용 진단 경로: 이 기기가 실제로 서버와 연결돼 있는지 실시간 표시
     fbDatabase.ref('.info/connected').on('value', snap => {
       const dbg = document.getElementById('debug-count');
@@ -321,13 +366,107 @@
     });
   }
 
-  // ===== ① 정기 백업 =====
-  function checkBackupReminder() {
-    const last = parseInt(localStorage.getItem('cm_stock_last_backup') || '0');
-    const days = (Date.now() - last) / (1000*60*60*24);
-    if (!last || days > 14) {
-      setTimeout(() => showToast('⚠️ 백업한 지 오래됐어요. 상단 다운로드 버튼으로 백업해주세요'), 1200);
-    }
+  // ===== ① 자동 백업 (파일 다운로드 없이, 매일 1회 클라우드에 스냅샷 저장) =====
+  async function autoCloudBackup() {
+    try {
+      const todayKey = new Date().toISOString().slice(0,10);
+      const backupRef = fbDatabase.ref('backups/' + todayKey);
+      const existing = await backupRef.once('value');
+      if (existing.exists()) return; // 오늘 이미 백업됨 - 중복 저장 안함
+
+      const [mv, vd, vl] = await Promise.all([
+        fbDatabase.ref('stock_movements').once('value'),
+        fbDatabase.ref('vendors').once('value'),
+        fbDatabase.ref('vendor_logs').once('value')
+      ]);
+      const mvVal = mv.val() || {}, vdVal = vd.val() || {}, vlVal = vl.val() || {};
+
+      // 어제(가장 최근) 백업이랑 내용이 완전히 똑같으면 - 입고/출고가 없었던 날이면 - 새로 안 만들고 건너뜀
+      const recentSnap = await fbDatabase.ref('backups').orderByKey().limitToLast(1).once('value');
+      let unchanged = false;
+      recentSnap.forEach(child => {
+        const prev = child.val();
+        if (prev && JSON.stringify(prev.stock_movements||{}) === JSON.stringify(mvVal)
+                  && JSON.stringify(prev.vendors||{}) === JSON.stringify(vdVal)
+                  && JSON.stringify(prev.vendor_logs||{}) === JSON.stringify(vlVal)) {
+          unchanged = true;
+        }
+      });
+      if (unchanged) return; // 변동 없음 - 백업 생략 (용량 절약)
+
+      await backupRef.set({ ts: Date.now(), stock_movements: mvVal, vendors: vdVal, vendor_logs: vlVal });
+
+      // 30일 지난 오래된 자동 백업은 정리 (restore-safety 임시 백업은 건드리지 않음)
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+      const cutoffKey = cutoff.toISOString().slice(0,10);
+      const allSnap = await fbDatabase.ref('backups').once('value');
+      const deletions = [];
+      allSnap.forEach(child => {
+        const key = child.key;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(key) && key < cutoffKey) deletions.push(fbDatabase.ref('backups/' + key).remove());
+      });
+      if (deletions.length) await Promise.all(deletions);
+    } catch(e) { console.error('자동 백업 실패', e); }
+  }
+
+  // ===== 백업 관리 화면 (자동 백업 목록 + 필요시 복구 + 선택적 파일 다운로드) =====
+  async function openBackupModal() {
+    document.getElementById('backup-modal').style.display = 'flex';
+    const list = document.getElementById('backup-list');
+    list.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-base">불러오는 중...</div>';
+    try {
+      const snap = await fbDatabase.ref('backups').once('value');
+      const data = snap.val() || {};
+      const dates = Object.keys(data).sort().reverse();
+      list.innerHTML = '';
+      if (!dates.length) { list.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-base">아직 자동 백업이 없습니다 (내일부터 자동 생성돼요)</div>'; return; }
+      dates.forEach(date => {
+        const b = data[date];
+        const mvCount = Object.keys(b.stock_movements || {}).length;
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between px-3.5 py-3 rounded-xl border border-[var(--line)] bg-white';
+        row.innerHTML = `
+          <div>
+            <p class="text-[15px] font-black text-[#2B2622]">${date}</p>
+            <p class="text-[13px] text-[#B8B2A3] font-bold">입출고 ${mvCount}건 스냅샷</p>
+          </div>
+          <button class="text-[13px] font-black text-white bg-[var(--rust)] px-3 py-2 rounded-lg" onclick="restoreFromBackup('${date}')">이 날짜로 복구</button>
+        `;
+        list.appendChild(row);
+      });
+    } catch(e) { list.innerHTML = '<div class="text-center py-8 text-[var(--rust)] text-base">불러오기 실패</div>'; }
+  }
+
+  async function restoreFromBackup(dateKey) {
+    if (!confirm(`${dateKey} 시점 백업으로 복구할까요?\n\n지금 현재 데이터는 그 시점 상태로 덮어씌워집니다.\n(복구 직전 상태는 별도로 자동 백업되니 걱정 마세요)`)) return;
+    if (!confirm('정말 진행할까요? 이 작업은 신중하게 확인 후 진행해주세요.')) return;
+    try {
+      // 복구하기 직전 현재 상태도 안전하게 하나 더 남겨둠
+      const now = new Date();
+      const safetyKey = 'restore-safety-' + now.toISOString().replace(/[:.]/g,'-');
+      const [mvNow, vdNow, vlNow] = await Promise.all([
+        fbDatabase.ref('stock_movements').once('value'),
+        fbDatabase.ref('vendors').once('value'),
+        fbDatabase.ref('vendor_logs').once('value')
+      ]);
+      await fbDatabase.ref('backups/' + safetyKey).set({
+        ts: Date.now(),
+        stock_movements: mvNow.val() || {},
+        vendors: vdNow.val() || {},
+        vendor_logs: vlNow.val() || {}
+      });
+
+      const snap = await fbDatabase.ref('backups/' + dateKey).once('value');
+      const b = snap.val();
+      if (!b) return showToast('해당 백업을 찾을 수 없습니다');
+      await Promise.all([
+        fbDatabase.ref('stock_movements').set(b.stock_movements || {}),
+        fbDatabase.ref('vendors').set(b.vendors || {}),
+        fbDatabase.ref('vendor_logs').set(b.vendor_logs || {})
+      ]);
+      showToast('복구 완료: ' + dateKey + ' 상태로 되돌렸습니다', true);
+      closeModal('backup-modal');
+    } catch(e) { showToast('복구 실패: ' + (e && e.message ? e.message : e), true); }
   }
 
   async function exportBackup() {
@@ -355,8 +494,7 @@
       a.href = URL.createObjectURL(blob);
       a.download = `청인마루_재고백업_${new Date().toISOString().slice(0,10)}.json`;
       a.click();
-      localStorage.setItem('cm_stock_last_backup', String(Date.now()));
-      showToast('백업 완료! 다운로드 폴더를 확인하세요');
+      showToast('파일로 다운로드 완료');
     } catch(e) { showToast('백업 실패'); }
   }
 

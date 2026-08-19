@@ -146,7 +146,11 @@
 
     <div class="grid grid-cols-2 gap-2.5">
       <div><label class="text-[10px] font-black text-slate-400 pl-1">수량 (박스)</label><input type="number" id="in-qty" class="input-premium mt-1" placeholder="0"></div>
-      <div id="price-field"><label class="text-[10px] font-black text-slate-400 pl-1">단가 (입고 시) <span class="text-blue-400 font-medium">· 원가 자동입력, 수정가능</span></label><input type="text" id="in-price" class="input-premium mt-1" placeholder="0" oninput="formatMoney(this)"></div>
+      <div></div>
+    </div>
+    <div id="price-field" class="grid grid-cols-2 gap-2.5">
+      <div><label class="text-[10px] font-black text-slate-400 pl-1">매입단가(VAT별도) <span class="text-blue-400 font-medium">· 원가자동</span></label><input type="text" id="in-price" class="input-premium mt-1" placeholder="0" oninput="formatMoney(this); syncPriceFromExVat();"></div>
+      <div><label class="text-[10px] font-black text-slate-400 pl-1">매입단가(VAT포함)</label><input type="text" id="in-price-vat" class="input-premium mt-1" placeholder="0" oninput="formatMoney(this); syncPriceFromIncVat();"></div>
     </div>
     <div class="grid grid-cols-2 gap-2.5">
       <div><label class="text-[10px] font-black text-slate-400 pl-1">거래처</label><input type="text" id="in-vendor" class="input-premium mt-1" placeholder="동화자연마루 등"></div>
@@ -195,7 +199,7 @@
   firebase.auth().signInAnonymously().catch(err => console.error('Firebase 인증 실패', err));
 
   let masterData = {}; // { brand: { product: [model,...] } }
-  let costDataMap = {}; // { "brand||name||model": costPrice } - 매입단가(비밀 단가)
+  let costDataMap = {}; // { "brand||name||model": {ex, inc} } - 매입단가(비밀 단가), VAT별도/포함
   let movements = {};  // { fbKey: {날짜,구분,brand,name,model,수량,단가,거래처,메모} }
   let stockSummary = [];
   let currentType = '입고';
@@ -243,16 +247,28 @@
         const name = String(item.name || '').trim();
         const model = String(item.model || '').trim();
         const exVatKey = Object.keys(item).find(k => k.replace(/\s/g,'') === '원가(vat미포함)' || k.replace(/\s/g,'') === '원가(vat별도)');
-        const costPrice = parseInt(String(item.cost ?? item.cost_ex_vat ?? item['원가'] ?? (exVatKey ? item[exVatKey] : '') ?? '').replace(/,/g,'')) || 0;
+        const incVatKey = Object.keys(item).find(k => k.replace(/\s/g,'') === '원가(vat포함)');
+        const costEx = parseInt(String(item.cost ?? item.cost_ex_vat ?? item['원가'] ?? (exVatKey ? item[exVatKey] : '') ?? '').replace(/,/g,'')) || 0;
+        const costInc = parseInt(String(item.cost_inc_vat ?? item.cost_vat ?? (incVatKey ? item[incVatKey] : '') ?? '').replace(/,/g,'')) || 0;
         if (!brand || !name) return;
         const key = `${brand}||${name}||${model}`;
-        if (costPrice) costDataMap[key] = costPrice;
+        if (costEx || costInc) costDataMap[key] = { ex: costEx, inc: costInc };
       });
     } catch(e) { /* 원가 조회 실패해도 재고 입력 자체는 계속 가능하게 조용히 무시 */ }
   }
 
   function getCostPriceFor(brand, name, model) {
-    return costDataMap[`${brand}||${name}||${model}`] || costDataMap[`${brand}||${name}||`] || 0;
+    return costDataMap[`${brand}||${name}||${model}`] || costDataMap[`${brand}||${name}||`] || null;
+  }
+
+  // ===== VAT별도 <-> VAT포함 상호 자동계산 (한쪽 수정하면 다른쪽도 즉시 갱신) =====
+  function syncPriceFromExVat() {
+    const ex = parseInt((document.getElementById('in-price').value||'0').replace(/,/g,'')) || 0;
+    document.getElementById('in-price-vat').value = ex ? Math.round(ex * 1.1).toLocaleString() : '';
+  }
+  function syncPriceFromIncVat() {
+    const inc = parseInt((document.getElementById('in-price-vat').value||'0').replace(/,/g,'')) || 0;
+    document.getElementById('in-price').value = inc ? Math.round(inc / 1.1).toLocaleString() : '';
   }
 
   function showToast(msg) { const t=document.getElementById('toast'); t.innerText=msg; t.className='show'; setTimeout(()=>t.className='',2000); }
@@ -350,7 +366,11 @@
     const m = document.getElementById('sel-model').value;
     if (!b || !p) return;
     const cost = getCostPriceFor(b, p, m);
-    if (cost) document.getElementById('in-price').value = cost.toLocaleString();
+    if (!cost) return;
+    const ex = cost.ex || (cost.inc ? Math.round(cost.inc / 1.1) : 0);
+    const inc = cost.inc || (cost.ex ? Math.round(cost.ex * 1.1) : 0);
+    document.getElementById('in-price').value = ex ? ex.toLocaleString() : '';
+    document.getElementById('in-price-vat').value = inc ? inc.toLocaleString() : '';
   }
 
   function onModelChange() {
@@ -431,6 +451,7 @@
       prodDate: document.getElementById('in-prod-date').value,
       qty,
       price: parseInt((document.getElementById('in-price').value||'0').replace(/,/g,'')) || 0,
+      priceIncVat: parseInt((document.getElementById('in-price-vat').value||'0').replace(/,/g,'')) || 0,
       vendor: document.getElementById('in-vendor').value,
       memo: document.getElementById('in-memo').value,
       ts: Date.now()
@@ -440,6 +461,7 @@
       showToast(currentType + ' 저장 완료 (전체 기기 즉시 반영)');
       document.getElementById('in-qty').value = '';
       document.getElementById('in-price').value = '';
+      document.getElementById('in-price-vat').value = '';
       document.getElementById('in-vendor').value = '';
       document.getElementById('in-memo').value = '';
       document.getElementById('in-lot').value = '';
@@ -471,7 +493,7 @@
             <span class="text-[10px] text-slate-400 font-bold">${r.date||''}</span>
           </div>
           <p class="text-sm font-black text-slate-800 truncate">${r.brand} · ${r.name} · ${r.model}</p>
-          <p class="text-[11px] text-slate-400 font-bold">${r.qty}BOX ${r.price?('· '+Number(r.price).toLocaleString()+'원'):''} ${r.vendor?('· '+r.vendor):''}</p>
+          <p class="text-[11px] text-slate-400 font-bold">${r.qty}BOX ${r.price?('· '+Number(r.price).toLocaleString()+'원(VAT별도)'):''}${r.priceIncVat?(' / '+Number(r.priceIncVat).toLocaleString()+'원(VAT포함)'):''} ${r.vendor?('· '+r.vendor):''}</p>
           <p class="text-[10px] text-slate-300 font-bold">${r.lot?('로트: '+r.lot):''} ${r.prodDate?('· 생산일 '+r.prodDate):''} ${r.memo?('· '+r.memo):''}</p>
         </div>
         <button onclick="deleteLog('${r.key}')" class="text-slate-300 hover:text-rose-500 px-2 shrink-0"><i class="fas fa-trash"></i></button>

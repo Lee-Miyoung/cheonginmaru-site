@@ -93,7 +93,7 @@
     </div>
     <div class="px-3 pt-2 flex gap-2">
       <button id="log-tab-active" onclick="setLogTab('active')" class="flex-1 py-2 rounded-lg text-xs font-black bg-[#2B2622] text-white">전체 기록</button>
-      <button id="log-tab-trash" onclick="setLogTab('trash')" class="flex-1 py-2 rounded-lg text-xs font-black bg-[#F3F0EA] text-[#B8B2A3]"><i class="fas fa-trash-can mr-1"></i>휴지통</button>
+      <button id="log-tab-trash" onclick="setLogTab('trash')" class="flex-1 py-2 rounded-lg text-xs font-black bg-[#F3F0EA] text-[#B8B2A3]"><i class="fas fa-trash-can mr-1"></i>휴지통 (30일 보관)</button>
     </div>
     <div id="log-list" class="p-3 overflow-y-auto flex-1 space-y-2 bg-[#FAF8F4]"></div>
   </div>
@@ -226,11 +226,26 @@
       <button id="type-return" class="py-3 rounded-xl text-[13px] font-black text-[#B8B2A3]" onclick="setType('반품')"><i class="fas fa-rotate-left mr-1"></i>반품</button>
     </div>
 
-    <div class="grid grid-cols-2 gap-2.5">
+    <div class="flex justify-between items-center">
+      <span class="eyebrow">품목 선택</span>
+      <label class="flex items-center gap-2 cursor-pointer">
+        <span class="text-[13px] font-bold text-[#8B8477]">목록에 없는 품목 직접 입력</span>
+        <input type="checkbox" id="manual-mode-toggle" class="accent-[#8B5E34] w-4 h-4" onchange="toggleManualMode()">
+      </label>
+    </div>
+    <div id="select-area" class="grid grid-cols-2 gap-2.5">
       <select id="sel-brand" class="input-premium" onchange="updateProducts()"></select>
       <select id="sel-product" class="input-premium" onchange="updateModels()"></select>
     </div>
     <select id="sel-model" class="input-premium" onchange="onModelChange(); autoFillCostPrice();"></select>
+
+    <div id="manual-area" class="hidden space-y-2.5">
+      <div class="grid grid-cols-2 gap-2.5">
+        <div><label class="eyebrow pl-1">브랜드 (직접입력)</label><input type="text" id="manual-brand" class="input-premium mt-1" placeholder="브랜드명"></div>
+        <div><label class="eyebrow pl-1">제품명 (직접입력)</label><input type="text" id="manual-product" class="input-premium mt-1" placeholder="제품명"></div>
+      </div>
+      <div><label class="eyebrow pl-1">색상/모델 (직접입력)</label><input type="text" id="manual-model" class="input-premium mt-1" placeholder="색상/모델명"></div>
+    </div>
 
     <div class="date-row grid grid-cols-2 gap-2.5">
       <div><label class="eyebrow pl-1">로트번호</label><input type="text" id="in-lot" class="input-premium mt-1" placeholder="예: L20260819-01" oninput="onModelChange()"></div>
@@ -345,6 +360,7 @@
     loadCostData();
     setType('입고');
     autoCloudBackup();
+    autoCleanupTrash();
     // Firebase 전용 진단 경로: 이 기기가 실제로 서버와 연결돼 있는지 실시간 표시
     fbDatabase.ref('.info/connected').on('value', snap => {
       const dbg = document.getElementById('debug-count');
@@ -407,6 +423,23 @@
       });
       if (deletions.length) await Promise.all(deletions);
     } catch(e) { console.error('자동 백업 실패', e); }
+  }
+
+  // ===== 휴지통 30일 지난 항목 자동 완전삭제 (deletedAt 기준) =====
+  async function autoCleanupTrash() {
+    try {
+      const cutoffTs = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      const trashPaths = ['stock_movements_trash', 'vendor_logs_trash', 'vendors_trash'];
+      for (const path of trashPaths) {
+        const snap = await fbDatabase.ref(path).once('value');
+        const deletions = [];
+        snap.forEach(child => {
+          const item = child.val();
+          if (item && item.deletedAt && item.deletedAt < cutoffTs) deletions.push(fbDatabase.ref(path + '/' + child.key).remove());
+        });
+        if (deletions.length) await Promise.all(deletions);
+      }
+    } catch(e) { console.error('휴지통 자동 정리 실패', e); }
   }
 
   // ===== 백업 관리 화면 (자동 백업 목록 + 필요시 복구 + 선택적 파일 다운로드) =====
@@ -599,7 +632,7 @@
     const sel = document.getElementById('sel-brand');
     const prev = sel.value;
     sel.innerHTML = '<option value="">브랜드 선택</option>';
-    Object.keys(masterData).sort().forEach(b => sel.add(new Option(b,b)));
+    Object.keys(masterData).forEach(b => sel.add(new Option(b,b))); // 구글시트에 나온 순서 그대로 유지
     if (prev && masterData[prev]) sel.value = prev;
     updateProducts();
   }
@@ -622,11 +655,33 @@
     autoFillCostPrice();
   }
 
+  let isManualMode = false;
+  function toggleManualMode() {
+    isManualMode = document.getElementById('manual-mode-toggle').checked;
+    document.getElementById('select-area').classList.toggle('hidden', isManualMode);
+    document.getElementById('sel-model').classList.toggle('hidden', isManualMode);
+    document.getElementById('manual-area').classList.toggle('hidden', !isManualMode);
+    document.getElementById('current-stock-box').classList.add('hidden');
+  }
+
+  function getSelectedItem() {
+    if (isManualMode) {
+      return {
+        brand: document.getElementById('manual-brand').value.trim(),
+        name: document.getElementById('manual-product').value.trim(),
+        model: document.getElementById('manual-model').value.trim()
+      };
+    }
+    return {
+      brand: document.getElementById('sel-brand').value,
+      name: document.getElementById('sel-product').value,
+      model: document.getElementById('sel-model').value
+    };
+  }
+
   function autoFillCostPrice() {
-    if (currentType !== '입고') return;
-    const b = document.getElementById('sel-brand').value;
-    const p = document.getElementById('sel-product').value;
-    const m = document.getElementById('sel-model').value;
+    if (currentType !== '입고' || isManualMode) return;
+    const { brand: b, name: p, model: m } = getSelectedItem();
     if (!b || !p) return;
     const cost = getCostPriceFor(b, p, m);
     if (!cost) return;
@@ -637,9 +692,7 @@
   }
 
   function onModelChange() {
-    const b = document.getElementById('sel-brand').value;
-    const p = document.getElementById('sel-product').value;
-    const m = document.getElementById('sel-model').value;
+    const { brand: b, name: p, model: m } = getSelectedItem();
     const lot = (document.getElementById('in-lot').value || '').trim();
     const box = document.getElementById('current-stock-box');
     if (!b || !p || !m) { box.classList.add('hidden'); return; }
@@ -761,9 +814,7 @@
   }
 
   function submitMovement() {
-    const brand = document.getElementById('sel-brand').value;
-    const name = document.getElementById('sel-product').value;
-    const model = document.getElementById('sel-model').value;
+    const { brand, name, model } = getSelectedItem();
     const qty = parseFloat(document.getElementById('in-qty').value) || 0;
     if (!brand || !name || !model) { showToast('브랜드/제품/모델을 선택하세요'); setSaveStatus('❌ 브랜드/제품/모델을 선택하세요', false); return; }
     if (qty <= 0) { showToast('수량을 입력하세요'); setSaveStatus('❌ 수량을 입력하세요', false); return; }
@@ -798,6 +849,7 @@
       document.getElementById('in-vendor').value = '';
       document.getElementById('in-memo').value = '';
       document.getElementById('in-lot').value = '';
+      if (isManualMode) document.getElementById('manual-model').value = '';
       document.getElementById('in-prod-date').value = '';
       syncDateDisplay('in-prod-date');
     }).catch((err) => {

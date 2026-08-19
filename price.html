@@ -773,7 +773,7 @@ function selectBrand(brand){
 let searchDebounceTimer = null;
 function onSearchInput(){
   clearTimeout(searchDebounceTimer);
-  searchDebounceTimer = setTimeout(renderList, 150); // 반응성 대폭 향상
+  searchDebounceTimer = setTimeout(renderList, 150);
 }
 
 (function(){
@@ -807,6 +807,11 @@ async function loadData(){
   }
 }
 
+/* 공지 문구 서식 처리:
+   **굵게**  →  <b>
+   [텍스트](URL)  →  파란색 링크 (새 탭 열림)
+   단독 URL(http...) →  파란색 [상세보기] 링크 (새 탭 열림)
+   "NEW" 글자  →  초록색 NEW 배지 */
 function renderNoticeText(text){
   if (!text) return '';
   let t = String(text);

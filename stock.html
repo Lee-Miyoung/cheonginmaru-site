@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>청인마루 재고 관리</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  body { font-family:'Pretendard Variable','Noto Sans KR',sans-serif; background:#f1f5f9; color:#0f172a; -webkit-tap-highlight-color:transparent; }
+  .premium-shadow { box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 12px 32px -12px rgba(15,23,42,.12); }
+  .input-premium { width:100%; padding:12px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#334155; outline:none; }
+  .input-premium:focus { background:#fff; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.1); }
+  #login-gate { display:flex; position:fixed; inset:0; background:#0f172a; z-index:999; align-items:center; justify-content:center; }
+  #toast { visibility:hidden; min-width:200px; background:#334155; color:#fff; text-align:center; border-radius:50px; padding:12px 24px; position:fixed; z-index:1000; left:50%; bottom:100px; transform:translateX(-50%); font-size:14px; font-weight:700; }
+  #toast.show { visibility:visible; animation:fadein .3s, fadeout .3s 1.7s; }
+  @keyframes fadein { from{opacity:0} to{opacity:1} }
+  @keyframes fadeout { from{opacity:1} to{opacity:0} }
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:900; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px;}
+</style>
+</head>
+<body class="antialiased">
+
+<div id="toast">저장되었습니다</div>
+
+<div id="login-gate">
+  <div class="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-sm text-center mx-4">
+    <h2 class="text-xl font-black text-slate-900 mb-1">청인마루 재고 관리</h2>
+    <p class="text-xs text-slate-400 font-bold mb-1">Stock System</p>
+    <p id="fb-badge" class="text-[9px] font-bold text-slate-300 mb-6">연결 확인 중...</p>
+    <input type="password" id="app-password" class="w-full p-4 bg-slate-100 rounded-xl text-center text-lg font-black outline-none focus:ring-2 ring-blue-500 mb-4" placeholder="PASSWORD" onkeyup="if(event.keyCode==13) checkLogin()">
+    <button onclick="checkLogin()" class="w-full py-4 bg-slate-900 text-white rounded-xl font-black text-lg">접속하기</button>
+  </div>
+</div>
+
+<div id="log-modal" class="modal-overlay">
+  <div class="bg-white rounded-[1.5rem] w-full max-w-lg mx-4 h-[80vh] flex flex-col overflow-hidden">
+    <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+      <h3 class="font-black text-slate-900"><i class="fas fa-history text-blue-600 mr-1.5"></i>입출고 기록 <span id="fb-status-badge" class="text-[9px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-600 ml-1">실시간 연결됨</span></h3>
+      <button onclick="closeModal('log-modal')" class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-3 border-b">
+      <input type="text" id="log-search" class="input-premium text-sm" placeholder="브랜드/제품/모델 검색..." oninput="renderLog()">
+    </div>
+    <div id="log-list" class="p-3 overflow-y-auto flex-1 space-y-2 bg-slate-50/50"></div>
+  </div>
+</div>
+
+<div class="max-w-2xl mx-auto p-4 md:p-6">
+
+  <header class="bg-white rounded-2xl premium-shadow px-4 py-3 flex items-center justify-between mb-5">
+    <div>
+      <h1 class="text-lg font-black text-slate-900">청인마루<span class="text-blue-600">.</span> 재고관리</h1>
+      <p class="text-[10px] text-slate-400 font-bold">Stock System · 실시간 공유</p>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <button onclick="loadMasterCSV(true)" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 hover:text-blue-600 flex items-center justify-center" title="품목목록 새로고침"><i class="fas fa-sync-alt"></i></button>
+      <button onclick="openLogModal()" class="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 hover:text-blue-600 flex items-center justify-center" title="입출고 기록"><i class="fas fa-list-ul"></i></button>
+    </div>
+  </header>
+
+  <div class="bg-white rounded-[2rem] p-5 premium-shadow space-y-4 mb-5">
+    <div class="grid grid-cols-2 bg-slate-900 p-1 rounded-2xl">
+      <button id="type-in" class="py-3 rounded-xl text-sm font-black text-white bg-blue-600" onclick="setType('입고')"><i class="fas fa-arrow-down mr-1.5"></i>입고</button>
+      <button id="type-out" class="py-3 rounded-xl text-sm font-black text-slate-400" onclick="setType('출고')"><i class="fas fa-arrow-up mr-1.5"></i>출고</button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2.5">
+      <select id="sel-brand" class="input-premium" onchange="updateProducts()"></select>
+      <select id="sel-product" class="input-premium" onchange="updateModels()"></select>
+    </div>
+    <select id="sel-model" class="input-premium" onchange="onModelChange()"></select>
+
+    <div id="current-stock-box" class="hidden bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2.5 flex justify-between items-center">
+      <span class="text-[11px] font-black text-emerald-700"><i class="fas fa-warehouse mr-1"></i>현재 재고</span>
+      <span id="current-stock-val" class="text-sm font-black text-emerald-600">-</span>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2.5">
+      <div><label class="text-[10px] font-black text-slate-400 pl-1">수량 (박스)</label><input type="number" id="in-qty" class="input-premium mt-1" placeholder="0"></div>
+      <div id="price-field"><label class="text-[10px] font-black text-slate-400 pl-1">단가 (입고 시)</label><input type="text" id="in-price" class="input-premium mt-1" placeholder="0" oninput="formatMoney(this)"></div>
+    </div>
+    <div class="grid grid-cols-2 gap-2.5">
+      <div><label class="text-[10px] font-black text-slate-400 pl-1">거래처</label><input type="text" id="in-vendor" class="input-premium mt-1" placeholder="동화자연마루 등"></div>
+      <div><label class="text-[10px] font-black text-slate-400 pl-1">날짜</label><input type="date" id="in-date" class="input-premium mt-1"></div>
+    </div>
+    <div><label class="text-[10px] font-black text-slate-400 pl-1">메모</label><input type="text" id="in-memo" class="input-premium mt-1" placeholder="선택 입력"></div>
+
+    <button onclick="submitMovement()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-base shadow-lg shadow-blue-100 active:scale-95 transition-transform">
+      <i class="fas fa-save mr-1.5"></i> 저장 (모든 기기에 즉시 반영)
+    </button>
+  </div>
+
+  <div class="bg-white rounded-[2rem] p-5 premium-shadow">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-sm font-black text-slate-800"><i class="fas fa-boxes-stacked text-blue-500 mr-1.5"></i>재고 현황</h3>
+      <span id="stock-count" class="text-[10px] font-bold text-slate-400"></span>
+    </div>
+    <input type="text" id="stock-search" class="input-premium text-sm mb-3" placeholder="브랜드/제품/모델 검색..." oninput="renderStockList()">
+    <div id="stock-list" class="space-y-1.5 max-h-[60vh] overflow-y-auto"></div>
+  </div>
+
+</div>
+
+<script>
+  // ===== 1) 900개 품목 조회 - 마루견적서(index.html)가 이미 쓰고 있는 공개 링크를 그대로 재사용 =====
+  //     읽기 전용 GET 요청이라 견적서/파트너가격 쪽에는 전혀 영향 없음. 새로 만들 것도, 공개 설정할 것도 없음.
+  const MASTER_SHEET_URL = "https://script.google.com/macros/s/AKfycbxHU1h6Vu2W5Yovgm8yRJKIoALUdpeLQULRdCKdVMtnER2QewMbFBAn0Q1s30hvtFpP/exec";
+
+  // ===== 2) Firebase - 견적서(index.html)와 동일한 프로젝트를 그대로 재사용 =====
+  //     stock_movements 라는 새 저장공간만 씀. quote_history(견적기록)는 전혀 건드리지 않음.
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHdMgp2clJ0y3L1GR-WubpAYKEVYvLcLA",
+    authDomain: "maru-quote-history.firebaseapp.com",
+    databaseURL: "https://maru-quote-history-default-rtdb.firebaseio.com",
+    projectId: "maru-quote-history",
+    storageBucket: "maru-quote-history.firebasestorage.app",
+    messagingSenderId: "936179721364",
+    appId: "1:936179721364:web:cbf9e9bb6c71970d400081"
+  };
+  let fbDatabase = null;
+
+  firebase.initializeApp(firebaseConfig);
+  fbDatabase = firebase.database();
+  firebase.auth().signInAnonymously().catch(err => console.error('Firebase 인증 실패', err));
+
+  let masterData = {}; // { brand: { product: [model,...] } }
+  let movements = {};  // { fbKey: {날짜,구분,brand,name,model,수량,단가,거래처,메모} }
+  let stockSummary = [];
+  let currentType = '입고';
+
+  window.onload = function() {
+    document.getElementById('in-date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('fb-badge').innerText = '🟢 실시간 연결됨 (전체 기기 공유)';
+    if (localStorage.getItem('cm_stock_auth') === 'valid') {
+      document.getElementById('login-gate').style.display = 'none';
+      init();
+    }
+  };
+
+  function checkLogin() {
+    if (btoa(document.getElementById('app-password').value) === 'MTMwNg==') { // 1306
+      localStorage.setItem('cm_stock_auth', 'valid');
+      document.getElementById('login-gate').style.display = 'none';
+      init();
+    } else { alert('비밀번호 오류'); }
+  }
+
+  function init() {
+    loadMasterCSV(false);
+    // 실시간 리스너: 다른 기기에서 저장/삭제하면 여기도 즉시 자동 갱신됨
+    fbDatabase.ref('stock_movements').on('value', snap => {
+      movements = snap.val() || {};
+      recalcStockSummary();
+      renderStockList();
+      onModelChange();
+      if (document.getElementById('log-modal').style.display === 'flex') renderLog();
+    });
+  }
+
+  function showToast(msg) { const t=document.getElementById('toast'); t.innerText=msg; t.className='show'; setTimeout(()=>t.className='',2000); }
+  function closeModal(id){ document.getElementById(id).style.display='none'; }
+  function formatMoney(el){ let v=el.value.replace(/[^0-9]/g,''); el.value = v? parseInt(v).toLocaleString():''; }
+
+  function setType(t) {
+    currentType = t;
+    document.getElementById('type-in').className = 'py-3 rounded-xl text-sm font-black transition-all ' + (t==='입고' ? 'text-white bg-blue-600' : 'text-slate-400');
+    document.getElementById('type-out').className = 'py-3 rounded-xl text-sm font-black transition-all ' + (t==='출고' ? 'text-white bg-rose-500' : 'text-slate-400');
+    document.getElementById('price-field').classList.toggle('opacity-30', t==='출고');
+    document.getElementById('price-field').classList.toggle('pointer-events-none', t==='출고');
+  }
+
+  // ===== 900개 품목 읽기 (읽기 전용 GET, 구글시트 원본/견적서에 아무 영향 없음) =====
+  // 마루견적서와 동일한 병합셀 처리(fillMergedCells) 로직을 그대로 적용해 brand/name이 빈 칸인 행도 정상 인식
+  function fillMergedCells(jsonData) {
+    const lastValues = {};
+    return jsonData.map(row => {
+      const hasAnyValue = Object.values(row).some(v => v !== undefined && v !== null && String(v).trim() !== '');
+      if (!hasAnyValue) return row;
+      const filled = { ...row };
+      ['brand', 'name'].forEach(key => {
+        const val = filled[key];
+        const isEmpty = val === undefined || val === null || String(val).trim() === '';
+        if (isEmpty) { if (lastValues[key] !== undefined) filled[key] = lastValues[key]; }
+        else { lastValues[key] = val; }
+      });
+      return filled;
+    });
+  }
+
+  async function loadMasterCSV(showMsg) {
+    try {
+      const res = await fetch(MASTER_SHEET_URL);
+      let jsonData = await res.json();
+      jsonData = fillMergedCells(jsonData);
+      masterData = {};
+      jsonData.forEach(item => {
+        const brand = String(item.brand || '').trim();
+        const name = String(item.name || '').trim();
+        const model = String(item.model || '').trim();
+        const category = String(item.category ?? item['구분'] ?? '바닥재').trim();
+        // 철거단가표 행, 벽장재 행은 재고 대상에서 제외 (마루 위주로 관리)
+        if (category.includes('철거') || category.includes('벽')) return;
+        if (!brand || !name || !model) return;
+        if (!masterData[brand]) masterData[brand] = {};
+        if (!masterData[brand][name]) masterData[brand][name] = [];
+        if (!masterData[brand][name].includes(model)) masterData[brand][name].push(model);
+      });
+      renderBrandSelect();
+      if (showMsg) showToast('품목 목록 업데이트 완료');
+    } catch(e) { showToast('품목 목록 불러오기 실패'); }
+  }
+
+  function renderBrandSelect() {
+    const sel = document.getElementById('sel-brand');
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">브랜드 선택</option>';
+    Object.keys(masterData).sort().forEach(b => sel.add(new Option(b,b)));
+    if (prev && masterData[prev]) sel.value = prev;
+    updateProducts();
+  }
+
+  function updateProducts() {
+    const b = document.getElementById('sel-brand').value;
+    const sel = document.getElementById('sel-product');
+    sel.innerHTML = '<option value="">제품 선택</option>';
+    if (b && masterData[b]) Object.keys(masterData[b]).forEach(n => sel.add(new Option(n,n)));
+    updateModels();
+  }
+
+  function updateModels() {
+    const b = document.getElementById('sel-brand').value;
+    const p = document.getElementById('sel-product').value;
+    const sel = document.getElementById('sel-model');
+    sel.innerHTML = '<option value="">색상/모델 선택</option>';
+    if (b && p && masterData[b] && masterData[b][p]) masterData[b][p].forEach(m => sel.add(new Option(m,m)));
+    onModelChange();
+  }
+
+  function onModelChange() {
+    const b = document.getElementById('sel-brand').value;
+    const p = document.getElementById('sel-product').value;
+    const m = document.getElementById('sel-model').value;
+    const box = document.getElementById('current-stock-box');
+    if (!b || !p || !m) { box.classList.add('hidden'); return; }
+    const found = stockSummary.find(s => s.brand===b && s.name===p && s.model===m);
+    const stock = found ? found.stock : 0;
+    box.classList.remove('hidden');
+    document.getElementById('current-stock-val').innerText = stock.toLocaleString() + ' BOX';
+    document.getElementById('current-stock-val').className = 'text-sm font-black ' + (stock <= 0 ? 'text-rose-500' : 'text-emerald-600');
+  }
+
+  // ===== Firebase 실시간 데이터를 기반으로 brand+name+model별 현재재고 재계산 =====
+  function recalcStockSummary() {
+    const map = {};
+    Object.values(movements).forEach(r => {
+      if (!r.brand || !r.name || !r.model) return;
+      const key = `${r.brand}||${r.name}||${r.model}`;
+      if (!map[key]) map[key] = { brand:r.brand, name:r.name, model:r.model, stock:0 };
+      const qty = Number(r.qty) || 0;
+      if (r.type === '입고') map[key].stock += qty;
+      else if (r.type === '출고') map[key].stock -= qty;
+    });
+    stockSummary = Object.values(map).sort((a,b) => a.stock - b.stock);
+  }
+
+  function renderStockList() {
+    const q = (document.getElementById('stock-search').value || '').toLowerCase();
+    const box = document.getElementById('stock-list');
+    const filtered = stockSummary.filter(s => !q || (s.brand+s.name+s.model).toLowerCase().includes(q));
+    document.getElementById('stock-count').innerText = `${filtered.length}개 품목`;
+    box.innerHTML = '';
+    if (!filtered.length) { box.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">기록이 없습니다</div>'; return; }
+    filtered.forEach(s => {
+      const low = s.stock <= 0;
+      const row = document.createElement('div');
+      row.className = 'flex justify-between items-center px-3 py-2.5 rounded-xl border ' + (low ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-100');
+      row.innerHTML = `
+        <div class="min-w-0 flex-1">
+          <p class="text-[10px] font-bold text-slate-400">${s.brand} · ${s.name}</p>
+          <p class="text-sm font-black text-slate-800 truncate">${s.model}</p>
+        </div>
+        <span class="text-base font-black ${low ? 'text-rose-500' : 'text-slate-800'} shrink-0 ml-2">${s.stock.toLocaleString()} <span class="text-[10px] font-bold">BOX</span></span>
+      `;
+      box.appendChild(row);
+    });
+  }
+
+  function submitMovement() {
+    const brand = document.getElementById('sel-brand').value;
+    const name = document.getElementById('sel-product').value;
+    const model = document.getElementById('sel-model').value;
+    const qty = parseFloat(document.getElementById('in-qty').value) || 0;
+    if (!brand || !name || !model) return showToast('브랜드/제품/모델을 선택하세요');
+    if (qty <= 0) return showToast('수량을 입력하세요');
+
+    const record = {
+      date: document.getElementById('in-date').value,
+      type: currentType,
+      brand, name, model,
+      qty,
+      price: parseInt((document.getElementById('in-price').value||'0').replace(/,/g,'')) || 0,
+      vendor: document.getElementById('in-vendor').value,
+      memo: document.getElementById('in-memo').value,
+      ts: Date.now()
+    };
+
+    fbDatabase.ref('stock_movements').push(record).then(() => {
+      showToast(currentType + ' 저장 완료 (전체 기기 즉시 반영)');
+      document.getElementById('in-qty').value = '';
+      document.getElementById('in-price').value = '';
+      document.getElementById('in-vendor').value = '';
+      document.getElementById('in-memo').value = '';
+    }).catch(() => showToast('저장 실패, 다시 시도해주세요'));
+  }
+
+  function openLogModal() {
+    document.getElementById('log-modal').style.display = 'flex';
+    renderLog();
+  }
+
+  function renderLog() {
+    const q = (document.getElementById('log-search').value || '').toLowerCase();
+    const box = document.getElementById('log-list');
+    const list = Object.keys(movements).map(key => ({ key, ...movements[key] }))
+      .sort((a,b) => (b.ts||0) - (a.ts||0))
+      .filter(r => !q || (r.brand+r.name+r.model).toLowerCase().includes(q));
+    box.innerHTML = '';
+    if (!list.length) { box.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm">기록이 없습니다</div>'; return; }
+    list.forEach(r => {
+      const isIn = r.type === '입고';
+      const row = document.createElement('div');
+      row.className = 'bg-white border border-slate-100 rounded-xl p-3 flex justify-between items-center';
+      row.innerHTML = `
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-1.5 mb-0.5">
+            <span class="text-[9px] font-black px-1.5 py-0.5 rounded-full ${isIn?'bg-blue-100 text-blue-600':'bg-rose-100 text-rose-600'}">${r.type}</span>
+            <span class="text-[10px] text-slate-400 font-bold">${r.date||''}</span>
+          </div>
+          <p class="text-sm font-black text-slate-800 truncate">${r.brand} · ${r.name} · ${r.model}</p>
+          <p class="text-[11px] text-slate-400 font-bold">${r.qty}BOX ${r.price?('· '+Number(r.price).toLocaleString()+'원'):''} ${r.vendor?('· '+r.vendor):''}</p>
+        </div>
+        <button onclick="deleteLog('${r.key}')" class="text-slate-300 hover:text-rose-500 px-2 shrink-0"><i class="fas fa-trash"></i></button>
+      `;
+      box.appendChild(row);
+    });
+  }
+
+  function deleteLog(key) {
+    if (!confirm('이 기록을 삭제할까요?')) return;
+    fbDatabase.ref('stock_movements/' + key).remove().then(() => showToast('삭제 완료')).catch(() => showToast('삭제 실패'));
+  }
+</script>
+</body>
+</html>

@@ -501,86 +501,11 @@ const fbDatabase = firebase.database();
 })();
 
 /* ============================================================
-   단가 데이터 + 공지사항 (동시접속 대비 SWR 초고속 캐시)
+   상태 & 최적화 인덱싱 유틸
    ============================================================ */
-const FEED_URL = 'https://script.google.com/macros/s/AKfycbzyafI_d2PZiE_AYS4Y5f9uBQjK5ULCxX21hk2Z5BMDcbktNT9NnF8mUb_HhA8hJqy9Fw/exec';
-const CACHE_KEY = 'cm_price_cache_v5';
-
 let RAW_DATA = [];
 let NOTICES = { info: [], urgentList: [] };
 let PROCESSED_PATTERNS = [];
-let dataFetchPromise = null;
-
-// 로컬 캐시 즉각 메모리 로드 (0.01초 렌더링 준비)
-try {
-  const cached = localStorage.getItem(CACHE_KEY);
-  if (cached) {
-    const { data } = JSON.parse(cached);
-    if (data && data.prices) {
-      RAW_DATA = data.prices;
-      NOTICES = data.notices || { info: [], urgentList: [] };
-      PROCESSED_PATTERNS = groupData(RAW_DATA);
-    }
-  }
-} catch(e){}
-
-// 백그라운드에서 최신 데이터 가져오기
-dataFetchPromise = fetch(FEED_URL)
-  .then(res => { if (!res.ok) throw new Error('네트워크 오류'); return res.json(); })
-  .then(json => {
-    RAW_DATA = json.prices || [];
-    NOTICES = json.notices || { info: [], urgentList: [] };
-    PROCESSED_PATTERNS = groupData(RAW_DATA);
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: json, ts: Date.now() })); } catch(e){}
-    return json;
-  });
-
-/* ============================================================
-   접근 게이트 (동시 접속 지연 없는 비동기 권한 승인)
-   ============================================================ */
-function showGate(title, msg){
-  document.getElementById('gate-title').innerText = title;
-  document.getElementById('gate-msg').innerText = msg;
-}
-function denyAccess(msg){
-  showGate('접근 권한이 없습니다', msg || '전달받은 링크가 정확한지 확인해주세요. 문의: 청인마루');
-}
-function grantAccess(clientName){
-  document.getElementById('gate').classList.add('hidden');
-  document.getElementById('mainWrap').classList.add('ready');
-  document.getElementById('clientName').innerText = clientName || '거래처';
-  loadData();
-}
-
-(async function checkTokenAndStart(){
-  const token = new URLSearchParams(window.location.search).get('t');
-  if (!token) { denyAccess('링크에 접속 코드가 없습니다. 담당자에게 전달받은 링크 그대로 접속해주세요.'); return; }
-  try {
-    // 1. 익명 로그인 및 토큰 확인
-    await firebase.auth().signInAnonymously();
-    const snap = await fbDatabase.ref('priceAccessTokens/' + token).once('value');
-    const data = snap.val();
-    
-    if (!data || data.active === false) { denyAccess('유효하지 않거나 비활성화된 링크입니다.'); return; }
-    if (data.expiresAt && Date.now() > data.expiresAt) { denyAccess('이 링크의 유효기간이 만료되었습니다. 담당자에게 문의해주세요.'); return; }
-
-    // 2. 화면 즉시 오픈 (대기 시간 제거)
-    grantAccess(data.clientName);
-
-    // 3. 접속 통계는 백그라운드에서 비동기 처리 (사용자 화면 열리는 속도에 영향 없음)
-    fbDatabase.ref('priceAccessTokens/' + token).update({
-      lastAccessedAt: Date.now(),
-      accessCount: (data.accessCount || 0) + 1
-    }).catch(()=>{});
-  } catch (e) {
-    console.error(e);
-    denyAccess('접속 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-  }
-})();
-
-/* ============================================================
-   상태 & 최적화 유틸
-   ============================================================ */
 let openState = {};
 let selectedBrand = null;
 
@@ -596,9 +521,6 @@ function fmtFactor(f){
   return (Math.round(n*100)/100).toString();
 }
 
-/* ============================================================
-   초고속 한글 검색 및 인덱싱 유틸
-   ============================================================ */
 const VOWEL_MERGE = {1:1, 3:1, 5:1, 7:1, 10:10, 11:10, 15:10};
 function decomposeHangulChar(ch){
   const code = ch.charCodeAt(0) - 0xAC00;
@@ -623,17 +545,10 @@ function stripWithMap(str){
   }
   return { stripped, map };
 }
-
 function makeSearchIndex(str){
   const s = stripWithMap(str);
-  return {
-    raw: str,
-    stripped: s.stripped,
-    map: s.map,
-    folded: foldForSearch(s.stripped)
-  };
+  return { raw: str, stripped: s.stripped, map: s.map, folded: foldForSearch(s.stripped) };
 }
-
 function highlightWithIndex(indexObj, qFolded, qLen){
   if (!qFolded || !indexObj) return indexObj.raw;
   const idx = indexObj.folded.indexOf(qFolded);
@@ -650,9 +565,6 @@ function getDiscStatus(text, fontFlag){
   return 'none';
 }
 
-/* ============================================================
-   데이터 그룹핑 및 1회성 사전 최적화 (인덱싱)
-   ============================================================ */
 function groupData(data){
   const variantMap = new Map();
   data.forEach(row => {
@@ -720,7 +632,67 @@ function groupData(data){
 }
 
 /* ============================================================
-   렌더링 함수군
+   접근 게이트 및 Firebase DB 0.05초 초고속 로딩
+   ============================================================ */
+function showGate(title, msg){
+  document.getElementById('gate-title').innerText = title;
+  document.getElementById('gate-msg').innerText = msg;
+}
+function denyAccess(msg){
+  showGate('접근 권한이 없습니다', msg || '전달받은 링크가 정확한지 확인해주세요. 문의: 청인마루');
+}
+function grantAccess(clientName){
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('mainWrap').classList.add('ready');
+  document.getElementById('clientName').innerText = clientName || '거래처';
+}
+
+(async function checkTokenAndStart(){
+  const token = new URLSearchParams(window.location.search).get('t');
+  if (!token) { denyAccess('링크에 접속 코드가 없습니다. 담당자에게 전달받은 링크 그대로 접속해주세요.'); return; }
+  
+  try {
+    await firebase.auth().signInAnonymously();
+    
+    // 1. 토큰 확인과 단가 데이터 수신을 Firebase에서 동시에 0.05초 만에 수행
+    const [tokenSnap, dataSnap] = await Promise.all([
+      fbDatabase.ref('priceAccessTokens/' + token).once('value'),
+      fbDatabase.ref('marketData').once('value')
+    ]);
+
+    const tokenData = tokenSnap.val();
+    if (!tokenData || tokenData.active === false) { denyAccess('유효하지 않거나 비활성화된 링크입니다.'); return; }
+    if (tokenData.expiresAt && Date.now() > tokenData.expiresAt) { denyAccess('이 링크의 유효기간이 만료되었습니다. 담당자에게 문의해주세요.'); return; }
+
+    grantAccess(tokenData.clientName);
+
+    // 2. 화면 즉시 렌더링
+    const marketData = dataSnap.val();
+    if (marketData) {
+      RAW_DATA = marketData.prices || [];
+      NOTICES = marketData.notices || { info: [], urgentList: [] };
+      PROCESSED_PATTERNS = groupData(RAW_DATA);
+      renderBrandFilter(PROCESSED_PATTERNS);
+      renderList();
+      renderNotices();
+    } else {
+      document.getElementById('listRoot').innerHTML = '<div class="empty">등록된 단가 정보가 없습니다. 관리자에게 문의하세요.</div>';
+    }
+
+    // 3. 접속 기록은 백그라운드에서 업데이트 (속도 영향 제로)
+    fbDatabase.ref('priceAccessTokens/' + token).update({
+      lastAccessedAt: Date.now(),
+      accessCount: (tokenData.accessCount || 0) + 1
+    }).catch(()=>{});
+
+  } catch (e) {
+    console.error(e);
+    denyAccess('접속 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+  }
+})();
+
+/* ============================================================
+   렌더링
    ============================================================ */
 function renderBrandFilter(patterns){
   const counts = {};
@@ -793,31 +765,6 @@ function onSearchInput(){
   }, { passive: false });
 })();
 
-async function loadData(){
-  const root = document.getElementById('listRoot');
-  if (PROCESSED_PATTERNS.length) {
-    renderBrandFilter(PROCESSED_PATTERNS);
-    renderList();
-    renderNotices();
-  } else {
-    root.innerHTML = '<div class="empty">단가 정보를 불러오는 중입니다...</div>';
-  }
-  try {
-    await dataFetchPromise;
-    renderBrandFilter(PROCESSED_PATTERNS);
-    renderList();
-    renderNotices();
-  } catch (e) {
-    if (!PROCESSED_PATTERNS.length) root.innerHTML = '<div class="empty">단가 정보를 불러오지 못했습니다.<br>잠시 후 새로고침 해주세요.</div>';
-    console.error(e);
-  }
-}
-
-/* 공지 문구 서식 처리:
-   **굵게**  →  <b>
-   [텍스트](URL)  →  파란색 링크 (새 탭 열림)
-   단독 URL(http...) →  파란색 [상세보기] 링크 (새 탭 열림)
-   "NEW" 글자  →  초록색 NEW 배지 */
 function renderNoticeText(text){
   if (!text) return '';
   let t = String(text);

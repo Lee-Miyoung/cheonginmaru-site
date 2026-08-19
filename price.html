@@ -514,18 +514,19 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const fbDatabase = firebase.database();
 
-/* 카카오톡 인앱 브라우저 감지 → 외부 브라우저로 바로 넘어갈 수 있는 배너 표시 */
+/* 카카오톡 인앱 브라우저 감지 → 자동으로 외부 브라우저 전환 시도 + 안 되면 누를 수 있는 배너도 같이 표시 */
+function openInExternalBrowser(){
+  const url = encodeURIComponent(window.location.href);
+  window.location.href = 'kakaotalk://web/openExternal?url=' + url;
+}
 (function(){
   const ua = navigator.userAgent || '';
   if (/kakaotalk/i.test(ua)) {
     const banner = document.getElementById('kakaoWarnBanner');
     if (banner) banner.style.display = 'block';
+    openInExternalBrowser(); // 자동 전환 시도 (브라우저가 막으면 위 배너 버튼으로 수동 전환 가능)
   }
 })();
-function openInExternalBrowser(){
-  const url = encodeURIComponent(window.location.href);
-  window.location.href = 'kakaotalk://web/openExternal?url=' + url;
-}
 
 /* 조회일 자동 표시 */
 (function(){

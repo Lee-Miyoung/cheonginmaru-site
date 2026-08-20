@@ -97,6 +97,12 @@
       <button id="log-tab-active" onclick="setLogTab('active')" class="flex-1 py-2 rounded-lg text-xs font-black bg-[#2B2622] text-white">전체 기록</button>
       <button id="log-tab-trash" onclick="setLogTab('trash')" class="flex-1 py-2 rounded-lg text-xs font-black bg-[#F3F0EA] text-[#B8B2A3]"><i class="fas fa-trash-can mr-1"></i>휴지통 (30일 보관)</button>
     </div>
+    <div class="px-3 pt-2 flex gap-1.5" id="log-type-filter-row">
+      <button class="log-type-filter-btn flex-1 py-1.5 rounded-lg text-[12px] font-black bg-[#2B2622] text-white" data-type="" onclick="setLogTypeFilter('')">전체</button>
+      <button class="log-type-filter-btn flex-1 py-1.5 rounded-lg text-[12px] font-black bg-[#F3F0EA] text-[#8B5E34]" data-type="입고" onclick="setLogTypeFilter('입고')">입고</button>
+      <button class="log-type-filter-btn flex-1 py-1.5 rounded-lg text-[12px] font-black bg-[#F3F0EA] text-rose-500" data-type="출고" onclick="setLogTypeFilter('출고')">출고</button>
+      <button class="log-type-filter-btn flex-1 py-1.5 rounded-lg text-[12px] font-black bg-[#F3F0EA] text-amber-600" data-type="반품" onclick="setLogTypeFilter('반품')">반품</button>
+    </div>
     <div id="log-list" class="p-3 overflow-y-auto flex-1 space-y-2 bg-[#FAF8F4]"></div>
   </div>
 </div>
@@ -252,9 +258,10 @@
 
     <!-- 반품 모드: 지금 갖고 있는 재고 중에서 골라서 반품 -->
     <div id="return-picker-area" class="hidden space-y-2.5">
-      <span class="eyebrow">반품할 재고 선택</span>
+      <span class="eyebrow" id="return-picker-title">반품할 재고 선택</span>
       <input type="text" id="return-search" class="input-premium" placeholder="브랜드/제품/모델/로트 검색..." oninput="renderReturnPicker()">
       <div id="return-picker-list" class="space-y-1.5 max-h-72 overflow-y-auto"></div>
+      <span id="return-picker-empty-msg" class="hidden"></span>
       <div id="return-selected-panel" class="hidden rounded-xl p-3.5 border"></div>
     </div>
 
@@ -263,14 +270,9 @@
       <div><label class="eyebrow pl-1">생산일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-prod-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-prod-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-prod-date')"></div></div>
     </div>
 
-    <div id="current-stock-box" class="hidden bg-[#F1F5F1] border border-[#D9E4D9] rounded-xl px-4 py-2.5">
-      <div class="flex justify-between items-center">
-        <span class="text-[14px] font-black text-[var(--moss)]"><i class="fas fa-warehouse mr-1"></i><span id="current-stock-label">현재 재고</span></span>
-        <span id="current-stock-val" class="text-sm font-black text-[var(--moss)] num">-</span>
-      </div>
-      <button id="fill-full-return-btn" type="button" onclick="fillFullReturnQty()" class="hidden w-full mt-2 py-2 rounded-lg bg-[var(--moss)] text-white text-[13px] font-black">
-        <i class="fas fa-rotate-left mr-1"></i>남은 재고 전량 반품으로 입력
-      </button>
+    <div id="current-stock-box" class="hidden bg-[#F1F5F1] border border-[#D9E4D9] rounded-xl px-4 py-2.5 flex justify-between items-center">
+      <span class="text-[14px] font-black text-[var(--moss)]"><i class="fas fa-warehouse mr-1"></i><span id="current-stock-label">현재 재고</span></span>
+      <span id="current-stock-val" class="text-sm font-black text-[var(--moss)] num">-</span>
     </div>
 
     <div class="grid grid-cols-2 gap-2.5">
@@ -358,12 +360,27 @@
     textEl.classList.remove('text-[#B8B2A3]');
   }
 
+  // 날짜 칸은 아이콘뿐 아니라 어디를 눌러도 달력이 뜨게 함
+  function setupDateBoxClicks() {
+    document.querySelectorAll('.date-box-wrap').forEach(wrap => {
+      const input = wrap.querySelector('input[type="date"]');
+      if (!input || wrap.dataset.boundClick) return;
+      wrap.dataset.boundClick = '1';
+      wrap.addEventListener('click', () => {
+        if (typeof input.showPicker === 'function') { try { input.showPicker(); return; } catch(e) {} }
+        input.focus();
+        input.click();
+      });
+    });
+  }
+
   window.onload = function() {
     document.getElementById('in-date').value = new Date().toISOString().slice(0,10);
     document.getElementById('in-order-date').value = new Date().toISOString().slice(0,10);
     syncDateDisplay('in-date');
     syncDateDisplay('in-order-date');
     syncDateDisplay('in-prod-date');
+    setupDateBoxClicks();
     if (localStorage.getItem('cm_stock_auth') === 'valid') {
       document.getElementById('login-gate').style.display = 'none';
       init();
@@ -612,32 +629,36 @@
     document.getElementById('memo-hint').innerText = t==='반품' ? '(반품 사유 꼭 적어주세요)' : '';
     document.getElementById('return-policy-fields').classList.toggle('hidden', t!=='입고');
 
-    const isReturn = t === '반품';
-    document.getElementById('normal-pick-header').classList.toggle('hidden', isReturn);
-    document.getElementById('select-area').classList.toggle('hidden', isReturn || isManualMode);
-    document.getElementById('sel-model').classList.toggle('hidden', isReturn || isManualMode);
-    document.getElementById('spec-display').classList.toggle('hidden', isReturn);
-    document.getElementById('manual-area').classList.toggle('hidden', !(isManualMode && !isReturn));
-    document.getElementById('return-picker-area').classList.toggle('hidden', !isReturn);
-    if (isReturn) {
+    const isPick = (t === '출고' || t === '반품'); // 출고/반품은 갖고 있는 재고에서 골라서 진행
+    document.getElementById('normal-pick-header').classList.toggle('hidden', isPick);
+    document.getElementById('select-area').classList.toggle('hidden', isPick || isManualMode);
+    document.getElementById('sel-model').classList.toggle('hidden', isPick || isManualMode);
+    document.getElementById('spec-display').classList.toggle('hidden', isPick);
+    document.getElementById('manual-area').classList.toggle('hidden', !(isManualMode && !isPick));
+    document.getElementById('return-picker-area').classList.toggle('hidden', !isPick);
+    document.getElementById('return-picker-title').innerText = t === '출고' ? '출고할 재고 선택' : '반품할 재고 선택';
+    document.getElementById('return-search').placeholder = t === '출고' ? '브랜드/제품/모델/로트 검색... (출고)' : '브랜드/제품/모델/로트 검색... (반품)';
+    document.getElementById('return-picker-empty-msg').innerText = t === '출고' ? '출고할 재고가 없습니다' : '반품 가능한 재고가 없습니다';
+    if (isPick) {
       renderReturnPicker();
     } else {
       selectedReturnItem = null;
       document.getElementById('return-selected-panel').classList.add('hidden');
     }
-
-    const returnBtn = document.getElementById('fill-full-return-btn');
-    if (returnBtn) returnBtn.classList.toggle('hidden', !(t === '반품' && currentAvailableStock > 0));
   }
 
-  // ===== 반품 모드: 현재 재고 목록에서 골라서 반품 =====
+  // ===== 출고/반품 모드: 현재 재고 목록에서 골라서 진행 =====
   function renderReturnPicker() {
     const listEl = document.getElementById('return-picker-list');
     if (!listEl) return;
     const q = (document.getElementById('return-search').value || '').toLowerCase();
     const items = stockSummary.filter(s => s.stock > 0 && (!q || (s.brand+s.name+s.model+(s.lot||'')).toLowerCase().includes(q)));
     listEl.innerHTML = '';
-    if (!items.length) { listEl.innerHTML = '<div class="text-center py-6 text-[#B8B2A3] text-[14px]">반품 가능한 재고가 없습니다</div>'; return; }
+    if (!items.length) {
+      const msg = currentType === '출고' ? '출고할 재고가 없습니다' : '반품 가능한 재고가 없습니다';
+      listEl.innerHTML = `<div class="text-center py-6 text-[#B8B2A3] text-[14px]">${msg}</div>`;
+      return;
+    }
     items.slice(0, 60).forEach(s => {
       const isSelected = selectedReturnItem && selectedReturnItem.brand===s.brand && selectedReturnItem.name===s.name && selectedReturnItem.model===s.model && selectedReturnItem.lot===s.lot;
       const row = document.createElement('button');
@@ -676,8 +697,21 @@
   function renderReturnSelectedPanel() {
     const panel = document.getElementById('return-selected-panel');
     if (!selectedReturnItem) { panel.classList.add('hidden'); return; }
-    const s = selectedReturnItem;
-    const policy = getReturnPolicyFor(s.brand, s.name, s.model, s.lot);
+    const sItem = selectedReturnItem;
+
+    // 출고는 반품정책 경고가 필요없음 - 선택한 재고 정보만 간단히 표시
+    if (currentType === '출고') {
+      panel.className = 'rounded-xl p-3.5 border border-[var(--line)] bg-[#FBF9F5]';
+      panel.innerHTML = `
+        <p class="text-[13px] font-bold text-[#B8B2A3]">${sItem.brand} · ${sItem.name}</p>
+        <p class="text-[15px] font-black text-[#3A342C]">${sItem.model} ${sItem.lot ? ('· 로트 '+sItem.lot) : ''}</p>
+        <p class="text-[13px] font-black text-[#3A342C] mt-1 num">현재 재고 ${sItem.stock.toLocaleString()} BOX 중에서 출고</p>
+      `;
+      panel.classList.remove('hidden');
+      return;
+    }
+
+    const policy = getReturnPolicyFor(sItem.brand, sItem.name, sItem.model, sItem.lot);
     let alertHtml = '';
     let borderColor = 'border-[var(--line)]';
     let bg = 'bg-[#FBF9F5]';
@@ -705,8 +739,8 @@
     }
     panel.className = 'rounded-xl p-3.5 border ' + borderColor + ' ' + bg;
     panel.innerHTML = `
-      <p class="text-[13px] font-bold text-[#B8B2A3]">${s.brand} · ${s.name}</p>
-      <p class="text-[15px] font-black text-[#3A342C]">${s.model} ${s.lot ? ('· 로트 '+s.lot) : ''}</p>
+      <p class="text-[13px] font-bold text-[#B8B2A3]">${sItem.brand} · ${sItem.name}</p>
+      <p class="text-[15px] font-black text-[#3A342C]">${sItem.model} ${sItem.lot ? ('· 로트 '+sItem.lot) : ''}</p>
       ${alertHtml}
     `;
     panel.classList.remove('hidden');
@@ -812,7 +846,7 @@
   }
 
   function getSelectedItem() {
-    if (currentType === '반품' && selectedReturnItem) {
+    if ((currentType === '반품' || currentType === '출고') && selectedReturnItem) {
       return { brand: selectedReturnItem.brand, name: selectedReturnItem.name, model: selectedReturnItem.model };
     }
     if (isManualMode) {
@@ -841,33 +875,33 @@
     document.getElementById('in-price-vat').value = inc ? inc.toLocaleString() : '';
   }
 
-  let currentAvailableStock = 0; // '반품 전량' 버튼과 초과 반품 검증에 사용
+  let currentAvailableStock = 0; // 초과 출고/반품 검증에 사용
 
   function onModelChange() {
     const { brand: b, name: p, model: m } = getSelectedItem();
-    const lot = (document.getElementById('in-lot').value || '').trim();
     const box = document.getElementById('current-stock-box');
-    const returnBtn = document.getElementById('fill-full-return-btn');
     if (!b || !p || !m) { box.classList.add('hidden'); currentAvailableStock = 0; return; }
     box.classList.remove('hidden');
     let stockVal = 0;
-    if (lot) {
-      const found = stockSummary.find(s => s.brand===b && s.name===p && s.model===m && s.lot===lot);
-      stockVal = found ? found.stock : 0;
-      document.getElementById('current-stock-label').innerText = `현재 재고 (로트: ${lot})`;
+
+    if ((currentType === '반품' || currentType === '출고') && selectedReturnItem) {
+      // 목록에서 정확히 고른 재고(로트 단위) - 합산하지 않고 그 항목 그대로
+      stockVal = selectedReturnItem.stock;
+      document.getElementById('current-stock-label').innerText = selectedReturnItem.lot ? `현재 재고 (로트: ${selectedReturnItem.lot})` : '현재 재고';
     } else {
-      stockVal = stockSummary.filter(s => s.brand===b && s.name===p && s.model===m).reduce((a,s)=>a+s.stock,0);
-      document.getElementById('current-stock-label').innerText = '현재 재고 (전체 로트 합계)';
+      const lot = (document.getElementById('in-lot').value || '').trim();
+      if (lot) {
+        const found = stockSummary.find(s => s.brand===b && s.name===p && s.model===m && s.lot===lot);
+        stockVal = found ? found.stock : 0;
+        document.getElementById('current-stock-label').innerText = `현재 재고 (로트: ${lot})`;
+      } else {
+        stockVal = stockSummary.filter(s => s.brand===b && s.name===p && s.model===m).reduce((a,s)=>a+s.stock,0);
+        document.getElementById('current-stock-label').innerText = '현재 재고 (전체 로트 합계)';
+      }
     }
     currentAvailableStock = stockVal;
     document.getElementById('current-stock-val').innerText = stockVal.toLocaleString() + ' BOX';
     document.getElementById('current-stock-val').className = 'text-sm font-black ' + (stockVal <= 0 ? 'text-rose-500' : 'text-[var(--moss)]');
-    returnBtn.classList.toggle('hidden', !(currentType === '반품' && stockVal > 0));
-  }
-
-  function fillFullReturnQty() {
-    document.getElementById('in-qty').value = currentAvailableStock;
-    showToast(`남은 재고 ${currentAvailableStock}BOX를 수량에 입력했습니다`);
   }
 
   // ===== Firebase 실시간 데이터를 기반으로 brand+name+model+로트번호별 현재재고 재계산 =====
@@ -952,7 +986,7 @@
         row.className = 'flex justify-between items-center gap-2 px-3.5 py-3 bg-white ' + (low ? 'bg-[#FBF1EE]' : '');
         row.innerHTML = `
           <div class="min-w-0 flex-1">
-            <p class="text-[13px] font-bold text-[#B8B2A3] truncate">${s.name}</p>
+            <p class="text-[14px] font-black text-[#5C5347] truncate">${s.name}</p>
             <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
             <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · '+s.prodDate) : ''}</p>
           </div>
@@ -1040,6 +1074,7 @@
   }
 
   let logTab = 'active';
+  let logTypeFilter = '';
   let movementsTrash = {};
   function setLogTab(tab) {
     logTab = tab;
@@ -1050,13 +1085,25 @@
     } else { renderLog(); }
   }
 
+  function setLogTypeFilter(type) {
+    logTypeFilter = type;
+    document.querySelectorAll('.log-type-filter-btn').forEach(btn => {
+      const active = btn.dataset.type === type;
+      const colorMap = { '': 'bg-[#2B2622] text-white', '입고': 'bg-[#8B5E34] text-white', '출고': 'bg-rose-500 text-white', '반품': 'bg-amber-500 text-white' };
+      const inactiveColorMap = { '': 'text-[#8B8477]', '입고': 'text-[#8B5E34]', '출고': 'text-rose-500', '반품': 'text-amber-600' };
+      btn.className = 'log-type-filter-btn flex-1 py-1.5 rounded-lg text-[12px] font-black ' + (active ? colorMap[btn.dataset.type] : 'bg-[#F3F0EA] ' + inactiveColorMap[btn.dataset.type]);
+    });
+    renderLog();
+  }
+
   function renderLog() {
     const q = (document.getElementById('log-search').value || '').toLowerCase();
     const box = document.getElementById('log-list');
     const source = logTab === 'trash' ? movementsTrash : movements;
     const list = Object.keys(source).map(key => ({ key, ...source[key] }))
       .sort((a,b) => (b.ts||0) - (a.ts||0))
-      .filter(r => !q || (r.brand+r.name+r.model).toLowerCase().includes(q));
+      .filter(r => !q || (r.brand+r.name+r.model).toLowerCase().includes(q))
+      .filter(r => !logTypeFilter || r.type === logTypeFilter);
     box.innerHTML = '';
     if (!list.length) { box.innerHTML = `<div class="text-center py-8 text-[#B8B2A3] text-sm">${logTab==='trash'?'휴지통이 비어있습니다':'기록이 없습니다'}</div>`; return; }
     list.forEach(r => {
@@ -1067,7 +1114,7 @@
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 mb-0.5">
             <span class="text-[15px] font-black px-1.5 py-0.5 rounded-full ${badgeStyle}">${r.type}</span>
-            <span class="text-[13px] text-[#B8B2A3] font-bold">입고 ${r.date||''}${r.orderDate?(' · 발주 '+r.orderDate):''}</span>
+            <span class="text-[13px] text-[#B8B2A3] font-bold">${r.date||''}${r.orderDate?(' · 발주 '+r.orderDate):''}</span>
           </div>
           <p class="text-sm font-black text-[#3A342C] truncate">${r.brand} · ${r.name} · ${r.model}</p>
           <p class="text-[14px] text-[#B8B2A3] font-bold">${r.qty}BOX ${r.price?('· '+Number(r.price).toLocaleString()+'원(VAT별도)'):''}${r.priceIncVat?(' / '+Number(r.priceIncVat).toLocaleString()+'원(VAT포함)'):''} ${r.vendor?('· '+r.vendor):''}</p>

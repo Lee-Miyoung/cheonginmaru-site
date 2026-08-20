@@ -252,9 +252,14 @@
       <div><label class="eyebrow pl-1">생산일자</label><div class="relative mt-1"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-prod-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-prod-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-prod-date')"></div></div>
     </div>
 
-    <div id="current-stock-box" class="hidden bg-[#F1F5F1] border border-[#D9E4D9] rounded-xl px-4 py-2.5 flex justify-between items-center">
-      <span class="text-[14px] font-black text-[var(--moss)]"><i class="fas fa-warehouse mr-1"></i><span id="current-stock-label">현재 재고</span></span>
-      <span id="current-stock-val" class="text-sm font-black text-[var(--moss)] num">-</span>
+    <div id="current-stock-box" class="hidden bg-[#F1F5F1] border border-[#D9E4D9] rounded-xl px-4 py-2.5">
+      <div class="flex justify-between items-center">
+        <span class="text-[14px] font-black text-[var(--moss)]"><i class="fas fa-warehouse mr-1"></i><span id="current-stock-label">현재 재고</span></span>
+        <span id="current-stock-val" class="text-sm font-black text-[var(--moss)] num">-</span>
+      </div>
+      <button id="fill-full-return-btn" type="button" onclick="fillFullReturnQty()" class="hidden w-full mt-2 py-2 rounded-lg bg-[var(--moss)] text-white text-[13px] font-black">
+        <i class="fas fa-rotate-left mr-1"></i>남은 재고 전량 반품으로 입력
+      </button>
     </div>
 
     <div class="grid grid-cols-2 gap-2.5">
@@ -585,6 +590,8 @@
     document.getElementById('price-field').classList.toggle('opacity-30', t!=='입고');
     document.getElementById('price-field').classList.toggle('pointer-events-none', t!=='입고');
     document.getElementById('memo-hint').innerText = t==='반품' ? '(반품 사유 꼭 적어주세요)' : '';
+    const returnBtn = document.getElementById('fill-full-return-btn');
+    if (returnBtn) returnBtn.classList.toggle('hidden', !(t === '반품' && currentAvailableStock > 0));
   }
 
   // ===== 900개 품목 읽기 (읽기 전용 GET, 구글시트 원본/견적서에 아무 영향 없음) =====
@@ -691,24 +698,33 @@
     document.getElementById('in-price-vat').value = inc ? inc.toLocaleString() : '';
   }
 
+  let currentAvailableStock = 0; // '반품 전량' 버튼과 초과 반품 검증에 사용
+
   function onModelChange() {
     const { brand: b, name: p, model: m } = getSelectedItem();
     const lot = (document.getElementById('in-lot').value || '').trim();
     const box = document.getElementById('current-stock-box');
-    if (!b || !p || !m) { box.classList.add('hidden'); return; }
+    const returnBtn = document.getElementById('fill-full-return-btn');
+    if (!b || !p || !m) { box.classList.add('hidden'); currentAvailableStock = 0; return; }
     box.classList.remove('hidden');
+    let stockVal = 0;
     if (lot) {
       const found = stockSummary.find(s => s.brand===b && s.name===p && s.model===m && s.lot===lot);
-      const stock = found ? found.stock : 0;
+      stockVal = found ? found.stock : 0;
       document.getElementById('current-stock-label').innerText = `현재 재고 (로트: ${lot})`;
-      document.getElementById('current-stock-val').innerText = stock.toLocaleString() + ' BOX';
-      document.getElementById('current-stock-val').className = 'text-sm font-black ' + (stock <= 0 ? 'text-rose-500' : 'text-[var(--moss)]');
     } else {
-      const total = stockSummary.filter(s => s.brand===b && s.name===p && s.model===m).reduce((a,s)=>a+s.stock,0);
+      stockVal = stockSummary.filter(s => s.brand===b && s.name===p && s.model===m).reduce((a,s)=>a+s.stock,0);
       document.getElementById('current-stock-label').innerText = '현재 재고 (전체 로트 합계)';
-      document.getElementById('current-stock-val').innerText = total.toLocaleString() + ' BOX';
-      document.getElementById('current-stock-val').className = 'text-sm font-black ' + (total <= 0 ? 'text-rose-500' : 'text-[var(--moss)]');
     }
+    currentAvailableStock = stockVal;
+    document.getElementById('current-stock-val').innerText = stockVal.toLocaleString() + ' BOX';
+    document.getElementById('current-stock-val').className = 'text-sm font-black ' + (stockVal <= 0 ? 'text-rose-500' : 'text-[var(--moss)]');
+    returnBtn.classList.toggle('hidden', !(currentType === '반품' && stockVal > 0));
+  }
+
+  function fillFullReturnQty() {
+    document.getElementById('in-qty').value = currentAvailableStock;
+    showToast(`남은 재고 ${currentAvailableStock}BOX를 수량에 입력했습니다`);
   }
 
   // ===== Firebase 실시간 데이터를 기반으로 brand+name+model+로트번호별 현재재고 재계산 =====
@@ -819,6 +835,10 @@
     if (!brand || !name || !model) { showToast('브랜드/제품/모델을 선택하세요'); setSaveStatus('❌ 브랜드/제품/모델을 선택하세요', false); return; }
     if (qty <= 0) { showToast('수량을 입력하세요'); setSaveStatus('❌ 수량을 입력하세요', false); return; }
     if (currentType === '반품' && !document.getElementById('in-memo').value.trim()) { showToast('반품 사유를 메모에 적어주세요'); setSaveStatus('❌ 반품 사유를 메모에 적어주세요', false); return; }
+    if ((currentType === '반품' || currentType === '출고') && !isManualMode && qty > currentAvailableStock) {
+      const msg = `현재 재고(${currentAvailableStock}BOX)보다 많이 ${currentType}할 수 없어요`;
+      showToast(msg, true); setSaveStatus('❌ ' + msg, false); return;
+    }
     if (!authReady) { showToast('⚠️ 아직 서버 연결 중입니다. 5초 후 다시 눌러주세요', true); setSaveStatus('⏳ 서버 연결 중... 5초 후 다시 눌러주세요', false); return; }
 
     setSaveStatus('저장 중...', true);

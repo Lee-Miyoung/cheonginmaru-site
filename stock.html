@@ -63,6 +63,8 @@
   .card { background:var(--paper-card); border:1px solid var(--line); border-radius:1.75rem; }
   .eyebrow { font-size:13px; font-weight:800; letter-spacing:.02em; text-transform:uppercase; color:#7A7364; }
   input[type="date"] { font-size:13px; min-width:0; padding-left:8px !important; padding-right:4px !important; overflow:hidden; }
+  .date-box-wrap .input-premium { transition: all .12s; }
+  .date-box-wrap:active .input-premium, .date-box-wrap:focus-within .input-premium { border-color:var(--wood); background:#fff; box-shadow:0 0 0 3px rgba(139,94,52,.14); transform:scale(0.98); }
   .brand-dot { width:8px; height:8px; border-radius:50%; background:var(--wood); flex-shrink:0; }
   .brand-accordion-arrow { transition: transform .2s; }
   .brand-accordion-arrow.open { transform: rotate(180deg); }
@@ -226,7 +228,7 @@
       <button id="type-return" class="py-3 rounded-xl text-[13px] font-black text-[#B8B2A3]" onclick="setType('반품')"><i class="fas fa-rotate-left mr-1"></i>반품</button>
     </div>
 
-    <div class="flex justify-between items-center">
+    <div id="normal-pick-header" class="flex justify-between items-center">
       <span class="eyebrow">품목 선택</span>
       <label class="flex items-center gap-2 cursor-pointer">
         <span class="text-[13px] font-bold text-[#8B8477]">목록에 없는 품목 직접 입력</span>
@@ -237,7 +239,8 @@
       <select id="sel-brand" class="input-premium" onchange="updateProducts()"></select>
       <select id="sel-product" class="input-premium" onchange="updateModels()"></select>
     </div>
-    <select id="sel-model" class="input-premium" onchange="onModelChange(); autoFillCostPrice();"></select>
+    <select id="sel-model" class="input-premium" onchange="onModelChange(); autoFillCostPrice(); updateSpecDisplay();"></select>
+    <p id="spec-display" class="hidden text-[13px] font-bold text-[#8B8477] pl-1"></p>
 
     <div id="manual-area" class="hidden space-y-2.5">
       <div class="grid grid-cols-2 gap-2.5">
@@ -247,9 +250,17 @@
       <div><label class="eyebrow pl-1">색상/모델 (직접입력)</label><input type="text" id="manual-model" class="input-premium mt-1" placeholder="색상/모델명"></div>
     </div>
 
+    <!-- 반품 모드: 지금 갖고 있는 재고 중에서 골라서 반품 -->
+    <div id="return-picker-area" class="hidden space-y-2.5">
+      <span class="eyebrow">반품할 재고 선택</span>
+      <input type="text" id="return-search" class="input-premium" placeholder="브랜드/제품/모델/로트 검색..." oninput="renderReturnPicker()">
+      <div id="return-picker-list" class="space-y-1.5 max-h-72 overflow-y-auto"></div>
+      <div id="return-selected-panel" class="hidden rounded-xl p-3.5 border"></div>
+    </div>
+
     <div class="date-row grid grid-cols-2 gap-2.5">
       <div><label class="eyebrow pl-1">로트번호</label><input type="text" id="in-lot" class="input-premium mt-1" placeholder="예: L20260819-01" oninput="onModelChange()"></div>
-      <div><label class="eyebrow pl-1">생산일자</label><div class="relative mt-1"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-prod-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-prod-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-prod-date')"></div></div>
+      <div><label class="eyebrow pl-1">생산일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-prod-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-prod-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-prod-date')"></div></div>
     </div>
 
     <div id="current-stock-box" class="hidden bg-[#F1F5F1] border border-[#D9E4D9] rounded-xl px-4 py-2.5">
@@ -270,9 +281,16 @@
       <div><label class="eyebrow pl-1">매입단가(VAT별도) <span class="text-[#A9784F] normal-case font-medium tracking-normal">· 원가자동</span></label><input type="text" id="in-price" class="input-premium mt-1 num" placeholder="0" oninput="formatMoney(this); syncPriceFromExVat();"></div>
       <div><label class="eyebrow pl-1">매입단가(VAT포함)</label><input type="text" id="in-price-vat" class="input-premium mt-1 num" placeholder="0" oninput="formatMoney(this); syncPriceFromIncVat();"></div>
     </div>
+    <div id="return-policy-fields" class="hidden grid grid-cols-2 gap-2.5">
+      <div class="flex items-center gap-2 bg-[#FBF9F5] border border-[var(--line)] rounded-xl px-3">
+        <input type="checkbox" id="in-returnable" checked class="accent-[var(--moss)] w-4 h-4">
+        <label for="in-returnable" class="text-[13px] font-bold text-[#3A342C]">반품 가능 거래처</label>
+      </div>
+      <div><label class="eyebrow pl-1">반품기한 (선택)</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-return-deadline-text" class="num text-[16px] text-[#B8B2A3]">기한 없음</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-return-deadline" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-return-deadline')"></div></div>
+    </div>
     <div class="date-row grid grid-cols-2 gap-2.5">
-      <div><label class="eyebrow pl-1">발주일자</label><div class="relative mt-1"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-order-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-order-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-order-date')"></div></div>
-      <div><label class="eyebrow pl-1">입고일자</label><div class="relative mt-1"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-date')"></div></div>
+      <div><label class="eyebrow pl-1">발주일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-order-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-order-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-order-date')"></div></div>
+      <div><label class="eyebrow pl-1">입고일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-date')"></div></div>
     </div>
     <div><label class="eyebrow pl-1">메모 <span id="memo-hint" class="text-[#B8B2A3] normal-case font-medium tracking-normal"></span></label><input type="text" id="in-memo" class="input-premium mt-1" placeholder="선택 입력 (반품 사유 등)"></div>
 
@@ -576,6 +594,8 @@
   function closeModal(id){ document.getElementById(id).style.display='none'; }
   function formatMoney(el){ let v=el.value.replace(/[^0-9]/g,''); el.value = v? parseInt(v).toLocaleString():''; }
 
+  let selectedReturnItem = null;
+
   function setType(t) {
     currentType = t;
     const styles = {
@@ -590,9 +610,108 @@
     document.getElementById('price-field').classList.toggle('opacity-30', t!=='입고');
     document.getElementById('price-field').classList.toggle('pointer-events-none', t!=='입고');
     document.getElementById('memo-hint').innerText = t==='반품' ? '(반품 사유 꼭 적어주세요)' : '';
+    document.getElementById('return-policy-fields').classList.toggle('hidden', t!=='입고');
+
+    const isReturn = t === '반품';
+    document.getElementById('normal-pick-header').classList.toggle('hidden', isReturn);
+    document.getElementById('select-area').classList.toggle('hidden', isReturn || isManualMode);
+    document.getElementById('sel-model').classList.toggle('hidden', isReturn || isManualMode);
+    document.getElementById('spec-display').classList.toggle('hidden', isReturn);
+    document.getElementById('manual-area').classList.toggle('hidden', !(isManualMode && !isReturn));
+    document.getElementById('return-picker-area').classList.toggle('hidden', !isReturn);
+    if (isReturn) {
+      renderReturnPicker();
+    } else {
+      selectedReturnItem = null;
+      document.getElementById('return-selected-panel').classList.add('hidden');
+    }
+
     const returnBtn = document.getElementById('fill-full-return-btn');
     if (returnBtn) returnBtn.classList.toggle('hidden', !(t === '반품' && currentAvailableStock > 0));
   }
+
+  // ===== 반품 모드: 현재 재고 목록에서 골라서 반품 =====
+  function renderReturnPicker() {
+    const listEl = document.getElementById('return-picker-list');
+    if (!listEl) return;
+    const q = (document.getElementById('return-search').value || '').toLowerCase();
+    const items = stockSummary.filter(s => s.stock > 0 && (!q || (s.brand+s.name+s.model+(s.lot||'')).toLowerCase().includes(q)));
+    listEl.innerHTML = '';
+    if (!items.length) { listEl.innerHTML = '<div class="text-center py-6 text-[#B8B2A3] text-[14px]">반품 가능한 재고가 없습니다</div>'; return; }
+    items.slice(0, 60).forEach(s => {
+      const isSelected = selectedReturnItem && selectedReturnItem.brand===s.brand && selectedReturnItem.name===s.name && selectedReturnItem.model===s.model && selectedReturnItem.lot===s.lot;
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 rounded-xl border ' + (isSelected ? 'border-[#8B5E34] bg-[#F6EFE6]' : 'border-[var(--line)] bg-white');
+      row.onclick = () => selectReturnItem(s);
+      row.innerHTML = `
+        <div class="min-w-0 flex-1">
+          <p class="text-[13px] font-bold text-[#B8B2A3] truncate">${s.brand} · ${s.name}</p>
+          <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
+          <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}</p>
+        </div>
+        <span class="text-[15px] font-black text-[#3A342C] num shrink-0">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
+      `;
+      listEl.appendChild(row);
+    });
+  }
+
+  function selectReturnItem(item) {
+    selectedReturnItem = item;
+    document.getElementById('in-lot').value = item.lot || '';
+    onModelChange();
+    renderReturnPicker();
+    renderReturnSelectedPanel();
+  }
+
+  // 해당 브랜드+제품+모델(+로트)의 가장 최근 입고 기록에서 반품정책(가능여부/기한)을 찾음
+  function getReturnPolicyFor(brand, name, model, lot) {
+    const candidates = Object.values(movements).filter(r => r.type === '입고' && r.brand === brand && r.name === name && r.model === model && (!lot || r.lot === lot));
+    if (!candidates.length) return null;
+    candidates.sort((a,b) => (b.ts||0) - (a.ts||0));
+    const rec = candidates[0];
+    return { returnable: rec.returnable !== false, returnDeadline: rec.returnDeadline || '', vendor: rec.vendor || '' };
+  }
+
+  function renderReturnSelectedPanel() {
+    const panel = document.getElementById('return-selected-panel');
+    if (!selectedReturnItem) { panel.classList.add('hidden'); return; }
+    const s = selectedReturnItem;
+    const policy = getReturnPolicyFor(s.brand, s.name, s.model, s.lot);
+    let alertHtml = '';
+    let borderColor = 'border-[var(--line)]';
+    let bg = 'bg-[#FBF9F5]';
+    if (!policy) {
+      alertHtml = `<p class="text-[13px] font-bold text-[#8B8477] mt-1"><i class="fas fa-circle-question mr-1"></i>반품 정책 정보 없음 (입고 기록에 반품기한이 기록되지 않음)</p>`;
+    } else if (policy.returnable === false) {
+      borderColor = 'border-[var(--rust)]'; bg = 'bg-[#FBEDEA]';
+      alertHtml = `<p class="text-[14px] font-black text-[var(--rust)] mt-1"><i class="fas fa-triangle-exclamation mr-1"></i>이 거래처는 반품을 받지 않습니다${policy.vendor ? (' ('+policy.vendor+')') : ''}</p>`;
+    } else if (policy.returnDeadline) {
+      const today = new Date().toISOString().slice(0,10);
+      const daysLeft = Math.round((new Date(policy.returnDeadline) - new Date(today)) / (1000*60*60*24));
+      if (today > policy.returnDeadline) {
+        borderColor = 'border-[var(--rust)]'; bg = 'bg-[#FBEDEA]';
+        alertHtml = `<p class="text-[14px] font-black text-[var(--rust)] mt-1"><i class="fas fa-triangle-exclamation mr-1"></i>반품 기한이 지났습니다 (기한: ${policy.returnDeadline})</p>`;
+      } else if (daysLeft <= 7) {
+        borderColor = 'border-[var(--rust)]'; bg = 'bg-[#FBEDEA]';
+        alertHtml = `<p class="text-[14px] font-black text-[var(--rust)] mt-1"><i class="fas fa-triangle-exclamation mr-1"></i>반품 기한이 얼마 안 남았어요 (D-${daysLeft}, 기한: ${policy.returnDeadline})</p>`;
+      } else {
+        borderColor = 'border-[var(--moss)]'; bg = 'bg-[#F1F5F1]';
+        alertHtml = `<p class="text-[13px] font-black text-[var(--moss)] mt-1"><i class="fas fa-circle-check mr-1"></i>반품 가능 (기한: ${policy.returnDeadline}까지)</p>`;
+      }
+    } else {
+      borderColor = 'border-[var(--moss)]'; bg = 'bg-[#F1F5F1]';
+      alertHtml = `<p class="text-[13px] font-black text-[var(--moss)] mt-1"><i class="fas fa-circle-check mr-1"></i>반품 가능 (기한 없음)</p>`;
+    }
+    panel.className = 'rounded-xl p-3.5 border ' + borderColor + ' ' + bg;
+    panel.innerHTML = `
+      <p class="text-[13px] font-bold text-[#B8B2A3]">${s.brand} · ${s.name}</p>
+      <p class="text-[15px] font-black text-[#3A342C]">${s.model} ${s.lot ? ('· 로트 '+s.lot) : ''}</p>
+      ${alertHtml}
+    `;
+    panel.classList.remove('hidden');
+  }
+
 
   // ===== 900개 품목 읽기 (읽기 전용 GET, 구글시트 원본/견적서에 아무 영향 없음) =====
   // 마루견적서와 동일한 병합셀 처리(fillMergedCells) 로직을 그대로 적용해 brand/name이 빈 칸인 행도 정상 인식
@@ -622,13 +741,15 @@
         const brand = String(item.brand || '').trim();
         const name = String(item.name || '').trim();
         const model = String(item.model || '').trim();
+        const spec = String(item.spec || '').trim();
+        const factor = parseFloat(item.factor) || 0; // 1박스당 헤베(㎡)
         const category = String(item.category ?? item['구분'] ?? '바닥재').trim();
         // 철거단가표 행, 벽장재 행은 재고 대상에서 제외 (마루 위주로 관리)
         if (category.includes('철거') || category.includes('벽')) return;
         if (!brand || !name || !model) return;
         if (!masterData[brand]) masterData[brand] = {};
         if (!masterData[brand][name]) masterData[brand][name] = [];
-        if (!masterData[brand][name].includes(model)) masterData[brand][name].push(model);
+        if (!masterData[brand][name].some(x => x.model === model)) masterData[brand][name].push({ model, spec, factor });
       });
       renderBrandSelect();
       if (showMsg) showToast('품목 목록 업데이트 완료');
@@ -657,9 +778,28 @@
     const p = document.getElementById('sel-product').value;
     const sel = document.getElementById('sel-model');
     sel.innerHTML = '<option value="">색상/모델 선택</option>';
-    if (b && p && masterData[b] && masterData[b][p]) masterData[b][p].forEach(m => sel.add(new Option(m,m)));
+    if (b && p && masterData[b] && masterData[b][p]) masterData[b][p].forEach(x => sel.add(new Option(x.model, x.model)));
     onModelChange();
     autoFillCostPrice();
+    updateSpecDisplay();
+  }
+
+  function getModelInfo(brand, name, model) {
+    if (masterData[brand] && masterData[brand][name]) {
+      return masterData[brand][name].find(x => x.model === model) || null;
+    }
+    return null;
+  }
+
+  function updateSpecDisplay() {
+    const el = document.getElementById('spec-display');
+    if (!el) return;
+    if (isManualMode) { el.classList.add('hidden'); return; }
+    const { brand, name, model } = getSelectedItem();
+    const info = getModelInfo(brand, name, model);
+    if (!info || (!info.spec && !info.factor)) { el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    el.innerText = [info.spec ? `규격 ${info.spec}` : '', info.factor ? `1박스 ${info.factor}㎡` : ''].filter(Boolean).join(' · ');
   }
 
   let isManualMode = false;
@@ -672,6 +812,9 @@
   }
 
   function getSelectedItem() {
+    if (currentType === '반품' && selectedReturnItem) {
+      return { brand: selectedReturnItem.brand, name: selectedReturnItem.name, model: selectedReturnItem.model };
+    }
     if (isManualMode) {
       return {
         brand: document.getElementById('manual-brand').value.trim(),
@@ -857,6 +1000,10 @@
       memo: document.getElementById('in-memo').value,
       ts: Date.now()
     };
+    if (currentType === '입고') {
+      record.returnable = document.getElementById('in-returnable').checked;
+      record.returnDeadline = document.getElementById('in-return-deadline').value || '';
+    }
 
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject({ code: 'timeout', message: '서버 응답 없음 (8초 초과) - 와이파이/네트워크를 확인하거나 데이터(LTE)로 시도해보세요' }), 8000));
 
@@ -872,6 +1019,14 @@
       if (isManualMode) document.getElementById('manual-model').value = '';
       document.getElementById('in-prod-date').value = '';
       syncDateDisplay('in-prod-date');
+      document.getElementById('in-return-deadline').value = '';
+      document.getElementById('in-return-deadline-text').innerText = '기한 없음';
+      if (currentType === '반품') {
+        selectedReturnItem = null;
+        document.getElementById('return-selected-panel').classList.add('hidden');
+        document.getElementById('return-search').value = '';
+        renderReturnPicker();
+      }
     }).catch((err) => {
       const msg = '저장 실패: ' + (err && err.message ? err.message : err);
       showToast(msg, true);

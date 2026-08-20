@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>청인마루 재고 관리</title>
+<title>청인마루 재고·거래처 관리</title>
 <script>
   // ===== 카카오톡 등 인앱 브라우저에서 열렸으면 자동으로 기본 브라우저(사파리/크롬)로 전환 =====
   (function() {
@@ -52,6 +52,7 @@
   .num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
   .premium-shadow { box-shadow: 0 1px 2px rgba(43,38,34,.05), 0 12px 28px -14px rgba(43,38,34,.18); }
   .input-premium { width:100%; padding:13px 14px; background:#FBF9F5; border:1px solid var(--line); border-radius:12px; font-weight:700; font-size:16px; color:#3A342C; outline:none; font-variant-numeric: tabular-nums; }
+  select.input-premium { padding:10px 12px; font-size:14px; text-overflow:ellipsis; }
   .input-premium:focus { background:#fff; border-color:var(--wood); box-shadow:0 0 0 3px rgba(139,94,52,.12); }
   #login-gate { display:flex; position:fixed; inset:0; background:var(--ink); z-index:999; align-items:center; justify-content:center; }
   #toast { visibility:hidden; min-width:200px; background:#3A342C; color:#fff; text-align:center; border-radius:50px; padding:12px 24px; position:fixed; z-index:1000; left:50%; bottom:100px; transform:translateX(-50%); font-size:14px; font-weight:700; }
@@ -76,7 +77,7 @@
 
 <div id="login-gate">
   <div class="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-sm text-center mx-4">
-    <h2 class="text-xl font-black text-[#2B2622] mb-1">청인마루 재고 관리</h2>
+    <h2 class="text-xl font-black text-[#2B2622] mb-1">청인마루 재고·거래처 관리</h2>
     <p class="text-xs text-[#8B8477] font-bold mb-1">Stock System</p>
     <p id="fb-badge" class="text-[15px] font-bold text-[#B8B2A3] mb-6">연결 확인 중...</p>
     <input type="password" id="app-password" class="w-full p-4 bg-[#F3F0EA] rounded-xl text-center text-lg font-black outline-none focus:ring-2 ring-[#8B5E34] mb-4" placeholder="PASSWORD" onkeyup="if(event.keyCode==13) checkLogin()">
@@ -211,11 +212,28 @@
   </div>
 </div>
 
+<!-- 품목 히스토리 모달: 입고→출고→반품 전체 흐름을 타임라인으로 -->
+<div id="item-history-modal" class="modal-overlay">
+  <div class="card rounded-[1.5rem] w-full max-w-lg mx-4 h-[85vh] flex flex-col overflow-hidden">
+    <div class="p-4 border-b bg-[#FBF9F5]">
+      <div class="flex justify-between items-start">
+        <div class="min-w-0">
+          <p id="ih-brand-name" class="text-[13px] font-bold text-[#B8B2A3] truncate">-</p>
+          <h3 id="ih-model" class="font-black text-[#2B2622] text-[17px] truncate">-</h3>
+        </div>
+        <button onclick="closeModal('item-history-modal')" class="w-8 h-8 rounded-full bg-[#E7E1D3] flex items-center justify-center shrink-0 ml-2"><i class="fas fa-times"></i></button>
+      </div>
+      <p id="ih-current-stock" class="text-[14px] font-black text-[var(--moss)] mt-1"></p>
+    </div>
+    <div id="ih-timeline" class="p-4 overflow-y-auto flex-1 space-y-3 bg-[#FAF8F4]"></div>
+  </div>
+</div>
+
 <div class="max-w-2xl mx-auto p-4 md:p-6">
 
   <header class="card premium-shadow px-4 py-3 flex items-center justify-between mb-5">
     <div>
-      <h1 class="text-lg font-black text-[#2B2622]">청인마루<span class="text-[#8B5E34]">.</span> 재고관리</h1>
+      <h1 class="text-lg font-black text-[#2B2622]">청인마루<span class="text-[#8B5E34]">.</span> 재고·거래처 관리</h1>
       <p class="text-[13px] text-[#8B8477] font-bold">Stock System · 실시간 공유 <span id="debug-count" class="text-[#A9784F]"></span></p>
     </div>
     <div class="flex items-center gap-1.5">
@@ -282,6 +300,10 @@
     <div id="price-field" class="grid grid-cols-2 gap-2.5">
       <div><label class="eyebrow pl-1">매입단가(VAT별도) <span class="text-[#A9784F] normal-case font-medium tracking-normal">· 원가자동</span></label><input type="text" id="in-price" class="input-premium mt-1 num" placeholder="0" oninput="formatMoney(this); syncPriceFromExVat();"></div>
       <div><label class="eyebrow pl-1">매입단가(VAT포함)</label><input type="text" id="in-price-vat" class="input-premium mt-1 num" placeholder="0" oninput="formatMoney(this); syncPriceFromIncVat();"></div>
+    </div>
+    <div id="shipping-field" class="hidden">
+      <label class="eyebrow pl-1">배송비 <span class="text-[#A9784F] normal-case font-medium tracking-normal">· 우리가 부담한 경우만 입력, 거래처가 무료로 보내줬으면 0</span></label>
+      <input type="text" id="in-shipping" class="input-premium mt-1 num" placeholder="0" oninput="formatMoney(this);">
     </div>
     <div id="return-policy-fields" class="hidden grid grid-cols-2 gap-2.5">
       <div class="flex items-center gap-2 bg-[#FBF9F5] border border-[var(--line)] rounded-xl px-3">
@@ -627,7 +649,9 @@
     document.getElementById('price-field').classList.toggle('opacity-30', t!=='입고');
     document.getElementById('price-field').classList.toggle('pointer-events-none', t!=='입고');
     document.getElementById('memo-hint').innerText = t==='반품' ? '(반품 사유 꼭 적어주세요)' : '';
+    document.getElementById('in-memo').placeholder = t==='반품' ? '반품 사유 (예: 하자, 색상 변경 등)' : t==='출고' ? '현장 정보 (예: OO아파트 102동 시공)' : '선택 입력';
     document.getElementById('return-policy-fields').classList.toggle('hidden', t!=='입고');
+    document.getElementById('shipping-field').classList.toggle('hidden', t!=='입고');
 
     const isPick = (t === '출고' || t === '반품'); // 출고/반품은 갖고 있는 재고에서 골라서 진행
     document.getElementById('normal-pick-header').classList.toggle('hidden', isPick);
@@ -921,6 +945,43 @@
   }
 
   let expandedBrands = new Set();
+
+  // ===== 품목 히스토리: 입고→출고→반품 전체 흐름을 한 화면에서 =====
+  function openItemHistory(brand, name, model) {
+    document.getElementById('ih-brand-name').innerText = `${brand} · ${name}`;
+    document.getElementById('ih-model').innerText = model;
+    const totalStock = stockSummary.filter(s => s.brand===brand && s.name===name && s.model===model).reduce((a,s)=>a+s.stock,0);
+    document.getElementById('ih-current-stock').innerHTML = `<i class="fas fa-warehouse mr-1"></i>현재 재고 ${totalStock.toLocaleString()} BOX`;
+
+    const records = Object.values(movements).filter(r => r.brand===brand && r.name===name && r.model===model).sort((a,b) => (b.ts||0) - (a.ts||0));
+    const box = document.getElementById('ih-timeline');
+    box.innerHTML = '';
+    if (!records.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-base">기록이 없습니다</div>'; return; }
+
+    records.forEach(r => {
+      const badgeStyle = r.type==='입고' ? 'bg-[#EFE2CF] text-[#8B5E34]' : r.type==='반품' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600';
+      const dotColor = r.type==='입고' ? 'bg-[#8B5E34]' : r.type==='반품' ? 'bg-amber-500' : 'bg-rose-400';
+      const row = document.createElement('div');
+      row.className = 'flex gap-3';
+      row.innerHTML = `
+        <div class="w-1.5 shrink-0 rounded-full ${dotColor}"></div>
+        <div class="flex-1 pb-3 border-b border-[var(--line)]">
+          <div class="flex items-center gap-1.5 mb-1">
+            <span class="text-[13px] font-black px-1.5 py-0.5 rounded-full ${badgeStyle}">${r.type}</span>
+            <span class="text-[13px] text-[#B8B2A3] font-bold">${r.date||''}</span>
+            <span class="text-[15px] font-black text-[#3A342C] num ml-auto">${(r.qty||0).toLocaleString()} BOX</span>
+          </div>
+          <p class="text-[13px] text-[#B8B2A3] font-bold">${r.lot?('로트 '+r.lot):'로트 미기재'}${r.vendor?(' · '+r.vendor):''}</p>
+          ${r.memo ? `<p class="text-[14px] font-bold text-[#8B5E34] mt-1"><i class="fas fa-note-sticky mr-1"></i>${r.memo}</p>` : ''}
+          ${r.type==='입고' && r.returnDeadline ? `<p class="text-[12px] font-bold text-[#8B8477] mt-1">반품기한 ${r.returnDeadline}${r.returnable===false?' · 반품불가':''}</p>` : ''}
+          ${r.type==='입고' && r.shippingFee ? `<p class="text-[12px] font-bold text-[#8B8477] mt-1"><i class="fas fa-truck mr-1"></i>배송비 ${Number(r.shippingFee).toLocaleString()}원</p>` : ''}
+        </div>
+      `;
+      box.appendChild(row);
+    });
+    document.getElementById('item-history-modal').style.display = 'flex';
+  }
+
   function toggleBrandGroup(brand) {
     if (expandedBrands.has(brand)) expandedBrands.delete(brand); else expandedBrands.add(brand);
     renderStockList();
@@ -982,15 +1043,20 @@
       body.className = isOpen ? 'divide-y divide-[var(--line)]' : 'hidden';
       items.forEach(s => {
         const low = s.stock <= 0;
-        const row = document.createElement('div');
-        row.className = 'flex justify-between items-center gap-2 px-3.5 py-3 bg-white ' + (low ? 'bg-[#FBF1EE]' : '');
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 bg-white active:bg-[#F6EFE6] ' + (low ? 'bg-[#FBF1EE]' : '');
+        row.onclick = () => openItemHistory(s.brand, s.name, s.model);
         row.innerHTML = `
           <div class="min-w-0 flex-1">
             <p class="text-[14px] font-black text-[#5C5347] truncate">${s.name}</p>
             <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
             <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · '+s.prodDate) : ''}</p>
           </div>
-          <span class="text-[17px] font-black ${low ? 'text-[var(--rust)]' : 'text-[#3A342C]'} shrink-0 num">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
+          <span class="flex items-center gap-1.5 shrink-0">
+            <span class="text-[17px] font-black ${low ? 'text-[var(--rust)]' : 'text-[#3A342C]'} num">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
+            <i class="fas fa-chevron-right text-[12px] text-[#CFC9BB]"></i>
+          </span>
         `;
         body.appendChild(row);
       });
@@ -1037,6 +1103,7 @@
     if (currentType === '입고') {
       record.returnable = document.getElementById('in-returnable').checked;
       record.returnDeadline = document.getElementById('in-return-deadline').value || '';
+      record.shippingFee = parseInt((document.getElementById('in-shipping').value||'0').replace(/,/g,'')) || 0;
     }
 
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject({ code: 'timeout', message: '서버 응답 없음 (8초 초과) - 와이파이/네트워크를 확인하거나 데이터(LTE)로 시도해보세요' }), 8000));
@@ -1055,6 +1122,7 @@
       syncDateDisplay('in-prod-date');
       document.getElementById('in-return-deadline').value = '';
       document.getElementById('in-return-deadline-text').innerText = '기한 없음';
+      document.getElementById('in-shipping').value = '';
       if (currentType === '반품') {
         selectedReturnItem = null;
         document.getElementById('return-selected-panel').classList.add('hidden');
@@ -1118,7 +1186,8 @@
           </div>
           <p class="text-sm font-black text-[#3A342C] truncate">${r.brand} · ${r.name} · ${r.model}</p>
           <p class="text-[14px] text-[#B8B2A3] font-bold">${r.qty}BOX ${r.price?('· '+Number(r.price).toLocaleString()+'원(VAT별도)'):''}${r.priceIncVat?(' / '+Number(r.priceIncVat).toLocaleString()+'원(VAT포함)'):''} ${r.vendor?('· '+r.vendor):''}</p>
-          <p class="text-[13px] text-[#CFC9BB] font-bold">${r.lot?('로트: '+r.lot):''} ${r.prodDate?('· 생산일 '+r.prodDate):''} ${r.memo?('· '+r.memo):''}</p>
+          <p class="text-[13px] text-[#CFC9BB] font-bold">${r.lot?('로트: '+r.lot):''} ${r.prodDate?('· 생산일 '+r.prodDate):''}</p>
+          ${r.memo ? `<p class="text-[13px] font-bold text-[#8B5E34] mt-0.5"><i class="fas fa-note-sticky mr-1"></i>${r.memo}</p>` : ''}
         </div>
         ${ logTab === 'trash'
           ? `<div class="flex flex-col gap-1 shrink-0"><button onclick="restoreLog('${r.key}')" class="text-emerald-500 hover:text-[var(--moss)] text-xs px-2 py-1 bg-[#F1F5F1] rounded-lg font-bold"><i class="fas fa-rotate-left mr-1"></i>복구</button><button onclick="permanentDeleteLog('${r.key}')" class="text-[#B8B2A3] hover:text-rose-500 text-[13px] px-2">완전삭제</button></div>`

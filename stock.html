@@ -131,7 +131,8 @@
     <!-- 새 거래처 입력 화면 -->
     <div id="vendor-form-view" class="hidden flex-1 flex flex-col overflow-hidden">
       <div class="p-4 overflow-y-auto flex-1 space-y-3">
-        <button onclick="hideVendorForm()" class="text-xs font-bold text-[#B8B2A3]"><i class="fas fa-arrow-left mr-1"></i> 목록으로</button>
+        <button onclick="hideVendorForm()" class="text-xs font-bold text-[#B8B2A3]"><i class="fas fa-arrow-left mr-1"></i> 뒤로</button>
+        <h4 id="vendor-form-title" class="text-[16px] font-black text-[#2B2622]">새 거래처 추가</h4>
         <div><label class="text-[13px] font-black text-[#B8B2A3] pl-1">거래처명</label><input type="text" id="vf-name" class="input-premium mt-1" placeholder="예: OO인테리어"></div>
         <div><label class="text-[13px] font-black text-[#B8B2A3] pl-1">담당자/연락처</label><input type="text" id="vf-phone" class="input-premium mt-1" placeholder="이름 010-0000-0000"></div>
         <div><label class="text-[13px] font-black text-[#B8B2A3] pl-1">주소</label><input type="text" id="vf-addr" class="input-premium mt-1" placeholder="선택 입력"></div>
@@ -143,7 +144,10 @@
     <!-- 거래처 상세(타임라인) 화면 -->
     <div id="vendor-detail-view" class="hidden flex-1 flex flex-col overflow-hidden">
       <div class="p-4 border-b space-y-1">
-        <button onclick="hideVendorDetail()" class="text-xs font-bold text-[#B8B2A3] mb-1"><i class="fas fa-arrow-left mr-1"></i> 목록으로</button>
+        <div class="flex justify-between items-start">
+          <button onclick="hideVendorDetail()" class="text-xs font-bold text-[#B8B2A3] mb-1"><i class="fas fa-arrow-left mr-1"></i> 목록으로</button>
+          <button onclick="editVendorInfo(currentVendorKey)" class="text-[13px] font-black text-[#8B5E34]"><i class="fas fa-pen mr-1"></i>정보 수정</button>
+        </div>
         <h4 id="vd-name" class="text-lg font-black text-[#2B2622]">-</h4>
         <p id="vd-phone" class="text-[15px] text-[#8B8477] font-bold"></p>
         <p id="vd-addr" class="text-[15px] text-[#B8B2A3]"></p>
@@ -160,7 +164,7 @@
           <input type="date" id="vl-date" class="input-premium text-sm">
         </div>
         <input type="text" id="vl-note" class="input-premium text-sm" placeholder="메모 (예: 노바마루 신제품 샘플북 전달)">
-        <button onclick="addVendorLog()" class="w-full py-2.5 bg-[#2B2622] text-white rounded-xl text-sm font-black"><i class="fas fa-plus mr-1"></i> 기록 추가</button>
+        <button id="vl-submit-btn" onclick="addVendorLog()" class="w-full py-2.5 bg-[#2B2622] text-white rounded-xl text-sm font-black"><i class="fas fa-plus mr-1"></i> 기록 추가</button>
       </div>
       <div id="vendor-timeline" class="p-3 overflow-y-auto flex-1 space-y-2 bg-white"></div>
     <div class="p-2 border-t bg-[#FBF9F5]">
@@ -1554,6 +1558,8 @@
     }
   }
 
+  let editingVendorKey = null;
+
   function showVendorList() {
     document.getElementById('vendor-list-view').classList.remove('hidden');
     document.getElementById('vendor-form-view').classList.add('hidden');
@@ -1561,12 +1567,30 @@
     currentVendorKey = null;
   }
   function showVendorForm() {
+    editingVendorKey = null;
+    document.getElementById('vendor-form-title').innerText = '새 거래처 추가';
     document.getElementById('vendor-list-view').classList.add('hidden');
     document.getElementById('vendor-form-view').classList.remove('hidden');
     document.getElementById('vf-name').value = ''; document.getElementById('vf-phone').value = '';
     document.getElementById('vf-addr').value = ''; document.getElementById('vf-memo').value = '';
   }
-  function hideVendorForm() { showVendorList(); }
+  function editVendorInfo(key) {
+    const v = vendors[key];
+    if (!v) return showToast('거래처 정보를 찾을 수 없습니다');
+    editingVendorKey = key;
+    document.getElementById('vendor-form-title').innerText = '거래처 정보 수정';
+    document.getElementById('vendor-list-view').classList.add('hidden');
+    document.getElementById('vendor-detail-view').classList.add('hidden');
+    document.getElementById('vendor-form-view').classList.remove('hidden');
+    document.getElementById('vf-name').value = v.name || '';
+    document.getElementById('vf-phone').value = v.phone || '';
+    document.getElementById('vf-addr').value = v.addr || '';
+    document.getElementById('vf-memo').value = v.memo || '';
+  }
+  function hideVendorForm() {
+    if (editingVendorKey) { const k = editingVendorKey; editingVendorKey = null; openVendorDetail(k); }
+    else showVendorList();
+  }
   function hideVendorDetail() { showVendorList(); }
 
   function lastVendorLogDate(vendorKey) {
@@ -1609,11 +1633,20 @@
       name,
       phone: document.getElementById('vf-phone').value.trim(),
       addr: document.getElementById('vf-addr').value.trim(),
-      memo: document.getElementById('vf-memo').value.trim(),
-      ts: Date.now()
+      memo: document.getElementById('vf-memo').value.trim()
     };
-    fbDatabase.ref('vendors').push(record).then(() => { showToast('거래처 등록 완료'); showVendorList(); })
-      .catch((err) => showToast('저장 실패: ' + (err && err.message ? err.message : err), true));
+    if (editingVendorKey) {
+      const key = editingVendorKey;
+      fbDatabase.ref('vendors/' + key).update(record).then(() => {
+        showToast('거래처 정보 수정 완료');
+        editingVendorKey = null;
+        openVendorDetail(key);
+      }).catch((err) => showToast('수정 실패: ' + (err && err.message ? err.message : err), true));
+    } else {
+      record.ts = Date.now();
+      fbDatabase.ref('vendors').push(record).then(() => { showToast('거래처 등록 완료'); showVendorList(); })
+        .catch((err) => showToast('저장 실패: ' + (err && err.message ? err.message : err), true));
+    }
   }
 
   function openVendorDetail(key) {
@@ -1623,8 +1656,11 @@
     document.getElementById('vendor-list-view').classList.add('hidden');
     document.getElementById('vendor-form-view').classList.add('hidden');
     document.getElementById('vendor-detail-view').classList.remove('hidden');
+    editingVendorLogKey = null;
     document.getElementById('vl-date').value = new Date().toISOString().slice(0,10);
     document.getElementById('vl-note').value = '';
+    document.getElementById('vl-type').value = '샘플북 전달';
+    document.getElementById('vl-submit-btn').innerHTML = '<i class="fas fa-plus mr-1"></i> 기록 추가';
     renderVendorDetail();
   }
 
@@ -1680,6 +1716,7 @@
             <button onclick="deleteVendorLog('${l.key}')" class="text-[#CFC9BB] hover:text-rose-500 text-xs px-1"><i class="fas fa-trash"></i></button>
           </div>
           <p class="text-sm font-bold text-[#4A4238] mt-1">${l.note||''}</p>
+          <button onclick="editVendorLog('${l.key}')" class="text-[13px] font-bold text-[#8B5E34] mt-1"><i class="fas fa-pen mr-1"></i>수정</button>
         </div>
       `;
       box.appendChild(row);
@@ -1697,6 +1734,19 @@
     } else { renderVendorDetail(); }
   }
 
+  let editingVendorLogKey = null;
+
+  function editVendorLog(key) {
+    const l = vendorLogs[key];
+    if (!l) return showToast('기록을 찾을 수 없습니다');
+    editingVendorLogKey = key;
+    document.getElementById('vl-type').value = l.type;
+    document.getElementById('vl-date').value = l.date;
+    document.getElementById('vl-note').value = l.note || '';
+    document.getElementById('vl-submit-btn').innerHTML = '<i class="fas fa-save mr-1"></i> 수정 저장';
+    document.querySelector('#vendor-detail-view .p-3.border-b').scrollIntoView({ behavior: 'smooth' });
+  }
+
   function addVendorLog() {
     if (!currentVendorKey) return;
     const record = {
@@ -1706,10 +1756,21 @@
       note: document.getElementById('vl-note').value.trim(),
       ts: Date.now()
     };
-    fbDatabase.ref('vendor_logs').push(record).then(() => {
-      showToast('기록 저장 완료');
-      document.getElementById('vl-note').value = '';
-    }).catch((err) => showToast('저장 실패: ' + (err && err.message ? err.message : err), true));
+    if (editingVendorLogKey) {
+      const key = editingVendorLogKey;
+      const { vendorKey, ts, ...updates } = record; // 원래 등록시각/거래처 연결은 유지
+      fbDatabase.ref('vendor_logs/' + key).update(updates).then(() => {
+        showToast('기록 수정 완료');
+        editingVendorLogKey = null;
+        document.getElementById('vl-note').value = '';
+        document.getElementById('vl-submit-btn').innerHTML = '<i class="fas fa-plus mr-1"></i> 기록 추가';
+      }).catch((err) => showToast('수정 실패: ' + (err && err.message ? err.message : err), true));
+    } else {
+      fbDatabase.ref('vendor_logs').push(record).then(() => {
+        showToast('기록 저장 완료');
+        document.getElementById('vl-note').value = '';
+      }).catch((err) => showToast('저장 실패: ' + (err && err.message ? err.message : err), true));
+    }
   }
 
   // 삭제 = 휴지통으로 이동 (복구 가능)

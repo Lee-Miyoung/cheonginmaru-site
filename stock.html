@@ -978,13 +978,14 @@
       if (!r.brand || !r.name || !r.model) return;
       const lot = r.lot || '';
       const key = `${r.brand}||${r.name}||${r.model}||${lot}`;
-      if (!map[key]) map[key] = { brand:r.brand, name:r.name, model:r.model, lot, prodDate:r.prodDate||'', stock:0 };
+      if (!map[key]) map[key] = { brand:r.brand, name:r.name, model:r.model, lot, prodDate:r.prodDate||'', stock:0, lastTs:0 };
       const qty = Number(r.qty) || 0;
       if (r.type === '입고') map[key].stock += qty;
       else if (r.type === '출고' || r.type === '반품') map[key].stock -= qty;
       if (r.type === '입고' && r.prodDate) map[key].prodDate = r.prodDate; // 최근 입고 기준 생산일자 표시
+      if ((r.ts||0) > map[key].lastTs) map[key].lastTs = r.ts || 0; // 이 품목의 가장 최근 활동 시각
     });
-    stockSummary = Object.values(map).sort((a,b) => a.stock - b.stock);
+    stockSummary = Object.values(map).sort((a,b) => b.lastTs - a.lastTs);
   }
 
   let expandedBrands = new Set();
@@ -1050,13 +1051,18 @@
     // 브랜드별로 그룹핑
     const groups = {};
     filtered.forEach(s => { (groups[s.brand] = groups[s.brand] || []).push(s); });
-    const brandNames = Object.keys(groups).sort((a,b) => a.localeCompare(b, 'ko'));
+    // 브랜드 그룹 자체도 그 브랜드에서 가장 최근 활동이 있었던 순서로 정렬 (최신이 위로)
+    const brandNames = Object.keys(groups).sort((a,b) => {
+      const aMax = Math.max(...groups[a].map(s => s.lastTs||0));
+      const bMax = Math.max(...groups[b].map(s => s.lastTs||0));
+      return bMax - aMax;
+    });
 
     // 검색 중일 때는 자동으로 다 펼쳐서 보여줌
     const autoExpand = !!q;
 
     brandNames.forEach(brand => {
-      const items = groups[brand].sort((a,b) => (a.name+a.model).localeCompare(b.name+b.model, 'ko'));
+      const items = groups[brand].sort((a,b) => (b.lastTs||0) - (a.lastTs||0)); // 최근 입출고된 품목이 위로
       const totalBox = items.reduce((sum, s) => sum + s.stock, 0);
       const lowCount = items.filter(s => s.stock <= 0).length;
       const isOpen = autoExpand || expandedBrands.has(brand);

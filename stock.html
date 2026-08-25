@@ -399,9 +399,9 @@
       </div>
       <div><label class="eyebrow pl-1">반품기한 (선택)</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-return-deadline-text" class="num text-[16px] text-[#B8B2A3]">기한 없음</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-return-deadline" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-return-deadline')"></div></div>
     </div>
-    <div class="date-row grid grid-cols-2 gap-2.5">
-      <div><label class="eyebrow pl-1">발주일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-order-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-order-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-order-date')"></div></div>
-      <div><label class="eyebrow pl-1">입고일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-date')"></div></div>
+    <div id="date-row-main" class="date-row grid grid-cols-2 gap-2.5">
+      <div id="order-date-field"><label class="eyebrow pl-1">발주일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-order-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-order-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-order-date')"></div></div>
+      <div><label class="eyebrow pl-1" id="in-date-label">입고일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-date')"></div></div>
     </div>
     <div><label class="eyebrow pl-1">메모 <span id="memo-hint" class="text-[#B8B2A3] normal-case font-medium tracking-normal"></span></label><input type="text" id="in-memo" class="input-premium mt-1" placeholder="선택 입력 (반품 사유 등)"></div>
 
@@ -807,6 +807,9 @@
     document.getElementById('in-memo').placeholder = t==='반품' ? '반품 사유 (예: 하자, 색상 변경 등)' : t==='출고' ? '현장 정보 (예: OO아파트 102동 시공)' : '선택 입력';
     document.getElementById('return-policy-fields').classList.toggle('hidden', t!=='입고');
     document.getElementById('shipping-field').classList.toggle('hidden', t!=='입고');
+    document.getElementById('order-date-field').classList.toggle('hidden', t!=='입고'); // 발주일자는 입고에만 의미있음
+    document.getElementById('date-row-main').className = 'date-row grid gap-2.5 ' + (t==='입고' ? 'grid-cols-2' : 'grid-cols-1');
+    document.getElementById('in-date-label').innerText = t==='입고' ? '입고일자' : t==='출고' ? '출고일자' : '반품일자';
 
     const isPick = (t === '출고' || t === '반품'); // 출고/반품은 갖고 있는 재고에서 골라서 진행
     document.getElementById('normal-pick-header').classList.toggle('hidden', isPick);
@@ -1609,21 +1612,60 @@
     if (!list.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-sm">등록된 거래처가 없습니다</div>'; return; }
     list.forEach(v => {
       const last = lastVendorLogDate(v.key);
-      const row = document.createElement('div');
-      row.className = 'bg-white border border-[var(--line)] rounded-xl p-3 flex justify-between items-center cursor-pointer active:bg-[#FBF9F5]';
-      row.onclick = () => openVendorDetail(v.key);
-      row.innerHTML = `
-        <div class="min-w-0 flex-1">
-          <p class="text-sm font-black text-[#3A342C] truncate">${v.name}</p>
-          <p class="text-[14px] text-[#B8B2A3] font-bold">${v.phone||''}</p>
-        </div>
-        <div class="text-right shrink-0 ml-2">
-          <p class="text-[13px] text-[#B8B2A3] font-bold">${last ? last.type : '기록 없음'}</p>
-          <p class="text-[13px] text-[#8B5E34] font-black">${last ? last.date : '-'}</p>
+      const outer = document.createElement('div');
+      outer.className = 'relative overflow-hidden rounded-xl';
+      outer.innerHTML = `
+        <button type="button" onclick="deleteVendor('${v.key}')" class="absolute right-0 top-0 h-full w-20 bg-[var(--rust)] text-white text-[13px] font-black flex items-center justify-center gap-1">
+          <i class="fas fa-trash"></i>삭제
+        </button>
+        <div class="vendor-swipe-row bg-white border border-[var(--line)] rounded-xl p-3 flex justify-between items-center cursor-pointer active:bg-[#FBF9F5] relative" style="transition: transform .15s;">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-black text-[#3A342C] truncate">${v.name}</p>
+            <p class="text-[14px] text-[#B8B2A3] font-bold">${v.phone||''}</p>
+          </div>
+          <div class="text-right shrink-0 ml-2">
+            <p class="text-[13px] text-[#B8B2A3] font-bold">${last ? last.type : '기록 없음'}</p>
+            <p class="text-[13px] text-[#8B5E34] font-black">${last ? last.date : '-'}</p>
+          </div>
         </div>
       `;
-      box.appendChild(row);
+      const rowEl = outer.querySelector('.vendor-swipe-row');
+      setupSwipeToDelete(rowEl, () => openVendorDetail(v.key));
+      box.appendChild(outer);
     });
+  }
+
+  // 오른쪽으로 살짝 당기면(왼쪽 스와이프) 뒤에 숨겨진 삭제 버튼이 드러나는 공용 스와이프 처리
+  function setupSwipeToDelete(rowEl, onTapCallback) {
+    let startX = 0, currentX = 0, dragging = false, opened = false;
+    rowEl.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; dragging = true; }, { passive: true });
+    rowEl.addEventListener('touchmove', (e) => {
+      if (!dragging) return;
+      currentX = e.touches[0].clientX - startX;
+      if (currentX > 0) currentX = 0; // 오른쪽으로는 안 밀림
+      if (currentX < -80) currentX = -80;
+      rowEl.style.transform = `translateX(${currentX}px)`;
+    }, { passive: true });
+    rowEl.addEventListener('touchend', () => {
+      dragging = false;
+      if (currentX < -40) { rowEl.style.transform = 'translateX(-80px)'; opened = true; }
+      else { rowEl.style.transform = 'translateX(0)'; opened = false; }
+      currentX = 0;
+    });
+    rowEl.addEventListener('click', (e) => {
+      if (opened) { e.stopPropagation(); rowEl.style.transform = 'translateX(0)'; opened = false; return; }
+      onTapCallback();
+    });
+  }
+
+  function deleteVendor(key) {
+    const v = vendors[key];
+    if (!v) return;
+    if (!confirm(`"${v.name}" 거래처를 삭제할까요?\n(연결된 기록은 남아있지만, 목록에서는 사라집니다)`)) return;
+    fbDatabase.ref('vendors_trash/' + key).set({ ...v, deletedAt: Date.now() })
+      .then(() => fbDatabase.ref('vendors/' + key).remove())
+      .then(() => showToast('거래처 삭제 완료'))
+      .catch((err) => showToast('삭제 실패: ' + (err && err.message ? err.message : err), true));
   }
 
   function saveVendor() {

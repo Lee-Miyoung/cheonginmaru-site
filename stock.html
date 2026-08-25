@@ -229,6 +229,49 @@
   </div>
 </div>
 
+<!-- 기록 수정 모달 -->
+<div id="edit-record-modal" class="modal-overlay">
+  <div class="card rounded-[1.5rem] w-full max-w-lg mx-4 max-h-[90vh] flex flex-col overflow-hidden">
+    <div class="p-4 border-b bg-[#FBF9F5] flex justify-between items-center">
+      <h3 class="font-black text-[#2B2622]"><i class="fas fa-pen mr-1.5 text-[#8B5E34]"></i>기록 수정</h3>
+      <button onclick="closeModal('edit-record-modal')" class="w-8 h-8 rounded-full bg-[#E7E1D3] flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-4 overflow-y-auto flex-1 space-y-3">
+      <div id="edit-item-label" class="text-[14px] font-black text-[#3A342C] bg-[#F3F0EA] rounded-lg px-3 py-2"></div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <div><label class="eyebrow pl-1">로트번호</label><input type="text" id="edit-lot" class="input-premium mt-1" placeholder="예: L20260819-01"></div>
+        <div><label class="eyebrow pl-1">생산일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="edit-prod-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="edit-prod-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('edit-prod-date')"></div></div>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <div><label class="eyebrow pl-1">수량 (박스)</label><input type="number" id="edit-qty" class="input-premium mt-1 num" placeholder="0"></div>
+        <div><label class="eyebrow pl-1">거래처</label><input type="text" id="edit-vendor" class="input-premium mt-1" placeholder="동화자연마루 등"></div>
+      </div>
+      <div id="edit-price-fields" class="hidden grid grid-cols-2 gap-2.5">
+        <div><label class="eyebrow pl-1">매입단가(VAT별도)</label><input type="text" id="edit-price" class="input-premium mt-1 num" placeholder="0" oninput="formatMoney(this);"></div>
+        <div><label class="eyebrow pl-1">매입단가(VAT포함)</label><input type="text" id="edit-price-vat" class="input-premium mt-1 num" placeholder="0" oninput="formatMoney(this);"></div>
+      </div>
+      <div id="edit-shipping-field" class="hidden">
+        <label class="eyebrow pl-1">배송비</label>
+        <input type="text" id="edit-shipping" class="input-premium mt-1 num" placeholder="0" oninput="formatMoney(this);">
+      </div>
+      <div id="edit-return-fields" class="hidden grid grid-cols-2 gap-2.5">
+        <div class="flex items-center gap-2 bg-[#FBF9F5] border border-[var(--line)] rounded-xl px-3">
+          <input type="checkbox" id="edit-returnable" class="accent-[var(--moss)] w-4 h-4">
+          <label for="edit-returnable" class="text-[13px] font-bold text-[#3A342C]">반품 가능 거래처</label>
+        </div>
+        <div><label class="eyebrow pl-1">반품기한</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="edit-return-deadline-text" class="num text-[16px] text-[#B8B2A3]">기한 없음</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="edit-return-deadline" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('edit-return-deadline')"></div></div>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <div><label class="eyebrow pl-1">발주일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="edit-order-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="edit-order-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('edit-order-date')"></div></div>
+        <div><label class="eyebrow pl-1">입고/출고일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="edit-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="edit-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('edit-date')"></div></div>
+      </div>
+      <div><label class="eyebrow pl-1">메모</label><input type="text" id="edit-memo" class="input-premium mt-1" placeholder="선택 입력"></div>
+      <button onclick="saveEditRecord()" class="w-full py-4 bg-[#8B5E34] text-white rounded-2xl font-black text-base"><i class="fas fa-save mr-1.5"></i>수정 저장</button>
+      <p id="edit-status" class="text-center text-xs font-bold py-1"></p>
+    </div>
+  </div>
+</div>
+
 <div class="max-w-2xl mx-auto p-4 md:p-6">
 
   <header class="card premium-shadow px-4 py-3 flex items-center justify-between mb-5">
@@ -953,7 +996,7 @@
     const totalStock = stockSummary.filter(s => s.brand===brand && s.name===name && s.model===model).reduce((a,s)=>a+s.stock,0);
     document.getElementById('ih-current-stock').innerHTML = `<i class="fas fa-warehouse mr-1"></i>현재 재고 ${totalStock.toLocaleString()} BOX`;
 
-    const records = Object.values(movements).filter(r => r.brand===brand && r.name===name && r.model===model).sort((a,b) => (b.ts||0) - (a.ts||0));
+    const records = Object.entries(movements).filter(([k,r]) => r.brand===brand && r.name===name && r.model===model).map(([k,r]) => ({ key: k, ...r })).sort((a,b) => (b.ts||0) - (a.ts||0));
     const box = document.getElementById('ih-timeline');
     box.innerHTML = '';
     if (!records.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-base">기록이 없습니다</div>'; return; }
@@ -970,6 +1013,7 @@
             <span class="text-[13px] font-black px-1.5 py-0.5 rounded-full ${badgeStyle}">${r.type}</span>
             <span class="text-[13px] text-[#B8B2A3] font-bold">${r.date||''}</span>
             <span class="text-[15px] font-black text-[#3A342C] num ml-auto">${(r.qty||0).toLocaleString()} BOX</span>
+            <button onclick="openEditRecord('${r.key}')" class="text-[#8B5E34] px-1"><i class="fas fa-pen text-[13px]"></i></button>
           </div>
           <p class="text-[13px] text-[#B8B2A3] font-bold">${r.lot?('로트 '+r.lot):'로트 미기재'}${r.vendor?(' · '+r.vendor):''}</p>
           ${r.memo ? `<p class="text-[14px] font-bold text-[#8B5E34] mt-1"><i class="fas fa-note-sticky mr-1"></i>${r.memo}</p>` : ''}
@@ -1191,10 +1235,78 @@
         </div>
         ${ logTab === 'trash'
           ? `<div class="flex flex-col gap-1 shrink-0"><button onclick="restoreLog('${r.key}')" class="text-emerald-500 hover:text-[var(--moss)] text-xs px-2 py-1 bg-[#F1F5F1] rounded-lg font-bold"><i class="fas fa-rotate-left mr-1"></i>복구</button><button onclick="permanentDeleteLog('${r.key}')" class="text-[#B8B2A3] hover:text-rose-500 text-[13px] px-2">완전삭제</button></div>`
-          : `<button onclick="deleteLog('${r.key}')" class="text-[#CFC9BB] hover:text-rose-500 px-2 shrink-0"><i class="fas fa-trash"></i></button>`
+          : `<div class="flex flex-col gap-1.5 shrink-0"><button onclick="openEditRecord('${r.key}')" class="text-[#8B5E34] hover:text-[#6E4A29] px-2"><i class="fas fa-pen"></i></button><button onclick="deleteLog('${r.key}')" class="text-[#CFC9BB] hover:text-rose-500 px-2"><i class="fas fa-trash"></i></button></div>`
         }
       `;
       box.appendChild(row);
+    });
+  }
+
+  // ===== 기록 수정 (브랜드/제품/모델/유형은 유지, 세부 값만 수정) =====
+  let editingRecordKey = null;
+  function openEditRecord(key) {
+    const r = movements[key];
+    if (!r) return showToast('기록을 찾을 수 없습니다');
+    editingRecordKey = key;
+    document.getElementById('edit-item-label').innerText = `${r.type} · ${r.brand} · ${r.name} · ${r.model}`;
+    document.getElementById('edit-lot').value = r.lot || '';
+    document.getElementById('edit-qty').value = r.qty || '';
+    document.getElementById('edit-vendor').value = r.vendor || '';
+    document.getElementById('edit-memo').value = r.memo || '';
+    document.getElementById('edit-prod-date').value = r.prodDate || '';
+    document.getElementById('edit-order-date').value = r.orderDate || '';
+    document.getElementById('edit-date').value = r.date || '';
+    syncDateDisplay('edit-prod-date');
+    syncDateDisplay('edit-order-date');
+    syncDateDisplay('edit-date');
+
+    const isIn = r.type === '입고';
+    document.getElementById('edit-price-fields').classList.toggle('hidden', !isIn);
+    document.getElementById('edit-shipping-field').classList.toggle('hidden', !isIn);
+    document.getElementById('edit-return-fields').classList.toggle('hidden', !isIn);
+    if (isIn) {
+      document.getElementById('edit-price').value = r.price ? r.price.toLocaleString() : '';
+      document.getElementById('edit-price-vat').value = r.priceIncVat ? r.priceIncVat.toLocaleString() : '';
+      document.getElementById('edit-shipping').value = r.shippingFee ? r.shippingFee.toLocaleString() : '';
+      document.getElementById('edit-returnable').checked = r.returnable !== false;
+      document.getElementById('edit-return-deadline').value = r.returnDeadline || '';
+      syncDateDisplay('edit-return-deadline');
+    }
+    document.getElementById('edit-status').innerText = '';
+    document.getElementById('edit-record-modal').style.display = 'flex';
+  }
+
+  function saveEditRecord() {
+    if (!editingRecordKey) return;
+    const original = movements[editingRecordKey];
+    if (!original) return showToast('기록을 찾을 수 없습니다');
+    const qty = parseFloat(document.getElementById('edit-qty').value) || 0;
+    if (qty <= 0) { document.getElementById('edit-status').innerText = '❌ 수량을 입력하세요'; return; }
+
+    const updates = {
+      lot: document.getElementById('edit-lot').value.trim(),
+      qty,
+      vendor: document.getElementById('edit-vendor').value,
+      memo: document.getElementById('edit-memo').value,
+      prodDate: document.getElementById('edit-prod-date').value,
+      orderDate: document.getElementById('edit-order-date').value,
+      date: document.getElementById('edit-date').value
+    };
+    if (original.type === '입고') {
+      updates.price = parseInt((document.getElementById('edit-price').value||'0').replace(/,/g,'')) || 0;
+      updates.priceIncVat = parseInt((document.getElementById('edit-price-vat').value||'0').replace(/,/g,'')) || 0;
+      updates.shippingFee = parseInt((document.getElementById('edit-shipping').value||'0').replace(/,/g,'')) || 0;
+      updates.returnable = document.getElementById('edit-returnable').checked;
+      updates.returnDeadline = document.getElementById('edit-return-deadline').value || '';
+    }
+
+    document.getElementById('edit-status').innerText = '저장 중...';
+    fbDatabase.ref('stock_movements/' + editingRecordKey).update(updates).then(() => {
+      showToast('수정 완료', true);
+      closeModal('edit-record-modal');
+      editingRecordKey = null;
+    }).catch((err) => {
+      document.getElementById('edit-status').innerText = '❌ 수정 실패: ' + (err && err.message ? err.message : err);
     });
   }
 

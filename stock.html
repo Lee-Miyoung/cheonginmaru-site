@@ -726,21 +726,42 @@
       listEl.innerHTML = `<div class="text-center py-6 text-[#B8B2A3] text-[14px]">${msg}</div>`;
       return;
     }
-    items.slice(0, 60).forEach(s => {
-      const isSelected = selectedReturnItem && selectedReturnItem.brand===s.brand && selectedReturnItem.name===s.name && selectedReturnItem.model===s.model && selectedReturnItem.lot===s.lot;
-      const row = document.createElement('button');
-      row.type = 'button';
-      row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 rounded-xl border ' + (isSelected ? 'border-[#8B5E34] bg-[#F6EFE6]' : 'border-[var(--line)] bg-white');
-      row.onclick = () => selectReturnItem(s);
-      row.innerHTML = `
-        <div class="min-w-0 flex-1">
-          <p class="text-[13px] font-bold text-[#B8B2A3] truncate">${s.brand} · ${s.name}</p>
-          <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
-          <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}</p>
-        </div>
-        <span class="text-[15px] font-black text-[#3A342C] num shrink-0">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
-      `;
-      listEl.appendChild(row);
+
+    // 재고 현황이랑 동일하게 브랜드별로 묶어서, 최근 활동순으로 정렬
+    const groups = {};
+    items.forEach(s => { (groups[s.brand] = groups[s.brand] || []).push(s); });
+    const brandNames = Object.keys(groups).sort((a,b) => {
+      const aMax = Math.max(...groups[a].map(s => s.lastTs||0));
+      const bMax = Math.max(...groups[b].map(s => s.lastTs||0));
+      return bMax - aMax;
+    });
+
+    brandNames.forEach(brand => {
+      const brandItems = groups[brand].sort((a,b) => (b.lastTs||0) - (a.lastTs||0));
+      const color = getBrandColor(brand);
+
+      const header = document.createElement('div');
+      header.className = 'flex items-center gap-2 px-1 pt-2 pb-1';
+      header.innerHTML = `<span class="brand-dot" style="background:${color}"></span><span class="text-[13px] font-black" style="color:${color}">${brand}</span>`;
+      listEl.appendChild(header);
+
+      brandItems.forEach(s => {
+        const isSelected = selectedReturnItem && selectedReturnItem.brand===s.brand && selectedReturnItem.name===s.name && selectedReturnItem.model===s.model && selectedReturnItem.lot===s.lot;
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.style.borderLeft = `4px solid ${color}`;
+        row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 rounded-xl border mb-1.5 ' + (isSelected ? 'border-[#8B5E34] bg-[#F6EFE6]' : 'border-[var(--line)] bg-white');
+        row.onclick = () => selectReturnItem(s);
+        row.innerHTML = `
+          <div class="min-w-0 flex-1">
+            <p class="text-[13px] font-bold text-[#B8B2A3] truncate">${s.name}</p>
+            <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
+            <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}</p>
+          </div>
+          <span class="text-[15px] font-black text-[#3A342C] num shrink-0">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
+        `;
+        listEl.appendChild(row);
+      });
     });
   }
 

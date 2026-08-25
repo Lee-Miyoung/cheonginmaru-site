@@ -781,6 +781,7 @@
             <p class="text-[13px] font-bold text-[#B8B2A3] truncate">${s.name}</p>
             <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
             <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}</p>
+            ${(s.orderDate || s.inDate) ? `<p class="text-[12px] text-[#CFC9BB] font-bold">${s.orderDate?('발주 '+s.orderDate):''}${s.inDate?(' · 입고 '+s.inDate):''}</p>` : ''}
           </div>
           <span class="text-[15px] font-black text-[#3A342C] num shrink-0">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
         `;
@@ -1025,11 +1026,17 @@
       if (!r.brand || !r.name || !r.model) return;
       const lot = r.lot || '';
       const key = `${r.brand}||${r.name}||${r.model}||${lot}`;
-      if (!map[key]) map[key] = { brand:r.brand, name:r.name, model:r.model, lot, prodDate:r.prodDate||'', stock:0, lastTs:0 };
+      if (!map[key]) map[key] = { brand:r.brand, name:r.name, model:r.model, lot, prodDate:'', orderDate:'', inDate:'', stock:0, lastTs:0, lastInTs:0 };
       const qty = Number(r.qty) || 0;
       if (r.type === '입고') map[key].stock += qty;
       else if (r.type === '출고' || r.type === '반품') map[key].stock -= qty;
-      if (r.type === '입고' && r.prodDate) map[key].prodDate = r.prodDate; // 최근 입고 기준 생산일자 표시
+      // 이 로트에 입고가 여러 번 있었으면, 가장 최근 입고 건 기준으로 생산일자/발주일자/입고일자 표시
+      if (r.type === '입고' && (r.ts||0) >= map[key].lastInTs) {
+        map[key].lastInTs = r.ts || 0;
+        map[key].prodDate = r.prodDate || map[key].prodDate;
+        map[key].orderDate = r.orderDate || map[key].orderDate;
+        map[key].inDate = r.date || map[key].inDate;
+      }
       if ((r.ts||0) > map[key].lastTs) map[key].lastTs = r.ts || 0; // 이 품목의 가장 최근 활동 시각
     });
     stockSummary = Object.values(map).sort((a,b) => b.lastTs - a.lastTs);
@@ -1148,7 +1155,8 @@
           <div class="min-w-0 flex-1">
             <p class="text-[14px] font-black text-[#5C5347] truncate">${s.name}</p>
             <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
-            <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · '+s.prodDate) : ''}</p>
+            <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · 생산 '+s.prodDate) : ''}</p>
+            ${(s.orderDate || s.inDate) ? `<p class="text-[12px] text-[#CFC9BB] font-bold">${s.orderDate?('발주 '+s.orderDate):''}${s.inDate?(' · 입고 '+s.inDate):''}</p>` : ''}
           </div>
           <span class="flex items-center gap-1.5 shrink-0">
             <span class="text-[17px] font-black ${low ? 'text-[var(--rust)]' : 'text-[#3A342C]'} num">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>

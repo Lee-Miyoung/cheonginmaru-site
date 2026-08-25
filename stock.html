@@ -280,6 +280,13 @@
         <div><label class="eyebrow pl-1">입고/출고일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="edit-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="edit-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('edit-date')"></div></div>
       </div>
       <div><label class="eyebrow pl-1">메모</label><input type="text" id="edit-memo" class="input-premium mt-1" placeholder="선택 입력"></div>
+      <div><label class="eyebrow pl-1">작성자</label>
+        <select id="edit-author" class="input-premium mt-1">
+          <option value="송원덕">송원덕 (사장님)</option>
+          <option value="실장님">실장님</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
       <button onclick="saveEditRecord()" class="w-full py-4 bg-[#8B5E34] text-white rounded-2xl font-black text-base"><i class="fas fa-save mr-1.5"></i>수정 저장</button>
       <p id="edit-status" class="text-center text-xs font-bold py-1"></p>
     </div>
@@ -1421,6 +1428,7 @@
     document.getElementById('edit-qty').value = r.qty || '';
     document.getElementById('edit-vendor').value = r.vendor || '';
     document.getElementById('edit-memo').value = r.memo || '';
+    document.getElementById('edit-author').value = r.author || getCurrentAuthor();
     document.getElementById('edit-prod-date').value = r.prodDate || '';
     document.getElementById('edit-order-date').value = r.orderDate || '';
     document.getElementById('edit-date').value = r.date || '';
@@ -1456,6 +1464,7 @@
       qty,
       vendor: document.getElementById('edit-vendor').value,
       memo: document.getElementById('edit-memo').value,
+      author: document.getElementById('edit-author').value,
       prodDate: document.getElementById('edit-prod-date').value,
       orderDate: document.getElementById('edit-order-date').value,
       date: document.getElementById('edit-date').value

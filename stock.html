@@ -715,6 +715,12 @@
   }
 
   // ===== 출고/반품 모드: 현재 재고 목록에서 골라서 진행 =====
+  let expandedPickerBrands = new Set();
+  function togglePickerBrand(brand) {
+    if (expandedPickerBrands.has(brand)) expandedPickerBrands.delete(brand); else expandedPickerBrands.add(brand);
+    renderReturnPicker();
+  }
+
   function renderReturnPicker() {
     const listEl = document.getElementById('return-picker-list');
     if (!listEl) return;
@@ -736,21 +742,39 @@
       return bMax - aMax;
     });
 
+    const autoExpand = !!q; // 검색 중이면 자동으로 펼쳐서 보여줌
+
     brandNames.forEach(brand => {
       const brandItems = groups[brand].sort((a,b) => (b.lastTs||0) - (a.lastTs||0));
       const color = getBrandColor(brand);
+      const isOpen = autoExpand || expandedPickerBrands.has(brand);
+      const selectedInThisBrand = selectedReturnItem && selectedReturnItem.brand === brand;
 
-      const header = document.createElement('div');
-      header.className = 'flex items-center gap-2 px-1 pt-2 pb-1';
-      header.innerHTML = `<span class="brand-dot" style="background:${color}"></span><span class="text-[13px] font-black" style="color:${color}">${brand}</span>`;
-      listEl.appendChild(header);
+      const wrap = document.createElement('div');
+      wrap.className = 'rounded-2xl border border-[var(--line)] overflow-hidden mb-1.5';
+      wrap.style.borderLeft = `5px solid ${color}`;
 
+      const header = document.createElement('button');
+      header.type = 'button';
+      header.className = 'w-full flex items-center justify-between px-3.5 py-3 bg-[#FBF9F5]';
+      header.onclick = () => togglePickerBrand(brand);
+      header.innerHTML = `
+        <span class="flex items-center gap-2 min-w-0">
+          <span class="brand-dot" style="background:${color}"></span>
+          <span class="text-[15px] font-black truncate" style="color:${color}">${brand}</span>
+          <span class="text-[13px] font-bold text-[#B8B2A3] shrink-0">${brandItems.length}개${selectedInThisBrand ? ' · 선택됨' : ''}</span>
+        </span>
+        <i class="fas fa-chevron-down text-[13px] text-[#B8B2A3] brand-accordion-arrow${isOpen ? ' open' : ''}"></i>
+      `;
+      wrap.appendChild(header);
+
+      const body = document.createElement('div');
+      body.className = isOpen ? 'p-2 space-y-1.5 bg-white' : 'hidden';
       brandItems.forEach(s => {
         const isSelected = selectedReturnItem && selectedReturnItem.brand===s.brand && selectedReturnItem.name===s.name && selectedReturnItem.model===s.model && selectedReturnItem.lot===s.lot;
         const row = document.createElement('button');
         row.type = 'button';
-        row.style.borderLeft = `4px solid ${color}`;
-        row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 rounded-xl border mb-1.5 ' + (isSelected ? 'border-[#8B5E34] bg-[#F6EFE6]' : 'border-[var(--line)] bg-white');
+        row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 rounded-xl border ' + (isSelected ? 'border-[#8B5E34] bg-[#F6EFE6]' : 'border-[var(--line)] bg-[#FAF8F4]');
         row.onclick = () => selectReturnItem(s);
         row.innerHTML = `
           <div class="min-w-0 flex-1">
@@ -760,8 +784,10 @@
           </div>
           <span class="text-[15px] font-black text-[#3A342C] num shrink-0">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
         `;
-        listEl.appendChild(row);
+        body.appendChild(row);
       });
+      wrap.appendChild(body);
+      listEl.appendChild(wrap);
     });
   }
 

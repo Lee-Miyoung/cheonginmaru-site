@@ -1399,6 +1399,12 @@
     renderStockList();
   }
 
+  let expandedProducts = new Set();
+  function toggleProductGroup(key) {
+    if (expandedProducts.has(key)) expandedProducts.delete(key); else expandedProducts.add(key);
+    renderStockList();
+  }
+
   // 브랜드별 고유 색상 (가독성을 위해 늘 같은 브랜드는 항상 같은 색)
   const BRAND_COLORS = ['#8B5E34','#4B6B4F','#B3452B','#5C7A99','#7D5A8C','#C08A2E','#3E7C7C','#9C5B5B','#5E7A3E','#8C4B6B'];
   function getBrandColor(brand) {
@@ -1457,29 +1463,68 @@
       groupWrap.appendChild(header);
 
       const body = document.createElement('div');
-      body.className = isOpen ? 'divide-y divide-[var(--line)]' : 'hidden';
-      items.forEach(s => {
-        const low = s.stock <= 0;
-        const info = getModelInfo(s.brand, s.name, s.model);
-        const spec = info && info.spec ? info.spec : '';
-        const row = document.createElement('button');
-        row.type = 'button';
-        row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 bg-white active:bg-[#F6EFE6] ' + (low ? 'bg-[#FBF1EE]' : '');
-        row.onclick = () => openItemHistory(s.brand, s.name, s.model);
-        row.innerHTML = `
-          <div class="min-w-0 flex-1">
-            <p class="text-[14px] font-black text-[#5C5347] truncate">${s.name}</p>
-            <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
-            ${spec ? `<p class="text-[14px] font-black text-[#8B5E34] mt-0.5"><i class="fas fa-ruler-combined mr-1"></i>${spec}</p>` : ''}
-            <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · 생산 '+s.prodDate) : ''}</p>
-            ${(s.orderDate || s.inDate) ? `<p class="text-[12px] text-[#CFC9BB] font-bold">${s.orderDate?('발주 '+s.orderDate):''}${s.inDate?(' · 입고 '+s.inDate):''}</p>` : ''}
-          </div>
+      body.className = isOpen ? 'divide-y divide-[var(--line)] bg-[#FCFBF8]' : 'hidden';
+
+      // 브랜드 안에서 제품명(카테고리)별로 한 번 더 묶음
+      const productGroups = {};
+      items.forEach(s => { (productGroups[s.name] = productGroups[s.name] || []).push(s); });
+      const productNames = Object.keys(productGroups).sort((a,b) => {
+        const aMax = Math.max(...productGroups[a].map(s => s.lastTs||0));
+        const bMax = Math.max(...productGroups[b].map(s => s.lastTs||0));
+        return bMax - aMax;
+      });
+
+      productNames.forEach(productName => {
+        const pItems = productGroups[productName].sort((a,b) => (b.lastTs||0) - (a.lastTs||0));
+        const pTotal = pItems.reduce((sum, s) => sum + s.stock, 0);
+        const pLow = pItems.filter(s => s.stock <= 0).length;
+        const productKey = brand + '||' + productName;
+        const pIsOpen = autoExpand || expandedProducts.has(productKey);
+
+        const pWrap = document.createElement('div');
+
+        const pHeader = document.createElement('button');
+        pHeader.type = 'button';
+        pHeader.className = 'w-full flex items-center justify-between px-3.5 py-2.5 bg-[#F3F0EA]';
+        pHeader.onclick = () => toggleProductGroup(productKey);
+        pHeader.innerHTML = `
+          <span class="flex items-center gap-2 min-w-0">
+            <span class="text-[14px] font-black text-[#5C5347] truncate">${productName}</span>
+            <span class="text-[12px] font-bold text-[#B8B2A3] shrink-0">${pItems.length}개${pLow ? ' · 부족 ' + pLow : ''}</span>
+          </span>
           <span class="flex items-center gap-1.5 shrink-0">
-            <span class="text-[17px] font-black ${low ? 'text-[var(--rust)]' : 'text-[#3A342C]'} num">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
-            <i class="fas fa-chevron-right text-[12px] text-[#CFC9BB]"></i>
+            <span class="text-[14px] font-black text-[#3A342C] num">${pTotal.toLocaleString()} <span class="text-[12px] font-bold text-[#8B8477]">BOX</span></span>
+            <i class="fas fa-chevron-down text-[11px] text-[#B8B2A3] brand-accordion-arrow${pIsOpen ? ' open' : ''}"></i>
           </span>
         `;
-        body.appendChild(row);
+        pWrap.appendChild(pHeader);
+
+        const pBody = document.createElement('div');
+        pBody.className = pIsOpen ? 'divide-y divide-[var(--line)]' : 'hidden';
+        pItems.forEach(s => {
+          const low = s.stock <= 0;
+          const info = getModelInfo(s.brand, s.name, s.model);
+          const spec = info && info.spec ? info.spec : '';
+          const row = document.createElement('button');
+          row.type = 'button';
+          row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 bg-white active:bg-[#F6EFE6] ' + (low ? 'bg-[#FBF1EE]' : '');
+          row.onclick = () => openItemHistory(s.brand, s.name, s.model);
+          row.innerHTML = `
+            <div class="min-w-0 flex-1">
+              <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
+              ${spec ? `<p class="text-[14px] font-black text-[#8B5E34] mt-0.5"><i class="fas fa-ruler-combined mr-1"></i>${spec}</p>` : ''}
+              <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · 생산 '+s.prodDate) : ''}</p>
+              ${(s.orderDate || s.inDate) ? `<p class="text-[12px] text-[#CFC9BB] font-bold">${s.orderDate?('발주 '+s.orderDate):''}${s.inDate?(' · 입고 '+s.inDate):''}</p>` : ''}
+            </div>
+            <span class="flex items-center gap-1.5 shrink-0">
+              <span class="text-[17px] font-black ${low ? 'text-[var(--rust)]' : 'text-[#3A342C]'} num">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
+              <i class="fas fa-chevron-right text-[12px] text-[#CFC9BB]"></i>
+            </span>
+          `;
+          pBody.appendChild(row);
+        });
+        pWrap.appendChild(pBody);
+        body.appendChild(pWrap);
       });
       groupWrap.appendChild(body);
       box.appendChild(groupWrap);

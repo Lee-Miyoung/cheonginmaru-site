@@ -17,27 +17,29 @@ self.addEventListener('activate', (event) => {
 });
 
 // 네트워크가 되면 항상 최신 파일을 가져오고(=구글시트/코드 수정사항 즉시 반영),
-// 네트워크가 안 되면 그때만 마지막으로 저장해둔 버전을 대신 보여줌
+// 네트워크가 안 되면(또는 3초 넘게 응답 없으면) 그때만 마지막으로 저장해둔 버전을 대신 보여줌
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return; // 저장(POST 등)은 그대로 통과
 
+  const networkFetch = fetch(event.request).then((response) => {
+    if (response && response.status === 200) {
+      const clone = response.clone();
+      caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone)).catch(() => {});
+    }
+    return response;
+  });
+
+  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000));
+
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        if (response && response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone)).catch(() => {});
+    Promise.race([networkFetch, timeout]).catch(() =>
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        if (event.request.mode === 'navigate') {
+          return caches.match('/price.html');
         }
-        return response;
+        return new Response('', { status: 503 });
       })
-      .catch(() =>
-        caches.match(event.request).then((cached) => {
-          if (cached) return cached;
-          if (event.request.mode === 'navigate') {
-            return caches.match('/price.html');
-          }
-          return new Response('', { status: 503 });
-        })
-      )
+    )
   );
 });

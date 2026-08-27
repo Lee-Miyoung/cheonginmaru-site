@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<script>
+  // ===== 오프라인에서도 이 페이지 자체가 열리도록 서비스워커 등록 =====
+  // scope를 '/price.html'로 좁혀서, 마루견적서(index.html)/재고관리(stock.html)에는 전혀 영향 없음
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw-price.js', { scope: '/price.html' }).catch(function(){});
+    });
+  }
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>청인마루 거래처 단가표</title>

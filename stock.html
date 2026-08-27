@@ -289,9 +289,12 @@
 <!-- 이미지 크게 보기 -->
 <div id="image-lightbox" class="modal-overlay" style="overflow:auto;">
   <div class="relative w-full h-full flex items-center justify-center p-2" onclick="closeImageLightbox()">
-    <img id="image-lightbox-img" src="" class="max-w-none rounded-xl mx-auto transition-transform duration-200" style="width:100%; touch-action:pinch-zoom;" onclick="event.stopPropagation(); toggleImageZoom();" ondblclick="event.stopPropagation(); toggleImageZoom();">
+    <img id="image-lightbox-img" src="" class="rounded-xl mx-auto" style="width:100%; height:auto; touch-action:pinch-zoom;" onclick="event.stopPropagation(); toggleImageZoom();" ondblclick="event.stopPropagation(); toggleImageZoom();">
+    <button id="lightbox-prev" onclick="event.stopPropagation(); lightboxNav(-1);" class="hidden fixed left-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/90 flex items-center justify-center z-10"><i class="fas fa-chevron-left"></i></button>
+    <button id="lightbox-next" onclick="event.stopPropagation(); lightboxNav(1);" class="hidden fixed right-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/90 flex items-center justify-center z-10"><i class="fas fa-chevron-right"></i></button>
     <button onclick="closeImageLightbox()" class="fixed top-4 right-4 w-10 h-10 rounded-full bg-white/90 flex items-center justify-center z-10"><i class="fas fa-times"></i></button>
-    <p class="fixed bottom-4 left-1/2 -translate-x-1/2 text-white text-[12px] font-bold bg-black/40 px-3 py-1.5 rounded-full">두 손가락으로 확대하거나, 사진을 탭해서 확대/축소</p>
+    <span id="lightbox-counter" class="hidden fixed top-4 left-4 text-white text-[12px] font-black bg-black/50 px-3 py-1.5 rounded-full z-10"></span>
+    <p class="fixed bottom-4 left-1/2 -translate-x-1/2 text-white text-[12px] font-bold bg-black/40 px-3 py-1.5 rounded-full">사진을 탭해서 확대/축소 · 여러 장이면 좌우로 스와이프</p>
   </div>
 </div>
 
@@ -685,11 +688,11 @@
       let imgsHtml = '';
       if (n.images && n.images.length) {
         if (n.images.length === 1) {
-          imgsHtml = `<img src="${n.images[0].dataUrl}" class="w-full max-h-56 object-cover rounded-lg border border-[var(--line)] cursor-pointer mt-2" onclick="openImageLightbox('${n.images[0].dataUrl}')">`;
+          imgsHtml = `<img src="${n.images[0].dataUrl}" data-notice-lightbox="${n.key}" data-idx="0" class="notice-lightbox-img w-full max-h-56 object-cover rounded-lg border border-[var(--line)] cursor-pointer mt-2">`;
         } else {
           imgsHtml = `
             <div class="flex gap-2 overflow-x-auto mt-2 pb-1" style="scroll-snap-type:x mandatory;">
-              ${n.images.map(img => `<img src="${img.dataUrl}" class="flex-shrink-0 rounded-lg border border-[var(--line)] cursor-pointer object-cover" style="width:78%; scroll-snap-align:center;" onclick="openImageLightbox('${img.dataUrl}')">`).join('')}
+              ${n.images.map((img, i) => `<img src="${img.dataUrl}" data-notice-lightbox="${n.key}" data-idx="${i}" class="notice-lightbox-img flex-shrink-0 rounded-lg border border-[var(--line)] cursor-pointer object-cover" style="width:78%; scroll-snap-align:center;">`).join('')}
             </div>
             <p class="text-[11px] text-[#B8B2A3] font-bold mt-1"><i class="fas fa-arrows-left-right mr-1"></i>옆으로 밀어서 사진 ${n.images.length}장 보기</p>
           `;
@@ -1528,9 +1531,25 @@
   }
 
   // ===== 재고 현황 브랜드 순서 - 직접 끌어서 바꾸면 그 순서가 기기에 저장됨 =====
-  // 검색어/데이터의 한글 정규화 형태(NFC/NFD)가 서로 달라 검색이 안 걸리는 문제 방지용 공통 헬퍼
+  // 검색어/데이터의 한글 정규화 형태(NFC/NFD)가 서로 달라 검색이 안 걸리는 문제 방지 +
+  // 띄어쓰기 무시 + 헷갈리기 쉬운 모음(애/에, 얘/예) 같은 걸로 취급해서 좀 더 관대하게 검색
   function normSearch(text) {
-    return String(text || '').normalize('NFC').toLowerCase();
+    let s = String(text || '').normalize('NFC').toLowerCase().replace(/\s+/g, '');
+    let out = '';
+    for (const ch of s) {
+      const code = ch.charCodeAt(0) - 0xAC00;
+      if (code >= 0 && code <= 11171) {
+        const lead = Math.floor(code / (21 * 28));
+        let vowel = Math.floor((code % (21 * 28)) / 28);
+        const tail = code % 28;
+        if (vowel === 1) vowel = 5;      // ㅐ -> ㅔ 로 통일 (애/에 혼동 방지)
+        else if (vowel === 3) vowel = 7; // ㅒ -> ㅖ 로 통일 (얘/예 혼동 방지)
+        out += String.fromCharCode(lead * 21 * 28 + vowel * 28 + tail + 0xAC00);
+      } else {
+        out += ch;
+      }
+    }
+    return out;
   }
 
   let brandCustomOrder = [];
@@ -2251,25 +2270,90 @@
     });
   }
 
-  function openImageLightbox(dataUrl) {
-    document.getElementById('image-lightbox-img').src = dataUrl;
+  let lightboxImages = [];
+  let lightboxIndex = 0;
+  let imageZoomedIn = false;
+
+  // images: 사진 URL 배열, startIndex: 처음 보여줄 사진 순번
+  function openImageLightbox(images, startIndex) {
+    lightboxImages = Array.isArray(images) ? images : [images];
+    lightboxIndex = startIndex || 0;
+    renderLightboxImage();
     document.getElementById('image-lightbox').style.display = 'flex';
+  }
+
+  function renderLightboxImage() {
+    const img = document.getElementById('image-lightbox-img');
+    img.src = lightboxImages[lightboxIndex] || '';
+    img.style.width = '100%';
+    imageZoomedIn = false;
+    const multi = lightboxImages.length > 1;
+    document.getElementById('lightbox-prev').classList.toggle('hidden', !multi || lightboxIndex === 0);
+    document.getElementById('lightbox-next').classList.toggle('hidden', !multi || lightboxIndex === lightboxImages.length - 1);
+    const counter = document.getElementById('lightbox-counter');
+    counter.classList.toggle('hidden', !multi);
+    if (multi) counter.innerText = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+  }
+
+  function lightboxNav(delta) {
+    const next = lightboxIndex + delta;
+    if (next < 0 || next >= lightboxImages.length) return;
+    lightboxIndex = next;
+    renderLightboxImage();
   }
 
   function closeImageLightbox() {
     document.getElementById('image-lightbox').style.display = 'none';
-    const img = document.getElementById('image-lightbox-img');
-    img.style.transform = 'scale(1)';
+    document.getElementById('image-lightbox-img').style.width = '100%';
     imageZoomedIn = false;
+    lightboxImages = [];
+    lightboxIndex = 0;
   }
 
-  // 핀치줌이 잘 안 먹는 인앱 브라우저 대비 - 탭하면 확대/축소 전환되는 방식도 같이 지원
-  let imageZoomedIn = false;
+  // 핀치줌이 잘 안 먹는 인앱 브라우저 대비 - 탭하면 확대/축소 전환 (실제 너비를 바꿔서 스크롤로 끝까지 볼 수 있게 함)
   function toggleImageZoom() {
     const img = document.getElementById('image-lightbox-img');
     imageZoomedIn = !imageZoomedIn;
-    img.style.transform = imageZoomedIn ? 'scale(2.2)' : 'scale(1)';
+    img.style.width = imageZoomedIn ? '220%' : '100%';
   }
+
+  // 라이트박스에서 좌우로 스와이프하면 사진 넘기기 (확대 중일 땐 스크롤 우선이라 넘기지 않음)
+  // 공지/거래처 사진 클릭 시 - 해당 항목의 전체 사진 배열 + 누른 순번을 라이트박스에 전달 (인라인 onclick 대신 위임 방식 - 특수문자 이스케이프 문제 방지)
+  document.addEventListener('click', (e) => {
+    const noticeImg = e.target.closest('.notice-lightbox-img');
+    if (noticeImg) {
+      const key = noticeImg.dataset.noticeLightbox;
+      const idx = parseInt(noticeImg.dataset.idx) || 0;
+      const n = notices[key];
+      if (n && n.images) openImageLightbox(n.images.map(i => i.dataUrl), idx);
+      return;
+    }
+    const vendorImg = e.target.closest('.vendor-lightbox-img');
+    if (vendorImg) {
+      const key = vendorImg.dataset.vendorLightbox;
+      const idx = parseInt(vendorImg.dataset.idx) || 0;
+      const v = vendors[key];
+      if (v && v.images) openImageLightbox(v.images.map(i => i.dataUrl), idx);
+    }
+  });
+
+  (function setupLightboxSwipe() {
+    let sx = 0, sy = 0;
+    const wrap = document.getElementById('image-lightbox');
+    if (!wrap) return;
+    wrap.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    }, { passive: true });
+    wrap.addEventListener('touchend', (e) => {
+      if (imageZoomedIn) return;
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        lightboxNav(dx < 0 ? 1 : -1);
+      }
+    }, { passive: true });
+  })();
 
   function saveVendor() {
     const name = document.getElementById('vf-name').value.trim();
@@ -2322,7 +2406,7 @@
     const imgBox = document.getElementById('vd-images-box');
     if (v.images && v.images.length) {
       imgBox.classList.remove('hidden');
-      imgBox.innerHTML = v.images.map(img => `<img src="${img.dataUrl}" class="w-full h-20 object-cover rounded-lg border border-[var(--line)] cursor-pointer" onclick="openImageLightbox('${img.dataUrl}')">`).join('');
+      imgBox.innerHTML = v.images.map((img, i) => `<img src="${img.dataUrl}" data-vendor-lightbox="${currentVendorKey}" data-idx="${i}" class="vendor-lightbox-img w-full h-20 object-cover rounded-lg border border-[var(--line)] cursor-pointer">`).join('');
     } else {
       imgBox.classList.add('hidden');
       imgBox.innerHTML = '';

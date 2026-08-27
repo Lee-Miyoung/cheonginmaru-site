@@ -615,10 +615,10 @@
     if (!list.length) { card.classList.add('hidden'); return; }
     card.classList.remove('hidden');
     listEl.innerHTML = '';
-    list.slice(0, 5).forEach(n => {
+    list.slice(0, 10).forEach(n => {
       const row = document.createElement('button');
       row.type = 'button';
-      row.onclick = () => openNoticeModal();
+      row.onclick = () => openNoticeModal(n.key);
       row.className = 'w-full text-left px-4 py-2.5 flex items-center justify-between gap-2 active:bg-[#F6EFE6]';
       row.innerHTML = `
         <span class="flex items-center gap-1.5 min-w-0">
@@ -639,17 +639,17 @@
       }
       listEl.appendChild(row);
     });
-    if (list.length > 5) {
+    if (list.length > 10) {
       const more = document.createElement('button');
       more.type = 'button';
       more.onclick = () => openNoticeModal();
       more.className = 'w-full text-center px-4 py-2 text-[12px] font-bold text-[#8B5E34] bg-[#F6EFE6]';
-      more.innerText = `+ ${list.length - 5}개 더 보기`;
+      more.innerText = `+ ${list.length - 10}개 더 보기`;
       listEl.appendChild(more);
     }
   }
 
-  function openNoticeModal() {
+  function openNoticeModal(focusKey) {
     editingNoticeKey = null;
     pendingNoticeImages = [];
     document.getElementById('notice-input').value = '';
@@ -659,7 +659,18 @@
     renderNoticeImagePreview();
     renderNoticeList();
     document.getElementById('notice-modal').style.display = 'flex';
-    refreshNoticesFromServer(); // 열 때마다 서버에서 확실하게 다시 불러옴
+    refreshNoticesFromServer(focusKey); // 열 때마다 서버에서 확실하게 다시 불러옴 (지정한 공지로 바로 이동)
+    if (focusKey) scrollToNotice(focusKey);
+  }
+
+  function scrollToNotice(key) {
+    setTimeout(() => {
+      const el = document.querySelector(`[data-notice-key="${key}"]`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-[#8B5E34]');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-[#8B5E34]'), 1800);
+    }, 150);
   }
 
   function renderNoticeList() {
@@ -669,8 +680,21 @@
     if (!list.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-sm">등록된 공지가 없습니다</div>'; return; }
     list.forEach(n => {
       const row = document.createElement('div');
-      row.className = 'bg-white border border-[var(--line)] rounded-xl p-3';
-      const imgsHtml = (n.images && n.images.length) ? `<div class="grid grid-cols-3 gap-2 mt-2">${n.images.map(img => `<img src="${img.dataUrl}" class="w-full h-20 object-cover rounded-lg border border-[var(--line)] cursor-pointer" onclick="openImageLightbox('${img.dataUrl}')">`).join('')}</div>` : '';
+      row.dataset.noticeKey = n.key;
+      row.className = 'bg-white border border-[var(--line)] rounded-xl p-3 transition-all';
+      let imgsHtml = '';
+      if (n.images && n.images.length) {
+        if (n.images.length === 1) {
+          imgsHtml = `<img src="${n.images[0].dataUrl}" class="w-full max-h-56 object-cover rounded-lg border border-[var(--line)] cursor-pointer mt-2" onclick="openImageLightbox('${n.images[0].dataUrl}')">`;
+        } else {
+          imgsHtml = `
+            <div class="flex gap-2 overflow-x-auto mt-2 pb-1" style="scroll-snap-type:x mandatory;">
+              ${n.images.map(img => `<img src="${img.dataUrl}" class="flex-shrink-0 rounded-lg border border-[var(--line)] cursor-pointer object-cover" style="width:78%; scroll-snap-align:center;" onclick="openImageLightbox('${img.dataUrl}')">`).join('')}
+            </div>
+            <p class="text-[11px] text-[#B8B2A3] font-bold mt-1"><i class="fas fa-arrows-left-right mr-1"></i>옆으로 밀어서 사진 ${n.images.length}장 보기</p>
+          `;
+        }
+      }
       const linkHtml = n.link ? `<a href="${n.link}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 mt-2 text-[13px] font-black text-white bg-[#8B5E34] px-3 py-1.5 rounded-lg"><i class="fas fa-arrow-up-right-from-square"></i>바로가기</a>` : '';
       row.innerHTML = `
         <p class="text-[14px] font-bold text-[#3A342C] whitespace-pre-wrap">${n.text || ''}</p>
@@ -772,11 +796,12 @@
   }
 
   // 실시간 리스너와 별개로, 저장 직후 확실하게 한 번 더 서버에서 직접 읽어와 화면을 갱신 (놓치는 경우 방지)
-  function refreshNoticesFromServer() {
+  function refreshNoticesFromServer(focusKey) {
     fbDatabase.ref('notices').once('value').then(snap => {
       notices = snap.val() || {};
       renderNoticeBanner();
       renderNoticeList();
+      if (focusKey) scrollToNotice(focusKey);
     }).catch(() => {});
   }
 
@@ -1099,8 +1124,8 @@
   function renderReturnPicker() {
     const listEl = document.getElementById('return-picker-list');
     if (!listEl) return;
-    const q = (document.getElementById('return-search').value || '').toLowerCase();
-    const items = stockSummary.filter(s => s.stock > 0 && (!q || (s.brand+s.name+s.model+(s.lot||'')).toLowerCase().includes(q)));
+    const q = normSearch(document.getElementById('return-search').value);
+    const items = stockSummary.filter(s => s.stock > 0 && (!q || normSearch(s.brand+s.name+s.model+(s.lot||'')).includes(q)));
     listEl.innerHTML = '';
     if (!items.length) {
       const msg = currentType === '출고' ? '출고할 재고가 없습니다' : '반품 가능한 재고가 없습니다';
@@ -1503,6 +1528,11 @@
   }
 
   // ===== 재고 현황 브랜드 순서 - 직접 끌어서 바꾸면 그 순서가 기기에 저장됨 =====
+  // 검색어/데이터의 한글 정규화 형태(NFC/NFD)가 서로 달라 검색이 안 걸리는 문제 방지용 공통 헬퍼
+  function normSearch(text) {
+    return String(text || '').normalize('NFC').toLowerCase();
+  }
+
   let brandCustomOrder = [];
   try { brandCustomOrder = JSON.parse(localStorage.getItem('cm_stock_brand_order') || '[]'); } catch(e) {}
 
@@ -1586,9 +1616,9 @@
   }
 
   function renderStockList() {
-    const q = (document.getElementById('stock-search').value || '').toLowerCase();
+    const q = normSearch(document.getElementById('stock-search').value);
     const box = document.getElementById('stock-list');
-    const filtered = stockSummary.filter(s => !q || (s.brand+s.name+s.model).toLowerCase().includes(q));
+    const filtered = stockSummary.filter(s => !q || normSearch(s.brand + s.name + s.model + (s.lot||'')).includes(q));
     document.getElementById('stock-count').innerText = `${filtered.length}개 품목`;
     box.innerHTML = '';
     if (!filtered.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-base">기록이 없습니다</div>'; return; }
@@ -1862,11 +1892,11 @@
   }
 
   function getFilteredLogList() {
-    const q = (document.getElementById('log-search').value || '').toLowerCase();
+    const q = normSearch(document.getElementById('log-search').value);
     const source = logTab === 'trash' ? movementsTrash : movements;
     return Object.keys(source).map(key => ({ key, ...source[key] }))
       .sort((a,b) => (b.ts||0) - (a.ts||0))
-      .filter(r => !q || (r.brand+r.name+r.model).toLowerCase().includes(q))
+      .filter(r => !q || normSearch(r.brand+r.name+r.model).includes(q))
       .filter(r => !logTypeFilter || r.type === logTypeFilter);
   }
 
@@ -2086,10 +2116,10 @@
   }
 
   function renderVendorList() {
-    const q = (document.getElementById('vendor-search').value || '').toLowerCase();
+    const q = normSearch(document.getElementById('vendor-search').value);
     const box = document.getElementById('vendor-list');
     const list = Object.keys(vendors).map(key => ({ key, ...vendors[key] }))
-      .filter(v => !q || (v.name||'').toLowerCase().includes(q))
+      .filter(v => !q || normSearch(v.name).includes(q))
       .sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ko'));
     box.innerHTML = '';
     if (!list.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-sm">등록된 거래처가 없습니다</div>'; return; }

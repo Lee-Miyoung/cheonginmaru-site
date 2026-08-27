@@ -277,6 +277,7 @@
     </div>
     <div class="p-3 border-b bg-[#FBF9F5] space-y-2">
       <textarea id="notice-input" class="input-premium text-sm" rows="3" placeholder="예: 이번주 금요일 재고조사 있습니다 / OO브랜드 단가 인상 안내"></textarea>
+      <input type="url" id="notice-link" class="input-premium text-sm" placeholder="🔗 링크 (선택, 예: 본사 재고조회사이트 주소 https://...)">
       <input type="file" id="notice-images-input" accept="image/*" multiple class="input-premium text-sm" onchange="handleNoticeImageSelect(event)">
       <div id="notice-images-preview" class="grid grid-cols-3 gap-2"></div>
       <button id="notice-submit-btn" onclick="saveNotice()" class="w-full py-2.5 bg-[#2B2622] text-white rounded-xl text-sm font-black"><i class="fas fa-plus mr-1"></i> 공지 등록</button>
@@ -620,9 +621,22 @@
       row.onclick = () => openNoticeModal();
       row.className = 'w-full text-left px-4 py-2.5 flex items-center justify-between gap-2 active:bg-[#F6EFE6]';
       row.innerHTML = `
-        <span class="text-[13px] font-bold text-[#3A342C] truncate">${(n.text || '').split('\n')[0] || '공지'}</span>
-        <span class="text-[11px] text-[#B8B2A3] font-bold shrink-0">${n.ts ? new Date(n.ts).toLocaleDateString() : ''}</span>
+        <span class="flex items-center gap-1.5 min-w-0">
+          ${n.link ? '<i class="fas fa-link text-[#8B5E34] text-[11px] shrink-0"></i>' : ''}
+          <span class="text-[13px] font-bold text-[#3A342C] truncate">${(n.text || '').split('\n')[0] || '공지'}</span>
+        </span>
+        <span class="flex items-center gap-2 shrink-0">
+          <span class="text-[11px] text-[#B8B2A3] font-bold">${n.ts ? new Date(n.ts).toLocaleDateString() : ''}</span>
+        </span>
       `;
+      if (n.link) {
+        const linkBtn = document.createElement('a');
+        linkBtn.href = n.link; linkBtn.target = '_blank'; linkBtn.rel = 'noopener';
+        linkBtn.className = 'shrink-0 text-[11px] font-black text-white bg-[#8B5E34] px-2 py-1 rounded-lg ml-1';
+        linkBtn.innerText = '바로가기';
+        linkBtn.onclick = (e) => e.stopPropagation();
+        row.querySelector('span.flex.items-center.gap-2').appendChild(linkBtn);
+      }
       listEl.appendChild(row);
     });
     if (list.length > 5) {
@@ -639,6 +653,7 @@
     editingNoticeKey = null;
     pendingNoticeImages = [];
     document.getElementById('notice-input').value = '';
+    document.getElementById('notice-link').value = '';
     document.getElementById('notice-images-input').value = '';
     document.getElementById('notice-submit-btn').innerHTML = '<i class="fas fa-plus mr-1"></i> 공지 등록';
     renderNoticeImagePreview();
@@ -656,8 +671,10 @@
       const row = document.createElement('div');
       row.className = 'bg-white border border-[var(--line)] rounded-xl p-3';
       const imgsHtml = (n.images && n.images.length) ? `<div class="grid grid-cols-3 gap-2 mt-2">${n.images.map(img => `<img src="${img.dataUrl}" class="w-full h-20 object-cover rounded-lg border border-[var(--line)] cursor-pointer" onclick="openImageLightbox('${img.dataUrl}')">`).join('')}</div>` : '';
+      const linkHtml = n.link ? `<a href="${n.link}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 mt-2 text-[13px] font-black text-white bg-[#8B5E34] px-3 py-1.5 rounded-lg"><i class="fas fa-arrow-up-right-from-square"></i>바로가기</a>` : '';
       row.innerHTML = `
         <p class="text-[14px] font-bold text-[#3A342C] whitespace-pre-wrap">${n.text || ''}</p>
+        ${linkHtml}
         ${imgsHtml}
         <div class="flex justify-between items-center mt-2.5 pt-2.5 border-t border-[var(--line)]">
           <p class="text-[12px] text-[#B8B2A3] font-bold">${n.author||''} · ${n.ts ? new Date(n.ts).toLocaleDateString() : ''}</p>
@@ -677,6 +694,7 @@
     editingNoticeKey = key;
     pendingNoticeImages = (n.images || []).slice();
     document.getElementById('notice-input').value = n.text || '';
+    document.getElementById('notice-link').value = n.link || '';
     document.getElementById('notice-submit-btn').innerHTML = '<i class="fas fa-save mr-1"></i> 수정 저장';
     renderNoticeImagePreview();
     document.querySelector('#notice-modal .p-3.border-b').scrollIntoView({ behavior: 'smooth' });
@@ -725,24 +743,28 @@
   function saveNotice() {
     const text = document.getElementById('notice-input').value.trim();
     if (!text) return showToast('공지 내용을 입력하세요');
+    let link = document.getElementById('notice-link').value.trim();
+    if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link; // http(s):// 안 붙이고 입력해도 되게
     if (!checkImagesPayloadOk(pendingNoticeImages)) return;
     if (editingNoticeKey) {
       const key = editingNoticeKey;
-      fbDatabase.ref('notices/' + key).update({ text, images: pendingNoticeImages }).then(() => {
+      fbDatabase.ref('notices/' + key).update({ text, link, images: pendingNoticeImages }).then(() => {
         showToast('공지 수정 완료');
         editingNoticeKey = null;
         pendingNoticeImages = [];
         document.getElementById('notice-input').value = '';
+        document.getElementById('notice-link').value = '';
         document.getElementById('notice-submit-btn').innerHTML = '<i class="fas fa-plus mr-1"></i> 공지 등록';
         renderNoticeImagePreview();
         refreshNoticesFromServer();
       }).catch((err) => showToast('수정 실패: ' + (err && err.message ? err.message : err), true));
     } else {
-      const record = { text, images: pendingNoticeImages, author: getCurrentAuthor(), ts: Date.now() };
+      const record = { text, link, images: pendingNoticeImages, author: getCurrentAuthor(), ts: Date.now() };
       fbDatabase.ref('notices').push(record).then(() => {
         showToast('공지 등록 완료');
         pendingNoticeImages = [];
         document.getElementById('notice-input').value = '';
+        document.getElementById('notice-link').value = '';
         renderNoticeImagePreview();
         refreshNoticesFromServer();
       }).catch((err) => showToast('등록 실패: ' + (err && err.message ? err.message : err), true));

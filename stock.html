@@ -136,7 +136,15 @@
         <div><label class="text-[13px] font-black text-[#B8B2A3] pl-1">거래처명</label><input type="text" id="vf-name" class="input-premium mt-1" placeholder="예: OO인테리어"></div>
         <div><label class="text-[13px] font-black text-[#B8B2A3] pl-1">담당자/연락처</label><input type="text" id="vf-phone" class="input-premium mt-1" placeholder="이름 010-0000-0000"></div>
         <div><label class="text-[13px] font-black text-[#B8B2A3] pl-1">주소</label><input type="text" id="vf-addr" class="input-premium mt-1" placeholder="선택 입력"></div>
-        <div><label class="text-[13px] font-black text-[#B8B2A3] pl-1">메모</label><input type="text" id="vf-memo" class="input-premium mt-1" placeholder="선택 입력"></div>
+        <div>
+          <label class="text-[13px] font-black text-[#B8B2A3] pl-1">정책/공지 <span class="text-[#A9784F] font-medium">(무료배송 기준, 반품 조건 등 - 직원들이 볼 수 있어요)</span></label>
+          <textarea id="vf-memo" class="input-premium mt-1" rows="4" placeholder="예: 100박스 이상 주문 시 무료배송 / 반품은 미개봉 상태만 가능"></textarea>
+        </div>
+        <div>
+          <label class="text-[13px] font-black text-[#B8B2A3] pl-1">단가표/사진 첨부 <span class="text-[#A9784F] font-medium">(자동으로 용량 줄여서 저장돼요)</span></label>
+          <input type="file" id="vf-images-input" accept="image/*" multiple class="input-premium mt-1" onchange="handleVendorImageSelect(event)">
+          <div id="vf-images-preview" class="grid grid-cols-3 gap-2 mt-2"></div>
+        </div>
         <button onclick="saveVendor()" class="w-full py-3.5 bg-[#8B5E34] text-white rounded-xl text-sm font-black"><i class="fas fa-save mr-1"></i> 저장</button>
       </div>
     </div>
@@ -151,7 +159,11 @@
         <h4 id="vd-name" class="text-lg font-black text-[#2B2622]">-</h4>
         <p id="vd-phone" class="text-[15px] text-[#8B8477] font-bold"></p>
         <p id="vd-addr" class="text-[15px] text-[#B8B2A3]"></p>
-        <p id="vd-memo" class="text-[15px] text-[#B8B2A3] italic"></p>
+        <div id="vd-memo-box" class="hidden mt-2 bg-[#F6EFE6] border border-[#E4D2B4] rounded-xl px-3.5 py-3">
+          <p class="eyebrow text-[#8B5E34] mb-1"><i class="fas fa-bullhorn mr-1"></i>정책/공지</p>
+          <p id="vd-memo" class="text-[14px] text-[#5C4A32] font-bold whitespace-pre-wrap"></p>
+        </div>
+        <div id="vd-images-box" class="hidden grid grid-cols-3 gap-2 mt-2"></div>
       </div>
       <div class="p-3 border-b bg-[#FBF9F5] space-y-2">
         <div class="grid grid-cols-2 gap-2">
@@ -247,6 +259,31 @@
   </div>
 </div>
 
+<!-- 전체 공지사항 모달 -->
+<div id="notice-modal" class="modal-overlay">
+  <div class="card rounded-[1.5rem] w-full max-w-lg mx-4 h-[85vh] flex flex-col overflow-hidden">
+    <div class="p-4 border-b bg-[#FBF9F5] flex justify-between items-center">
+      <h3 class="font-black text-[#2B2622]"><i class="fas fa-bullhorn mr-1.5 text-[#8B5E34]"></i>전체 공지</h3>
+      <button onclick="closeModal('notice-modal')" class="w-8 h-8 rounded-full bg-[#E7E1D3] flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-3 border-b bg-[#FBF9F5] space-y-2">
+      <textarea id="notice-input" class="input-premium text-sm" rows="3" placeholder="예: 이번주 금요일 재고조사 있습니다 / OO브랜드 단가 인상 안내"></textarea>
+      <input type="file" id="notice-images-input" accept="image/*" multiple class="input-premium text-sm" onchange="handleNoticeImageSelect(event)">
+      <div id="notice-images-preview" class="grid grid-cols-3 gap-2"></div>
+      <button id="notice-submit-btn" onclick="saveNotice()" class="w-full py-2.5 bg-[#2B2622] text-white rounded-xl text-sm font-black"><i class="fas fa-plus mr-1"></i> 공지 등록</button>
+    </div>
+    <div id="notice-list" class="p-3 overflow-y-auto flex-1 space-y-2 bg-[#FAF8F4]"></div>
+  </div>
+</div>
+
+<!-- 이미지 크게 보기 -->
+<div id="image-lightbox" class="modal-overlay">
+  <div class="relative max-w-full max-h-full p-4" onclick="closeModal('image-lightbox')">
+    <img id="image-lightbox-img" src="" class="max-w-full max-h-[85vh] rounded-xl mx-auto" onclick="event.stopPropagation()">
+    <button onclick="closeModal('image-lightbox')" class="absolute top-2 right-2 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center"><i class="fas fa-times"></i></button>
+  </div>
+</div>
+
 <!-- 기록 수정 모달 -->
 <div id="edit-record-modal" class="modal-overlay">
   <div class="card rounded-[1.5rem] w-full max-w-lg mx-4 max-h-[90vh] flex flex-col overflow-hidden">
@@ -305,6 +342,7 @@
       <p class="text-[13px] text-[#8B8477] font-bold">Stock System · 실시간 공유 <span id="debug-count" class="text-[#A9784F]"></span></p>
     </div>
     <div class="flex items-center gap-1.5">
+      <button onclick="openNoticeModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="전체 공지"><i class="fas fa-bullhorn"></i></button>
       <button onclick="openBackupModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[var(--moss)] flex items-center justify-center" title="백업 관리"><i class="fas fa-shield-halved"></i></button>
       <button onclick="loadMasterCSV(true)" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="품목목록 새로고침"><i class="fas fa-sync-alt"></i></button>
       <button onclick="openMonthlyModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="월별 매입 통계"><i class="fas fa-chart-column"></i></button>
@@ -312,6 +350,15 @@
       <button onclick="openLogModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="입출고 기록"><i class="fas fa-list-ul"></i></button>
     </div>
   </header>
+
+  <!-- 전체 공지 배너 (특정 거래처 아닌 회사 전체 공지) -->
+  <button id="notice-banner" onclick="openNoticeModal()" class="hidden w-full mb-3 rounded-2xl px-4 py-3 flex items-center justify-between text-left premium-shadow bg-[#2B2622] text-white">
+    <span class="flex items-center gap-2 min-w-0">
+      <i class="fas fa-bullhorn shrink-0"></i>
+      <span id="notice-banner-text" class="font-black text-[14px] truncate"></span>
+    </span>
+    <i class="fas fa-chevron-right text-[13px] shrink-0"></i>
+  </button>
 
   <!-- 반품기한 임박/초과 알림 배너 -->
   <button id="return-alert-banner" onclick="openReturnAlertsModal()" class="hidden w-full mb-5 rounded-2xl px-4 py-3 flex items-center justify-between text-left premium-shadow">
@@ -531,6 +578,135 @@
       const dbg = document.getElementById('debug-count');
       if (dbg) dbg.innerText = '(읽기 실패: ' + err.code + ')';
     });
+
+    // 전체 공지사항 실시간 리스너 (특정 거래처와 무관한 공지)
+    fbDatabase.ref('notices').on('value', snap => {
+      notices = snap.val() || {};
+      renderNoticeBanner();
+      if (document.getElementById('notice-modal').style.display === 'flex') renderNoticeList();
+    });
+  }
+
+  // ===== 전체 공지사항 (특정 거래처 아님) =====
+  let notices = {};
+  let pendingNoticeImages = [];
+  let editingNoticeKey = null;
+
+  function renderNoticeBanner() {
+    const banner = document.getElementById('notice-banner');
+    const list = Object.values(notices).sort((a,b) => (b.ts||0)-(a.ts||0));
+    if (!list.length) { banner.classList.add('hidden'); return; }
+    banner.classList.remove('hidden');
+    document.getElementById('notice-banner-text').innerText = list[0].text.split('\n')[0];
+  }
+
+  function openNoticeModal() {
+    editingNoticeKey = null;
+    pendingNoticeImages = [];
+    document.getElementById('notice-input').value = '';
+    document.getElementById('notice-images-input').value = '';
+    document.getElementById('notice-submit-btn').innerHTML = '<i class="fas fa-plus mr-1"></i> 공지 등록';
+    renderNoticeImagePreview();
+    renderNoticeList();
+    document.getElementById('notice-modal').style.display = 'flex';
+  }
+
+  function renderNoticeList() {
+    const box = document.getElementById('notice-list');
+    const list = Object.keys(notices).map(key => ({ key, ...notices[key] })).sort((a,b) => (b.ts||0)-(a.ts||0));
+    box.innerHTML = '';
+    if (!list.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-sm">등록된 공지가 없습니다</div>'; return; }
+    list.forEach(n => {
+      const row = document.createElement('div');
+      row.className = 'bg-white border border-[var(--line)] rounded-xl p-3';
+      const imgsHtml = (n.images && n.images.length) ? `<div class="grid grid-cols-3 gap-2 mt-2">${n.images.map(img => `<img src="${img.dataUrl}" class="w-full h-20 object-cover rounded-lg border border-[var(--line)] cursor-pointer" onclick="openImageLightbox('${img.dataUrl}')">`).join('')}</div>` : '';
+      row.innerHTML = `
+        <div class="flex justify-between items-start gap-2">
+          <p class="text-[14px] font-bold text-[#3A342C] whitespace-pre-wrap flex-1">${n.text}</p>
+          <div class="flex gap-1.5 shrink-0">
+            <button onclick="editNotice('${n.key}')" class="text-[#8B5E34] px-1"><i class="fas fa-pen text-[13px]"></i></button>
+            <button onclick="deleteNotice('${n.key}')" class="text-[#CFC9BB] hover:text-rose-500 px-1"><i class="fas fa-trash text-[13px]"></i></button>
+          </div>
+        </div>
+        ${imgsHtml}
+        <p class="text-[12px] text-[#B8B2A3] font-bold mt-2">${n.author||''} · ${new Date(n.ts||0).toLocaleDateString()}</p>
+      `;
+      box.appendChild(row);
+    });
+  }
+
+  function editNotice(key) {
+    const n = notices[key];
+    if (!n) return;
+    editingNoticeKey = key;
+    pendingNoticeImages = (n.images || []).slice();
+    document.getElementById('notice-input').value = n.text || '';
+    document.getElementById('notice-submit-btn').innerHTML = '<i class="fas fa-save mr-1"></i> 수정 저장';
+    renderNoticeImagePreview();
+    document.querySelector('#notice-modal .p-3.border-b').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function deleteNotice(key) {
+    if (!confirm('이 공지를 삭제할까요?')) return;
+    fbDatabase.ref('notices/' + key).remove().then(() => showToast('공지 삭제 완료'))
+      .catch((err) => showToast('삭제 실패: ' + (err && err.message ? err.message : err), true));
+  }
+
+  async function handleNoticeImageSelect(event) {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    showToast('이미지 처리 중...');
+    for (const file of files) {
+      try {
+        const dataUrl = await compressImageFile(file, 1000, 0.7);
+        pendingNoticeImages.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2,7), name: file.name, dataUrl });
+      } catch(e) { showToast('이미지 처리 실패: ' + file.name); }
+    }
+    event.target.value = '';
+    renderNoticeImagePreview();
+  }
+
+  function removeNoticePendingImage(id) {
+    pendingNoticeImages = pendingNoticeImages.filter(img => img.id !== id);
+    renderNoticeImagePreview();
+  }
+
+  function renderNoticeImagePreview() {
+    const box = document.getElementById('notice-images-preview');
+    box.innerHTML = '';
+    pendingNoticeImages.forEach(img => {
+      const cell = document.createElement('div');
+      cell.className = 'relative';
+      cell.innerHTML = `
+        <img src="${img.dataUrl}" class="w-full h-20 object-cover rounded-lg border border-[var(--line)]">
+        <button type="button" onclick="removeNoticePendingImage('${img.id}')" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[var(--rust)] text-white text-[11px] flex items-center justify-center"><i class="fas fa-times"></i></button>
+      `;
+      box.appendChild(cell);
+    });
+  }
+
+  function saveNotice() {
+    const text = document.getElementById('notice-input').value.trim();
+    if (!text) return showToast('공지 내용을 입력하세요');
+    if (editingNoticeKey) {
+      const key = editingNoticeKey;
+      fbDatabase.ref('notices/' + key).update({ text, images: pendingNoticeImages }).then(() => {
+        showToast('공지 수정 완료');
+        editingNoticeKey = null;
+        pendingNoticeImages = [];
+        document.getElementById('notice-input').value = '';
+        document.getElementById('notice-submit-btn').innerHTML = '<i class="fas fa-plus mr-1"></i> 공지 등록';
+        renderNoticeImagePreview();
+      }).catch((err) => showToast('수정 실패: ' + (err && err.message ? err.message : err), true));
+    } else {
+      const record = { text, images: pendingNoticeImages, author: getCurrentAuthor(), ts: Date.now() };
+      fbDatabase.ref('notices').push(record).then(() => {
+        showToast('공지 등록 완료');
+        pendingNoticeImages = [];
+        document.getElementById('notice-input').value = '';
+        renderNoticeImagePreview();
+      }).catch((err) => showToast('등록 실패: ' + (err && err.message ? err.message : err), true));
+    }
   }
 
   // ===== 작성자 (누가 입력했는지 기록에 남김) =====
@@ -1562,6 +1738,7 @@
   }
 
   let editingVendorKey = null;
+  let pendingVendorImages = []; // 저장 전 임시 보관 (수정 중 추가/삭제)
 
   function showVendorList() {
     document.getElementById('vendor-list-view').classList.remove('hidden');
@@ -1571,16 +1748,20 @@
   }
   function showVendorForm() {
     editingVendorKey = null;
+    pendingVendorImages = [];
     document.getElementById('vendor-form-title').innerText = '새 거래처 추가';
     document.getElementById('vendor-list-view').classList.add('hidden');
     document.getElementById('vendor-form-view').classList.remove('hidden');
     document.getElementById('vf-name').value = ''; document.getElementById('vf-phone').value = '';
     document.getElementById('vf-addr').value = ''; document.getElementById('vf-memo').value = '';
+    document.getElementById('vf-images-input').value = '';
+    renderVendorImagePreview();
   }
   function editVendorInfo(key) {
     const v = vendors[key];
     if (!v) return showToast('거래처 정보를 찾을 수 없습니다');
     editingVendorKey = key;
+    pendingVendorImages = (v.images || []).slice();
     document.getElementById('vendor-form-title').innerText = '거래처 정보 수정';
     document.getElementById('vendor-list-view').classList.add('hidden');
     document.getElementById('vendor-detail-view').classList.add('hidden');
@@ -1589,6 +1770,8 @@
     document.getElementById('vf-phone').value = v.phone || '';
     document.getElementById('vf-addr').value = v.addr || '';
     document.getElementById('vf-memo').value = v.memo || '';
+    document.getElementById('vf-images-input').value = '';
+    renderVendorImagePreview();
   }
   function hideVendorForm() {
     if (editingVendorKey) { const k = editingVendorKey; editingVendorKey = null; openVendorDetail(k); }
@@ -1620,7 +1803,7 @@
         </button>
         <div class="vendor-swipe-row bg-white border border-[var(--line)] rounded-xl p-3 flex justify-between items-center cursor-pointer active:bg-[#FBF9F5] relative" style="transition: transform .15s;">
           <div class="min-w-0 flex-1">
-            <p class="text-sm font-black text-[#3A342C] truncate">${v.name}</p>
+            <p class="text-sm font-black text-[#3A342C] truncate">${v.name} ${v.memo ? '<i class="fas fa-bullhorn text-[#8B5E34] text-[11px] ml-1"></i>' : ''}</p>
             <p class="text-[14px] text-[#B8B2A3] font-bold">${v.phone||''}</p>
           </div>
           <div class="text-right shrink-0 ml-2">
@@ -1668,6 +1851,66 @@
       .catch((err) => showToast('삭제 실패: ' + (err && err.message ? err.message : err), true));
   }
 
+  // ===== 이미지 첨부 (Firebase Storage 안 쓰고, 압축해서 DB에 바로 저장 - 새 설정 필요 없음) =====
+  function compressImageFile(file, maxWidth, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > maxWidth) { h = Math.round(h * (maxWidth / w)); w = maxWidth; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleVendorImageSelect(event) {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    showToast('이미지 처리 중...');
+    for (const file of files) {
+      try {
+        const dataUrl = await compressImageFile(file, 1000, 0.7);
+        pendingVendorImages.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2,7), name: file.name, dataUrl });
+      } catch(e) { showToast('이미지 처리 실패: ' + file.name); }
+    }
+    event.target.value = '';
+    renderVendorImagePreview();
+  }
+
+  function removeVendorPendingImage(id) {
+    pendingVendorImages = pendingVendorImages.filter(img => img.id !== id);
+    renderVendorImagePreview();
+  }
+
+  function renderVendorImagePreview() {
+    const box = document.getElementById('vf-images-preview');
+    box.innerHTML = '';
+    pendingVendorImages.forEach(img => {
+      const cell = document.createElement('div');
+      cell.className = 'relative';
+      cell.innerHTML = `
+        <img src="${img.dataUrl}" class="w-full h-20 object-cover rounded-lg border border-[var(--line)]">
+        <button type="button" onclick="removeVendorPendingImage('${img.id}')" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[var(--rust)] text-white text-[11px] flex items-center justify-center"><i class="fas fa-times"></i></button>
+      `;
+      box.appendChild(cell);
+    });
+  }
+
+  function openImageLightbox(dataUrl) {
+    document.getElementById('image-lightbox-img').src = dataUrl;
+    document.getElementById('image-lightbox').style.display = 'flex';
+  }
+
   function saveVendor() {
     const name = document.getElementById('vf-name').value.trim();
     if (!name) return showToast('거래처명을 입력하세요');
@@ -1675,7 +1918,8 @@
       name,
       phone: document.getElementById('vf-phone').value.trim(),
       addr: document.getElementById('vf-addr').value.trim(),
-      memo: document.getElementById('vf-memo').value.trim()
+      memo: document.getElementById('vf-memo').value.trim(),
+      images: pendingVendorImages
     };
     if (editingVendorKey) {
       const key = editingVendorKey;
@@ -1713,6 +1957,15 @@
     document.getElementById('vd-phone').innerText = v.phone || '';
     document.getElementById('vd-addr').innerText = v.addr || '';
     document.getElementById('vd-memo').innerText = v.memo || '';
+    document.getElementById('vd-memo-box').classList.toggle('hidden', !v.memo);
+    const imgBox = document.getElementById('vd-images-box');
+    if (v.images && v.images.length) {
+      imgBox.classList.remove('hidden');
+      imgBox.innerHTML = v.images.map(img => `<img src="${img.dataUrl}" class="w-full h-20 object-cover rounded-lg border border-[var(--line)] cursor-pointer" onclick="openImageLightbox('${img.dataUrl}')">`).join('');
+    } else {
+      imgBox.classList.add('hidden');
+      imgBox.innerHTML = '';
+    }
 
     if (showingVendorTrash) {
       const trashLogs = Object.keys(vendorLogsTrash).filter(k => vendorLogsTrash[k].vendorKey === currentVendorKey)

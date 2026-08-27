@@ -30,6 +30,15 @@
     }
   })();
 </script>
+<script>
+  // ===== 오프라인에서도 이 페이지 자체가 열리도록 서비스워커 등록 =====
+  // scope를 '/stock.html'로 좁혀서, 마루견적서(index.html)/파트너가격(price.html)에는 전혀 영향 없음
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw-stock.js', { scope: '/stock.html' }).catch(function(){});
+    });
+  }
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -967,25 +976,36 @@
   }
 
   // ===== 매입단가(비밀 단가) 불러오기 - 견적서 관리패널과 같은 데이터, 로그인(1306)한 직원은 바로 조회됨 =====
+  const COST_CACHE_KEY = 'cm_stock_cost_cache';
+
+  function buildCostDataFromJson(jsonData) {
+    jsonData = fillMergedCells(jsonData);
+    costDataMap = {};
+    jsonData.forEach(item => {
+      const brand = String(item.brand || '').trim();
+      const name = String(item.name || '').trim();
+      const model = String(item.model || '').trim();
+      const exVatKey = Object.keys(item).find(k => k.replace(/\s/g,'') === '원가(vat미포함)' || k.replace(/\s/g,'') === '원가(vat별도)');
+      const incVatKey = Object.keys(item).find(k => k.replace(/\s/g,'') === '원가(vat포함)');
+      const costEx = parseInt(String(item.cost ?? item.cost_ex_vat ?? item['원가'] ?? (exVatKey ? item[exVatKey] : '') ?? '').replace(/,/g,'')) || 0;
+      const costInc = parseInt(String(item.cost_inc_vat ?? item.cost_vat ?? (incVatKey ? item[incVatKey] : '') ?? '').replace(/,/g,'')) || 0;
+      if (!brand || !name) return;
+      const key = `${brand}||${name}||${model}`;
+      if (costEx || costInc) costDataMap[key] = { ex: costEx, inc: costInc };
+    });
+  }
+
   async function loadCostData() {
     try {
       const res = await fetch(`${MASTER_SHEET_URL}?k=${encodeURIComponent(ADMIN_KEY)}`);
-      let jsonData = await res.json();
-      jsonData = fillMergedCells(jsonData);
-      costDataMap = {};
-      jsonData.forEach(item => {
-        const brand = String(item.brand || '').trim();
-        const name = String(item.name || '').trim();
-        const model = String(item.model || '').trim();
-        const exVatKey = Object.keys(item).find(k => k.replace(/\s/g,'') === '원가(vat미포함)' || k.replace(/\s/g,'') === '원가(vat별도)');
-        const incVatKey = Object.keys(item).find(k => k.replace(/\s/g,'') === '원가(vat포함)');
-        const costEx = parseInt(String(item.cost ?? item.cost_ex_vat ?? item['원가'] ?? (exVatKey ? item[exVatKey] : '') ?? '').replace(/,/g,'')) || 0;
-        const costInc = parseInt(String(item.cost_inc_vat ?? item.cost_vat ?? (incVatKey ? item[incVatKey] : '') ?? '').replace(/,/g,'')) || 0;
-        if (!brand || !name) return;
-        const key = `${brand}||${name}||${model}`;
-        if (costEx || costInc) costDataMap[key] = { ex: costEx, inc: costInc };
-      });
-    } catch(e) { /* 원가 조회 실패해도 재고 입력 자체는 계속 가능하게 조용히 무시 */ }
+      const jsonData = await res.json();
+      buildCostDataFromJson(jsonData);
+      try { localStorage.setItem(COST_CACHE_KEY, JSON.stringify(jsonData)); } catch(e) {}
+    } catch(e) {
+      // 오프라인이면 저장해둔 원가 캐시로 대체 (원가자동입력 계속 되게)
+      const cached = localStorage.getItem(COST_CACHE_KEY);
+      if (cached) { try { buildCostDataFromJson(JSON.parse(cached)); } catch(e2) {} }
+    }
   }
 
   function getCostPriceFor(brand, name, model) {
@@ -1215,29 +1235,54 @@
     });
   }
 
+  const MASTER_CACHE_KEY = 'cm_stock_master_cache';
+  const MASTER_CACHE_TS_KEY = 'cm_stock_master_cache_ts';
+
+  function buildMasterDataFromJson(jsonData) {
+    jsonData = fillMergedCells(jsonData);
+    masterData = {};
+    jsonData.forEach(item => {
+      const brand = String(item.brand || '').trim();
+      const name = String(item.name || '').trim();
+      const model = String(item.model || '').trim();
+      const spec = String(item.spec || '').trim();
+      const factor = parseFloat(item.factor) || 0; // 1박스당 헤베(㎡)
+      const category = String(item.category ?? item['구분'] ?? '바닥재').trim();
+      // 철거단가표 행, 벽장재 행은 재고 대상에서 제외 (마루 위주로 관리)
+      if (category.includes('철거') || category.includes('벽')) return;
+      if (!brand || !name || !model) return;
+      if (!masterData[brand]) masterData[brand] = {};
+      if (!masterData[brand][name]) masterData[brand][name] = [];
+      if (!masterData[brand][name].some(x => x.model === model)) masterData[brand][name].push({ model, spec, factor });
+    });
+  }
+
   async function loadMasterCSV(showMsg) {
     try {
       const res = await fetch(MASTER_SHEET_URL);
-      let jsonData = await res.json();
-      jsonData = fillMergedCells(jsonData);
-      masterData = {};
-      jsonData.forEach(item => {
-        const brand = String(item.brand || '').trim();
-        const name = String(item.name || '').trim();
-        const model = String(item.model || '').trim();
-        const spec = String(item.spec || '').trim();
-        const factor = parseFloat(item.factor) || 0; // 1박스당 헤베(㎡)
-        const category = String(item.category ?? item['구분'] ?? '바닥재').trim();
-        // 철거단가표 행, 벽장재 행은 재고 대상에서 제외 (마루 위주로 관리)
-        if (category.includes('철거') || category.includes('벽')) return;
-        if (!brand || !name || !model) return;
-        if (!masterData[brand]) masterData[brand] = {};
-        if (!masterData[brand][name]) masterData[brand][name] = [];
-        if (!masterData[brand][name].some(x => x.model === model)) masterData[brand][name].push({ model, spec, factor });
-      });
+      const jsonData = await res.json();
+      buildMasterDataFromJson(jsonData);
       renderBrandSelect();
+      try {
+        localStorage.setItem(MASTER_CACHE_KEY, JSON.stringify(jsonData));
+        localStorage.setItem(MASTER_CACHE_TS_KEY, String(Date.now()));
+      } catch(e) { /* 저장공간 부족 등은 무시 - 캐시는 있으면 좋은 정도 */ }
       if (showMsg) showToast('품목 목록 업데이트 완료');
-    } catch(e) { showToast('품목 목록 불러오기 실패'); }
+    } catch(e) {
+      // 오프라인이거나 시트 연결 실패 - 예전에 저장해둔 캐시로 대체해서라도 앱은 계속 쓸 수 있게 함
+      const cached = localStorage.getItem(MASTER_CACHE_KEY);
+      if (cached) {
+        try {
+          buildMasterDataFromJson(JSON.parse(cached));
+          renderBrandSelect();
+          const ts = parseInt(localStorage.getItem(MASTER_CACHE_TS_KEY) || '0');
+          const dateStr = ts ? new Date(ts).toLocaleDateString() : '이전';
+          showToast(`📴 오프라인 - ${dateStr} 기준 저장된 품목목록을 사용해요`, true);
+        } catch(e2) { showToast('품목 목록 불러오기 실패'); }
+      } else {
+        showToast('품목 목록 불러오기 실패 (처음 켤 땐 인터넷이 한 번 필요해요)', true);
+      }
+    }
   }
 
   function renderBrandSelect() {

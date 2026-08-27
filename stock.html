@@ -596,9 +596,9 @@
   function renderNoticeBanner() {
     const banner = document.getElementById('notice-banner');
     const list = Object.values(notices).sort((a,b) => (b.ts||0)-(a.ts||0));
-    if (!list.length) { banner.classList.add('hidden'); return; }
+    if (!list.length || !list[0]) { banner.classList.add('hidden'); return; }
     banner.classList.remove('hidden');
-    document.getElementById('notice-banner-text').innerText = list[0].text.split('\n')[0];
+    document.getElementById('notice-banner-text').innerText = (list[0].text || '').split('\n')[0] || '공지 확인';
   }
 
   function openNoticeModal() {
@@ -610,6 +610,7 @@
     renderNoticeImagePreview();
     renderNoticeList();
     document.getElementById('notice-modal').style.display = 'flex';
+    refreshNoticesFromServer(); // 열 때마다 서버에서 확실하게 다시 불러옴
   }
 
   function renderNoticeList() {
@@ -622,15 +623,15 @@
       row.className = 'bg-white border border-[var(--line)] rounded-xl p-3';
       const imgsHtml = (n.images && n.images.length) ? `<div class="grid grid-cols-3 gap-2 mt-2">${n.images.map(img => `<img src="${img.dataUrl}" class="w-full h-20 object-cover rounded-lg border border-[var(--line)] cursor-pointer" onclick="openImageLightbox('${img.dataUrl}')">`).join('')}</div>` : '';
       row.innerHTML = `
-        <div class="flex justify-between items-start gap-2">
-          <p class="text-[14px] font-bold text-[#3A342C] whitespace-pre-wrap flex-1">${n.text}</p>
+        <p class="text-[14px] font-bold text-[#3A342C] whitespace-pre-wrap">${n.text || ''}</p>
+        ${imgsHtml}
+        <div class="flex justify-between items-center mt-2.5 pt-2.5 border-t border-[var(--line)]">
+          <p class="text-[12px] text-[#B8B2A3] font-bold">${n.author||''} · ${n.ts ? new Date(n.ts).toLocaleDateString() : ''}</p>
           <div class="flex gap-1.5 shrink-0">
-            <button onclick="editNotice('${n.key}')" class="text-[#8B5E34] px-1"><i class="fas fa-pen text-[13px]"></i></button>
-            <button onclick="deleteNotice('${n.key}')" class="text-[#CFC9BB] hover:text-rose-500 px-1"><i class="fas fa-trash text-[13px]"></i></button>
+            <button onclick="editNotice('${n.key}')" class="text-[13px] font-black text-[#8B5E34] bg-[#F6EFE6] px-3 py-1.5 rounded-lg"><i class="fas fa-pen mr-1"></i>수정</button>
+            <button onclick="deleteNotice('${n.key}')" class="text-[13px] font-black text-[var(--rust)] bg-[#FBEDEA] px-3 py-1.5 rounded-lg"><i class="fas fa-trash mr-1"></i>삭제</button>
           </div>
         </div>
-        ${imgsHtml}
-        <p class="text-[12px] text-[#B8B2A3] font-bold mt-2">${n.author||''} · ${new Date(n.ts||0).toLocaleDateString()}</p>
       `;
       box.appendChild(row);
     });
@@ -700,6 +701,7 @@
         document.getElementById('notice-input').value = '';
         document.getElementById('notice-submit-btn').innerHTML = '<i class="fas fa-plus mr-1"></i> 공지 등록';
         renderNoticeImagePreview();
+        refreshNoticesFromServer();
       }).catch((err) => showToast('수정 실패: ' + (err && err.message ? err.message : err), true));
     } else {
       const record = { text, images: pendingNoticeImages, author: getCurrentAuthor(), ts: Date.now() };
@@ -708,8 +710,18 @@
         pendingNoticeImages = [];
         document.getElementById('notice-input').value = '';
         renderNoticeImagePreview();
+        refreshNoticesFromServer();
       }).catch((err) => showToast('등록 실패: ' + (err && err.message ? err.message : err), true));
     }
+  }
+
+  // 실시간 리스너와 별개로, 저장 직후 확실하게 한 번 더 서버에서 직접 읽어와 화면을 갱신 (놓치는 경우 방지)
+  function refreshNoticesFromServer() {
+    fbDatabase.ref('notices').once('value').then(snap => {
+      notices = snap.val() || {};
+      renderNoticeBanner();
+      renderNoticeList();
+    }).catch(() => {});
   }
 
   // ===== 작성자 (누가 입력했는지 기록에 남김) =====
@@ -1070,10 +1082,12 @@
         row.type = 'button';
         row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 rounded-xl border ' + (isSelected ? 'border-[#8B5E34] bg-[#F6EFE6]' : 'border-[var(--line)] bg-[#FAF8F4]');
         row.onclick = () => selectReturnItem(s);
+        const pickerSpec = (getModelInfo(s.brand, s.name, s.model) || {}).spec || '';
         row.innerHTML = `
           <div class="min-w-0 flex-1">
             <p class="text-[13px] font-bold text-[#B8B2A3] truncate">${s.name}</p>
             <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
+            ${pickerSpec ? `<p class="text-[13px] font-black text-[#8B5E34]"><i class="fas fa-ruler-combined mr-1"></i>${pickerSpec}</p>` : ''}
             <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}</p>
             ${(s.orderDate || s.inDate) ? `<p class="text-[12px] text-[#CFC9BB] font-bold">${s.orderDate?('발주 '+s.orderDate):''}${s.inDate?(' · 입고 '+s.inDate):''}</p>` : ''}
           </div>
@@ -1441,6 +1455,8 @@
       body.className = isOpen ? 'divide-y divide-[var(--line)]' : 'hidden';
       items.forEach(s => {
         const low = s.stock <= 0;
+        const info = getModelInfo(s.brand, s.name, s.model);
+        const spec = info && info.spec ? info.spec : '';
         const row = document.createElement('button');
         row.type = 'button';
         row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 bg-white active:bg-[#F6EFE6] ' + (low ? 'bg-[#FBF1EE]' : '');
@@ -1449,6 +1465,7 @@
           <div class="min-w-0 flex-1">
             <p class="text-[14px] font-black text-[#5C5347] truncate">${s.name}</p>
             <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
+            ${spec ? `<p class="text-[14px] font-black text-[#8B5E34] mt-0.5"><i class="fas fa-ruler-combined mr-1"></i>${spec}</p>` : ''}
             <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · 생산 '+s.prodDate) : ''}</p>
             ${(s.orderDate || s.inDate) ? `<p class="text-[12px] text-[#CFC9BB] font-bold">${s.orderDate?('발주 '+s.orderDate):''}${s.inDate?(' · 입고 '+s.inDate):''}</p>` : ''}
           </div>

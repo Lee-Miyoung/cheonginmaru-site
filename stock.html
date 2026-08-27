@@ -353,32 +353,29 @@
     </div>
   </header>
 
-  <!-- 전체 공지 배너 (특정 거래처 아닌 회사 전체 공지) -->
-  <button id="notice-banner" onclick="openNoticeModal()" class="hidden w-full mb-3 rounded-2xl px-4 py-3 flex items-center justify-between text-left premium-shadow bg-[#2B2622] text-white">
-    <span class="flex items-center gap-2 min-w-0">
-      <i class="fas fa-bullhorn shrink-0"></i>
-      <span id="notice-banner-text" class="font-black text-[14px] truncate"></span>
-    </span>
-    <i class="fas fa-chevron-right text-[13px] shrink-0"></i>
-  </button>
+  <!-- 전체 공지 미리보기 (최근 5개까지 목록으로) -->
+  <div id="notice-preview-card" class="hidden card premium-shadow mb-3 overflow-hidden">
+    <button onclick="openNoticeModal()" class="w-full flex items-center justify-between px-4 py-2.5 bg-[#2B2622] text-white">
+      <span class="flex items-center gap-2 text-[13px] font-black"><i class="fas fa-bullhorn"></i>전체 공지</span>
+      <i class="fas fa-chevron-right text-[12px]"></i>
+    </button>
+    <div id="notice-preview-list" class="divide-y divide-[var(--line)]"></div>
+  </div>
 
-  <!-- 반품기한 임박/초과 알림 배너 -->
-  <button id="return-alert-banner" onclick="openReturnAlertsModal()" class="hidden w-full mb-5 rounded-2xl px-4 py-3 flex items-center justify-between text-left premium-shadow">
-    <span class="flex items-center gap-2">
-      <i class="fas fa-triangle-exclamation"></i>
-      <span id="return-alert-text" class="font-black text-[14px]"></span>
-    </span>
-    <i class="fas fa-chevron-right text-[13px]"></i>
-  </button>
-
-  <!-- 작성자 표시 (누가 입력했는지 기록에 남김) -->
-  <div class="card p-3.5 premium-shadow mb-5 flex items-center justify-between">
-    <span class="text-[13px] font-bold text-[#8B8477]"><i class="fas fa-user mr-1.5"></i>작성자</span>
-    <select id="author-select" class="bg-transparent text-[14px] font-black text-[#3A342C] outline-none" onchange="saveAuthorPref()">
-      <option value="송원덕">송원덕 (사장님)</option>
-      <option value="실장님">실장님</option>
-      <option value="기타">기타</option>
-    </select>
+  <!-- 반품기한 알림 + 작성자를 한 줄에 -->
+  <div id="top-row-grid" class="grid grid-cols-1 gap-3 mb-5">
+    <button id="return-alert-banner" onclick="openReturnAlertsModal()" class="hidden rounded-2xl px-3.5 py-3 flex items-center gap-2 text-left premium-shadow min-w-0">
+      <i class="fas fa-triangle-exclamation shrink-0"></i>
+      <span id="return-alert-text" class="font-black text-[13px] truncate"></span>
+    </button>
+    <div class="card p-3 premium-shadow flex items-center justify-between">
+      <span class="text-[13px] font-bold text-[#8B8477]"><i class="fas fa-user mr-1.5"></i>작성자</span>
+      <select id="author-select" class="bg-transparent text-[14px] font-black text-[#3A342C] outline-none" onchange="saveAuthorPref()">
+        <option value="송원덕">송원덕 (사장님)</option>
+        <option value="실장님">실장님</option>
+        <option value="기타">기타</option>
+      </select>
+    </div>
   </div>
 
   <main class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start">
@@ -599,11 +596,31 @@
   let editingNoticeKey = null;
 
   function renderNoticeBanner() {
-    const banner = document.getElementById('notice-banner');
+    const card = document.getElementById('notice-preview-card');
+    const listEl = document.getElementById('notice-preview-list');
     const list = Object.values(notices).sort((a,b) => (b.ts||0)-(a.ts||0));
-    if (!list.length || !list[0]) { banner.classList.add('hidden'); return; }
-    banner.classList.remove('hidden');
-    document.getElementById('notice-banner-text').innerText = (list[0].text || '').split('\n')[0] || '공지 확인';
+    if (!list.length) { card.classList.add('hidden'); return; }
+    card.classList.remove('hidden');
+    listEl.innerHTML = '';
+    list.slice(0, 5).forEach(n => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.onclick = () => openNoticeModal();
+      row.className = 'w-full text-left px-4 py-2.5 flex items-center justify-between gap-2 active:bg-[#F6EFE6]';
+      row.innerHTML = `
+        <span class="text-[13px] font-bold text-[#3A342C] truncate">${(n.text || '').split('\n')[0] || '공지'}</span>
+        <span class="text-[11px] text-[#B8B2A3] font-bold shrink-0">${n.ts ? new Date(n.ts).toLocaleDateString() : ''}</span>
+      `;
+      listEl.appendChild(row);
+    });
+    if (list.length > 5) {
+      const more = document.createElement('button');
+      more.type = 'button';
+      more.onclick = () => openNoticeModal();
+      more.className = 'w-full text-center px-4 py-2 text-[12px] font-bold text-[#8B5E34] bg-[#F6EFE6]';
+      more.innerText = `+ ${list.length - 5}개 더 보기`;
+      listEl.appendChild(more);
+    }
   }
 
   function openNoticeModal() {
@@ -756,14 +773,16 @@
 
   function renderReturnAlertBanner() {
     const banner = document.getElementById('return-alert-banner');
+    const grid = document.getElementById('top-row-grid');
     const alerts = computeReturnAlerts();
-    if (!alerts.length) { banner.classList.add('hidden'); return; }
+    if (!alerts.length) { banner.classList.add('hidden'); grid.className = 'grid grid-cols-1 gap-3 mb-5'; return; }
     const overdueCount = alerts.filter(a => a.daysLeft < 0).length;
     banner.classList.remove('hidden');
-    banner.className = 'w-full mb-5 rounded-2xl px-4 py-3 flex items-center justify-between text-left premium-shadow ' + (overdueCount ? 'bg-[var(--rust)] text-white' : 'bg-amber-500 text-white');
+    banner.className = 'rounded-2xl px-3.5 py-3 flex items-center gap-2 text-left premium-shadow min-w-0 ' + (overdueCount ? 'bg-[var(--rust)] text-white' : 'bg-amber-500 text-white');
+    grid.className = 'grid grid-cols-2 gap-3 mb-5';
     document.getElementById('return-alert-text').innerText = overdueCount
-      ? `반품기한 지난 재고 ${overdueCount}건 포함, 총 ${alerts.length}건 확인 필요`
-      : `반품기한 임박 재고 ${alerts.length}건 (7일 이내)`;
+      ? `반품기한 지남 ${overdueCount}건 포함 총 ${alerts.length}건`
+      : `반품기한 임박 ${alerts.length}건 (7일내)`;
   }
 
   function openReturnAlertsModal() {

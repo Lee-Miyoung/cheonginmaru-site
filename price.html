@@ -638,17 +638,48 @@ function grantAccess(clientName){
 (async function checkTokenAndStart(){
   const token = new URLSearchParams(window.location.search).get('t');
   if (!token) { denyAccess('링크에 접속 코드가 없습니다. 담당자에게 전달받은 링크 그대로 접속해주세요.'); return; }
+
+  const GRANT_CACHE_KEY = 'cm_price_grant_' + token;
+  const OFFLINE_GRACE_MS = 24 * 60 * 60 * 1000; // 오프라인 접속 유효기간: 마지막 정상확인 후 하루까지만
+
+  function tryOfflineGrant(reasonMsg) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(GRANT_CACHE_KEY) || 'null');
+      const withinGrace = cached && cached.ts && (Date.now() - cached.ts < OFFLINE_GRACE_MS);
+      if (cached && withinGrace && cached.active !== false && (!cached.expiresAt || Date.now() < cached.expiresAt)) {
+        grantAccess(cached.clientName); // 예전에 확인됐던 접속이면, 오프라인이어도 그대로 열어줌 (가격표는 이미 로컬 캐시에 저장돼있음)
+        return true;
+      }
+    } catch(e) {}
+    denyAccess(reasonMsg || '오프라인 상태입니다. 온라인으로 한 번 재확인이 필요해요 (마지막 확인 후 일정 기간이 지났거나, 접속 기록이 없어요).');
+    return false;
+  }
+
   try {
-    // 1. 익명 로그인 및 토큰 확인
-    await firebase.auth().signInAnonymously();
-    const snap = await fbDatabase.ref('priceAccessTokens/' + token).once('value');
+    // 1. 익명 로그인 및 토큰 확인 - 응답이 4초 넘게 없으면(오프라인 등) 예전 확인 기록으로 대체
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000));
+    await Promise.race([firebase.auth().signInAnonymously(), timeout]);
+    const snap = await Promise.race([fbDatabase.ref('priceAccessTokens/' + token).once('value'), timeout]);
     const data = snap.val();
-    
-    if (!data || data.active === false) { denyAccess('유효하지 않거나 비활성화된 링크입니다.'); return; }
-    if (data.expiresAt && Date.now() > data.expiresAt) { denyAccess('이 링크의 유효기간이 만료되었습니다. 담당자에게 문의해주세요.'); return; }
+
+    if (!data || data.active === false) {
+      try { localStorage.removeItem(GRANT_CACHE_KEY); } catch(e) {} // 차단된 링크면 예전 오프라인 통과 기록도 즉시 무효화
+      denyAccess('유효하지 않거나 비활성화된 링크입니다.'); return;
+    }
+    if (data.expiresAt && Date.now() > data.expiresAt) {
+      try { localStorage.removeItem(GRANT_CACHE_KEY); } catch(e) {}
+      denyAccess('이 링크의 유효기간이 만료되었습니다. 담당자에게 문의해주세요.'); return;
+    }
 
     // 2. 화면 즉시 오픈 (대기 시간 제거)
     grantAccess(data.clientName);
+
+    // 이번에 정상 확인된 접속 정보를 저장해둠 - 다음에 오프라인일 때 이걸로 대신 열어줌 (단, 유효기간 3일 한정)
+    try {
+      localStorage.setItem(GRANT_CACHE_KEY, JSON.stringify({
+        clientName: data.clientName, expiresAt: data.expiresAt || null, active: data.active !== false, ts: Date.now()
+      }));
+    } catch(e) {}
 
     // 3. 접속 통계는 백그라운드에서 비동기 처리 (사용자 화면 열리는 속도에 영향 없음)
     fbDatabase.ref('priceAccessTokens/' + token).update({
@@ -657,7 +688,8 @@ function grantAccess(clientName){
     }).catch(()=>{});
   } catch (e) {
     console.error(e);
-    denyAccess('접속 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    // 온라인 확인이 실패/시간초과 - 예전에 확인됐던 링크면 오프라인으로라도 열어줌
+    tryOfflineGrant();
   }
 })();
 

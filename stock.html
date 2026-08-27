@@ -336,18 +336,19 @@
 
 <div class="max-w-2xl mx-auto p-4 md:p-6">
 
-  <header class="card premium-shadow px-4 py-3 flex items-center justify-between mb-3">
+  <header class="card premium-shadow px-4 py-3 flex items-center justify-between mb-3 relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#8B5E34] via-[#C08A2E] to-[var(--moss)]"></div>
     <div>
       <h1 class="text-lg font-black text-[#2B2622]">청인마루<span class="text-[#8B5E34]">.</span> 재고·거래처 관리</h1>
       <p class="text-[13px] text-[#8B8477] font-bold">Stock System · 실시간 공유 <span id="debug-count" class="text-[#A9784F]"></span></p>
     </div>
     <div class="flex items-center gap-1.5">
-      <button onclick="openNoticeModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="전체 공지"><i class="fas fa-bullhorn"></i></button>
-      <button onclick="openBackupModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[var(--moss)] flex items-center justify-center" title="백업 관리"><i class="fas fa-shield-halved"></i></button>
-      <button onclick="loadMasterCSV(true)" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="품목목록 새로고침"><i class="fas fa-sync-alt"></i></button>
-      <button onclick="openMonthlyModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="월별 매입 통계"><i class="fas fa-chart-column"></i></button>
-      <button onclick="openVendorModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="거래처 관리"><i class="fas fa-address-book"></i></button>
-      <button onclick="openLogModal()" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B8477] hover:text-[#8B5E34] flex items-center justify-center" title="입출고 기록"><i class="fas fa-list-ul"></i></button>
+      <button onclick="openNoticeModal()" class="w-10 h-10 rounded-xl bg-[#FBEEDB] text-[#C08A2E] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="전체 공지"><i class="fas fa-bullhorn"></i></button>
+      <button onclick="openBackupModal()" class="w-10 h-10 rounded-xl bg-[#E9F0EA] text-[var(--moss)] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="백업 관리"><i class="fas fa-shield-halved"></i></button>
+      <button onclick="loadMasterCSV(true)" class="w-10 h-10 rounded-xl bg-[#F1EAE0] text-[#8B5E34] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="품목목록 새로고침"><i class="fas fa-sync-alt"></i></button>
+      <button onclick="openMonthlyModal()" class="w-10 h-10 rounded-xl bg-[#E7EDF2] text-[#4E6E8C] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="월별 매입 통계"><i class="fas fa-chart-column"></i></button>
+      <button onclick="openVendorModal()" class="w-10 h-10 rounded-xl bg-[#F0E7EE] text-[#8C4B6B] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="거래처 관리"><i class="fas fa-address-book"></i></button>
+      <button onclick="openLogModal()" class="w-10 h-10 rounded-xl bg-[#F5E8E4] text-[var(--rust)] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="입출고 기록"><i class="fas fa-list-ul"></i></button>
     </div>
   </header>
 
@@ -658,12 +659,13 @@
     showToast('이미지 처리 중...');
     for (const file of files) {
       try {
-        const dataUrl = await compressImageFile(file, 1000, 0.7);
+        const dataUrl = await compressImageFile(file, 850, 0.6);
         pendingNoticeImages.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2,7), name: file.name, dataUrl });
       } catch(e) { showToast('이미지 처리 실패: ' + file.name); }
     }
     event.target.value = '';
     renderNoticeImagePreview();
+    checkImagesPayloadOk(pendingNoticeImages);
   }
 
   function removeNoticePendingImage(id) {
@@ -688,6 +690,7 @@
   function saveNotice() {
     const text = document.getElementById('notice-input').value.trim();
     if (!text) return showToast('공지 내용을 입력하세요');
+    if (!checkImagesPayloadOk(pendingNoticeImages)) return;
     if (editingNoticeKey) {
       const key = editingNoticeKey;
       fbDatabase.ref('notices/' + key).update({ text, images: pendingNoticeImages }).then(() => {
@@ -1873,18 +1876,33 @@
     });
   }
 
+  // 사진을 한꺼번에 너무 많이/크게 올리면 저장이 실패할 수 있어서, 올리기 전에 미리 용량 확인
+  const MAX_IMAGES_PAYLOAD_CHARS = 2.5 * 1024 * 1024; // 대략 2.5MB 상당
+  function totalImagesPayloadSize(images) {
+    return (images || []).reduce((sum, img) => sum + (img.dataUrl ? img.dataUrl.length : 0), 0);
+  }
+  function checkImagesPayloadOk(images) {
+    const size = totalImagesPayloadSize(images);
+    if (size > MAX_IMAGES_PAYLOAD_CHARS) {
+      showToast(`사진 용량이 너무 커요 (${images.length}장, 약 ${Math.round(size/1024/1024*10)/10}MB). 몇 장 지우고 다시 시도해주세요`, true);
+      return false;
+    }
+    return true;
+  }
+
   async function handleVendorImageSelect(event) {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
     showToast('이미지 처리 중...');
     for (const file of files) {
       try {
-        const dataUrl = await compressImageFile(file, 1000, 0.7);
+        const dataUrl = await compressImageFile(file, 850, 0.6);
         pendingVendorImages.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2,7), name: file.name, dataUrl });
       } catch(e) { showToast('이미지 처리 실패: ' + file.name); }
     }
     event.target.value = '';
     renderVendorImagePreview();
+    checkImagesPayloadOk(pendingVendorImages);
   }
 
   function removeVendorPendingImage(id) {
@@ -1914,6 +1932,7 @@
   function saveVendor() {
     const name = document.getElementById('vf-name').value.trim();
     if (!name) return showToast('거래처명을 입력하세요');
+    if (!checkImagesPayloadOk(pendingVendorImages)) return;
     const record = {
       name,
       phone: document.getElementById('vf-phone').value.trim(),

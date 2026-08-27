@@ -1480,6 +1480,89 @@
     return BRAND_COLORS[h % BRAND_COLORS.length];
   }
 
+  // ===== 재고 현황 브랜드 순서 - 직접 끌어서 바꾸면 그 순서가 기기에 저장됨 =====
+  let brandCustomOrder = [];
+  try { brandCustomOrder = JSON.parse(localStorage.getItem('cm_stock_brand_order') || '[]'); } catch(e) {}
+
+  function saveBrandOrder(order) {
+    brandCustomOrder = order;
+    try { localStorage.setItem('cm_stock_brand_order', JSON.stringify(order)); } catch(e) {}
+  }
+
+  function sortBrandsWithCustomOrder(brandNames, groups) {
+    const orderIndex = {};
+    brandCustomOrder.forEach((b, i) => { orderIndex[b] = i; });
+    return brandNames.slice().sort((a, b) => {
+      const ai = orderIndex.hasOwnProperty(a) ? orderIndex[a] : Infinity;
+      const bi = orderIndex.hasOwnProperty(b) ? orderIndex[b] : Infinity;
+      if (ai !== bi) return ai - bi;
+      const aMax = Math.max(...groups[a].map(s => s.lastTs||0));
+      const bMax = Math.max(...groups[b].map(s => s.lastTs||0));
+      return bMax - aMax;
+    });
+  }
+
+  function attachBrandDragHandle(handleEl, groupWrap, brand) {
+    handleEl.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation(); // 드래그 핸들 조작이 아코디언 펼침/접힘으로 이어지지 않게 함
+      const list = document.getElementById('stock-list');
+      const rect = groupWrap.getBoundingClientRect();
+      const clone = groupWrap.cloneNode(true);
+      clone.style.position = 'fixed';
+      clone.style.left = rect.left + 'px';
+      clone.style.top = rect.top + 'px';
+      clone.style.width = rect.width + 'px';
+      clone.style.zIndex = '9999';
+      clone.style.pointerEvents = 'none';
+      clone.style.opacity = '0.95';
+      clone.style.boxShadow = '0 10px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(clone);
+
+      const placeholder = document.createElement('div');
+      placeholder.style.height = rect.height + 'px';
+      placeholder.style.border = '2px dashed #D8D0BC';
+      placeholder.style.borderRadius = '1rem';
+      placeholder.style.marginBottom = '8px';
+      list.insertBefore(placeholder, groupWrap);
+      groupWrap.style.display = 'none';
+
+      const offsetY = e.clientY - rect.top;
+
+      function onMove(ev) {
+        clone.style.top = (ev.clientY - offsetY) + 'px';
+        const cloneRect = clone.getBoundingClientRect();
+        const cloneCenter = cloneRect.top + cloneRect.height / 2;
+        const siblings = Array.from(list.children).filter(el => el !== placeholder && el !== groupWrap && el.dataset && el.dataset.brandGroup);
+        let inserted = false;
+        for (const sib of siblings) {
+          const sRect = sib.getBoundingClientRect();
+          const sCenter = sRect.top + sRect.height / 2;
+          if (cloneCenter < sCenter) {
+            list.insertBefore(placeholder, sib);
+            inserted = true;
+            break;
+          }
+        }
+        if (!inserted) list.appendChild(placeholder);
+      }
+
+      function onUp() {
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+        list.insertBefore(groupWrap, placeholder);
+        placeholder.remove();
+        groupWrap.style.display = '';
+        clone.remove();
+        const order = Array.from(list.children).map(el => el.dataset && el.dataset.brandGroup).filter(Boolean);
+        saveBrandOrder(order);
+      }
+
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    });
+  }
+
   function renderStockList() {
     const q = (document.getElementById('stock-search').value || '').toLowerCase();
     const box = document.getElementById('stock-list');
@@ -1491,12 +1574,13 @@
     // 브랜드별로 그룹핑
     const groups = {};
     filtered.forEach(s => { (groups[s.brand] = groups[s.brand] || []).push(s); });
-    // 브랜드 그룹 자체도 그 브랜드에서 가장 최근 활동이 있었던 순서로 정렬 (최신이 위로)
-    const brandNames = Object.keys(groups).sort((a,b) => {
+    // 브랜드 그룹 자체도 그 브랜드에서 가장 최근 활동이 있었던 순서로 정렬 (최신이 위로) - 단, 직접 순서를 바꿔둔 게 있으면 그게 우선
+    let brandNames = Object.keys(groups).sort((a,b) => {
       const aMax = Math.max(...groups[a].map(s => s.lastTs||0));
       const bMax = Math.max(...groups[b].map(s => s.lastTs||0));
       return bMax - aMax;
     });
+    brandNames = sortBrandsWithCustomOrder(brandNames, groups);
 
     // 검색 중일 때는 자동으로 다 펼쳐서 보여줌
     const autoExpand = !!q;
@@ -1511,6 +1595,7 @@
       const groupWrap = document.createElement('div');
       groupWrap.className = 'rounded-2xl border border-[var(--line)] overflow-hidden';
       groupWrap.style.borderLeft = `5px solid ${color}`;
+      groupWrap.dataset.brandGroup = brand;
 
       const header = document.createElement('button');
       header.type = 'button';
@@ -1518,6 +1603,7 @@
       header.onclick = () => toggleBrandGroup(brand);
       header.innerHTML = `
         <span class="flex items-center gap-2 min-w-0">
+          <span class="brand-drag-handle text-[#CFC9BB] px-1 -ml-1 shrink-0" style="touch-action:none; cursor:grab;"><i class="fas fa-grip-lines"></i></span>
           <span class="brand-dot" style="background:${color}"></span>
           <span class="text-[17px] font-black truncate" style="color:${color}">${brand}</span>
           <span class="text-[13px] font-bold text-[#B8B2A3] shrink-0">${items.length}개${lowCount ? ' · 부족 ' + lowCount : ''}</span>
@@ -1528,6 +1614,8 @@
         </span>
       `;
       groupWrap.appendChild(header);
+      const dragHandleEl = header.querySelector('.brand-drag-handle');
+      if (dragHandleEl) attachBrandDragHandle(dragHandleEl, groupWrap, brand);
 
       const body = document.createElement('div');
       body.className = isOpen ? 'divide-y divide-[var(--line)] bg-[#FCFBF8]' : 'hidden';

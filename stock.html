@@ -277,7 +277,13 @@
     </div>
     <div class="p-3 border-b bg-[#FBF9F5] space-y-2">
       <textarea id="notice-input" class="input-premium text-sm" rows="3" placeholder="예: 이번주 금요일 재고조사 있습니다 / OO브랜드 단가 인상 안내"></textarea>
-      <input type="url" id="notice-link" class="input-premium text-sm" placeholder="🔗 링크 (선택, 예: 본사 재고조회사이트 주소 https://...)">
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-[13px] font-black text-[#8B8477]">🔗 링크 (선택, 여러 개 추가 가능)</span>
+          <button type="button" onclick="addNoticeLinkRow()" class="text-[12px] font-black text-[#8B5E34] bg-[#F6EFE6] px-2.5 py-1 rounded-lg"><i class="fas fa-plus mr-1"></i>추가</button>
+        </div>
+        <div id="notice-links-rows" class="space-y-2"></div>
+      </div>
       <input type="file" id="notice-images-input" accept="image/*" multiple class="input-premium text-sm" onchange="handleNoticeImageSelect(event)">
       <div id="notice-images-preview" class="grid grid-cols-3 gap-2"></div>
       <button id="notice-submit-btn" onclick="saveNotice()" class="w-full py-2.5 bg-[#2B2622] text-white rounded-xl text-sm font-black"><i class="fas fa-plus mr-1"></i> 공지 등록</button>
@@ -625,21 +631,13 @@
       row.className = 'w-full text-left px-4 py-2.5 flex items-center justify-between gap-2 active:bg-[#F6EFE6]';
       row.innerHTML = `
         <span class="flex items-center gap-1.5 min-w-0">
-          ${n.link ? '<i class="fas fa-link text-[#8B5E34] text-[11px] shrink-0"></i>' : ''}
+          ${(n.links && n.links.length) || n.link ? '<i class="fas fa-link text-[#8B5E34] text-[11px] shrink-0"></i>' : ''}
           <span class="text-[13px] font-bold text-[#3A342C] truncate">${(n.text || '').split('\n')[0] || '공지'}</span>
         </span>
         <span class="flex items-center gap-2 shrink-0">
           <span class="text-[11px] text-[#B8B2A3] font-bold">${n.ts ? new Date(n.ts).toLocaleDateString() : ''}</span>
         </span>
       `;
-      if (n.link) {
-        const linkBtn = document.createElement('a');
-        linkBtn.href = n.link; linkBtn.target = '_blank'; linkBtn.rel = 'noopener';
-        linkBtn.className = 'shrink-0 text-[11px] font-black text-white bg-[#8B5E34] px-2 py-1 rounded-lg ml-1';
-        linkBtn.innerText = '바로가기';
-        linkBtn.onclick = (e) => e.stopPropagation();
-        row.querySelector('span.flex.items-center.gap-2').appendChild(linkBtn);
-      }
       listEl.appendChild(row);
     });
     if (list.length > 10) {
@@ -654,12 +652,39 @@
 
   let noticeDetailKey = null; // 특정 공지 하나만 보여줄 때 그 키. null이면 전체 목록.
 
+  // ===== 공지 링크 (여러 개 추가 가능, 각각 제목+주소) =====
+  function addNoticeLinkRow(title, url) {
+    const row = document.createElement('div');
+    row.className = 'flex gap-2';
+    row.setAttribute('data-notice-link-row', '');
+    const safeTitle = title ? String(title).replace(/"/g, '&quot;') : '';
+    row.innerHTML = `
+      <input type="text" class="notice-link-title input-premium text-sm" style="flex:1" placeholder="제목 (예: 재고 사이트)" value="${safeTitle}">
+      <input type="url" class="notice-link-url input-premium text-sm" style="flex:1.4" placeholder="https://..." value="${url || ''}">
+      <button type="button" onclick="this.closest('[data-notice-link-row]').remove()" class="text-[#CFC9BB] hover:text-rose-500 px-2 shrink-0"><i class="fas fa-times"></i></button>
+    `;
+    document.getElementById('notice-links-rows').appendChild(row);
+  }
+
+  function clearNoticeLinkRows() {
+    document.getElementById('notice-links-rows').innerHTML = '';
+  }
+
+  function getNoticeLinksFromForm() {
+    return Array.from(document.querySelectorAll('[data-notice-link-row]')).map(row => {
+      const title = row.querySelector('.notice-link-title').value.trim();
+      let url = row.querySelector('.notice-link-url').value.trim();
+      if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
+      return { title, url };
+    }).filter(l => l.url); // 주소 없는 행은 저장 안 함
+  }
+
   function openNoticeModal(focusKey) {
     editingNoticeKey = null;
     pendingNoticeImages = [];
     noticeDetailKey = focusKey || null;
     document.getElementById('notice-input').value = '';
-    document.getElementById('notice-link').value = '';
+    clearNoticeLinkRows();
     document.getElementById('notice-images-input').value = '';
     document.getElementById('notice-submit-btn').innerHTML = '<i class="fas fa-plus mr-1"></i> 공지 등록';
     renderNoticeImagePreview();
@@ -795,7 +820,10 @@
           `;
         }
       }
-      const linkHtml = n.link ? `<a href="${n.link}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 mt-2 text-[13px] font-black text-white bg-[#8B5E34] px-3 py-1.5 rounded-lg"><i class="fas fa-arrow-up-right-from-square"></i>바로가기</a>` : '';
+      const links = n.links || (n.link ? [{ title: '바로가기', url: n.link }] : []); // 예전 단일 링크 방식도 계속 표시됨
+      const linkHtml = links.length
+        ? `<div class="flex flex-wrap gap-1.5 mt-2">${links.map(l => `<a href="${l.url}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-[13px] font-black text-white bg-[#8B5E34] px-3 py-1.5 rounded-lg"><i class="fas fa-arrow-up-right-from-square"></i>${l.title || '바로가기'}</a>`).join('')}</div>`
+        : '';
       row.innerHTML = `
         <div class="flex items-start gap-2">
           ${draggable ? '<span class="notice-drag-handle text-[#CFC9BB] px-1 pt-1 shrink-0" style="touch-action:none; cursor:grab;"><i class="fas fa-grip-lines"></i></span>' : ''}
@@ -824,7 +852,9 @@
     editingNoticeKey = key;
     pendingNoticeImages = (n.images || []).slice();
     document.getElementById('notice-input').value = n.text || '';
-    document.getElementById('notice-link').value = n.link || '';
+    clearNoticeLinkRows();
+    const existingLinks = n.links || (n.link ? [{ title: '바로가기', url: n.link }] : []); // 예전 단일 링크 방식도 이어서 편집 가능
+    existingLinks.forEach(l => addNoticeLinkRow(l.title, l.url));
     document.getElementById('notice-submit-btn').innerHTML = '<i class="fas fa-save mr-1"></i> 수정 저장';
     renderNoticeImagePreview();
     document.querySelector('#notice-modal .p-3.border-b').scrollIntoView({ behavior: 'smooth' });
@@ -873,28 +903,27 @@
   function saveNotice() {
     const text = document.getElementById('notice-input').value.trim();
     if (!text) return showToast('공지 내용을 입력하세요');
-    let link = document.getElementById('notice-link').value.trim();
-    if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link; // http(s):// 안 붙이고 입력해도 되게
+    const links = getNoticeLinksFromForm();
     if (!checkImagesPayloadOk(pendingNoticeImages)) return;
     if (editingNoticeKey) {
       const key = editingNoticeKey;
-      fbDatabase.ref('notices/' + key).update({ text, link, images: pendingNoticeImages }).then(() => {
+      fbDatabase.ref('notices/' + key).update({ text, links, link: null, images: pendingNoticeImages }).then(() => {
         showToast('공지 수정 완료');
         editingNoticeKey = null;
         pendingNoticeImages = [];
         document.getElementById('notice-input').value = '';
-        document.getElementById('notice-link').value = '';
+        clearNoticeLinkRows();
         document.getElementById('notice-submit-btn').innerHTML = '<i class="fas fa-plus mr-1"></i> 공지 등록';
         renderNoticeImagePreview();
         refreshNoticesFromServer();
       }).catch((err) => showToast('수정 실패: ' + (err && err.message ? err.message : err), true));
     } else {
-      const record = { text, link, images: pendingNoticeImages, author: getCurrentAuthor(), ts: Date.now() };
+      const record = { text, links, images: pendingNoticeImages, author: getCurrentAuthor(), ts: Date.now() };
       fbDatabase.ref('notices').push(record).then(() => {
         showToast('공지 등록 완료');
         pendingNoticeImages = [];
         document.getElementById('notice-input').value = '';
-        document.getElementById('notice-link').value = '';
+        clearNoticeLinkRows();
         renderNoticeImagePreview();
         refreshNoticesFromServer();
       }).catch((err) => showToast('등록 실패: ' + (err && err.message ? err.message : err), true));
@@ -1250,7 +1279,14 @@
     const autoExpand = !!q; // 검색 중이면 자동으로 펼쳐서 보여줌
 
     brandNames.forEach(brand => {
-      const brandItems = groups[brand].sort((a,b) => (b.lastTs||0) - (a.lastTs||0));
+      // 같은 제품/모델이 여러 로트로 나뉘어 있어도 이름순으로 나란히 묶어서 보이게 정렬
+      const brandItems = groups[brand].sort((a,b) => {
+        const nameCompare = String(a.name||'').localeCompare(String(b.name||''), 'ko');
+        if (nameCompare !== 0) return nameCompare;
+        const modelCompare = String(a.model||'').localeCompare(String(b.model||''), 'ko');
+        if (modelCompare !== 0) return modelCompare;
+        return String(a.lot||'').localeCompare(String(b.lot||''), 'ko');
+      });
       const color = getBrandColor(brand);
       const isOpen = autoExpand || expandedPickerBrands.has(brand);
       const selectedInThisBrand = selectedReturnItem && selectedReturnItem.brand === brand;
@@ -1803,7 +1839,12 @@
       });
 
       productNames.forEach(productName => {
-        const pItems = productGroups[productName].sort((a,b) => (b.lastTs||0) - (a.lastTs||0));
+        // 같은 모델(색상)이 여러 로트로 나뉘어 있어도 모델명 기준으로 묶어서 나란히 보이게 정렬
+        const pItems = productGroups[productName].sort((a,b) => {
+          const modelCompare = String(a.model||'').localeCompare(String(b.model||''), 'ko');
+          if (modelCompare !== 0) return modelCompare;
+          return String(a.lot||'').localeCompare(String(b.lot||''), 'ko'); // 같은 모델이면 로트번호 순
+        });
         const pTotal = pItems.reduce((sum, s) => sum + s.stock, 0);
         const pLow = pItems.filter(s => s.stock <= 0).length;
         const productKey = brand + '||' + productName;

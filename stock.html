@@ -329,6 +329,10 @@
         <label class="eyebrow pl-1">배송비</label>
         <input type="text" id="edit-shipping" class="input-premium mt-1 num" placeholder="0" oninput="formatMoney(this);">
       </div>
+      <div id="edit-actual-spec-field" class="hidden">
+        <label class="eyebrow pl-1">실제 규격 <span class="text-[#A9784F] normal-case font-medium tracking-normal">· 시트 규격과 다를 때만</span></label>
+        <input type="text" id="edit-actual-spec" class="input-premium mt-1" placeholder="시트와 같으면 비워두세요">
+      </div>
       <div id="edit-return-fields" class="hidden grid grid-cols-2 gap-2.5">
         <div class="flex items-center gap-2 bg-[#FBF9F5] border border-[var(--line)] rounded-xl px-3">
           <input type="checkbox" id="edit-returnable" class="accent-[var(--moss)] w-4 h-4">
@@ -441,6 +445,11 @@
     <div class="date-row grid grid-cols-2 gap-2.5">
       <div><label class="eyebrow pl-1">로트번호</label><input type="text" id="in-lot" class="input-premium mt-1" placeholder="예: L20260819-01" oninput="onModelChange()"></div>
       <div><label class="eyebrow pl-1">생산일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-prod-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-prod-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-prod-date')"></div></div>
+    </div>
+
+    <div id="actual-spec-field" class="hidden">
+      <label class="eyebrow pl-1">실제 규격 <span class="text-[#A9784F] normal-case font-medium tracking-normal">· 시트 규격과 다를 때만 입력</span></label>
+      <input type="text" id="in-actual-spec" class="input-premium mt-1" placeholder="시트와 같으면 비워두세요 (다를 때만 예: 7.5T*195W)">
     </div>
 
     <div id="current-stock-box" class="hidden bg-[#F1F5F1] border border-[#D9E4D9] rounded-xl px-4 py-2.5 flex justify-between items-center">
@@ -625,19 +634,30 @@
     card.classList.remove('hidden');
     listEl.innerHTML = '';
     list.slice(0, 10).forEach(n => {
-      const row = document.createElement('button');
-      row.type = 'button';
-      row.onclick = () => openNoticeModal(n.key);
-      row.className = 'w-full text-left px-4 py-2.5 flex items-center justify-between gap-2 active:bg-[#F6EFE6]';
-      row.innerHTML = `
-        <span class="flex items-center gap-1.5 min-w-0">
-          ${(n.links && n.links.length) || n.link ? '<i class="fas fa-link text-[#8B5E34] text-[11px] shrink-0"></i>' : ''}
-          <span class="text-[13px] font-bold text-[#3A342C] truncate">${(n.text || '').split('\n')[0] || '공지'}</span>
-        </span>
-        <span class="flex items-center gap-2 shrink-0">
-          <span class="text-[11px] text-[#B8B2A3] font-bold">${n.ts ? new Date(n.ts).toLocaleDateString() : ''}</span>
-        </span>
+      const links = n.links || (n.link ? [{ title: '바로가기', url: n.link }] : []);
+      const row = document.createElement('div');
+      row.className = 'w-full px-4 py-2.5 flex items-center justify-between gap-2';
+      const textBtn = document.createElement('button');
+      textBtn.type = 'button';
+      textBtn.onclick = () => openNoticeModal(n.key);
+      textBtn.className = 'flex-1 min-w-0 text-left flex items-center gap-2 rounded-lg active:bg-[#F6EFE6] py-0.5';
+      textBtn.innerHTML = `
+        <span class="text-[13px] font-bold text-[#3A342C] truncate">${(n.text || '').split('\n')[0] || '공지'}</span>
+        <span class="text-[11px] text-[#B8B2A3] font-bold shrink-0">${n.ts ? new Date(n.ts).toLocaleDateString() : ''}</span>
       `;
+      row.appendChild(textBtn);
+      if (links.length) {
+        const linkWrap = document.createElement('span');
+        linkWrap.className = 'flex items-center gap-1 shrink-0';
+        links.forEach(l => {
+          const a = document.createElement('a');
+          a.href = l.url; a.target = '_blank'; a.rel = 'noopener';
+          a.className = 'text-[11px] font-black text-white bg-[#8B5E34] px-2 py-1 rounded-lg whitespace-nowrap';
+          a.innerText = l.title || '바로가기';
+          linkWrap.appendChild(a);
+        });
+        row.appendChild(linkWrap);
+      }
       listEl.appendChild(row);
     });
     if (list.length > 10) {
@@ -1226,6 +1246,7 @@
     document.getElementById('in-memo').placeholder = t==='반품' ? '반품 사유 (예: 하자, 색상 변경 등)' : t==='출고' ? '현장 정보 (예: OO아파트 102동 시공)' : '선택 입력';
     document.getElementById('return-policy-fields').classList.toggle('hidden', t!=='입고');
     document.getElementById('shipping-field').classList.toggle('hidden', t!=='입고');
+    document.getElementById('actual-spec-field').classList.toggle('hidden', t!=='입고');
     document.getElementById('order-date-field').classList.toggle('hidden', t!=='입고'); // 발주일자는 입고에만 의미있음
     document.getElementById('date-row-main').className = 'date-row grid gap-2.5 ' + (t==='입고' ? 'grid-cols-2' : 'grid-cols-1');
     document.getElementById('in-date-label').innerText = t==='입고' ? '입고일자' : t==='출고' ? '출고일자' : '반품일자';
@@ -1318,11 +1339,14 @@
         row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 rounded-xl border ' + (isSelected ? 'border-[#8B5E34] bg-[#F6EFE6]' : 'border-[var(--line)] bg-[#FAF8F4]');
         row.onclick = () => selectReturnItem(s);
         const pickerSpec = (getModelInfo(s.brand, s.name, s.model) || {}).spec || '';
+        const pickerSpecMismatch = s.actualSpec && s.actualSpec !== pickerSpec;
         row.innerHTML = `
           <div class="min-w-0 flex-1">
             <p class="text-[13px] font-bold text-[#B8B2A3] truncate">${s.name}</p>
             <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
-            ${pickerSpec ? `<p class="text-[13px] font-black text-[#8B5E34]"><i class="fas fa-ruler-combined mr-1"></i>${pickerSpec}</p>` : ''}
+            ${pickerSpecMismatch
+              ? `<p class="text-[13px] font-black text-[var(--rust)]"><i class="fas fa-triangle-exclamation mr-1"></i>스펙 다름: ${s.actualSpec}</p>`
+              : (pickerSpec ? `<p class="text-[13px] font-black text-[#8B5E34]"><i class="fas fa-ruler-combined mr-1"></i>${pickerSpec}</p>` : '')}
             <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}</p>
             ${(s.orderDate || s.inDate) ? `<p class="text-[12px] text-[#CFC9BB] font-bold">${s.orderDate?('발주 '+s.orderDate):''}${s.inDate?(' · 입고 '+s.inDate):''}</p>` : ''}
           </div>
@@ -1594,16 +1618,17 @@
       if (!r.brand || !r.name || !r.model) return;
       const lot = r.lot || '';
       const key = `${r.brand}||${r.name}||${r.model}||${lot}`;
-      if (!map[key]) map[key] = { brand:r.brand, name:r.name, model:r.model, lot, prodDate:'', orderDate:'', inDate:'', stock:0, lastTs:0, lastInTs:0 };
+      if (!map[key]) map[key] = { brand:r.brand, name:r.name, model:r.model, lot, prodDate:'', orderDate:'', inDate:'', actualSpec:'', stock:0, lastTs:0, lastInTs:0 };
       const qty = Number(r.qty) || 0;
       if (r.type === '입고') map[key].stock += qty;
       else if (r.type === '출고' || r.type === '반품') map[key].stock -= qty;
-      // 이 로트에 입고가 여러 번 있었으면, 가장 최근 입고 건 기준으로 생산일자/발주일자/입고일자 표시
+      // 이 로트에 입고가 여러 번 있었으면, 가장 최근 입고 건 기준으로 생산일자/발주일자/입고일자/실제규격 표시
       if (r.type === '입고' && (r.ts||0) >= map[key].lastInTs) {
         map[key].lastInTs = r.ts || 0;
         map[key].prodDate = r.prodDate || map[key].prodDate;
         map[key].orderDate = r.orderDate || map[key].orderDate;
         map[key].inDate = r.date || map[key].inDate;
+        map[key].actualSpec = r.actualSpec || '';
       }
       if ((r.ts||0) > map[key].lastTs) map[key].lastTs = r.ts || 0; // 이 품목의 가장 최근 활동 시각
     });
@@ -1629,12 +1654,13 @@
       const dotColor = r.type==='입고' ? 'bg-[#8B5E34]' : r.type==='반품' ? 'bg-amber-500' : 'bg-rose-400';
       const row = document.createElement('div');
       row.className = 'flex gap-3';
+      const dateLabel = r.type==='입고' ? '입고' : r.type==='출고' ? '출고' : '반품';
       row.innerHTML = `
         <div class="w-1.5 shrink-0 rounded-full ${dotColor}"></div>
         <div class="flex-1 pb-3 border-b border-[var(--line)]">
           <div class="flex items-center gap-1.5 mb-1">
             <span class="text-[13px] font-black px-1.5 py-0.5 rounded-full ${badgeStyle}">${r.type}</span>
-            <span class="text-[13px] text-[#B8B2A3] font-bold">${r.date||''}</span>
+            <span class="text-[13px] text-[#B8B2A3] font-bold">${dateLabel} ${r.date||''}${r.type==='입고' && r.orderDate ? (' · 발주 '+r.orderDate) : ''}</span>
             <span class="text-[15px] font-black text-[#3A342C] num ml-auto">${(r.qty||0).toLocaleString()} BOX</span>
             <button onclick="openEditRecord('${r.key}')" class="text-[#8B5E34] px-1"><i class="fas fa-pen text-[13px]"></i></button>
           </div>
@@ -1874,6 +1900,7 @@
           const low = s.stock <= 0;
           const info = getModelInfo(s.brand, s.name, s.model);
           const spec = info && info.spec ? info.spec : '';
+          const specMismatch = s.actualSpec && s.actualSpec !== spec;
           const row = document.createElement('button');
           row.type = 'button';
           row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 bg-white active:bg-[#F6EFE6] ' + (low ? 'bg-[#FBF1EE]' : '');
@@ -1881,7 +1908,9 @@
           row.innerHTML = `
             <div class="min-w-0 flex-1">
               <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
-              ${spec ? `<p class="text-[14px] font-black text-[#8B5E34] mt-0.5"><i class="fas fa-ruler-combined mr-1"></i>${spec}</p>` : ''}
+              ${specMismatch
+                ? `<p class="text-[14px] font-black text-[var(--rust)] mt-0.5"><i class="fas fa-triangle-exclamation mr-1"></i>스펙 다름: ${s.actualSpec} <span class="text-[#B8B2A3] font-bold">(시트: ${spec || '미기재'})</span></p>`
+                : (spec ? `<p class="text-[14px] font-black text-[#8B5E34] mt-0.5"><i class="fas fa-ruler-combined mr-1"></i>${spec}</p>` : '')}
               <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · 생산 '+s.prodDate) : ''}</p>
               ${(s.orderDate || s.inDate) ? `<p class="text-[12px] text-[#CFC9BB] font-bold">${s.orderDate?('발주 '+s.orderDate):''}${s.inDate?(' · 입고 '+s.inDate):''}</p>` : ''}
             </div>
@@ -1977,6 +2006,7 @@
       record.returnable = document.getElementById('in-returnable').checked;
       record.returnDeadline = document.getElementById('in-return-deadline').value || '';
       record.shippingFee = parseInt((document.getElementById('in-shipping').value||'0').replace(/,/g,'')) || 0;
+      record.actualSpec = document.getElementById('in-actual-spec').value.trim();
     }
 
     function resetFormAfterSave() {
@@ -1992,6 +2022,7 @@
       document.getElementById('in-return-deadline').value = '';
       document.getElementById('in-return-deadline-text').innerText = '기한 없음';
       document.getElementById('in-shipping').value = '';
+      document.getElementById('in-actual-spec').value = '';
       if (currentType === '반품') {
         selectedReturnItem = null;
         document.getElementById('return-selected-panel').classList.add('hidden');
@@ -2069,13 +2100,14 @@
     if (!list.length) { box.innerHTML = `<div class="text-center py-8 text-[#B8B2A3] text-sm">${logTab==='trash'?'휴지통이 비어있습니다':'기록이 없습니다'}</div>`; return; }
     list.forEach(r => {
       const badgeStyle = r.type==='입고' ? 'bg-[#EFE2CF] text-[#8B5E34]' : r.type==='반품' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600';
+      const dateLabel = r.type==='입고' ? '입고' : r.type==='출고' ? '출고' : '반품';
       const row = document.createElement('div');
       row.className = 'bg-white border border-[var(--line)] rounded-xl p-3 flex justify-between items-center';
       row.innerHTML = `
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 mb-0.5">
             <span class="text-[15px] font-black px-1.5 py-0.5 rounded-full ${badgeStyle}">${r.type}</span>
-            <span class="text-[13px] text-[#B8B2A3] font-bold">${r.date||''}${r.orderDate?(' · 발주 '+r.orderDate):''}</span>
+            <span class="text-[13px] text-[#B8B2A3] font-bold">${dateLabel} ${r.date||''}${r.type==='입고' && r.orderDate?(' · 발주 '+r.orderDate):''}</span>
             ${r.author ? `<span class="text-[12px] text-[#CFC9BB] font-bold ml-auto"><i class="fas fa-user mr-0.5"></i>${r.author}</span>` : ''}
           </div>
           <p class="text-sm font-black text-[#3A342C] truncate">${r.brand} · ${r.name} · ${r.model}</p>
@@ -2114,11 +2146,13 @@
     const isIn = r.type === '입고';
     document.getElementById('edit-price-fields').classList.toggle('hidden', !isIn);
     document.getElementById('edit-shipping-field').classList.toggle('hidden', !isIn);
+    document.getElementById('edit-actual-spec-field').classList.toggle('hidden', !isIn);
     document.getElementById('edit-return-fields').classList.toggle('hidden', !isIn);
     if (isIn) {
       document.getElementById('edit-price').value = r.price ? r.price.toLocaleString() : '';
       document.getElementById('edit-price-vat').value = r.priceIncVat ? r.priceIncVat.toLocaleString() : '';
       document.getElementById('edit-shipping').value = r.shippingFee ? r.shippingFee.toLocaleString() : '';
+      document.getElementById('edit-actual-spec').value = r.actualSpec || '';
       document.getElementById('edit-returnable').checked = r.returnable !== false;
       document.getElementById('edit-return-deadline').value = r.returnDeadline || '';
       syncDateDisplay('edit-return-deadline');
@@ -2148,6 +2182,7 @@
       updates.price = parseInt((document.getElementById('edit-price').value||'0').replace(/,/g,'')) || 0;
       updates.priceIncVat = parseInt((document.getElementById('edit-price-vat').value||'0').replace(/,/g,'')) || 0;
       updates.shippingFee = parseInt((document.getElementById('edit-shipping').value||'0').replace(/,/g,'')) || 0;
+      updates.actualSpec = document.getElementById('edit-actual-spec').value.trim();
       updates.returnable = document.getElementById('edit-returnable').checked;
       updates.returnDeadline = document.getElementById('edit-return-deadline').value || '';
     }

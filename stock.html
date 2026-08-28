@@ -652,9 +652,12 @@
     }
   }
 
+  let noticeDetailKey = null; // 특정 공지 하나만 보여줄 때 그 키. null이면 전체 목록.
+
   function openNoticeModal(focusKey) {
     editingNoticeKey = null;
     pendingNoticeImages = [];
+    noticeDetailKey = focusKey || null;
     document.getElementById('notice-input').value = '';
     document.getElementById('notice-link').value = '';
     document.getElementById('notice-images-input').value = '';
@@ -662,26 +665,120 @@
     renderNoticeImagePreview();
     renderNoticeList();
     document.getElementById('notice-modal').style.display = 'flex';
-    refreshNoticesFromServer(focusKey); // 열 때마다 서버에서 확실하게 다시 불러옴 (지정한 공지로 바로 이동)
-    if (focusKey) scrollToNotice(focusKey);
+    refreshNoticesFromServer();
   }
 
-  function scrollToNotice(key) {
-    setTimeout(() => {
-      const el = document.querySelector(`[data-notice-key="${key}"]`);
-      if (!el) return;
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el.classList.add('ring-2', 'ring-[#8B5E34]');
-      setTimeout(() => el.classList.remove('ring-2', 'ring-[#8B5E34]'), 1800);
-    }, 150);
+  function showAllNotices() {
+    noticeDetailKey = null;
+    renderNoticeList();
   }
 
   function renderNoticeList() {
     const box = document.getElementById('notice-list');
-    const list = Object.keys(notices).map(key => ({ key, ...notices[key] })).sort((a,b) => (b.ts||0)-(a.ts||0));
+    const allList = Object.keys(notices).map(key => ({ key, ...notices[key] }))
+      .sort((a,b) => {
+        const ao = a.sortOrder, bo = b.sortOrder;
+        if (ao !== undefined && bo !== undefined) return ao - bo;
+        if (ao !== undefined) return -1;
+        if (bo !== undefined) return 1;
+        return (b.ts||0) - (a.ts||0);
+      });
     box.innerHTML = '';
-    if (!list.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-sm">등록된 공지가 없습니다</div>'; return; }
-    list.forEach(n => {
+
+    // 특정 공지 하나만 보기로 들어온 경우 - 그 공지 하나만 보여주고, 위에 전체 목록으로 가는 버튼을 둠
+    if (noticeDetailKey) {
+      const n = notices[noticeDetailKey];
+      if (!n) { noticeDetailKey = null; } // 삭제된 공지면 전체 목록으로 대체
+      else {
+        const backBtn = document.createElement('button');
+        backBtn.type = 'button';
+        backBtn.onclick = showAllNotices;
+        backBtn.className = 'w-full text-left text-[13px] font-bold text-[#8B5E34] mb-1';
+        backBtn.innerHTML = '<i class="fas fa-arrow-left mr-1"></i> 전체 공지 목록 보기';
+        box.appendChild(backBtn);
+        box.appendChild(buildNoticeRow({ key: noticeDetailKey, ...n }, false));
+        return;
+      }
+    }
+
+    if (!allList.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-sm">등록된 공지가 없습니다</div>'; return; }
+    if (allList.length > 1) {
+      const hint = document.createElement('p');
+      hint.className = 'text-[12px] text-[#B8B2A3] font-bold mb-1';
+      hint.innerHTML = '<i class="fas fa-grip-lines mr-1"></i>손잡이를 끌어서 순서를 바꿀 수 있어요';
+      box.appendChild(hint);
+    }
+    allList.forEach(n => box.appendChild(buildNoticeRow(n, true)));
+  }
+
+  function saveNoticeOrder(orderedKeys) {
+    const updates = {};
+    orderedKeys.forEach((key, i) => { updates['notices/' + key + '/sortOrder'] = i; });
+    fbDatabase.ref().update(updates).catch((err) => showToast('순서 저장 실패: ' + (err && err.message ? err.message : err), true));
+  }
+
+  function attachNoticeDragHandle(handleEl, rowEl) {
+    handleEl.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const list = document.getElementById('notice-list');
+      const rect = rowEl.getBoundingClientRect();
+      const clone = rowEl.cloneNode(true);
+      clone.style.position = 'fixed';
+      clone.style.left = rect.left + 'px';
+      clone.style.top = rect.top + 'px';
+      clone.style.width = rect.width + 'px';
+      clone.style.zIndex = '9999';
+      clone.style.pointerEvents = 'none';
+      clone.style.opacity = '0.95';
+      clone.style.boxShadow = '0 10px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(clone);
+
+      const placeholder = document.createElement('div');
+      placeholder.style.height = rect.height + 'px';
+      placeholder.style.border = '2px dashed #D8D0BC';
+      placeholder.style.borderRadius = '0.75rem';
+      placeholder.style.marginBottom = '8px';
+      list.insertBefore(placeholder, rowEl);
+      rowEl.style.display = 'none';
+
+      const offsetY = e.clientY - rect.top;
+
+      function onMove(ev) {
+        clone.style.top = (ev.clientY - offsetY) + 'px';
+        const cloneRect = clone.getBoundingClientRect();
+        const cloneCenter = cloneRect.top + cloneRect.height / 2;
+        const siblings = Array.from(list.children).filter(el => el !== placeholder && el !== rowEl && el.dataset && el.dataset.noticeKey);
+        let inserted = false;
+        for (const sib of siblings) {
+          const sRect = sib.getBoundingClientRect();
+          const sCenter = sRect.top + sRect.height / 2;
+          if (cloneCenter < sCenter) {
+            list.insertBefore(placeholder, sib);
+            inserted = true;
+            break;
+          }
+        }
+        if (!inserted) list.appendChild(placeholder);
+      }
+
+      function onUp() {
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+        list.insertBefore(rowEl, placeholder);
+        placeholder.remove();
+        rowEl.style.display = '';
+        clone.remove();
+        const order = Array.from(list.children).map(el => el.dataset && el.dataset.noticeKey).filter(Boolean);
+        saveNoticeOrder(order);
+      }
+
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    });
+  }
+
+  function buildNoticeRow(n, draggable) {
       const row = document.createElement('div');
       row.dataset.noticeKey = n.key;
       row.className = 'bg-white border border-[var(--line)] rounded-xl p-3 transition-all';
@@ -700,7 +797,10 @@
       }
       const linkHtml = n.link ? `<a href="${n.link}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 mt-2 text-[13px] font-black text-white bg-[#8B5E34] px-3 py-1.5 rounded-lg"><i class="fas fa-arrow-up-right-from-square"></i>바로가기</a>` : '';
       row.innerHTML = `
-        <p class="text-[14px] font-bold text-[#3A342C] whitespace-pre-wrap">${n.text || ''}</p>
+        <div class="flex items-start gap-2">
+          ${draggable ? '<span class="notice-drag-handle text-[#CFC9BB] px-1 pt-1 shrink-0" style="touch-action:none; cursor:grab;"><i class="fas fa-grip-lines"></i></span>' : ''}
+          <p class="text-[14px] font-bold text-[#3A342C] whitespace-pre-wrap flex-1">${n.text || ''}</p>
+        </div>
         ${linkHtml}
         ${imgsHtml}
         <div class="flex justify-between items-center mt-2.5 pt-2.5 border-t border-[var(--line)]">
@@ -711,8 +811,11 @@
           </div>
         </div>
       `;
-      box.appendChild(row);
-    });
+      if (draggable) {
+        const handle = row.querySelector('.notice-drag-handle');
+        if (handle) attachNoticeDragHandle(handle, row);
+      }
+      return row;
   }
 
   function editNotice(key) {
@@ -799,12 +902,11 @@
   }
 
   // 실시간 리스너와 별개로, 저장 직후 확실하게 한 번 더 서버에서 직접 읽어와 화면을 갱신 (놓치는 경우 방지)
-  function refreshNoticesFromServer(focusKey) {
+  function refreshNoticesFromServer() {
     fbDatabase.ref('notices').once('value').then(snap => {
       notices = snap.val() || {};
       renderNoticeBanner();
       renderNoticeList();
-      if (focusKey) scrollToNotice(focusKey);
     }).catch(() => {});
   }
 

@@ -739,7 +739,7 @@
     showToast('이미지 처리 중...');
     for (const file of files) {
       try {
-        const dataUrl = await compressImageFile(file, 850, 0.6);
+        const dataUrl = await compressImageFile(file, 1400, 0.78);
         pendingNoticeImages.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2,7), name: file.name, dataUrl });
       } catch(e) { showToast('이미지 처리 실패: ' + file.name); }
     }
@@ -2223,7 +2223,7 @@
   }
 
   // 사진을 한꺼번에 너무 많이/크게 올리면 저장이 실패할 수 있어서, 올리기 전에 미리 용량 확인
-  const MAX_IMAGES_PAYLOAD_CHARS = 2.5 * 1024 * 1024; // 대략 2.5MB 상당
+  const MAX_IMAGES_PAYLOAD_CHARS = 4.5 * 1024 * 1024; // 대략 4.5MB 상당 (화질 개선으로 상한도 같이 올림)
   function totalImagesPayloadSize(images) {
     return (images || []).reduce((sum, img) => sum + (img.dataUrl ? img.dataUrl.length : 0), 0);
   }
@@ -2242,7 +2242,7 @@
     showToast('이미지 처리 중...');
     for (const file of files) {
       try {
-        const dataUrl = await compressImageFile(file, 850, 0.6);
+        const dataUrl = await compressImageFile(file, 1400, 0.78);
         pendingVendorImages.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2,7), name: file.name, dataUrl });
       } catch(e) { showToast('이미지 처리 실패: ' + file.name); }
     }
@@ -2278,6 +2278,7 @@
   function openImageLightbox(images, startIndex) {
     lightboxImages = Array.isArray(images) ? images : [images];
     lightboxIndex = startIndex || 0;
+    imageZoomedIn = true; // 클릭하면 바로 확대된(잘 보이는) 상태로 열림
     renderLightboxImage();
     document.getElementById('image-lightbox').style.display = 'flex';
   }
@@ -2285,8 +2286,7 @@
   function renderLightboxImage() {
     const img = document.getElementById('image-lightbox-img');
     img.src = lightboxImages[lightboxIndex] || '';
-    img.style.width = '100%';
-    imageZoomedIn = false;
+    img.style.width = imageZoomedIn ? '220%' : '100%';
     const multi = lightboxImages.length > 1;
     document.getElementById('lightbox-prev').classList.toggle('hidden', !multi || lightboxIndex === 0);
     document.getElementById('lightbox-next').classList.toggle('hidden', !multi || lightboxIndex === lightboxImages.length - 1);
@@ -2299,7 +2299,9 @@
     const next = lightboxIndex + delta;
     if (next < 0 || next >= lightboxImages.length) return;
     lightboxIndex = next;
-    renderLightboxImage();
+    renderLightboxImage(); // 확대 상태(imageZoomedIn)는 그대로 유지한 채 다음 사진으로 전환
+    document.getElementById('image-lightbox').scrollTop = 0;
+    document.getElementById('image-lightbox').scrollLeft = 0;
   }
 
   function closeImageLightbox() {
@@ -2317,7 +2319,6 @@
     img.style.width = imageZoomedIn ? '220%' : '100%';
   }
 
-  // 라이트박스에서 좌우로 스와이프하면 사진 넘기기 (확대 중일 땐 스크롤 우선이라 넘기지 않음)
   // 공지/거래처 사진 클릭 시 - 해당 항목의 전체 사진 배열 + 누른 순번을 라이트박스에 전달 (인라인 onclick 대신 위임 방식 - 특수문자 이스케이프 문제 방지)
   document.addEventListener('click', (e) => {
     const noticeImg = e.target.closest('.notice-lightbox-img');
@@ -2337,6 +2338,7 @@
     }
   });
 
+  // 확대된 상태에서도 좌우로 크게 스와이프하면 사진이 넘어가게 함 (제자리에서 살짝 움직이는 건 사진 훑어보기로 인식해 무시)
   (function setupLightboxSwipe() {
     let sx = 0, sy = 0;
     const wrap = document.getElementById('image-lightbox');
@@ -2346,10 +2348,9 @@
       sx = e.touches[0].clientX; sy = e.touches[0].clientY;
     }, { passive: true });
     wrap.addEventListener('touchend', (e) => {
-      if (imageZoomedIn) return;
       const dx = e.changedTouches[0].clientX - sx;
       const dy = e.changedTouches[0].clientY - sy;
-      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (Math.abs(dx) > 100 && Math.abs(dx) > Math.abs(dy) * 2.2) {
         lightboxNav(dx < 0 ? 1 : -1);
       }
     }, { passive: true });

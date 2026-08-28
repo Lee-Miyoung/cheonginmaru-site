@@ -284,7 +284,8 @@
         </div>
         <div id="notice-links-rows" class="space-y-2"></div>
       </div>
-      <input type="file" id="notice-images-input" accept="image/*" multiple class="input-premium text-sm" onchange="handleNoticeImageSelect(event)">
+      <input type="file" id="notice-images-input" accept="image/*,application/pdf" multiple class="input-premium text-sm" onchange="handleNoticeImageSelect(event)">
+      <p class="text-[12px] text-[#B8B2A3] font-bold">사진은 위 textarea에 카톡처럼 붙여넣기(Ctrl+V)도 돼요. PDF는 5MB까지 첨부 가능해요.</p>
       <div id="notice-images-preview" class="grid grid-cols-3 gap-2"></div>
       <button id="notice-submit-btn" onclick="saveNotice()" class="w-full py-2.5 bg-[#2B2622] text-white rounded-xl text-sm font-black"><i class="fas fa-plus mr-1"></i> 공지 등록</button>
     </div>
@@ -629,7 +630,7 @@
   function renderNoticeBanner() {
     const card = document.getElementById('notice-preview-card');
     const listEl = document.getElementById('notice-preview-list');
-    const list = Object.values(notices).sort((a,b) => (b.ts||0)-(a.ts||0));
+    const list = Object.keys(notices).map(key => ({ key, ...notices[key] })).sort((a,b) => (b.ts||0)-(a.ts||0));
     if (!list.length) { card.classList.add('hidden'); return; }
     card.classList.remove('hidden');
     listEl.innerHTML = '';
@@ -828,17 +829,21 @@
       row.dataset.noticeKey = n.key;
       row.className = 'bg-white border border-[var(--line)] rounded-xl p-3 transition-all';
       let imgsHtml = '';
-      if (n.images && n.images.length) {
-        if (n.images.length === 1) {
-          imgsHtml = `<img src="${n.images[0].dataUrl}" data-notice-lightbox="${n.key}" data-idx="0" class="notice-lightbox-img w-full max-h-56 object-cover rounded-lg border border-[var(--line)] cursor-pointer mt-2">`;
-        } else {
-          imgsHtml = `
-            <div class="flex gap-2 overflow-x-auto mt-2 pb-1" style="scroll-snap-type:x mandatory;">
-              ${n.images.map((img, i) => `<img src="${img.dataUrl}" data-notice-lightbox="${n.key}" data-idx="${i}" class="notice-lightbox-img flex-shrink-0 rounded-lg border border-[var(--line)] cursor-pointer object-cover" style="width:78%; scroll-snap-align:center;">`).join('')}
-            </div>
-            <p class="text-[11px] text-[#B8B2A3] font-bold mt-1"><i class="fas fa-arrows-left-right mr-1"></i>옆으로 밀어서 사진 ${n.images.length}장 보기</p>
-          `;
-        }
+      let pdfsHtml = '';
+      const imageItems = (n.images || []).filter(img => img.type !== 'pdf');
+      const pdfItems = (n.images || []).filter(img => img.type === 'pdf');
+      if (imageItems.length === 1) {
+        imgsHtml = `<img src="${imageItems[0].dataUrl}" data-notice-lightbox="${n.key}" data-idx="0" class="notice-lightbox-img w-full max-h-56 object-cover rounded-lg border border-[var(--line)] cursor-pointer mt-2">`;
+      } else if (imageItems.length > 1) {
+        imgsHtml = `
+          <div class="flex gap-2 overflow-x-auto mt-2 pb-1" style="scroll-snap-type:x mandatory;">
+            ${imageItems.map((img, i) => `<img src="${img.dataUrl}" data-notice-lightbox="${n.key}" data-idx="${i}" class="notice-lightbox-img flex-shrink-0 rounded-lg border border-[var(--line)] cursor-pointer object-cover" style="width:78%; scroll-snap-align:center;">`).join('')}
+          </div>
+          <p class="text-[11px] text-[#B8B2A3] font-bold mt-1"><i class="fas fa-arrows-left-right mr-1"></i>옆으로 밀어서 사진 ${imageItems.length}장 보기</p>
+        `;
+      }
+      if (pdfItems.length) {
+        pdfsHtml = `<div class="flex flex-wrap gap-1.5 mt-2">${pdfItems.map(p => `<a href="${p.dataUrl}" target="_blank" class="inline-flex items-center gap-1.5 text-[13px] font-black text-[#3A342C] bg-[#F3F0EA] border border-[var(--line)] px-3 py-1.5 rounded-lg"><i class="fas fa-file-pdf text-[var(--rust)]"></i>${p.name}</a>`).join('')}</div>`;
       }
       const links = n.links || (n.link ? [{ title: '바로가기', url: n.link }] : []); // 예전 단일 링크 방식도 계속 표시됨
       const linkHtml = links.length
@@ -851,6 +856,7 @@
         </div>
         ${linkHtml}
         ${imgsHtml}
+        ${pdfsHtml}
         <div class="flex justify-between items-center mt-2.5 pt-2.5 border-t border-[var(--line)]">
           <p class="text-[12px] text-[#B8B2A3] font-bold">${n.author||''} · ${n.ts ? new Date(n.ts).toLocaleDateString() : ''}</p>
           <div class="flex gap-1.5 shrink-0">
@@ -886,20 +892,54 @@
       .catch((err) => showToast('삭제 실패: ' + (err && err.message ? err.message : err), true));
   }
 
-  async function handleNoticeImageSelect(event) {
-    const files = Array.from(event.target.files || []);
+  // PDF는 압축(캔버스 변환)이 안 되니 원본 그대로 base64로 저장 - 용량이 커서 5MB 넘으면 거절
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function processNoticeFiles(files) {
     if (!files.length) return;
-    showToast('이미지 처리 중...');
+    showToast('파일 처리 중...');
     for (const file of files) {
       try {
-        const dataUrl = await compressImageFile(file, 1400, 0.78);
-        pendingNoticeImages.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2,7), name: file.name, dataUrl });
-      } catch(e) { showToast('이미지 처리 실패: ' + file.name); }
+        if (file.type === 'application/pdf') {
+          if (file.size > 5 * 1024 * 1024) { showToast('PDF는 5MB까지만 첨부 가능해요: ' + file.name, true); continue; }
+          const dataUrl = await readFileAsDataUrl(file);
+          pendingNoticeImages.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2,7), name: file.name, dataUrl, type: 'pdf' });
+        } else if (file.type.startsWith('image/')) {
+          const dataUrl = await compressImageFile(file, 1400, 0.78);
+          pendingNoticeImages.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2,7), name: file.name || '이미지', dataUrl, type: 'image' });
+        }
+      } catch(e) { showToast('파일 처리 실패: ' + file.name); }
     }
-    event.target.value = '';
     renderNoticeImagePreview();
     checkImagesPayloadOk(pendingNoticeImages);
   }
+
+  async function handleNoticeImageSelect(event) {
+    const files = Array.from(event.target.files || []);
+    await processNoticeFiles(files);
+    event.target.value = '';
+  }
+
+  // 카카오톡처럼 이미지를 복사해서 그대로 붙여넣기(Ctrl+V)하면 첨부되게 함
+  document.addEventListener('DOMContentLoaded', () => {
+    const noticeTextarea = document.getElementById('notice-input');
+    if (noticeTextarea) {
+      noticeTextarea.addEventListener('paste', async (e) => {
+        const items = (e.clipboardData || window.clipboardData).items;
+        const imageFiles = Array.from(items).filter(it => it.type.startsWith('image/')).map(it => it.getAsFile()).filter(Boolean);
+        if (!imageFiles.length) return; // 이미지가 아니면 원래대로 텍스트 붙여넣기
+        e.preventDefault();
+        await processNoticeFiles(imageFiles);
+      });
+    }
+  });
 
   function removeNoticePendingImage(id) {
     pendingNoticeImages = pendingNoticeImages.filter(img => img.id !== id);
@@ -912,10 +952,20 @@
     pendingNoticeImages.forEach(img => {
       const cell = document.createElement('div');
       cell.className = 'relative';
-      cell.innerHTML = `
-        <img src="${img.dataUrl}" class="w-full h-20 object-cover rounded-lg border border-[var(--line)]">
-        <button type="button" onclick="removeNoticePendingImage('${img.id}')" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[var(--rust)] text-white text-[11px] flex items-center justify-center"><i class="fas fa-times"></i></button>
-      `;
+      if (img.type === 'pdf') {
+        cell.innerHTML = `
+          <a href="${img.dataUrl}" target="_blank" class="w-full h-20 rounded-lg border border-[var(--line)] bg-[#F6EFE6] flex flex-col items-center justify-center gap-0.5 px-1">
+            <i class="fas fa-file-pdf text-[var(--rust)] text-[20px]"></i>
+            <span class="text-[10px] font-bold text-[#8B8477] truncate w-full text-center">${img.name}</span>
+          </a>
+          <button type="button" onclick="removeNoticePendingImage('${img.id}')" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[var(--rust)] text-white text-[11px] flex items-center justify-center"><i class="fas fa-times"></i></button>
+        `;
+      } else {
+        cell.innerHTML = `
+          <img src="${img.dataUrl}" class="w-full h-20 object-cover rounded-lg border border-[var(--line)]">
+          <button type="button" onclick="removeNoticePendingImage('${img.id}')" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[var(--rust)] text-white text-[11px] flex items-center justify-center"><i class="fas fa-times"></i></button>
+        `;
+      }
       box.appendChild(cell);
     });
   }
@@ -2401,7 +2451,7 @@
   }
 
   // 사진을 한꺼번에 너무 많이/크게 올리면 저장이 실패할 수 있어서, 올리기 전에 미리 용량 확인
-  const MAX_IMAGES_PAYLOAD_CHARS = 4.5 * 1024 * 1024; // 대략 4.5MB 상당 (화질 개선으로 상한도 같이 올림)
+  const MAX_IMAGES_PAYLOAD_CHARS = 7.5 * 1024 * 1024; // 대략 7.5MB 상당 (PDF 첨부 5MB까지 여유있게 허용)
   function totalImagesPayloadSize(images) {
     return (images || []).reduce((sum, img) => sum + (img.dataUrl ? img.dataUrl.length : 0), 0);
   }
@@ -2504,7 +2554,8 @@
       const key = noticeImg.dataset.noticeLightbox;
       const idx = parseInt(noticeImg.dataset.idx) || 0;
       const n = notices[key];
-      if (n && n.images) openImageLightbox(n.images.map(i => i.dataUrl), idx);
+      const imgs = n && n.images ? n.images.filter(i => i.type !== 'pdf') : [];
+      if (imgs.length) openImageLightbox(imgs.map(i => i.dataUrl), idx);
       return;
     }
     const vendorImg = e.target.closest('.vendor-lightbox-img');

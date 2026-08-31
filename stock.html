@@ -43,6 +43,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
@@ -279,6 +280,54 @@
   </div>
 </div>
 
+<!-- 반품 리스트 만들기 모달 -->
+<div id="return-list-modal" class="modal-overlay">
+  <div class="card rounded-[1.5rem] w-full max-w-lg mx-4 h-[90vh] flex flex-col overflow-hidden">
+    <div class="p-4 border-b bg-[#FBF9F5] flex justify-between items-center">
+      <h3 class="font-black text-[#2B2622]"><i class="fas fa-file-invoice mr-1.5 text-[#5C7A3D]"></i>반품 리스트 만들기</h3>
+      <button onclick="closeModal('return-list-modal')" class="w-8 h-8 rounded-full bg-[#E7E1D3] flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-4 overflow-y-auto flex-1 space-y-3 bg-[#FAF8F4]">
+      <div>
+        <label class="eyebrow pl-1">브랜드 (거래처)</label>
+        <select id="rl-brand" class="input-premium mt-1" onchange="onReturnListBrandChange()"></select>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <div><label class="eyebrow pl-1">반품처(대리점명)</label><input type="text" id="rl-from-name" class="input-premium mt-1" value="청인마루"></div>
+        <div><label class="eyebrow pl-1">담당자(반품자)</label><input type="text" id="rl-from-person" class="input-premium mt-1" value="송원덕"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <div><label class="eyebrow pl-1">반품일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="rl-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="rl-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('rl-date')"></div></div>
+        <div><label class="eyebrow pl-1">수신처</label><input type="text" id="rl-to-name" class="input-premium mt-1" placeholder="예: 캠마트코리아 2공장 물류창고"></div>
+      </div>
+
+      <div class="pt-2 border-t border-[var(--line)]">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-[13px] font-black text-[#8B8477]">반품 품목</span>
+          <button type="button" onclick="addReturnListRow()" class="text-[12px] font-black text-[#5C7A3D] bg-[#E8EDE4] px-2.5 py-1 rounded-lg"><i class="fas fa-plus mr-1"></i>품목 추가</button>
+        </div>
+        <div id="rl-rows" class="space-y-2"></div>
+      </div>
+      <div class="flex justify-between items-center bg-[#EFF3EA] rounded-xl px-3.5 py-2.5">
+        <span class="text-[13px] font-black text-[#5C7A3D]">총 수량</span>
+        <span id="rl-total" class="text-[16px] font-black text-[#3A342C]">0 BOX</span>
+      </div>
+
+      <div class="pt-2 border-t border-[var(--line)] space-y-2.5">
+        <p class="text-[13px] font-black text-[#8B8477]">도착지 정보</p>
+        <input type="text" id="rl-arrive-addr" class="input-premium" placeholder="도착지 주소">
+        <input type="text" id="rl-arrive-person" class="input-premium" placeholder="도착지 담당자 (예: 과장 김동영 010-0000-0000)">
+        <p class="text-[13px] font-black text-[#8B8477] pt-1">출발지 정보</p>
+        <input type="text" id="rl-depart-addr" class="input-premium" value="인천 서구 석남동 223-757 청인마루">
+        <input type="text" id="rl-depart-person" class="input-premium" value="대표 송원덕(010-8299-1074)">
+      </div>
+
+      <button onclick="generateReturnListImage()" class="w-full py-4 bg-[#5C7A3D] text-white rounded-2xl font-black text-base"><i class="fas fa-image mr-1.5"></i>이미지로 만들어서 공유</button>
+      <p id="rl-status" class="text-center text-xs font-bold py-1"></p>
+    </div>
+  </div>
+</div>
+
 <!-- 전체 공지사항 모달 -->
 <div id="notice-modal" class="modal-overlay">
   <div class="card rounded-[1.5rem] w-full max-w-lg mx-4 h-[85vh] flex flex-col overflow-hidden">
@@ -305,6 +354,62 @@
 </div>
 
 <!-- 이미지 크게 보기 -->
+<!-- 반품 리스트 이미지 생성용 - 화면엔 안 보이고 캡처용으로만 사용 -->
+<div id="rl-print-template" style="position:absolute; left:-9999px; top:0; width:900px; background:#fff; font-family:'Pretendard','Noto Sans KR',sans-serif; padding:44px; color:#111;">
+  <h1 style="font-size:34px; font-weight:900; margin:0 0 28px 0;">반품리스트</h1>
+  <div style="display:flex; justify-content:flex-end; margin-bottom:22px;">
+    <div style="font-size:14px; line-height:1.75; max-width:480px;">
+      <p style="margin:0 0 6px 0;">1. 반품인정은 출고일 기준 익월말 도착분까지입니다.</p>
+      <p style="margin:0 0 6px 0;">2. 반품 실물 파렛트에 본 리스트를 부착하여주십시요<br>(맨위박스 위에 놓으십시요. 가능하면 랩핑요망)</p>
+      <p style="margin:0 0 6px 0;">3. 되도록 같은 제품/패턴끼리 모아서 적재해 주십시요.</p>
+      <p style="margin:0;">4. 반품담당자가 직접확인, 서명하여 주십시요.</p>
+    </div>
+  </div>
+  <table style="width:100%; border-collapse:collapse; margin-bottom:22px; font-size:15px; text-align:center;">
+    <tr>
+      <th style="border:1px solid #333; padding:10px; background:#f2f2f2;">반품처(대리점명)</th>
+      <th style="border:1px solid #333; padding:10px; background:#f2f2f2;">담당자(반품자)</th>
+      <th style="border:1px solid #333; padding:10px; background:#f2f2f2;">반품일자</th>
+      <th style="border:1px solid #333; padding:10px; background:#f2f2f2;">수신처</th>
+      <th style="border:1px solid #333; padding:10px; background:#f2f2f2;">처리담당자</th>
+      <th style="border:1px solid #333; padding:10px; background:#f2f2f2;">확인/서명</th>
+    </tr>
+    <tr>
+      <td id="rl-p-from-name" style="border:1px solid #333; padding:12px;"></td>
+      <td id="rl-p-from-person" style="border:1px solid #333; padding:12px;"></td>
+      <td id="rl-p-date" style="border:1px solid #333; padding:12px;"></td>
+      <td id="rl-p-to-name" style="border:1px solid #333; padding:12px;"></td>
+      <td style="border:1px solid #333; padding:12px;"></td>
+      <td style="border:1px solid #333; padding:12px;"></td>
+    </tr>
+  </table>
+  <table style="width:100%; border-collapse:collapse; font-size:15px; text-align:center;">
+    <thead>
+      <tr style="background:#dfead4;">
+        <th style="border:1px solid #333; padding:10px;">제품 분류(종류)</th>
+        <th style="border:1px solid #333; padding:10px;">패턴명(제품명)</th>
+        <th style="border:1px solid #333; padding:10px;">생산LOT</th>
+        <th style="border:1px solid #333; padding:10px;">박스수</th>
+        <th style="border:1px solid #333; padding:10px;">특이사항/비고</th>
+      </tr>
+    </thead>
+    <tbody id="rl-p-items"></tbody>
+    <tr style="background:#dfead4; font-weight:900;">
+      <td style="border:1px solid #333; padding:10px;">총 수량</td>
+      <td style="border:1px solid #333; padding:10px;"></td>
+      <td style="border:1px solid #333; padding:10px;"></td>
+      <td id="rl-p-total" style="border:1px solid #333; padding:10px;"></td>
+      <td style="border:1px solid #333; padding:10px;"></td>
+    </tr>
+  </table>
+  <div style="margin-top:26px; font-size:15px; line-height:1.85;">
+    <p style="margin:0;">도착지: <span id="rl-p-arrive-addr"></span></p>
+    <p style="margin:0;">담당자: <span id="rl-p-arrive-person"></span></p>
+    <p style="margin:0;">출발지: <span id="rl-p-depart-addr"></span></p>
+    <p style="margin:0;">담당자: <span id="rl-p-depart-person"></span></p>
+  </div>
+</div>
+
 <div id="image-lightbox" class="modal-overlay" style="overflow:auto;">
   <div class="relative w-full h-full flex items-center justify-center p-2" onclick="closeImageLightbox()">
     <img id="image-lightbox-img" src="" class="rounded-xl mx-auto" style="width:100%; height:auto; touch-action:pinch-zoom;" onclick="event.stopPropagation(); toggleImageZoom();" ondblclick="event.stopPropagation(); toggleImageZoom();">
@@ -388,6 +493,7 @@
       <button onclick="openMonthlyModal()" class="w-10 h-10 rounded-xl bg-[#E7EDF2] text-[#4E6E8C] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="월별 매입 통계"><i class="fas fa-chart-column"></i></button>
       <button onclick="openVendorModal()" class="w-10 h-10 rounded-xl bg-[#F0E7EE] text-[#8C4B6B] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="거래처 관리"><i class="fas fa-address-book"></i></button>
       <button onclick="openLogModal()" class="w-10 h-10 rounded-xl bg-[#F5E8E4] text-[var(--rust)] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="입출고 기록"><i class="fas fa-list-ul"></i></button>
+      <button onclick="openReturnListModal()" class="w-10 h-10 rounded-xl bg-[#E8EDE4] text-[#5C7A3D] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="반품 리스트 만들기"><i class="fas fa-file-invoice"></i></button>
     </div>
   </header>
 
@@ -2221,6 +2327,136 @@
       showToast('⚠️ 서버 응답이 없어서 이 기기에 임시 저장했어요. 자동으로 재시도됩니다', true);
       setSaveStatus('📴 임시 저장됨 (자동 재시도 예정)', true);
       resetFormAfterSave();
+    });
+  }
+
+  // ===== 반품 리스트 만들기 (브랜드별로 품목 추가해서 한 장의 이미지로 생성) =====
+  const RL_ROW_DEFAULTS = { category: '', pattern: '', lot: '', qty: '', note: '시공잔량' };
+
+  function openReturnListModal() {
+    const brandSelect = document.getElementById('rl-brand');
+    brandSelect.innerHTML = Object.keys(masterData).sort((a,b) => a.localeCompare(b,'ko'))
+      .map(b => `<option value="${b}">${b}</option>`).join('');
+    document.getElementById('rl-rows').innerHTML = '';
+    addReturnListRow();
+    document.getElementById('rl-date').value = new Date().toISOString().slice(0,10);
+    syncDateDisplay('rl-date');
+    document.getElementById('rl-status').innerText = '';
+    onReturnListBrandChange();
+    document.getElementById('return-list-modal').style.display = 'flex';
+  }
+
+  // 브랜드마다 수신처/도착지 정보가 다르니, 한 번 입력해두면 다음에 그 브랜드 고를 때 자동으로 불러옴
+  function onReturnListBrandChange() {
+    const brand = document.getElementById('rl-brand').value;
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('cm_return_list_pref_' + brand) || '{}'); } catch(e) {}
+    document.getElementById('rl-to-name').value = saved.toName || '';
+    document.getElementById('rl-arrive-addr').value = saved.arriveAddr || '';
+    document.getElementById('rl-arrive-person').value = saved.arrivePerson || '';
+    document.getElementById('rl-depart-addr').value = saved.departAddr || '인천 서구 석남동 223-757 청인마루';
+    document.getElementById('rl-depart-person').value = saved.departPerson || '대표 송원덕(010-8299-1074)';
+  }
+
+  function addReturnListRow(vals) {
+    const v = { ...RL_ROW_DEFAULTS, ...(vals || {}) };
+    const row = document.createElement('div');
+    row.className = 'grid grid-cols-12 gap-1.5 items-center';
+    row.setAttribute('data-rl-row', '');
+    row.innerHTML = `
+      <input type="text" class="rl-category input-premium text-sm col-span-3" placeholder="분류" value="${v.category}">
+      <input type="text" class="rl-pattern input-premium text-sm col-span-3" placeholder="패턴명" value="${v.pattern}">
+      <input type="text" class="rl-lot input-premium text-sm col-span-2" placeholder="생산LOT" value="${v.lot}">
+      <input type="number" class="rl-qty input-premium text-sm col-span-2" placeholder="박스" value="${v.qty}" oninput="recalcReturnListTotal()">
+      <button type="button" onclick="this.closest('[data-rl-row]').remove(); recalcReturnListTotal();" class="col-span-1 text-[#CFC9BB] hover:text-rose-500 flex justify-center"><i class="fas fa-times"></i></button>
+      <input type="text" class="rl-note input-premium text-sm col-span-11" placeholder="특이사항/비고 (예: 시공잔량)" value="${v.note}">
+    `;
+    document.getElementById('rl-rows').appendChild(row);
+    recalcReturnListTotal();
+  }
+
+  function getReturnListRows() {
+    return Array.from(document.querySelectorAll('[data-rl-row]')).map(row => ({
+      category: row.querySelector('.rl-category').value.trim(),
+      pattern: row.querySelector('.rl-pattern').value.trim(),
+      lot: row.querySelector('.rl-lot').value.trim(),
+      qty: parseFloat(row.querySelector('.rl-qty').value) || 0,
+      note: row.querySelector('.rl-note').value.trim()
+    })).filter(r => r.pattern || r.qty); // 완전히 빈 행은 제외
+  }
+
+  function recalcReturnListTotal() {
+    const total = getReturnListRows().reduce((sum, r) => sum + r.qty, 0);
+    document.getElementById('rl-total').innerText = total.toLocaleString() + ' BOX';
+  }
+
+  function generateReturnListImage() {
+    const rows = getReturnListRows();
+    if (!rows.length) return showToast('품목을 1개 이상 입력하세요');
+    const brand = document.getElementById('rl-brand').value;
+    const fromName = document.getElementById('rl-from-name').value.trim() || '청인마루';
+    const fromPerson = document.getElementById('rl-from-person').value.trim();
+    const dateVal = document.getElementById('rl-date').value;
+    const dateDisplay = dateVal ? `${dateVal.slice(0,4)}년${parseInt(dateVal.slice(5,7))}월${parseInt(dateVal.slice(8,10))}일` : '';
+    const toName = document.getElementById('rl-to-name').value.trim();
+    const arriveAddr = document.getElementById('rl-arrive-addr').value.trim();
+    const arrivePerson = document.getElementById('rl-arrive-person').value.trim();
+    const departAddr = document.getElementById('rl-depart-addr').value.trim();
+    const departPerson = document.getElementById('rl-depart-person').value.trim();
+
+    // 다음에 같은 브랜드 고를 때 자동으로 채워지게 저장
+    try {
+      localStorage.setItem('cm_return_list_pref_' + brand, JSON.stringify({
+        toName, arriveAddr, arrivePerson, departAddr, departPerson
+      }));
+    } catch(e) {}
+
+    document.getElementById('rl-p-from-name').innerText = fromName;
+    document.getElementById('rl-p-from-person').innerText = fromPerson;
+    document.getElementById('rl-p-date').innerText = dateDisplay;
+    document.getElementById('rl-p-to-name').innerText = toName;
+    document.getElementById('rl-p-total').innerText = rows.reduce((s,r)=>s+r.qty,0).toLocaleString();
+    document.getElementById('rl-p-arrive-addr').innerText = arriveAddr;
+    document.getElementById('rl-p-arrive-person').innerText = arrivePerson;
+    document.getElementById('rl-p-depart-addr').innerText = departAddr;
+    document.getElementById('rl-p-depart-person').innerText = departPerson;
+
+    const tbody = document.getElementById('rl-p-items');
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td style="border:1px solid #333; padding:10px;">${r.category || '-'}</td>
+        <td style="border:1px solid #333; padding:10px;">${r.pattern || '-'}</td>
+        <td style="border:1px solid #333; padding:10px;">${r.lot || '-'}</td>
+        <td style="border:1px solid #333; padding:10px;">${r.qty}</td>
+        <td style="border:1px solid #333; padding:10px;">${r.note || ''}</td>
+      </tr>
+    `).join('');
+    // 표가 너무 짧아 보이지 않게, 실제 반품리스트 양식처럼 빈 줄 2개 정도 추가
+    tbody.innerHTML += `
+      <tr><td style="border:1px solid #333; padding:10px;">&nbsp;</td><td style="border:1px solid #333;"></td><td style="border:1px solid #333;"></td><td style="border:1px solid #333;"></td><td style="border:1px solid #333;"></td></tr>
+      <tr><td style="border:1px solid #333; padding:10px;">&nbsp;</td><td style="border:1px solid #333;"></td><td style="border:1px solid #333;"></td><td style="border:1px solid #333;"></td><td style="border:1px solid #333;"></td></tr>
+    `;
+
+    document.getElementById('rl-status').innerText = '이미지 만드는 중...';
+    const target = document.getElementById('rl-print-template');
+    html2canvas(target, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
+      canvas.toBlob(blob => {
+        const fileName = `반품리스트_${brand}_${dateVal || ''}.png`;
+        const file = new File([blob], fileName, { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: '반품리스트', text: `${brand} 반품리스트` })
+            .then(() => document.getElementById('rl-status').innerText = '')
+            .catch(() => {}); // 공유 취소는 에러로 안 봄
+        } else {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = fileName;
+          a.click();
+        }
+        document.getElementById('rl-status').innerText = '✅ 이미지 생성 완료';
+      }, 'image/png');
+    }).catch((err) => {
+      document.getElementById('rl-status').innerText = '❌ 생성 실패: ' + (err && err.message ? err.message : err);
     });
   }
 

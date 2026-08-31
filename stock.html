@@ -353,8 +353,8 @@
         <div><label class="eyebrow pl-1">반품기한</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="edit-return-deadline-text" class="num text-[16px] text-[#B8B2A3]">기한 없음</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="edit-return-deadline" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('edit-return-deadline')"></div></div>
       </div>
       <div class="grid grid-cols-2 gap-2.5">
-        <div><label class="eyebrow pl-1">발주일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="edit-order-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="edit-order-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('edit-order-date')"></div></div>
-        <div><label class="eyebrow pl-1">입고/출고일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="edit-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="edit-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('edit-date')"></div></div>
+        <div id="edit-order-date-field"><label class="eyebrow pl-1">발주일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="edit-order-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="edit-order-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('edit-order-date')"></div></div>
+        <div><label class="eyebrow pl-1" id="edit-date-label">입고일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="edit-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="edit-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('edit-date')"></div></div>
       </div>
       <div><label class="eyebrow pl-1">메모</label><input type="text" id="edit-memo" class="input-premium mt-1" placeholder="선택 입력"></div>
       <div><label class="eyebrow pl-1">작성자</label>
@@ -365,6 +365,8 @@
         </select>
       </div>
       <button onclick="saveEditRecord()" class="w-full py-4 bg-[#8B5E34] text-white rounded-2xl font-black text-base"><i class="fas fa-save mr-1.5"></i>수정 저장</button>
+      <button id="edit-cancel-scheduled-btn" onclick="cancelScheduledFromEdit()" class="hidden w-full py-3 bg-[#FBEDEA] text-[var(--rust)] rounded-2xl font-black text-[14px]"><i class="fas fa-ban mr-1.5"></i>이 예정 출고 취소하기</button>
+      <button onclick="closeModal('edit-record-modal')" class="w-full py-2.5 text-[#8B8477] font-bold text-[14px]">취소 (닫기)</button>
       <p id="edit-status" class="text-center text-xs font-bold py-1"></p>
     </div>
   </div>
@@ -630,6 +632,7 @@
       if (dbg) dbg.innerText = `(서버상 ${Object.keys(movements).length}건)`;
       if (document.getElementById('log-modal').style.display === 'flex') renderLog();
       if (document.getElementById('monthly-modal').style.display === 'flex') renderMonthlyStats();
+      if (document.getElementById('scheduled-shipments-modal').style.display === 'flex') openScheduledShipmentsModal();
     }, err => {
       const dbg = document.getElementById('debug-count');
       if (dbg) dbg.innerText = '(읽기 실패: ' + err.code + ')';
@@ -1098,9 +1101,10 @@
         <p class="text-[15px] font-black text-[#3A342C]">${r.model} ${r.lot?('· 로트 '+r.lot):''}</p>
         <p class="text-[14px] font-black text-amber-600 mt-1"><i class="fas fa-clock mr-1"></i>${r.date} 예정 · ${(r.qty||0).toLocaleString()} BOX</p>
         ${r.memo ? `<p class="text-[13px] font-bold text-[#8B5E34] mt-1"><i class="fas fa-note-sticky mr-1"></i>${r.memo}</p>` : ''}
-        <div class="flex gap-1.5 mt-2">
+        <div class="flex gap-1.5 mt-2 flex-wrap">
           <button onclick="executeScheduledShipmentNow('${r.key}')" class="text-[13px] font-black text-white bg-[#8B5E34] px-3 py-1.5 rounded-lg"><i class="fas fa-play mr-1"></i>지금 바로 출고 처리</button>
           <button onclick="openEditRecord('${r.key}'); closeModal('scheduled-shipments-modal');" class="text-[13px] font-black text-[#8B5E34] bg-[#F6EFE6] px-3 py-1.5 rounded-lg"><i class="fas fa-pen mr-1"></i>수정</button>
+          <button onclick="cancelScheduledShipment('${r.key}')" class="text-[13px] font-black text-[var(--rust)] bg-[#FBEDEA] px-3 py-1.5 rounded-lg"><i class="fas fa-ban mr-1"></i>취소</button>
         </div>
       `;
       box.appendChild(row);
@@ -1114,6 +1118,17 @@
       showToast('출고가 시작됩니다', true);
       closeModal('scheduled-shipments-modal');
     }).catch((err) => showToast('처리 실패: ' + (err && err.message ? err.message : err), true));
+  }
+
+  // 예정 출고 취소 - 실제 출고와 똑같이 휴지통으로 이동 (30일간 복구 가능, 재고에는 애초에 반영 안 됐으니 그대로 유지됨)
+  function cancelScheduledShipment(key) {
+    if (!confirm('이 예정 출고를 취소할까요?\n(휴지통으로 이동되며, 필요하면 나중에 복구할 수 있어요)')) return;
+    const record = movements[key];
+    if (!record) return;
+    fbDatabase.ref('stock_movements_trash/' + key).set({ ...record, deletedAt: Date.now() })
+      .then(() => fbDatabase.ref('stock_movements/' + key).remove())
+      .then(() => { showToast('예정 출고를 취소했습니다'); })
+      .catch((err) => showToast('취소 실패: ' + (err && err.message ? err.message : err), true));
   }
 
   // 예정 출고 중 날짜가 이미 지난 게 있으면(오늘 열었을 때 새로 발견됐으면) 안내만 보여줌 - 별도 저장 없이 이미 자동으로 실제 출고로 계산되고 있음
@@ -2298,6 +2313,8 @@
     syncDateDisplay('edit-date');
 
     const isIn = r.type === '입고';
+    document.getElementById('edit-order-date-field').classList.toggle('hidden', !isIn); // 발주일자는 입고에만 의미있음
+    document.getElementById('edit-date-label').innerText = r.type === '입고' ? '입고일자' : r.type === '출고' ? '출고일자' : '반품일자';
     document.getElementById('edit-price-fields').classList.toggle('hidden', !isIn);
     document.getElementById('edit-shipping-field').classList.toggle('hidden', !isIn);
     document.getElementById('edit-actual-spec-field').classList.toggle('hidden', !isIn);
@@ -2311,8 +2328,17 @@
       document.getElementById('edit-return-deadline').value = r.returnDeadline || '';
       syncDateDisplay('edit-return-deadline');
     }
+    // 예정 출고(미래 날짜 출고)면 여기서도 바로 취소할 수 있게 버튼 노출
+    document.getElementById('edit-cancel-scheduled-btn').classList.toggle('hidden', !isFutureShipment(r));
     document.getElementById('edit-status').innerText = '';
     document.getElementById('edit-record-modal').style.display = 'flex';
+  }
+
+  function cancelScheduledFromEdit() {
+    if (!editingRecordKey) return;
+    const key = editingRecordKey;
+    closeModal('edit-record-modal');
+    cancelScheduledShipment(key);
   }
 
   function saveEditRecord() {

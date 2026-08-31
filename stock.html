@@ -208,6 +208,11 @@
       <span id="monthly-current-label" class="text-base font-black text-[#2B2622]">-</span>
       <button onclick="shiftMonth(1)" class="w-9 h-9 rounded-lg bg-[#F3F0EA] text-[#8B5E34] flex items-center justify-center"><i class="fas fa-chevron-right"></i></button>
     </div>
+    <div class="px-3 pt-2.5 pb-1 flex items-center justify-center gap-1.5">
+      <span class="text-[12px] font-bold text-[#B8B2A3] mr-1">기준일</span>
+      <button id="monthly-basis-order" onclick="setMonthlyBasis('order')" class="text-[12px] font-black px-3 py-1.5 rounded-lg bg-[#8B5E34] text-white">발주일 (반품용)</button>
+      <button id="monthly-basis-in" onclick="setMonthlyBasis('in')" class="text-[12px] font-black px-3 py-1.5 rounded-lg bg-[#F3F0EA] text-[#8B8477]">입고일 (매입용)</button>
+    </div>
     <div class="p-4 overflow-y-auto flex-1 space-y-3">
       <div class="rounded-2xl bg-[#2B2622] text-white p-4">
         <p class="eyebrow text-[#C9A57C]">이 달 총 매입액 (VAT별도)</p>
@@ -746,21 +751,11 @@
     loadAuthorPref();
     updateOfflineQueueBadge();
     updateReturnListQueueBadge();
-    // Firebase 전용 진단 경로: 이 기기가 실제로 서버와 연결돼 있는지 실시간 표시
-    // 모바일은 화면 꺼짐/네트워크 전환 때문에 아주 잠깐씩 끊겼다 붙었다 하는 게 정상이라, 4초 이상 계속 끊겨있을 때만 경고 표시 (짧은 순간은 조용히 넘어감)
-    let disconnectTimer = null;
+    // Firebase 연결 상태 감지 - 연결되는 즉시 오프라인 대기열 자동 업로드
+    // 참고: 화면에 "연결 끊김" 경고는 표시하지 않음 - 오프라인 저장이 이미 알아서 처리해주고,
+    // 모바일에서는 짧은 연결 변동이 자주 있어서 계속 경고를 띄우면 실제 문제 없는데도 불안하게만 만듦
     fbDatabase.ref('.info/connected').on('value', snap => {
-      const dbg = document.getElementById('debug-count');
-      if (snap.val() === true) {
-        if (disconnectTimer) { clearTimeout(disconnectTimer); disconnectTimer = null; }
-        if (dbg) dbg.innerText = `(서버상 ${Object.keys(movements).length}건)`;
-        flushOfflineQueue(); // 서버 연결되는 순간 대기중이던 기록 자동 업로드
-      } else {
-        if (disconnectTimer) clearTimeout(disconnectTimer);
-        disconnectTimer = setTimeout(() => {
-          if (dbg) dbg.innerText = '(⚠️ 서버 연결 끊김 - 저장은 계속 가능, 자동으로 재시도돼요)';
-        }, 4000);
-      }
+      if (snap.val() === true) flushOfflineQueue();
     });
     // 실시간 리스너: 다른 기기에서 저장/삭제하면 여기도 즉시 자동 갱신됨
     fbDatabase.ref('stock_movements').on('value', snap => {
@@ -3327,6 +3322,15 @@
 
   // ===== 월별 매입 통계 =====
   let monthlyCursor = new Date(); // 현재 보고 있는 달
+  let monthlyDateBasis = 'order'; // 'order' = 발주일 기준(반품 판단용, 기본값), 'in' = 입고일 기준(매입 통계용)
+
+  function setMonthlyBasis(basis) {
+    monthlyDateBasis = basis;
+    document.getElementById('monthly-basis-order').className = 'text-[12px] font-black px-3 py-1.5 rounded-lg ' + (basis==='order' ? 'bg-[#8B5E34] text-white' : 'bg-[#F3F0EA] text-[#8B8477]');
+    document.getElementById('monthly-basis-in').className = 'text-[12px] font-black px-3 py-1.5 rounded-lg ' + (basis==='in' ? 'bg-[#8B5E34] text-white' : 'bg-[#F3F0EA] text-[#8B8477]');
+    renderMonthlyStats();
+  }
+
   function openMonthlyModal() {
     document.getElementById('monthly-modal').style.display = 'flex';
     monthlyCursor = new Date();
@@ -3348,10 +3352,15 @@
     const y = monthlyCursor.getFullYear();
     const m = monthlyCursor.getMonth(); // 0-indexed
     const monthKey = `${y}-${String(m+1).padStart(2,'0')}`;
-    document.getElementById('monthly-current-label').innerText = `${y}년 ${m+1}월`;
+    const basisLabel = monthlyDateBasis === 'order' ? '발주일 기준' : '입고일 기준';
+    document.getElementById('monthly-current-label').innerText = `${y}년 ${m+1}월 (${basisLabel})`;
 
-    // 입고 건만 집계 (매입 지출 기준)
-    const records = Object.values(movements).filter(r => r.type === '입고' && r.date && r.date.startsWith(monthKey));
+    // 발주일 기준이면 반품 판단에 필요한 발주일자로 집계 (발주일자 없는 옛날 기록은 입고일로 대체), 입고일 기준이면 매입 지출 집계용
+    const records = Object.values(movements).filter(r => {
+      if (r.type !== '입고') return false;
+      const dateToCheck = monthlyDateBasis === 'order' ? (r.orderDate || r.date) : r.date;
+      return dateToCheck && dateToCheck.startsWith(monthKey);
+    });
 
     let totalAmount = 0, totalQty = 0;
     const byBrand = {};
@@ -3413,7 +3422,7 @@
           item.className = 'bg-white border border-[var(--line)] rounded-lg p-2.5';
           item.innerHTML = `
             <p class="text-[13px] font-bold text-[#8B8477]">${r.name} · ${r.model}</p>
-            <p class="text-[12px] text-[#B8B2A3] font-bold">${r.lot?('로트 '+r.lot):'로트 미기재'} · 입고 ${r.date} · ${(r.qty||0).toLocaleString()}BOX${r.returnable===false?' · <span class="text-[var(--rust)]">반품불가</span>':''}${r.returnDeadline?(' · 반품기한 '+r.returnDeadline):''}</p>
+            <p class="text-[12px] text-[#B8B2A3] font-bold">${r.lot?('로트 '+r.lot):'로트 미기재'} · ${r.orderDate?('발주 '+r.orderDate+' · '):''}입고 ${r.date} · ${(r.qty||0).toLocaleString()}BOX${r.returnable===false?' · <span class="text-[var(--rust)]">반품불가</span>':''}${r.returnDeadline?(' · 반품기한 '+r.returnDeadline):''}</p>
             <button type="button" onclick="event.stopPropagation(); addReturnListFromMonthly('${r.brand.replace(/'/g,"\\'")}','${(r.name||'').replace(/'/g,"\\'")}','${(r.model||'').replace(/'/g,"\\'")}','${(r.lot||'').replace(/'/g,"\\'")}','${r.orderDate||''}','${r.prodDate||''}',${r.qty||0})" class="mt-1.5 text-[12px] font-black text-white bg-[#5C7A3D] px-2.5 py-1 rounded-lg"><i class="fas fa-file-invoice mr-1"></i>반품리스트에 추가</button>
           `;
           detailWrap.appendChild(item);

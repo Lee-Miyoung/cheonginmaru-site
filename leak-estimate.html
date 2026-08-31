@@ -463,20 +463,18 @@
    실패하고 목록에도 나타나지 않습니다 (가장 흔한 실수).
 ==================================================================== */
 const firebaseConfig = {
-  apiKey: "여기에_apiKey_입력",
+  apiKey: "AIzaSyCHdMgp2clJ0y3L1GR-WubpAYKEVYvLcLA",
   authDomain: "maru-quote-history.firebaseapp.com",
-  databaseURL: "여기에_실제_databaseURL_입력",
+  databaseURL: "https://maru-quote-history-default-rtdb.firebaseio.com",
   projectId: "maru-quote-history",
-  storageBucket: "maru-quote-history.appspot.com",
+  storageBucket: "maru-quote-history.firebasestorage.app",
   messagingSenderId: "936179721364",
-  appId: "여기에_appId_입력"
+  appId: "1:936179721364:web:cbf9e9bb6c71970d400081"
 };
 
-/* ⚠️ 업체용 단가 구글시트 연동 URL (Apps Script 웹앱 배포 주소).
-   앤님이 만들어두신 "업체용 단가" 시트를 JSON 배열로 반환하는 주소를
-   여기에 넣어주세요. 예상 형식: [{"name":"강마루","spec":"...","unit":"평","price":85000}, ...]
-   비워두면 "검색" 기능은 비활성화되고 "직접 입력으로 행 추가"만 동작합니다. */
-const TRADE_PRICE_SHEET_URL = "";
+/* ⚠️ 업체용 단가 구글시트 연동 URL. price.html이 이미 쓰고 있는 것과 동일한
+   FEED_URL을 그대로 재사용합니다 (읽기만 하므로 price.html에는 영향 없음). */
+const TRADE_PRICE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzyafI_d2PZiE_AYS4Y5f9uBQjK5ULCxX21hk2Z5BMDcbktNT9NnF8mUb_HhA8hJqy9Fw/exec";
 
 let db = null;
 let firebaseReady = false;
@@ -750,16 +748,21 @@ document.addEventListener('input', function(e){
 
 /* ---- 업체용 단가 시트 컬럼: brand, name, model, price, firm_price, factor, spec, 태민, 원가(vat별도), 원가(vat포함), labor, 부자재
    → brand+name+model을 품명으로, spec을 규격으로, firm_price(시공비·황토풀 포함가)를 단가로 사용.
-   factor는 비고에 참고용으로 남긴다. ---- */
+   factor(1박스당 ㎡)는 price.html과 동일하게 "1BOX = X㎡" 형식으로 비고에 남긴다. ---- */
+function fmtFactor(f){
+  var n = parseFloat(f);
+  if(!n || isNaN(n)) return null;
+  return (Math.round(n*100)/100).toString();
+}
 function normalizeSheetRow(row){
   var brand = (row.brand || row['브랜드'] || '').toString().trim();
   var name = (row.name || row['네임'] || row['name '] || '').toString().trim();
   var model = (row.model || row['모델'] || '').toString().trim();
   var spec = (row.spec || row['스펙'] || row['규격'] || '').toString().trim();
   var firmPriceRaw = row.firm_price != null ? row.firm_price : (row['firm_price'] != null ? row['firm_price'] : row['업체가']);
-  var factor = row.factor != null ? row.factor : row['factor'];
+  var factorTxt = fmtFactor(row.factor != null ? row.factor : row['factor']);
   var displayName = [brand, name, model].filter(Boolean).join(' ');
-  var note = (factor !== undefined && factor !== null && String(factor).trim() !== '') ? ('환산계수 ' + factor) : '';
+  var note = factorTxt ? ('1BOX = ' + factorTxt + '㎡') : '';
   return { name: displayName, spec: spec, unit: '', price: num(firmPriceRaw), note: note };
 }
 
@@ -801,7 +804,7 @@ async function ensureTradePriceList(){
     var rows;
     try{
       var json = JSON.parse(text);
-      rows = Array.isArray(json) ? json : (json.items || json.data || []);
+      rows = Array.isArray(json) ? json : (json.prices || json.items || json.data || []);
     }catch(e){
       rows = parseCSV(text); // Apps Script가 아니라 구글시트 CSV 내보내기 링크인 경우
     }

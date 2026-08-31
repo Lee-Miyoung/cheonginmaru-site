@@ -373,49 +373,59 @@
 
 <!-- 이미지 크게 보기 -->
 <!-- 반품 리스트 이미지 생성용 - 화면엔 안 보이고 캡처용으로만 사용 -->
-<div id="rl-print-template" style="position:absolute; left:-9999px; top:0; width:900px; background:#fff; font-family:'Pretendard','Noto Sans KR',sans-serif; padding:44px; color:#111;">
-  <h1 id="rl-p-title" style="font-size:34px; font-weight:900; margin:0 0 28px 0;">반품리스트</h1>
-  <div style="display:flex; justify-content:flex-end; margin-bottom:22px;">
-    <div id="rl-p-instructions" style="font-size:14px; line-height:1.75; max-width:480px; white-space:pre-wrap;"></div>
+<div id="rl-print-template" style="position:absolute; left:-9999px; top:0; width:1000px; background:#fff; font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif; padding:48px; color:#111; box-sizing:border-box;">
+  <h1 id="rl-p-title" style="font-size:36px; font-weight:900; margin:0 0 26px 0; letter-spacing:-0.5px;">반품리스트</h1>
+  <div style="display:flex; justify-content:flex-end; margin-bottom:24px;">
+    <div id="rl-p-instructions" style="font-size:14px; line-height:1.8; max-width:520px; white-space:pre-wrap; text-align:left;"></div>
   </div>
-  <table style="width:100%; border-collapse:collapse; margin-bottom:22px; font-size:15px; text-align:center;">
+  <table style="width:100%; table-layout:fixed; border-collapse:collapse; margin-bottom:24px; font-size:15px; text-align:center;">
+    <colgroup>
+      <col style="width:17%"><col style="width:15%"><col style="width:15%"><col style="width:19%"><col style="width:15%"><col style="width:19%">
+    </colgroup>
     <tr>
-      <th style="border:1px solid #333; padding:10px; background:#f2f2f2;">반품처(대리점명)</th>
-      <th style="border:1px solid #333; padding:10px; background:#f2f2f2;">담당자(반품자)</th>
-      <th style="border:1px solid #333; padding:10px; background:#f2f2f2;">반품일자</th>
-      <th style="border:1px solid #333; padding:10px; background:#f2f2f2;">수신처</th>
-      <th style="border:1px solid #333; padding:10px; background:#f2f2f2;">처리담당자</th>
-      <th style="border:1px solid #333; padding:10px; background:#f2f2f2;">확인/서명</th>
+      <th style="border:1px solid #444; padding:11px 6px; background:#f0f0f0; font-weight:900;">반품처(대리점명)</th>
+      <th style="border:1px solid #444; padding:11px 6px; background:#f0f0f0; font-weight:900;">담당자(반품자)</th>
+      <th style="border:1px solid #444; padding:11px 6px; background:#f0f0f0; font-weight:900;">반품일자</th>
+      <th style="border:1px solid #444; padding:11px 6px; background:#f0f0f0; font-weight:900;">수신처</th>
+      <th style="border:1px solid #444; padding:11px 6px; background:#f0f0f0; font-weight:900;">처리담당자</th>
+      <th style="border:1px solid #444; padding:11px 6px; background:#f0f0f0; font-weight:900;">확인/서명</th>
     </tr>
-    <tr>
-      <td id="rl-p-from-name" style="border:1px solid #333; padding:12px;"></td>
-      <td id="rl-p-from-person" style="border:1px solid #333; padding:12px;"></td>
-      <td id="rl-p-date" style="border:1px solid #333; padding:12px;"></td>
-      <td id="rl-p-to-name" style="border:1px solid #333; padding:12px;"></td>
-      <td style="border:1px solid #333; padding:12px;"></td>
-      <td style="border:1px solid #333; padding:12px;"></td>
+    <tr style="height:52px;">
+      <td id="rl-p-from-name" style="border:1px solid #444; padding:11px 6px;"></td>
+      <td id="rl-p-from-person" style="border:1px solid #444; padding:11px 6px;"></td>
+      <td id="rl-p-date" style="border:1px solid #444; padding:11px 6px;"></td>
+      <td id="rl-p-to-name" style="border:1px solid #444; padding:11px 6px;"></td>
+      <td style="border:1px solid #444; padding:11px 6px;"></td>
+      <td style="border:1px solid #444; padding:11px 6px;"></td>
     </tr>
   </table>
-  <table style="width:100%; border-collapse:collapse; font-size:15px; text-align:center;">
+  <table style="width:100%; table-layout:fixed; border-collapse:collapse; font-size:14px; text-align:center;">
+    <colgroup>
+      <col style="width:15%"><col style="width:19%"><col style="width:13%"><col style="width:12%"><col style="width:12%"><col style="width:9%"><col style="width:20%">
+    </colgroup>
     <thead>
       <tr style="background:#dfead4;">
-        <th style="border:1px solid #333; padding:10px;">제품 분류(종류)</th>
-        <th style="border:1px solid #333; padding:10px;">패턴명(제품명)</th>
-        <th style="border:1px solid #333; padding:10px;">생산LOT</th>
-        <th style="border:1px solid #333; padding:10px;">박스수</th>
-        <th style="border:1px solid #333; padding:10px;">특이사항/비고</th>
+        <th style="border:1px solid #444; padding:10px 6px; font-weight:900;">제품 분류(종류)</th>
+        <th style="border:1px solid #444; padding:10px 6px; font-weight:900;">패턴명(제품명)</th>
+        <th style="border:1px solid #444; padding:10px 6px; font-weight:900;">생산LOT</th>
+        <th style="border:1px solid #444; padding:10px 6px; font-weight:900;">발주일자</th>
+        <th style="border:1px solid #444; padding:10px 6px; font-weight:900;">생산일자</th>
+        <th style="border:1px solid #444; padding:10px 6px; font-weight:900;">박스수</th>
+        <th style="border:1px solid #444; padding:10px 6px; font-weight:900;">특이사항/비고</th>
       </tr>
     </thead>
     <tbody id="rl-p-items"></tbody>
     <tr style="background:#dfead4; font-weight:900;">
-      <td style="border:1px solid #333; padding:10px;">총 수량</td>
-      <td style="border:1px solid #333; padding:10px;"></td>
-      <td style="border:1px solid #333; padding:10px;"></td>
-      <td id="rl-p-total" style="border:1px solid #333; padding:10px;"></td>
-      <td style="border:1px solid #333; padding:10px;"></td>
+      <td style="border:1px solid #444; padding:10px 6px;">총 수량</td>
+      <td style="border:1px solid #444; padding:10px 6px;"></td>
+      <td style="border:1px solid #444; padding:10px 6px;"></td>
+      <td style="border:1px solid #444; padding:10px 6px;"></td>
+      <td style="border:1px solid #444; padding:10px 6px;"></td>
+      <td id="rl-p-total" style="border:1px solid #444; padding:10px 6px;"></td>
+      <td style="border:1px solid #444; padding:10px 6px;"></td>
     </tr>
   </table>
-  <div style="margin-top:26px; font-size:15px; line-height:1.85;">
+  <div style="margin-top:28px; font-size:15px; line-height:1.9;">
     <p style="margin:0;">도착지: <span id="rl-p-arrive-addr"></span></p>
     <p style="margin:0;">담당자: <span id="rl-p-arrive-person"></span></p>
     <p style="margin:0;">출발지: <span id="rl-p-depart-addr"></span></p>
@@ -506,7 +516,10 @@
       <button onclick="openMonthlyModal()" class="w-10 h-10 rounded-xl bg-[#E7EDF2] text-[#4E6E8C] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="월별 매입 통계"><i class="fas fa-chart-column"></i></button>
       <button onclick="openVendorModal()" class="w-10 h-10 rounded-xl bg-[#F0E7EE] text-[#8C4B6B] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="거래처 관리"><i class="fas fa-address-book"></i></button>
       <button onclick="openLogModal()" class="w-10 h-10 rounded-xl bg-[#F5E8E4] text-[var(--rust)] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="입출고 기록"><i class="fas fa-list-ul"></i></button>
-      <button onclick="openReturnListModal()" class="w-10 h-10 rounded-xl bg-[#E8EDE4] text-[#5C7A3D] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="반품 리스트 만들기"><i class="fas fa-file-invoice"></i></button>
+      <button onclick="openReturnListModal()" class="relative w-10 h-10 rounded-xl bg-[#E8EDE4] text-[#5C7A3D] hover:scale-105 active:scale-95 transition-transform flex items-center justify-center shadow-sm" title="반품 리스트 만들기">
+        <i class="fas fa-file-invoice"></i>
+        <span id="rl-queue-badge" class="hidden absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--rust)] text-white text-[10px] font-black flex items-center justify-center"></span>
+      </button>
     </div>
   </header>
 
@@ -732,6 +745,7 @@
     autoCleanupTrash();
     loadAuthorPref();
     updateOfflineQueueBadge();
+    updateReturnListQueueBadge();
     // Firebase 전용 진단 경로: 이 기기가 실제로 서버와 연결돼 있는지 실시간 표시
     fbDatabase.ref('.info/connected').on('value', snap => {
       const dbg = document.getElementById('debug-count');
@@ -1735,6 +1749,7 @@
       <p class="text-[13px] font-bold text-[#B8B2A3]">${sItem.brand} · ${sItem.name}</p>
       <p class="text-[15px] font-black text-[#3A342C]">${sItem.model} ${sItem.lot ? ('· 로트 '+sItem.lot) : ''}</p>
       ${alertHtml}
+      <button type="button" onclick="addCurrentReturnToList()" class="mt-2 text-[13px] font-black text-white bg-[#5C7A3D] px-3 py-1.5 rounded-lg"><i class="fas fa-file-invoice mr-1"></i>반품리스트에도 추가</button>
     `;
     panel.classList.remove('hidden');
   }
@@ -2383,7 +2398,7 @@
   }
 
   // ===== 반품 리스트 만들기 (브랜드별로 재고에서 골라 추가해서 한 장의 이미지로 생성) =====
-  const RL_ROW_DEFAULTS = { category: '', pattern: '', lot: '', qty: '', note: '시공잔량' };
+  const RL_ROW_DEFAULTS = { category: '', pattern: '', lot: '', orderDate: '', prodDate: '', qty: '', note: '시공잔량' };
 
   function openReturnListModal() {
     // 실제 재고가 있는 브랜드만 골라야 반품리스트를 만들 수 있음
@@ -2393,6 +2408,10 @@
       brandSelect.innerHTML = '<option value="">재고 있는 브랜드가 없습니다</option>';
     } else {
       brandSelect.innerHTML = brandsWithStock.map(b => `<option value="${b}">${b}</option>`).join('');
+      // 반품탭에서 미리 담아둔 대기목록이 있으면, 그 브랜드를 우선 선택해줌
+      const queuedBrands = getReturnListQueue().map(q => q.brand);
+      const preferred = brandsWithStock.find(b => queuedBrands.includes(b));
+      if (preferred) brandSelect.value = preferred;
     }
     document.getElementById('rl-rows').innerHTML = '';
     document.getElementById('rl-stock-search').value = '';
@@ -2402,6 +2421,49 @@
     onReturnListBrandChange();
     recalcReturnListTotal();
     document.getElementById('return-list-modal').style.display = 'flex';
+  }
+
+  // 반품 탭에서 바로 "반품리스트에 추가"한 항목들을 잠깐 담아두는 대기목록 (모달을 안 열어도 쌓여있음)
+  function getReturnListQueue() {
+    try { return JSON.parse(localStorage.getItem('cm_rl_pending_queue') || '[]'); } catch(e) { return []; }
+  }
+  function queueForReturnList(item) {
+    const queue = getReturnListQueue();
+    queue.push(item);
+    localStorage.setItem('cm_rl_pending_queue', JSON.stringify(queue));
+    updateReturnListQueueBadge();
+  }
+  function consumeReturnListQueueForBrand(brand) {
+    const queue = getReturnListQueue();
+    const matching = queue.filter(q => q.brand === brand);
+    const remaining = queue.filter(q => q.brand !== brand);
+    localStorage.setItem('cm_rl_pending_queue', JSON.stringify(remaining));
+    updateReturnListQueueBadge();
+    return matching;
+  }
+  function updateReturnListQueueBadge() {
+    const badge = document.getElementById('rl-queue-badge');
+    if (!badge) return;
+    const count = getReturnListQueue().length;
+    badge.classList.toggle('hidden', count === 0);
+    badge.innerText = count;
+  }
+
+  // 반품 탭에서 재고를 고른 뒤, 이 버튼으로 "반품리스트"에도 바로 담을 수 있음
+  function addCurrentReturnToList() {
+    if (!selectedReturnItem) return showToast('먼저 반품할 재고를 선택하세요');
+    const qty = parseFloat(document.getElementById('in-qty').value) || 0;
+    queueForReturnList({
+      brand: selectedReturnItem.brand,
+      category: selectedReturnItem.name,
+      pattern: selectedReturnItem.model,
+      lot: selectedReturnItem.lot || '',
+      orderDate: selectedReturnItem.orderDate || '',
+      prodDate: selectedReturnItem.prodDate || '',
+      qty: qty || '',
+      note: document.getElementById('in-memo').value.trim() || '시공잔량'
+    });
+    showToast('📄 반품리스트 대기목록에 추가했어요 (헤더의 문서 아이콘에서 확인)', true);
   }
 
   // 브랜드마다 수신처/도착지 정보가 다르니, 한 번 입력해두면 다음에 그 브랜드 고를 때 자동으로 불러옴
@@ -2424,9 +2486,12 @@
     document.getElementById('rl-instructions').value = saved.instructions || RL_DEFAULT_INSTRUCTIONS;
     document.getElementById('rl-stock-search').value = '';
     renderReturnListStockPicker();
+    // 반품 탭에서 미리 담아둔 항목이 있으면 자동으로 목록에 채워줌
+    const queued = consumeReturnListQueueForBrand(brand);
+    queued.forEach(item => addReturnListRow(item));
   }
 
-  // 선택한 브랜드의 실제 재고 목록을 보여주고, 탭하면 반품 목록에 바로 추가됨
+  // 선택한 브랜드의 실제 재고 목록을 보여주고, 탭하면 반품 목록에 바로 추가됨 (발주일자/생산일자도 자동으로 채워짐)
   function renderReturnListStockPicker() {
     const brand = document.getElementById('rl-brand').value;
     const q = normSearch(document.getElementById('rl-stock-search').value);
@@ -2439,13 +2504,13 @@
       row.type = 'button';
       row.className = 'w-full text-left flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg active:bg-[#F6EFE6]';
       row.onclick = () => {
-        addReturnListRow({ category: s.name, pattern: s.model, lot: s.lot || '', qty: '', note: '시공잔량' });
+        addReturnListRow({ category: s.name, pattern: s.model, lot: s.lot || '', orderDate: s.orderDate || '', prodDate: s.prodDate || '', qty: '', note: '시공잔량' });
         showToast('반품 목록에 추가됨');
       };
       row.innerHTML = `
         <div class="min-w-0 flex-1">
           <p class="text-[13px] font-bold text-[#3A342C] truncate">${s.name} · ${s.model}</p>
-          <p class="text-[12px] text-[#B8B2A3] font-bold">${s.lot ? ('로트 '+s.lot) : '로트 미기재'} · 현재 ${s.stock}BOX</p>
+          <p class="text-[12px] text-[#B8B2A3] font-bold">${s.lot ? ('로트 '+s.lot) : '로트 미기재'} · 현재 ${s.stock}BOX${s.orderDate?(' · 발주 '+s.orderDate):''}</p>
         </div>
         <i class="fas fa-plus-circle text-[#5C7A3D] text-[18px] shrink-0"></i>
       `;
@@ -2456,15 +2521,23 @@
   function addReturnListRow(vals) {
     const v = { ...RL_ROW_DEFAULTS, ...(vals || {}) };
     const row = document.createElement('div');
-    row.className = 'grid grid-cols-12 gap-1.5 items-center';
+    row.className = 'bg-white border border-[var(--line)] rounded-xl p-2.5 space-y-1.5';
     row.setAttribute('data-rl-row', '');
     row.innerHTML = `
-      <input type="text" class="rl-category input-premium text-sm col-span-3" placeholder="분류" value="${v.category}">
-      <input type="text" class="rl-pattern input-premium text-sm col-span-3" placeholder="패턴명" value="${v.pattern}">
-      <input type="text" class="rl-lot input-premium text-sm col-span-2" placeholder="생산LOT" value="${v.lot}">
-      <input type="number" class="rl-qty input-premium text-sm col-span-2" placeholder="박스" value="${v.qty}" oninput="recalcReturnListTotal()">
-      <button type="button" onclick="this.closest('[data-rl-row]').remove(); recalcReturnListTotal();" class="col-span-1 text-[#CFC9BB] hover:text-rose-500 flex justify-center"><i class="fas fa-times"></i></button>
-      <input type="text" class="rl-note input-premium text-sm col-span-11" placeholder="특이사항/비고 (예: 시공잔량)" value="${v.note}">
+      <div class="flex gap-1.5">
+        <input type="text" class="rl-category input-premium text-sm flex-1" placeholder="분류" value="${v.category}">
+        <input type="text" class="rl-pattern input-premium text-sm flex-1" placeholder="패턴명" value="${v.pattern}">
+        <button type="button" onclick="this.closest('[data-rl-row]').remove(); recalcReturnListTotal();" class="text-[#CFC9BB] hover:text-rose-500 px-1"><i class="fas fa-times"></i></button>
+      </div>
+      <input type="text" class="rl-lot input-premium text-sm" placeholder="생산LOT" value="${v.lot}">
+      <div class="grid grid-cols-2 gap-1.5">
+        <div><label class="text-[11px] font-bold text-[var(--rust)]">발주일자 *필수</label><input type="date" class="rl-order-date input-premium text-sm mt-0.5" value="${v.orderDate}"></div>
+        <div><label class="text-[11px] font-bold text-[#B8B2A3]">생산일자 (선택)</label><input type="date" class="rl-prod-date input-premium text-sm mt-0.5" value="${v.prodDate}"></div>
+      </div>
+      <div class="flex gap-1.5">
+        <input type="number" class="rl-qty input-premium text-sm" placeholder="박스" value="${v.qty}" style="max-width:90px" oninput="recalcReturnListTotal()">
+        <input type="text" class="rl-note input-premium text-sm flex-1" placeholder="특이사항/비고 (예: 시공잔량)" value="${v.note}">
+      </div>
     `;
     document.getElementById('rl-rows').appendChild(row);
     recalcReturnListTotal();
@@ -2475,6 +2548,8 @@
       category: row.querySelector('.rl-category').value.trim(),
       pattern: row.querySelector('.rl-pattern').value.trim(),
       lot: row.querySelector('.rl-lot').value.trim(),
+      orderDate: row.querySelector('.rl-order-date').value,
+      prodDate: row.querySelector('.rl-prod-date').value,
       qty: parseFloat(row.querySelector('.rl-qty').value) || 0,
       note: row.querySelector('.rl-note').value.trim()
     })).filter(r => r.pattern || r.qty); // 완전히 빈 행은 제외
@@ -2488,6 +2563,8 @@
   function generateReturnListImage() {
     const rows = getReturnListRows();
     if (!rows.length) return showToast('품목을 1개 이상 입력하세요');
+    const missingOrderDate = rows.filter(r => !r.orderDate);
+    if (missingOrderDate.length) return showToast(`발주일자가 없는 품목이 ${missingOrderDate.length}개 있어요. 반품은 발주일 기준이라 꼭 입력해주세요`, true);
     const brand = document.getElementById('rl-brand').value;
     const fromName = document.getElementById('rl-from-name').value.trim() || '청인마루';
     const fromPerson = document.getElementById('rl-from-person').value.trim();
@@ -2509,7 +2586,7 @@
     } catch(e) {}
 
     document.getElementById('rl-p-title').innerText = title;
-    document.getElementById('rl-p-instructions').innerHTML = instructions.split('\n').map(line => `<p style="margin:0 0 6px 0;">${line}</p>`).join('');
+    document.getElementById('rl-p-instructions').innerHTML = instructions.split('\n').map(line => `<p style="margin:0 0 7px 0;">${line}</p>`).join('');
     document.getElementById('rl-p-from-name').innerText = fromName;
     document.getElementById('rl-p-from-person').innerText = fromPerson;
     document.getElementById('rl-p-date').innerText = dateDisplay;
@@ -2520,21 +2597,23 @@
     document.getElementById('rl-p-depart-addr').innerText = departAddr;
     document.getElementById('rl-p-depart-person').innerText = departPerson;
 
+    const fmtDate = (d) => d ? `${d.slice(0,4)}.${d.slice(5,7)}.${d.slice(8,10)}` : '-';
+    const tdStyle = 'border:1px solid #444; padding:9px 6px; vertical-align:middle;';
     const tbody = document.getElementById('rl-p-items');
     tbody.innerHTML = rows.map(r => `
       <tr>
-        <td style="border:1px solid #333; padding:10px;">${r.category || '-'}</td>
-        <td style="border:1px solid #333; padding:10px;">${r.pattern || '-'}</td>
-        <td style="border:1px solid #333; padding:10px;">${r.lot || '-'}</td>
-        <td style="border:1px solid #333; padding:10px;">${r.qty}</td>
-        <td style="border:1px solid #333; padding:10px;">${r.note || ''}</td>
+        <td style="${tdStyle}">${r.category || '-'}</td>
+        <td style="${tdStyle}">${r.pattern || '-'}</td>
+        <td style="${tdStyle}">${r.lot || '-'}</td>
+        <td style="${tdStyle}">${fmtDate(r.orderDate)}</td>
+        <td style="${tdStyle}">${fmtDate(r.prodDate)}</td>
+        <td style="${tdStyle}">${r.qty}</td>
+        <td style="${tdStyle} text-align:left;">${r.note || ''}</td>
       </tr>
     `).join('');
     // 표가 너무 짧아 보이지 않게, 실제 반품리스트 양식처럼 빈 줄 2개 정도 추가
-    tbody.innerHTML += `
-      <tr><td style="border:1px solid #333; padding:10px;">&nbsp;</td><td style="border:1px solid #333;"></td><td style="border:1px solid #333;"></td><td style="border:1px solid #333;"></td><td style="border:1px solid #333;"></td></tr>
-      <tr><td style="border:1px solid #333; padding:10px;">&nbsp;</td><td style="border:1px solid #333;"></td><td style="border:1px solid #333;"></td><td style="border:1px solid #333;"></td><td style="border:1px solid #333;"></td></tr>
-    `;
+    const blankCells = Array(7).fill(`<td style="${tdStyle}">&nbsp;</td>`).join('');
+    tbody.innerHTML += `<tr>${blankCells}</tr><tr>${blankCells}</tr>`;
 
     document.getElementById('rl-status').innerText = '이미지 만드는 중...';
     const target = document.getElementById('rl-print-template');
@@ -3249,6 +3328,12 @@
     renderMonthlyStats();
   }
 
+  let expandedMonthlyBrands = new Set();
+  function toggleMonthlyBrand(b) {
+    if (expandedMonthlyBrands.has(b)) expandedMonthlyBrands.delete(b); else expandedMonthlyBrands.add(b);
+    renderMonthlyStats();
+  }
+
   function renderMonthlyStats() {
     const y = monthlyCursor.getFullYear();
     const m = monthlyCursor.getMonth(); // 0-indexed
@@ -3267,10 +3352,11 @@
       totalAmount += amount;
       totalQty += qty;
       const b = r.brand || '미분류';
-      if (!byBrand[b]) byBrand[b] = { amount: 0, qty: 0, count: 0 };
+      if (!byBrand[b]) byBrand[b] = { amount: 0, qty: 0, count: 0, items: [] };
       byBrand[b].amount += amount;
       byBrand[b].qty += qty;
       byBrand[b].count += 1;
+      byBrand[b].items.push(r);
     });
 
     document.getElementById('monthly-total-amount').innerText = totalAmount.toLocaleString() + '원';
@@ -3288,8 +3374,11 @@
       const d = byBrand[b];
       const pct = Math.max(4, Math.round((d.amount / maxAmount) * 100));
       const color = getBrandColor(b);
-      const row = document.createElement('div');
-      row.className = 'rounded-xl border border-[var(--line)] p-3.5';
+      const isOpen = expandedMonthlyBrands.has(b);
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.onclick = () => toggleMonthlyBrand(b);
+      row.className = 'w-full text-left rounded-xl border border-[var(--line)] p-3.5';
       row.style.borderLeft = `5px solid ${color}`;
       row.innerHTML = `
         <div class="flex justify-between items-baseline mb-1.5">
@@ -3299,10 +3388,35 @@
         <div class="h-2 rounded-full bg-[#F3F0EA] overflow-hidden mb-1.5">
           <div class="h-full rounded-full" style="width:${pct}%;background:${color}"></div>
         </div>
-        <p class="text-[13px] text-[#B8B2A3] font-bold">${d.qty.toLocaleString()} BOX · ${d.count}건</p>
+        <p class="text-[13px] text-[#B8B2A3] font-bold flex items-center justify-between">
+          <span>${d.qty.toLocaleString()} BOX · ${d.count}건</span>
+          <i class="fas fa-chevron-down text-[11px] brand-accordion-arrow${isOpen ? ' open' : ''}"></i>
+        </p>
       `;
       brandList.appendChild(row);
+
+      if (isOpen) {
+        const detailWrap = document.createElement('div');
+        detailWrap.className = 'space-y-1.5 mt-1.5 mb-1';
+        d.items.sort((a,b2) => (b2.date||'').localeCompare(a.date||'')).forEach(r => {
+          const item = document.createElement('div');
+          item.className = 'bg-white border border-[var(--line)] rounded-lg p-2.5';
+          item.innerHTML = `
+            <p class="text-[13px] font-bold text-[#8B8477]">${r.name} · ${r.model}</p>
+            <p class="text-[12px] text-[#B8B2A3] font-bold">${r.lot?('로트 '+r.lot):'로트 미기재'} · 입고 ${r.date} · ${(r.qty||0).toLocaleString()}BOX${r.returnable===false?' · <span class="text-[var(--rust)]">반품불가</span>':''}${r.returnDeadline?(' · 반품기한 '+r.returnDeadline):''}</p>
+            <button type="button" onclick="event.stopPropagation(); addReturnListFromMonthly('${r.brand.replace(/'/g,"\\'")}','${(r.name||'').replace(/'/g,"\\'")}','${(r.model||'').replace(/'/g,"\\'")}','${(r.lot||'').replace(/'/g,"\\'")}','${r.orderDate||''}','${r.prodDate||''}',${r.qty||0})" class="mt-1.5 text-[12px] font-black text-white bg-[#5C7A3D] px-2.5 py-1 rounded-lg"><i class="fas fa-file-invoice mr-1"></i>반품리스트에 추가</button>
+          `;
+          detailWrap.appendChild(item);
+        });
+        brandList.appendChild(detailWrap);
+      }
     });
+  }
+
+  // 월별 입고 내역에서 바로 반품리스트 대기목록에 담기
+  function addReturnListFromMonthly(brand, name, model, lot, orderDate, prodDate, qty) {
+    queueForReturnList({ brand, category: name, pattern: model, lot, orderDate, prodDate, qty: qty || '', note: '시공잔량' });
+    showToast('📄 반품리스트 대기목록에 추가했어요 (헤더의 문서 아이콘에서 확인)', true);
   }
 </script>
 </body>

@@ -773,20 +773,52 @@
   function renderNoticeBanner() {
     const card = document.getElementById('notice-preview-card');
     const listEl = document.getElementById('notice-preview-list');
-    const list = Object.keys(notices).map(key => ({ key, ...notices[key] })).sort((a,b) => (b.ts||0)-(a.ts||0));
+    const list = Object.keys(notices).map(key => ({ key, ...notices[key] }))
+      .sort((a,b) => {
+        const ao = a.sortOrder, bo = b.sortOrder;
+        if (ao !== undefined && bo !== undefined) return ao - bo;
+        if (ao !== undefined) return -1;
+        if (bo !== undefined) return 1;
+        return (b.ts||0) - (a.ts||0);
+      });
     if (!list.length) { card.classList.add('hidden'); return; }
     card.classList.remove('hidden');
     listEl.innerHTML = '';
+    if (list.length > 1) {
+      const hint = document.createElement('p');
+      hint.className = 'text-[11px] text-[#B8B2A3] font-bold px-4 pt-2';
+      hint.innerHTML = '<i class="fas fa-grip-lines mr-1"></i>손잡이를 끌어서 순서를 바꿀 수 있어요';
+      listEl.appendChild(hint);
+    }
     list.slice(0, 10).forEach(n => {
       const links = n.links || (n.link ? [{ title: '바로가기', url: n.link }] : []);
+      // 공지 맨 앞 [회사명] 태그를 읽어서, 그 회사만의 고유 색으로 구분되게 함 (재고 브랜드 색상이랑 같은 방식)
+      const tagMatch = (n.text || '').match(/^\[(.+?)\]/);
+      const tagColor = tagMatch ? getBrandColor(tagMatch[1]) : '#B8B2A3';
+
       const row = document.createElement('div');
-      row.className = 'w-full px-4 py-2.5 flex items-center justify-between gap-2';
+      row.dataset.noticeKey = n.key;
+      row.className = 'w-full px-3 py-2.5 flex items-center gap-2';
+      row.style.borderLeft = `4px solid ${tagColor}`;
+
+      const handle = document.createElement('span');
+      handle.className = 'notice-drag-handle text-[#CFC9BB] px-1 shrink-0';
+      handle.style.touchAction = 'none';
+      handle.style.cursor = 'grab';
+      handle.innerHTML = '<i class="fas fa-grip-lines"></i>';
+      row.appendChild(handle);
+      attachNoticeDragHandle(handle, row, listEl);
+
       const textBtn = document.createElement('button');
       textBtn.type = 'button';
       textBtn.onclick = () => openNoticeModal(n.key);
       textBtn.className = 'flex-1 min-w-0 text-left flex items-center gap-2 rounded-lg active:bg-[#F6EFE6] py-0.5';
+      const firstLine = (n.text || '').split('\n')[0] || '공지';
+      const displayLine = tagMatch
+        ? firstLine.replace(tagMatch[0], `<span style="color:${tagColor}; font-weight:900;">${tagMatch[0]}</span>`)
+        : firstLine;
       textBtn.innerHTML = `
-        <span class="text-[13px] font-bold text-[#3A342C] truncate">${(n.text || '').split('\n')[0] || '공지'}</span>
+        <span class="text-[13px] font-bold text-[#3A342C] truncate">${displayLine}</span>
         <span class="text-[11px] text-[#B8B2A3] font-bold shrink-0">${n.ts ? new Date(n.ts).toLocaleDateString() : ''}</span>
       `;
       row.appendChild(textBtn);
@@ -796,7 +828,8 @@
         links.forEach(l => {
           const a = document.createElement('a');
           a.href = l.url; a.target = '_blank'; a.rel = 'noopener';
-          a.className = 'text-[11px] font-black text-white bg-[#8B5E34] px-2 py-1 rounded-lg whitespace-nowrap';
+          a.className = 'text-[11px] font-black text-white px-2 py-1 rounded-lg whitespace-nowrap';
+          a.style.background = tagColor;
           a.innerText = l.title || '바로가기';
           linkWrap.appendChild(a);
         });
@@ -906,11 +939,11 @@
     fbDatabase.ref().update(updates).catch((err) => showToast('순서 저장 실패: ' + (err && err.message ? err.message : err), true));
   }
 
-  function attachNoticeDragHandle(handleEl, rowEl) {
+  function attachNoticeDragHandle(handleEl, rowEl, listEl) {
     handleEl.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const list = document.getElementById('notice-list');
+      const list = listEl || document.getElementById('notice-list');
       const rect = rowEl.getBoundingClientRect();
       const clone = rowEl.cloneNode(true);
       clone.style.position = 'fixed';
@@ -970,7 +1003,10 @@
   function buildNoticeRow(n, draggable) {
       const row = document.createElement('div');
       row.dataset.noticeKey = n.key;
+      const tagMatch = (n.text || '').match(/^\[(.+?)\]/);
+      const tagColor = tagMatch ? getBrandColor(tagMatch[1]) : null;
       row.className = 'bg-white border border-[var(--line)] rounded-xl p-3 transition-all';
+      if (tagColor) row.style.borderLeft = `4px solid ${tagColor}`;
       let imgsHtml = '';
       let pdfsHtml = '';
       const imageItems = (n.images || []).filter(img => img.type !== 'pdf');
@@ -992,10 +1028,13 @@
       const linkHtml = links.length
         ? `<div class="flex flex-wrap gap-1.5 mt-2">${links.map(l => `<a href="${l.url}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-[13px] font-black text-white bg-[#8B5E34] px-3 py-1.5 rounded-lg"><i class="fas fa-arrow-up-right-from-square"></i>${l.title || '바로가기'}</a>`).join('')}</div>`
         : '';
+      const displayText = tagMatch
+        ? (n.text || '').replace(tagMatch[0], `<span style="color:${tagColor}; font-weight:900;">${tagMatch[0]}</span>`)
+        : (n.text || '');
       row.innerHTML = `
         <div class="flex items-start gap-2">
           ${draggable ? '<span class="notice-drag-handle text-[#CFC9BB] px-1 pt-1 shrink-0" style="touch-action:none; cursor:grab;"><i class="fas fa-grip-lines"></i></span>' : ''}
-          <p class="text-[14px] font-bold text-[#3A342C] whitespace-pre-wrap flex-1">${n.text || ''}</p>
+          <p class="text-[14px] font-bold text-[#3A342C] whitespace-pre-wrap flex-1">${displayText}</p>
         </div>
         ${linkHtml}
         ${imgsHtml}

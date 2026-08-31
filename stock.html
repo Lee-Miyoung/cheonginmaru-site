@@ -268,6 +268,17 @@
   </div>
 </div>
 
+<!-- 예정 출고 목록 모달 -->
+<div id="scheduled-shipments-modal" class="modal-overlay">
+  <div class="card rounded-[1.5rem] w-full max-w-lg mx-4 h-[80vh] flex flex-col overflow-hidden">
+    <div class="p-4 border-b bg-[#FBF9F5] flex justify-between items-center">
+      <h3 class="font-black text-[#2B2622]"><i class="fas fa-clock mr-1.5 text-amber-500"></i>예정된 출고</h3>
+      <button onclick="closeModal('scheduled-shipments-modal')" class="w-8 h-8 rounded-full bg-[#E7E1D3] flex items-center justify-center"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="scheduled-shipments-list" class="p-4 overflow-y-auto flex-1 space-y-2 bg-[#FAF8F4]"></div>
+  </div>
+</div>
+
 <!-- 전체 공지사항 모달 -->
 <div id="notice-modal" class="modal-overlay">
   <div class="card rounded-[1.5rem] w-full max-w-lg mx-4 h-[85vh] flex flex-col overflow-hidden">
@@ -387,6 +398,12 @@
     <div id="notice-preview-list" class="divide-y divide-[var(--line)]"></div>
   </div>
 
+  <!-- 예정 출고 알림 -->
+  <button id="scheduled-shipment-banner" onclick="openScheduledShipmentsModal()" class="hidden w-full mb-3 rounded-2xl px-4 py-3 flex items-center justify-between text-left premium-shadow bg-amber-500 text-white">
+    <span id="scheduled-shipment-text" class="font-black text-[14px]"></span>
+    <i class="fas fa-chevron-right text-[13px]"></i>
+  </button>
+
   <!-- 반품기한 알림 + 작성자를 한 줄에 -->
   <div id="top-row-grid" class="grid grid-cols-1 gap-3 mb-5">
     <button id="return-alert-banner" onclick="openReturnAlertsModal()" class="hidden rounded-2xl px-3.5 py-3 flex items-center gap-2 text-left premium-shadow min-w-0">
@@ -479,7 +496,9 @@
     </div>
     <div id="date-row-main" class="date-row grid grid-cols-2 gap-2.5">
       <div id="order-date-field"><label class="eyebrow pl-1">발주일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-order-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-order-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-order-date')"></div></div>
-      <div><label class="eyebrow pl-1" id="in-date-label">입고일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-date')"></div></div>
+      <div><label class="eyebrow pl-1" id="in-date-label">입고일자</label><div class="relative mt-1 date-box-wrap"><div class="input-premium flex items-center justify-between pointer-events-none"><span id="in-date-text" class="num text-[16px]">날짜 선택</span><i class="fas fa-calendar-day text-[#B8B2A3]"></i></div><input type="date" id="in-date" class="absolute inset-0 w-full h-full opacity-0 z-10" oninput="syncDateDisplay('in-date'); checkScheduledDateHint();"></div>
+        <p id="scheduled-date-hint" class="hidden text-[12px] font-black text-amber-600 mt-1"><i class="fas fa-clock mr-1"></i>미래 날짜예요 - 예정 출고로 등록되고, 그날 자동으로 처리돼요</p>
+      </div>
     </div>
     <div><label class="eyebrow pl-1">메모 <span id="memo-hint" class="text-[#B8B2A3] normal-case font-medium tracking-normal"></span></label><input type="text" id="in-memo" class="input-premium mt-1" placeholder="선택 입력 (반품 사유 등)"></div>
 
@@ -605,6 +624,8 @@
       renderStockList();
       onModelChange();
       renderReturnAlertBanner();
+      renderScheduledShipmentBanner();
+      checkAndExecuteScheduledShipments();
       const dbg = document.getElementById('debug-count');
       if (dbg) dbg.innerText = `(서버상 ${Object.keys(movements).length}건)`;
       if (document.getElementById('log-modal').style.display === 'flex') renderLog();
@@ -1048,6 +1069,67 @@
       : `반품기한 임박 ${alerts.length}건 (7일내)`;
   }
 
+  // ===== 예정 출고 - 미래 날짜로 등록한 출고, 그날이 되면 자동으로 실제 출고 처리 =====
+  function getScheduledShipments() {
+    return Object.keys(movements)
+      .map(key => ({ key, ...movements[key] }))
+      .filter(r => r.type === '출고' && r.status === 'scheduled')
+      .sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  }
+
+  function renderScheduledShipmentBanner() {
+    const banner = document.getElementById('scheduled-shipment-banner');
+    const list = getScheduledShipments();
+    if (!list.length) { banner.classList.add('hidden'); return; }
+    banner.classList.remove('hidden');
+    document.getElementById('scheduled-shipment-text').innerText = `📦 예정된 출고 ${list.length}건 (날짜 되면 자동 처리)`;
+  }
+
+  function openScheduledShipmentsModal() {
+    const list = getScheduledShipments();
+    const box = document.getElementById('scheduled-shipments-list');
+    box.innerHTML = '';
+    if (!list.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-base">예정된 출고가 없습니다</div>'; }
+    list.forEach(r => {
+      const row = document.createElement('div');
+      row.className = 'rounded-xl p-3.5 border border-amber-300 bg-amber-50';
+      row.innerHTML = `
+        <p class="text-[13px] font-bold text-[#8B8477]">${r.brand} · ${r.name}</p>
+        <p class="text-[15px] font-black text-[#3A342C]">${r.model} ${r.lot?('· 로트 '+r.lot):''}</p>
+        <p class="text-[14px] font-black text-amber-600 mt-1"><i class="fas fa-clock mr-1"></i>${r.date} 예정 · ${(r.qty||0).toLocaleString()} BOX</p>
+        ${r.memo ? `<p class="text-[13px] font-bold text-[#8B5E34] mt-1"><i class="fas fa-note-sticky mr-1"></i>${r.memo}</p>` : ''}
+        <div class="flex gap-1.5 mt-2">
+          <button onclick="executeScheduledShipmentNow('${r.key}')" class="text-[13px] font-black text-white bg-[#8B5E34] px-3 py-1.5 rounded-lg"><i class="fas fa-play mr-1"></i>지금 바로 출고 처리</button>
+          <button onclick="openEditRecord('${r.key}'); closeModal('scheduled-shipments-modal');" class="text-[13px] font-black text-[#8B5E34] bg-[#F6EFE6] px-3 py-1.5 rounded-lg"><i class="fas fa-pen mr-1"></i>수정</button>
+        </div>
+      `;
+      box.appendChild(row);
+    });
+    document.getElementById('scheduled-shipments-modal').style.display = 'flex';
+  }
+
+  function executeScheduledShipmentNow(key) {
+    fbDatabase.ref('stock_movements/' + key).update({ status: null, date: new Date().toISOString().slice(0,10) }).then(() => {
+      showToast('출고가 시작됩니다', true);
+      closeModal('scheduled-shipments-modal');
+    }).catch((err) => showToast('처리 실패: ' + (err && err.message ? err.message : err), true));
+  }
+
+  // 예정 출고 중 날짜가 이미 지났거나 오늘인 것들을 자동으로 실제 출고로 전환 (재고 차감 시작)
+  let scheduledCheckDone = false;
+  function checkAndExecuteScheduledShipments() {
+    const today = new Date().toISOString().slice(0,10);
+    const due = getScheduledShipments().filter(r => r.date <= today);
+    if (!due.length) return;
+    due.forEach(r => {
+      fbDatabase.ref('stock_movements/' + r.key).update({ status: null }).catch(() => {});
+    });
+    if (!scheduledCheckDone) {
+      scheduledCheckDone = true;
+      showToast(`📦 예정 출고 ${due.length}건 - 출고가 시작됩니다`, true);
+    }
+  }
+
   function openReturnAlertsModal() {
     const alerts = computeReturnAlerts();
     const box = document.getElementById('return-alerts-list');
@@ -1279,6 +1361,14 @@
 
   let selectedReturnItem = null;
 
+  function checkScheduledDateHint() {
+    const hint = document.getElementById('scheduled-date-hint');
+    const dateVal = document.getElementById('in-date').value;
+    const today = new Date().toISOString().slice(0,10);
+    const show = currentType === '출고' && dateVal && dateVal > today;
+    hint.classList.toggle('hidden', !show);
+  }
+
   function setType(t) {
     currentType = t;
     const styles = {
@@ -1301,6 +1391,7 @@
     document.getElementById('order-date-field').classList.toggle('hidden', t!=='입고'); // 발주일자는 입고에만 의미있음
     document.getElementById('date-row-main').className = 'date-row grid gap-2.5 ' + (t==='입고' ? 'grid-cols-2' : 'grid-cols-1');
     document.getElementById('in-date-label').innerText = t==='입고' ? '입고일자' : t==='출고' ? '출고일자' : '반품일자';
+    checkScheduledDateHint();
 
     const isPick = (t === '출고' || t === '반품'); // 출고/반품은 갖고 있는 재고에서 골라서 진행
     document.getElementById('normal-pick-header').classList.toggle('hidden', isPick);
@@ -1672,7 +1763,7 @@
       if (!map[key]) map[key] = { brand:r.brand, name:r.name, model:r.model, lot, prodDate:'', orderDate:'', inDate:'', actualSpec:'', stock:0, lastTs:0, lastInTs:0 };
       const qty = Number(r.qty) || 0;
       if (r.type === '입고') map[key].stock += qty;
-      else if (r.type === '출고' || r.type === '반품') map[key].stock -= qty;
+      else if ((r.type === '출고' || r.type === '반품') && r.status !== 'scheduled') map[key].stock -= qty; // 예정 출고는 아직 실제로 나간 게 아니라 재고 차감 안 함
       // 이 로트에 입고가 여러 번 있었으면, 가장 최근 입고 건 기준으로 생산일자/발주일자/입고일자/실제규격 표시
       if (r.type === '입고' && (r.ts||0) >= map[key].lastInTs) {
         map[key].lastInTs = r.ts || 0;
@@ -1701,8 +1792,9 @@
     if (!records.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-base">기록이 없습니다</div>'; return; }
 
     records.forEach(r => {
-      const badgeStyle = r.type==='입고' ? 'bg-[#EFE2CF] text-[#8B5E34]' : r.type==='반품' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600';
-      const dotColor = r.type==='입고' ? 'bg-[#8B5E34]' : r.type==='반품' ? 'bg-amber-500' : 'bg-rose-400';
+      const isScheduled = r.status === 'scheduled';
+      const badgeStyle = isScheduled ? 'bg-amber-100 text-amber-600' : r.type==='입고' ? 'bg-[#EFE2CF] text-[#8B5E34]' : r.type==='반품' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600';
+      const dotColor = isScheduled ? 'bg-amber-400' : r.type==='입고' ? 'bg-[#8B5E34]' : r.type==='반품' ? 'bg-amber-500' : 'bg-rose-400';
       const row = document.createElement('div');
       row.className = 'flex gap-3';
       const dateLabel = r.type==='입고' ? '입고' : r.type==='출고' ? '출고' : '반품';
@@ -1710,7 +1802,7 @@
         <div class="w-1.5 shrink-0 rounded-full ${dotColor}"></div>
         <div class="flex-1 pb-3 border-b border-[var(--line)]">
           <div class="flex items-center gap-1.5 mb-1">
-            <span class="text-[13px] font-black px-1.5 py-0.5 rounded-full ${badgeStyle}">${r.type}</span>
+            <span class="text-[13px] font-black px-1.5 py-0.5 rounded-full ${badgeStyle}">${isScheduled ? '예정 출고' : r.type}</span>
             <span class="text-[13px] text-[#B8B2A3] font-bold">${dateLabel} ${r.date||''}${r.type==='입고' && r.orderDate ? (' · 발주 '+r.orderDate) : ''}</span>
             <span class="text-[15px] font-black text-[#3A342C] num ml-auto">${(r.qty||0).toLocaleString()} BOX</span>
             <button onclick="openEditRecord('${r.key}')" class="text-[#8B5E34] px-1"><i class="fas fa-pen text-[13px]"></i></button>
@@ -2059,6 +2151,12 @@
       record.shippingFee = parseInt((document.getElementById('in-shipping').value||'0').replace(/,/g,'')) || 0;
       record.actualSpec = document.getElementById('in-actual-spec').value.trim();
     }
+    // 출고일자를 미래로 입력하면 "예정 출고"로 저장 - 그날이 되면 자동으로 실제 출고 처리됨 (재고는 아직 안 빠짐)
+    let isScheduled = false;
+    if (currentType === '출고' && record.date) {
+      const today = new Date().toISOString().slice(0,10);
+      if (record.date > today) { record.status = 'scheduled'; isScheduled = true; }
+    }
 
     function resetFormAfterSave() {
       document.getElementById('in-qty').value = '';
@@ -2095,8 +2193,13 @@
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject({ code: 'timeout', message: 'timeout' }), 8000));
 
     Promise.race([fbDatabase.ref('stock_movements').push(record), timeoutPromise]).then(() => {
-      showToast(currentType + ' 저장 완료 (전체 기기 즉시 반영)', true);
-      setSaveStatus('✅ ' + new Date().toLocaleTimeString() + ' 저장 완료', true);
+      if (isScheduled) {
+        showToast(`📦 예정 출고 등록됨 - ${record.date}에 자동으로 출고 처리됩니다`, true);
+        setSaveStatus('📦 예정 출고 등록 완료 (' + record.date + ' 자동 처리 예정)', true);
+      } else {
+        showToast(currentType + ' 저장 완료 (전체 기기 즉시 반영)', true);
+        setSaveStatus('✅ ' + new Date().toLocaleTimeString() + ' 저장 완료', true);
+      }
       resetFormAfterSave();
     }).catch((err) => {
       // 서버 응답이 없으면 실패로 끝내지 않고, 오프라인 대기열로 넘겨서 나중에 자동 재시도
@@ -2150,14 +2253,15 @@
     box.innerHTML = '';
     if (!list.length) { box.innerHTML = `<div class="text-center py-8 text-[#B8B2A3] text-sm">${logTab==='trash'?'휴지통이 비어있습니다':'기록이 없습니다'}</div>`; return; }
     list.forEach(r => {
-      const badgeStyle = r.type==='입고' ? 'bg-[#EFE2CF] text-[#8B5E34]' : r.type==='반품' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600';
+      const isScheduled = r.status === 'scheduled';
+      const badgeStyle = isScheduled ? 'bg-amber-100 text-amber-600' : r.type==='입고' ? 'bg-[#EFE2CF] text-[#8B5E34]' : r.type==='반품' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600';
       const dateLabel = r.type==='입고' ? '입고' : r.type==='출고' ? '출고' : '반품';
       const row = document.createElement('div');
       row.className = 'bg-white border border-[var(--line)] rounded-xl p-3 flex justify-between items-center';
       row.innerHTML = `
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 mb-0.5">
-            <span class="text-[15px] font-black px-1.5 py-0.5 rounded-full ${badgeStyle}">${r.type}</span>
+            <span class="text-[15px] font-black px-1.5 py-0.5 rounded-full ${badgeStyle}">${isScheduled ? '예정 출고' : r.type}</span>
             <span class="text-[13px] text-[#B8B2A3] font-bold">${dateLabel} ${r.date||''}${r.type==='입고' && r.orderDate?(' · 발주 '+r.orderDate):''}</span>
             ${r.author ? `<span class="text-[12px] text-[#CFC9BB] font-bold ml-auto"><i class="fas fa-user mr-0.5"></i>${r.author}</span>` : ''}
           </div>

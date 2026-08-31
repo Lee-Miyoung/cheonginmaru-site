@@ -1069,11 +1069,11 @@
       : `반품기한 임박 ${alerts.length}건 (7일내)`;
   }
 
-  // ===== 예정 출고 - 미래 날짜로 등록한 출고, 그날이 되면 자동으로 실제 출고 처리 =====
+  // ===== 예정 출고 - 출고일자가 오늘보다 미래인 출고 기록. 그날이 되면 화면에서 자동으로 실제 출고로 인식됨 (별도 저장 불필요) =====
   function getScheduledShipments() {
     return Object.keys(movements)
       .map(key => ({ key, ...movements[key] }))
-      .filter(r => r.type === '출고' && r.status === 'scheduled')
+      .filter(r => isFutureShipment(r))
       .sort((a,b) => (a.date||'').localeCompare(b.date||''));
   }
 
@@ -1109,25 +1109,21 @@
   }
 
   function executeScheduledShipmentNow(key) {
-    fbDatabase.ref('stock_movements/' + key).update({ status: null, date: new Date().toISOString().slice(0,10) }).then(() => {
+    // 출고일자를 오늘로 당겨서 저장 - 그러면 자동으로 "예정"이 아닌 실제 출고로 인식되어 재고가 바로 차감됨
+    fbDatabase.ref('stock_movements/' + key).update({ date: new Date().toISOString().slice(0,10) }).then(() => {
       showToast('출고가 시작됩니다', true);
       closeModal('scheduled-shipments-modal');
     }).catch((err) => showToast('처리 실패: ' + (err && err.message ? err.message : err), true));
   }
 
-  // 예정 출고 중 날짜가 이미 지났거나 오늘인 것들을 자동으로 실제 출고로 전환 (재고 차감 시작)
+  // 예정 출고 중 날짜가 이미 지난 게 있으면(오늘 열었을 때 새로 발견됐으면) 안내만 보여줌 - 별도 저장 없이 이미 자동으로 실제 출고로 계산되고 있음
   let scheduledCheckDone = false;
   function checkAndExecuteScheduledShipments() {
+    if (scheduledCheckDone) return;
     const today = new Date().toISOString().slice(0,10);
-    const due = getScheduledShipments().filter(r => r.date <= today);
-    if (!due.length) return;
-    due.forEach(r => {
-      fbDatabase.ref('stock_movements/' + r.key).update({ status: null }).catch(() => {});
-    });
-    if (!scheduledCheckDone) {
-      scheduledCheckDone = true;
-      showToast(`📦 예정 출고 ${due.length}건 - 출고가 시작됩니다`, true);
-    }
+    const dueToday = Object.values(movements).filter(r => r.type === '출고' && r.date === today);
+    scheduledCheckDone = true;
+    if (dueToday.length) showToast(`📦 예정 출고 ${dueToday.length}건 - 출고가 시작됩니다`, true);
   }
 
   function openReturnAlertsModal() {
@@ -1763,7 +1759,8 @@
       if (!map[key]) map[key] = { brand:r.brand, name:r.name, model:r.model, lot, prodDate:'', orderDate:'', inDate:'', actualSpec:'', stock:0, lastTs:0, lastInTs:0 };
       const qty = Number(r.qty) || 0;
       if (r.type === '입고') map[key].stock += qty;
-      else if ((r.type === '출고' || r.type === '반품') && r.status !== 'scheduled') map[key].stock -= qty; // 예정 출고는 아직 실제로 나간 게 아니라 재고 차감 안 함
+      else if (r.type === '반품') map[key].stock -= qty;
+      else if (r.type === '출고' && !isFutureShipment(r)) map[key].stock -= qty; // 미래 날짜 출고(예정)는 아직 실제로 나간 게 아니라 재고 차감 안 함
       // 이 로트에 입고가 여러 번 있었으면, 가장 최근 입고 건 기준으로 생산일자/발주일자/입고일자/실제규격 표시
       if (r.type === '입고' && (r.ts||0) >= map[key].lastInTs) {
         map[key].lastInTs = r.ts || 0;
@@ -1792,7 +1789,7 @@
     if (!records.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-base">기록이 없습니다</div>'; return; }
 
     records.forEach(r => {
-      const isScheduled = r.status === 'scheduled';
+      const isScheduled = isFutureShipment(r);
       const badgeStyle = isScheduled ? 'bg-amber-100 text-amber-600' : r.type==='입고' ? 'bg-[#EFE2CF] text-[#8B5E34]' : r.type==='반품' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600';
       const dotColor = isScheduled ? 'bg-amber-400' : r.type==='입고' ? 'bg-[#8B5E34]' : r.type==='반품' ? 'bg-amber-500' : 'bg-rose-400';
       const row = document.createElement('div');
@@ -1840,6 +1837,12 @@
   // ===== 재고 현황 브랜드 순서 - 직접 끌어서 바꾸면 그 순서가 기기에 저장됨 =====
   // 검색어/데이터의 한글 정규화 형태(NFC/NFD)가 서로 달라 검색이 안 걸리는 문제 방지 +
   // 띄어쓰기 무시 + 헷갈리기 쉬운 모음(애/에, 얘/예) 같은 걸로 취급해서 좀 더 관대하게 검색
+  // 저장된 값(status)에 의존하지 않고, 볼 때마다 "출고일자가 오늘보다 미래인지"로 판단 - 예전에 입력한 미래날짜 기록도 자동으로 인식됨
+  function isFutureShipment(r) {
+    if (!r || r.type !== '출고' || !r.date) return false;
+    return r.date > new Date().toISOString().slice(0,10);
+  }
+
   function normSearch(text) {
     let s = String(text || '').normalize('NFC').toLowerCase().replace(/\s+/g, '');
     let out = '';
@@ -2151,12 +2154,8 @@
       record.shippingFee = parseInt((document.getElementById('in-shipping').value||'0').replace(/,/g,'')) || 0;
       record.actualSpec = document.getElementById('in-actual-spec').value.trim();
     }
-    // 출고일자를 미래로 입력하면 "예정 출고"로 저장 - 그날이 되면 자동으로 실제 출고 처리됨 (재고는 아직 안 빠짐)
-    let isScheduled = false;
-    if (currentType === '출고' && record.date) {
-      const today = new Date().toISOString().slice(0,10);
-      if (record.date > today) { record.status = 'scheduled'; isScheduled = true; }
-    }
+    // 출고일자를 미래로 입력하면 화면에서 자동으로 "예정 출고"로 인식됨 (별도 상태값 저장 불필요, 재고는 그날까지 안 빠짐)
+    const isScheduled = isFutureShipment(record);
 
     function resetFormAfterSave() {
       document.getElementById('in-qty').value = '';
@@ -2253,7 +2252,7 @@
     box.innerHTML = '';
     if (!list.length) { box.innerHTML = `<div class="text-center py-8 text-[#B8B2A3] text-sm">${logTab==='trash'?'휴지통이 비어있습니다':'기록이 없습니다'}</div>`; return; }
     list.forEach(r => {
-      const isScheduled = r.status === 'scheduled';
+      const isScheduled = isFutureShipment(r);
       const badgeStyle = isScheduled ? 'bg-amber-100 text-amber-600' : r.type==='입고' ? 'bg-[#EFE2CF] text-[#8B5E34]' : r.type==='반품' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600';
       const dateLabel = r.type==='입고' ? '입고' : r.type==='출고' ? '출고' : '반품';
       const row = document.createElement('div');

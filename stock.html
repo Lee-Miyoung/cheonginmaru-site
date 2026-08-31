@@ -593,6 +593,21 @@
     <!-- 반품 모드: 지금 갖고 있는 재고 중에서 골라서 반품 -->
     <div id="return-picker-area" class="hidden space-y-2.5">
       <span class="eyebrow" id="return-picker-title">반품할 재고 선택</span>
+
+      <!-- 반품은 보통 브랜드별로 한꺼번에 처리하므로, 브랜드를 먼저 고르면 그 브랜드 재고만 발주월별로 보여줌 -->
+      <div id="return-brand-filter-wrap" class="hidden">
+        <select id="return-brand-filter" class="input-premium" onchange="onReturnBrandFilterChange()">
+          <option value="">브랜드를 먼저 선택하세요</option>
+        </select>
+        <div id="return-brand-active-row" class="hidden flex items-center justify-between bg-[#FBF9F5] border border-[var(--line)] rounded-xl px-3.5 py-2.5 mt-2">
+          <span class="flex items-center gap-2 min-w-0">
+            <span id="return-brand-active-dot" class="brand-dot shrink-0"></span>
+            <span id="return-brand-active-name" class="text-[15px] font-black truncate"></span>
+          </span>
+          <button type="button" onclick="clearReturnBrandFilter()" class="text-[13px] font-black text-[var(--rust)] bg-[#FBEDEA] px-3 py-1.5 rounded-lg shrink-0"><i class="fas fa-times mr-1"></i>취소</button>
+        </div>
+      </div>
+
       <input type="text" id="return-search" class="input-premium" placeholder="브랜드/제품/모델/로트 검색..." oninput="renderReturnPicker()">
       <div id="return-picker-list" class="space-y-1.5 max-h-72 overflow-y-auto"></div>
       <span id="return-picker-empty-msg" class="hidden"></span>
@@ -766,6 +781,8 @@
       renderReturnAlertBanner();
       renderScheduledShipmentBanner();
       checkAndExecuteScheduledShipments();
+      // 출고/반품 선택화면이 열려있는 중에 재고가 바뀌면(다른 기기 저장 등) 그 자리에서 바로 최신 재고로 갱신
+      if (document.getElementById('return-picker-area') && !document.getElementById('return-picker-area').classList.contains('hidden')) renderReturnPicker();
       const dbg = document.getElementById('debug-count');
       if (dbg) dbg.innerText = `(서버상 ${Object.keys(movements).length}건)`;
       if (document.getElementById('log-modal').style.display === 'flex') renderLog();
@@ -1589,8 +1606,11 @@
     document.getElementById('manual-area').classList.toggle('hidden', !(isManualMode && !isPick));
     document.getElementById('return-picker-area').classList.toggle('hidden', !isPick);
     document.getElementById('return-picker-title').innerText = t === '출고' ? '출고할 재고 선택' : '반품할 재고 선택';
-    document.getElementById('return-search').placeholder = t === '출고' ? '브랜드/제품/모델/로트 검색... (출고)' : '브랜드/제품/모델/로트 검색... (반품)';
     document.getElementById('return-picker-empty-msg').innerText = t === '출고' ? '출고할 재고가 없습니다' : '반품 가능한 재고가 없습니다';
+    // 반품은 브랜드별로 한꺼번에 처리하는 경우가 많아서, 브랜드부터 고르고 그 안에서만 보게 함 (출고는 기존처럼 전체 브랜드 아코디언)
+    document.getElementById('return-brand-filter-wrap').classList.toggle('hidden', t !== '반품');
+    if (t === '반품') { populateReturnBrandFilter(); }
+    updateReturnBrandFilterUI();
     if (isPick) {
       renderReturnPicker();
     } else {
@@ -1606,15 +1626,148 @@
     renderReturnPicker();
   }
 
+  // 반품일 때 고른 브랜드 (브랜드별로 한꺼번에 반품 처리하기 위한 필터)
+  let returnBrandFilter = '';
+
+  function populateReturnBrandFilter() {
+    const sel = document.getElementById('return-brand-filter');
+    const brandsWithStock = [...new Set(stockSummary.filter(s => s.stock > 0).map(s => s.brand))].sort((a,b) => a.localeCompare(b, 'ko'));
+    const stillValid = brandsWithStock.includes(returnBrandFilter);
+    if (!stillValid) returnBrandFilter = ''; // 반품 처리해서 재고가 0이 됐으면 필터 자동 해제
+    sel.innerHTML = '<option value="">브랜드를 먼저 선택하세요</option>' + brandsWithStock.map(b => `<option value="${b}">${b}</option>`).join('');
+    sel.value = returnBrandFilter;
+  }
+
+  function onReturnBrandFilterChange() {
+    returnBrandFilter = document.getElementById('return-brand-filter').value;
+    selectedReturnItem = null;
+    document.getElementById('return-selected-panel').classList.add('hidden');
+    document.getElementById('return-search').value = '';
+    updateReturnBrandFilterUI();
+    renderReturnPicker();
+  }
+
+  function clearReturnBrandFilter() {
+    returnBrandFilter = '';
+    document.getElementById('return-brand-filter').value = '';
+    selectedReturnItem = null;
+    document.getElementById('return-selected-panel').classList.add('hidden');
+    document.getElementById('return-search').value = '';
+    updateReturnBrandFilterUI();
+    renderReturnPicker();
+  }
+
+  function updateReturnBrandFilterUI() {
+    const activeRow = document.getElementById('return-brand-active-row');
+    const selectEl = document.getElementById('return-brand-filter');
+    const searchEl = document.getElementById('return-search');
+    if (currentType === '반품' && returnBrandFilter) {
+      activeRow.classList.remove('hidden');
+      selectEl.classList.add('hidden');
+      const color = getBrandColor(returnBrandFilter);
+      document.getElementById('return-brand-active-name').innerText = returnBrandFilter;
+      document.getElementById('return-brand-active-name').style.color = color;
+      document.getElementById('return-brand-active-dot').style.background = color;
+      searchEl.classList.remove('hidden');
+      searchEl.placeholder = `${returnBrandFilter} 안에서 검색... (제품/모델/로트)`;
+    } else if (currentType === '반품') {
+      activeRow.classList.add('hidden');
+      selectEl.classList.remove('hidden');
+      searchEl.classList.add('hidden'); // 브랜드 고르기 전엔 검색 숨김 - 어차피 보여줄 목록이 없음
+    } else {
+      activeRow.classList.add('hidden');
+      searchEl.classList.remove('hidden');
+      searchEl.placeholder = currentType === '출고' ? '브랜드/제품/모델/로트 검색... (출고)' : '브랜드/제품/모델/로트 검색...';
+    }
+  }
+
   function renderReturnPicker() {
     const listEl = document.getElementById('return-picker-list');
     if (!listEl) return;
+
+    if (currentType === '반품') {
+      if (!returnBrandFilter) {
+        listEl.innerHTML = '<div class="text-center py-10 text-[#B8B2A3] text-[14px]"><i class="fas fa-hand-point-up block text-[22px] mb-2"></i>위에서 반품할 브랜드를 먼저 선택하세요<br><span class="text-[12px]">브랜드를 고르면 그 재고만 발주월별로 보여드려요</span></div>';
+        return;
+      }
+      renderReturnPickerByMonth(returnBrandFilter);
+      return;
+    }
+
+    renderReturnPickerAllBrands();
+  }
+
+  // 반품: 고른 브랜드의 재고만, 발주월(오래된 순)로 묶어서 보여줌 - 한 브랜드 반품을 한 번에 끝내기 편하게
+  function renderReturnPickerByMonth(brand) {
+    const listEl = document.getElementById('return-picker-list');
+    const q = normSearch(document.getElementById('return-search').value);
+    const items = stockSummary.filter(s => s.brand === brand && s.stock > 0 && (!q || normSearch(s.name+s.model+(s.lot||'')).includes(q)));
+    listEl.innerHTML = '';
+    if (!items.length) {
+      listEl.innerHTML = `<div class="text-center py-6 text-[#B8B2A3] text-[14px]">${q ? '검색 결과가 없습니다' : '이 브랜드는 반품 가능한 재고가 없습니다'}</div>`;
+      return;
+    }
+
+    const NO_DATE_KEY = '__none__';
+    const groups = {};
+    items.forEach(s => {
+      const monthKey = s.orderDate ? s.orderDate.slice(0, 7) : NO_DATE_KEY;
+      (groups[monthKey] = groups[monthKey] || []).push(s);
+    });
+    // 발주일 오래된 달부터 위로 (반품 기한이 더 급한 것부터 보이게), 발주일 미기재는 맨 아래
+    const monthKeys = Object.keys(groups).sort((a, b) => {
+      if (a === NO_DATE_KEY) return 1;
+      if (b === NO_DATE_KEY) return -1;
+      return a.localeCompare(b);
+    });
+    const color = getBrandColor(brand);
+
+    monthKeys.forEach(monthKey => {
+      const monthItems = groups[monthKey].sort((a, b) => {
+        const n = String(a.name || '').localeCompare(String(b.name || ''), 'ko');
+        if (n !== 0) return n;
+        return String(a.model || '').localeCompare(String(b.model || ''), 'ko');
+      });
+      const monthLabel = monthKey === NO_DATE_KEY ? '발주일 미기재' : `${monthKey.slice(0,4)}년 ${parseInt(monthKey.slice(5,7),10)}월 발주`;
+
+      const header = document.createElement('p');
+      header.className = 'text-[13px] font-black px-1 pt-2.5 pb-0.5 flex items-center gap-1.5';
+      header.style.color = color;
+      header.innerHTML = `<i class="fas fa-calendar-day"></i>${monthLabel} <span class="text-[#B8B2A3] font-bold">· ${monthItems.length}개</span>`;
+      listEl.appendChild(header);
+
+      monthItems.forEach(s => {
+        const isSelected = selectedReturnItem && selectedReturnItem.brand===s.brand && selectedReturnItem.name===s.name && selectedReturnItem.model===s.model && selectedReturnItem.lot===s.lot;
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 rounded-xl border mb-1.5 ' + (isSelected ? 'border-[#8B5E34] bg-[#F6EFE6]' : 'border-[var(--line)] bg-[#FAF8F4]');
+        row.onclick = () => selectReturnItem(s);
+        const pickerSpec = (getModelInfo(s.brand, s.name, s.model) || {}).spec || '';
+        const pickerSpecMismatch = s.actualSpec && s.actualSpec !== pickerSpec;
+        row.innerHTML = `
+          <div class="min-w-0 flex-1">
+            <p class="text-[13px] font-bold text-[#B8B2A3] truncate">${s.name}</p>
+            <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
+            ${pickerSpecMismatch
+              ? `<p class="text-[13px] font-black text-[var(--rust)]"><i class="fas fa-triangle-exclamation mr-1"></i>스펙 다름: ${s.actualSpec}</p>`
+              : (pickerSpec ? `<p class="text-[13px] font-black text-[#8B5E34]"><i class="fas fa-ruler-combined mr-1"></i>${pickerSpec}</p>` : '')}
+            <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}</p>
+          </div>
+          <span class="text-[15px] font-black text-[#3A342C] num shrink-0">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
+        `;
+        listEl.appendChild(row);
+      });
+    });
+  }
+
+  // 출고: 기존 방식 그대로 - 전체 브랜드를 아코디언으로 보여줌
+  function renderReturnPickerAllBrands() {
+    const listEl = document.getElementById('return-picker-list');
     const q = normSearch(document.getElementById('return-search').value);
     const items = stockSummary.filter(s => s.stock > 0 && (!q || normSearch(s.brand+s.name+s.model+(s.lot||'')).includes(q)));
     listEl.innerHTML = '';
     if (!items.length) {
-      const msg = currentType === '출고' ? '출고할 재고가 없습니다' : '반품 가능한 재고가 없습니다';
-      listEl.innerHTML = `<div class="text-center py-6 text-[#B8B2A3] text-[14px]">${msg}</div>`;
+      listEl.innerHTML = `<div class="text-center py-6 text-[#B8B2A3] text-[14px]">출고할 재고가 없습니다</div>`;
       return;
     }
 

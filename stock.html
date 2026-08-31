@@ -292,6 +292,24 @@
         <label class="eyebrow pl-1">브랜드 (거래처)</label>
         <select id="rl-brand" class="input-premium mt-1" onchange="onReturnListBrandChange()"></select>
       </div>
+
+      <details class="bg-white border border-[var(--line)] rounded-xl px-3.5 py-2.5">
+        <summary class="text-[13px] font-black text-[#8B5E34] cursor-pointer">양식 문구 수정 (회사마다 양식이 다르면 여기서 조정, 브랜드별로 저장됨)</summary>
+        <div class="mt-2.5 space-y-2">
+          <div><label class="text-[12px] font-bold text-[#B8B2A3]">제목</label><input type="text" id="rl-title" class="input-premium mt-1 text-sm" value="반품리스트"></div>
+          <div><label class="text-[12px] font-bold text-[#B8B2A3]">안내문구 (줄바꿈으로 구분)</label><textarea id="rl-instructions" class="input-premium mt-1 text-sm" rows="6">1. 반품인정은 출고일 기준 익월말 도착분까지입니다.
+2. 반품 실물 파렛트에 본 리스트를 부착하여주십시요 (맨위박스 위에 놓으십시요. 가능하면 랩핑요망)
+3. 되도록 같은 제품/패턴끼리 모아서 적재해 주십시요.
+4. 반품담당자가 직접확인, 서명하여 주십시요.</textarea></div>
+        </div>
+      </details>
+
+      <div class="pt-1">
+        <p class="text-[13px] font-black text-[#8B8477] mb-1.5"><i class="fas fa-boxes-stacked mr-1"></i>이 브랜드 재고에서 골라서 추가</p>
+        <input type="text" id="rl-stock-search" class="input-premium text-sm mb-2" placeholder="제품/모델 검색..." oninput="renderReturnListStockPicker()">
+        <div id="rl-stock-picker" class="space-y-1.5 max-h-52 overflow-y-auto border border-[var(--line)] rounded-xl p-2 bg-white"></div>
+      </div>
+
       <div class="grid grid-cols-2 gap-2.5">
         <div><label class="eyebrow pl-1">반품처(대리점명)</label><input type="text" id="rl-from-name" class="input-premium mt-1" value="청인마루"></div>
         <div><label class="eyebrow pl-1">담당자(반품자)</label><input type="text" id="rl-from-person" class="input-premium mt-1" value="송원덕"></div>
@@ -303,8 +321,8 @@
 
       <div class="pt-2 border-t border-[var(--line)]">
         <div class="flex items-center justify-between mb-1.5">
-          <span class="text-[13px] font-black text-[#8B8477]">반품 품목</span>
-          <button type="button" onclick="addReturnListRow()" class="text-[12px] font-black text-[#5C7A3D] bg-[#E8EDE4] px-2.5 py-1 rounded-lg"><i class="fas fa-plus mr-1"></i>품목 추가</button>
+          <span class="text-[13px] font-black text-[#8B8477]">반품 목록 <span class="text-[#B8B2A3] font-medium">(위에서 재고를 고르면 여기 추가돼요, 수기 추가도 가능)</span></span>
+          <button type="button" onclick="addReturnListRow()" class="text-[12px] font-black text-[#5C7A3D] bg-[#E8EDE4] px-2.5 py-1 rounded-lg"><i class="fas fa-plus mr-1"></i>직접 추가</button>
         </div>
         <div id="rl-rows" class="space-y-2"></div>
       </div>
@@ -356,14 +374,9 @@
 <!-- 이미지 크게 보기 -->
 <!-- 반품 리스트 이미지 생성용 - 화면엔 안 보이고 캡처용으로만 사용 -->
 <div id="rl-print-template" style="position:absolute; left:-9999px; top:0; width:900px; background:#fff; font-family:'Pretendard','Noto Sans KR',sans-serif; padding:44px; color:#111;">
-  <h1 style="font-size:34px; font-weight:900; margin:0 0 28px 0;">반품리스트</h1>
+  <h1 id="rl-p-title" style="font-size:34px; font-weight:900; margin:0 0 28px 0;">반품리스트</h1>
   <div style="display:flex; justify-content:flex-end; margin-bottom:22px;">
-    <div style="font-size:14px; line-height:1.75; max-width:480px;">
-      <p style="margin:0 0 6px 0;">1. 반품인정은 출고일 기준 익월말 도착분까지입니다.</p>
-      <p style="margin:0 0 6px 0;">2. 반품 실물 파렛트에 본 리스트를 부착하여주십시요<br>(맨위박스 위에 놓으십시요. 가능하면 랩핑요망)</p>
-      <p style="margin:0 0 6px 0;">3. 되도록 같은 제품/패턴끼리 모아서 적재해 주십시요.</p>
-      <p style="margin:0;">4. 반품담당자가 직접확인, 서명하여 주십시요.</p>
-    </div>
+    <div id="rl-p-instructions" style="font-size:14px; line-height:1.75; max-width:480px; white-space:pre-wrap;"></div>
   </div>
   <table style="width:100%; border-collapse:collapse; margin-bottom:22px; font-size:15px; text-align:center;">
     <tr>
@@ -2330,23 +2343,35 @@
     });
   }
 
-  // ===== 반품 리스트 만들기 (브랜드별로 품목 추가해서 한 장의 이미지로 생성) =====
+  // ===== 반품 리스트 만들기 (브랜드별로 재고에서 골라 추가해서 한 장의 이미지로 생성) =====
   const RL_ROW_DEFAULTS = { category: '', pattern: '', lot: '', qty: '', note: '시공잔량' };
 
   function openReturnListModal() {
+    // 실제 재고가 있는 브랜드만 골라야 반품리스트를 만들 수 있음
+    const brandsWithStock = [...new Set(stockSummary.filter(s => s.stock > 0).map(s => s.brand))].sort((a,b) => a.localeCompare(b,'ko'));
     const brandSelect = document.getElementById('rl-brand');
-    brandSelect.innerHTML = Object.keys(masterData).sort((a,b) => a.localeCompare(b,'ko'))
-      .map(b => `<option value="${b}">${b}</option>`).join('');
+    if (!brandsWithStock.length) {
+      brandSelect.innerHTML = '<option value="">재고 있는 브랜드가 없습니다</option>';
+    } else {
+      brandSelect.innerHTML = brandsWithStock.map(b => `<option value="${b}">${b}</option>`).join('');
+    }
     document.getElementById('rl-rows').innerHTML = '';
-    addReturnListRow();
+    document.getElementById('rl-stock-search').value = '';
     document.getElementById('rl-date').value = new Date().toISOString().slice(0,10);
     syncDateDisplay('rl-date');
     document.getElementById('rl-status').innerText = '';
     onReturnListBrandChange();
+    recalcReturnListTotal();
     document.getElementById('return-list-modal').style.display = 'flex';
   }
 
   // 브랜드마다 수신처/도착지 정보가 다르니, 한 번 입력해두면 다음에 그 브랜드 고를 때 자동으로 불러옴
+  const RL_DEFAULT_TITLE = '반품리스트';
+  const RL_DEFAULT_INSTRUCTIONS = `1. 반품인정은 출고일 기준 익월말 도착분까지입니다.
+2. 반품 실물 파렛트에 본 리스트를 부착하여주십시요 (맨위박스 위에 놓으십시요. 가능하면 랩핑요망)
+3. 되도록 같은 제품/패턴끼리 모아서 적재해 주십시요.
+4. 반품담당자가 직접확인, 서명하여 주십시요.`;
+
   function onReturnListBrandChange() {
     const brand = document.getElementById('rl-brand').value;
     let saved = {};
@@ -2356,6 +2381,37 @@
     document.getElementById('rl-arrive-person').value = saved.arrivePerson || '';
     document.getElementById('rl-depart-addr').value = saved.departAddr || '인천 서구 석남동 223-757 청인마루';
     document.getElementById('rl-depart-person').value = saved.departPerson || '대표 송원덕(010-8299-1074)';
+    document.getElementById('rl-title').value = saved.title || RL_DEFAULT_TITLE;
+    document.getElementById('rl-instructions').value = saved.instructions || RL_DEFAULT_INSTRUCTIONS;
+    document.getElementById('rl-stock-search').value = '';
+    renderReturnListStockPicker();
+  }
+
+  // 선택한 브랜드의 실제 재고 목록을 보여주고, 탭하면 반품 목록에 바로 추가됨
+  function renderReturnListStockPicker() {
+    const brand = document.getElementById('rl-brand').value;
+    const q = normSearch(document.getElementById('rl-stock-search').value);
+    const box = document.getElementById('rl-stock-picker');
+    const items = stockSummary.filter(s => s.brand === brand && s.stock > 0 && (!q || normSearch(s.name+s.model+(s.lot||'')).includes(q)));
+    box.innerHTML = '';
+    if (!items.length) { box.innerHTML = '<div class="text-center py-4 text-[#B8B2A3] text-[13px]">이 브랜드는 재고가 없습니다</div>'; return; }
+    items.forEach(s => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'w-full text-left flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg active:bg-[#F6EFE6]';
+      row.onclick = () => {
+        addReturnListRow({ category: s.name, pattern: s.model, lot: s.lot || '', qty: '', note: '시공잔량' });
+        showToast('반품 목록에 추가됨');
+      };
+      row.innerHTML = `
+        <div class="min-w-0 flex-1">
+          <p class="text-[13px] font-bold text-[#3A342C] truncate">${s.name} · ${s.model}</p>
+          <p class="text-[12px] text-[#B8B2A3] font-bold">${s.lot ? ('로트 '+s.lot) : '로트 미기재'} · 현재 ${s.stock}BOX</p>
+        </div>
+        <i class="fas fa-plus-circle text-[#5C7A3D] text-[18px] shrink-0"></i>
+      `;
+      box.appendChild(row);
+    });
   }
 
   function addReturnListRow(vals) {
@@ -2403,14 +2459,18 @@
     const arrivePerson = document.getElementById('rl-arrive-person').value.trim();
     const departAddr = document.getElementById('rl-depart-addr').value.trim();
     const departPerson = document.getElementById('rl-depart-person').value.trim();
+    const title = document.getElementById('rl-title').value.trim() || RL_DEFAULT_TITLE;
+    const instructions = document.getElementById('rl-instructions').value || RL_DEFAULT_INSTRUCTIONS;
 
-    // 다음에 같은 브랜드 고를 때 자동으로 채워지게 저장
+    // 다음에 같은 브랜드 고를 때 자동으로 채워지게 저장 (양식 문구도 브랜드별로 기억됨)
     try {
       localStorage.setItem('cm_return_list_pref_' + brand, JSON.stringify({
-        toName, arriveAddr, arrivePerson, departAddr, departPerson
+        toName, arriveAddr, arrivePerson, departAddr, departPerson, title, instructions
       }));
     } catch(e) {}
 
+    document.getElementById('rl-p-title').innerText = title;
+    document.getElementById('rl-p-instructions').innerHTML = instructions.split('\n').map(line => `<p style="margin:0 0 6px 0;">${line}</p>`).join('');
     document.getElementById('rl-p-from-name').innerText = fromName;
     document.getElementById('rl-p-from-person').innerText = fromPerson;
     document.getElementById('rl-p-date').innerText = dateDisplay;

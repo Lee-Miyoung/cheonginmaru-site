@@ -208,18 +208,58 @@
   .sheet-note{ font-size:11px; color:var(--ink-faint); margin-top:4px; }
 
   @media print{
-    body{ background:#fff; padding:0; }
+    body{ background:#fff; padding:0; font-size:11px; }
     .toolbar, .tabs, .meta-bar, .error-banner{ display:none !important; }
-    .sheet{ box-shadow:none; border-radius:0; margin:0 auto; padding:14mm 14mm 10mm; }
+    .sheet{ box-shadow:none; border-radius:0; margin:0 auto; padding:8mm 10mm 6mm; max-width:none; }
     .sheet.page-break{ page-break-before:always; }
     [contenteditable="true"]{ background:none!important; box-shadow:none!important; }
     .ti-input{ border:none !important; }
     input[type="date"].doc-date, .doc-input-inline{ border:none !important; background:none !important; padding:0 !important; -webkit-appearance:none; appearance:none; }
-    .seal-stamp{ mix-blend-mode:normal; }
+    .seal-stamp{ mix-blend-mode:normal; height:38px; }
+
+    /* 편집용 UI 요소는 인쇄에서 완전히 제거 */
+    .accordion, .trade-search-bar, #tradeSearchHint, #tradeSearchResults, .row-del{ display:none !important; }
+    .client-picker-trigger{ border:none !important; background:none !important; padding:0 !important; min-width:0 !important; }
+    .client-picker-trigger .arrow, .client-picker-trigger span:last-child{ display:none !important; }
+    .client-picker-panel{ display:none !important; }
+
+    /* 여백/줄간격 압축 */
+    .brand-row{ padding-bottom:6px; margin-bottom:10px; }
+    .brand-name{ font-size:13px; }
+    .doc-title{ font-size:19px; margin:4px 0 2px; }
+    .doc-sub{ font-size:10px; margin-bottom:10px; }
+    table.infogrid{ margin-bottom:8px; font-size:10.5px; }
+    table.infogrid td{ padding:5px 8px; }
+    table.items{ font-size:10px; }
+    table.items th{ padding:5px 4px; }
+    table.items td{ padding:3px 5px; }
+    table.items tr.subrow td{ padding:3px 5px; font-size:9.5px; }
+    .totals{ font-size:10.5px; }
+    .totals td{ padding:4px 10px; }
+    .totals tr.grand td{ font-size:11.5px; }
+    .pyeong-toggle{ margin:4px 0 6px; padding:4px 8px; font-size:10px; }
+    .pyeong-toggle input{ width:12px; height:12px; }
+    .notes{ margin-top:10px; padding:8px 12px; }
+    .notes li{ font-size:9px; line-height:1.4; margin-bottom:1px; }
+    .warnbox{ margin-top:8px; padding:8px 12px; }
+    .warnbox li{ font-size:9px; line-height:1.4; }
+    .disclaimer-top{ font-size:9px; padding:6px 10px; margin-bottom:10px; line-height:1.4; }
+    .confirm-box{ margin-top:10px; padding:8px 12px; }
+    .confirm-box p{ font-size:9.5px; line-height:1.4; margin:0 0 8px; }
+    .sign-line-grid{ gap:14px; }
+    .sign-line .lbl2{ margin-bottom:12px; }
+    h2.sec{ font-size:13px; margin:12px 0 8px; padding-bottom:4px; }
+    h3.sub{ font-size:11px; margin:8px 0 4px; }
+    p.body-text{ font-size:10px; line-height:1.4; margin:3px 0 6px; }
+    ul.bullets{ margin:3px 0 8px; }
+    ul.bullets li{ font-size:10px; line-height:1.4; margin-bottom:2px; }
+    .cover-tag{ font-size:9px; padding:2px 10px; margin-bottom:4px; }
+    .footdate{ margin:12px 0 8px; font-size:10px; }
   }
 </style>
 </head>
 <body>
+
 
 <div class="tabs">
   <button class="tab-btn active" data-tab="leak" onclick="switchTab('leak')">🌊 누수복구 견적</button>
@@ -234,6 +274,7 @@
       <button class="ghost" onclick="startNewEstimate()">＋ 새 견적</button>
       <button class="ghost" onclick="if(confirm('처음 예시 내용으로 되돌릴까요? 저장하지 않은 수정 내용이 사라집니다.')) resetActiveTab()">↺ 초기화</button>
       <button class="primary" onclick="window.print()">🖨️ PDF로 저장 / 인쇄</button>
+      <button class="ghost" onclick="saveAsImage()">🖼️ 이미지로 저장</button>
       <button class="primary" onclick="manualSave()">☁️ 견적 저장</button>
     </div>
   </div>
@@ -579,6 +620,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 function showError(msg){
   var el = document.getElementById('errorBanner');
@@ -1105,6 +1147,31 @@ function resetActiveTab(){
   else{ try{ localStorage.removeItem(tradeLocalKey()); }catch(e){} }
   location.reload();
 }
+
+async function saveAsImage(){
+  var wrap = document.getElementById(currentTab === 'leak' ? 'tabLeak' : 'tabTrade');
+  var sheets = wrap.querySelectorAll('.sheet');
+  if(!sheets.length){ alert('캡처할 내용이 없습니다.'); return; }
+  var names = currentTab === 'leak'
+    ? ['누수복구_견적서', '누수복구_소견서']
+    : ['거래처용_견적서'];
+  for(var i=0; i<sheets.length; i++){
+    try{
+      var canvas = await html2canvas(sheets[i], { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+      var link = document.createElement('a');
+      link.download = (names[i] || ('견적서_' + (i+1))) + '.png';
+      link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      await new Promise(function(resolve){ setTimeout(resolve, 350); });
+    }catch(err){
+      console.error('이미지 저장 실패', err);
+      alert('이미지 생성 중 오류가 발생했습니다: ' + (err && err.message ? err.message : err));
+    }
+  }
+}
+window.saveAsImage = saveAsImage;
 
 /* ===================== 거래처 선택 아코디언 (검색 + 목록 + 직접입력) =====================
    leak_estimates의 거래처/경로·고객명, b2b_estimates의 거래처명을 모아서

@@ -2,117 +2,66 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>누수복구 견적 관리 - 청인마루</title>
+<title>견적 관리 - 청인마루</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
   :root{
-    --page-bg:#eef0f3;
-    --paper:#ffffff;
-    --ink:#1a1d23;
-    --ink-soft:#4b515c;
-    --ink-faint:#889099;
-    --brand:#1f3864;
-    --brand-2:#2f5496;
-    --accent-bg:#eef2fb;
-    --line:#d9dde4;
+    --page-bg:#eef0f3; --paper:#ffffff; --ink:#1a1d23; --ink-soft:#4b515c; --ink-faint:#889099;
+    --brand:#1f3864; --brand-2:#2f5496; --accent-bg:#eef2fb; --line:#d9dde4;
     --shadow: 0 8px 24px rgba(20,24,33,.10);
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--page-bg);
-    color:var(--ink);
-    font-family:'Noto Sans KR','Malgun Gothic',sans-serif;
-    padding:28px 16px 60px;
-  }
-  .wrap{ max-width:1180px; margin:0 auto; }
+  body{ margin:0; background:var(--page-bg); color:var(--ink); font-family:'Noto Sans KR','Malgun Gothic',sans-serif; padding:28px 16px 60px; }
+  .wrap{ max-width:1220px; margin:0 auto; }
 
-  /* 잠금 화면 */
-  #gate{
-    max-width:360px;
-    margin:120px auto;
-    background:#fff;
-    border-radius:12px;
-    box-shadow:var(--shadow);
-    padding:32px 28px;
-    text-align:center;
-  }
+  #gate{ max-width:360px; margin:120px auto; background:#fff; border-radius:12px; box-shadow:var(--shadow); padding:32px 28px; text-align:center; }
   #gate h1{ font-size:16px; color:var(--brand); margin:0 0 6px; }
   #gate p{ font-size:12px; color:var(--ink-faint); margin:0 0 18px; }
-  #gate input{
-    width:100%; padding:11px 12px; font-size:14px;
-    border:1px solid var(--line); border-radius:8px; margin-bottom:10px;
-    font-family:inherit;
-  }
-  #gate button{
-    width:100%; padding:11px; font-size:14px; font-weight:700;
-    background:var(--brand); color:#fff; border:none; border-radius:8px; cursor:pointer;
-  }
+  #gate input{ width:100%; padding:11px 12px; font-size:14px; border:1px solid var(--line); border-radius:8px; margin-bottom:10px; font-family:inherit; }
+  #gate button{ width:100%; padding:11px; font-size:14px; font-weight:700; background:var(--brand); color:#fff; border:none; border-radius:8px; cursor:pointer; }
   #gate .err{ color:#c0392b; font-size:12px; margin-top:8px; display:none; }
+  #gate .hint2{ font-size:11px; color:var(--ink-faint); margin-top:14px; }
 
-  header.top{
-    display:flex; justify-content:space-between; align-items:center;
-    margin-bottom:18px; flex-wrap:wrap; gap:10px;
-  }
+  header.top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
   header.top .title{ font-size:19px; font-weight:900; color:var(--brand); }
   header.top .title small{ display:block; font-size:11.5px; color:var(--ink-faint); font-weight:400; margin-top:2px;}
-  header.top a.new-btn{
-    background:var(--brand); color:#fff; text-decoration:none;
-    padding:11px 18px; border-radius:8px; font-weight:700; font-size:13px;
-    box-shadow:var(--shadow);
-  }
+  header.top .btns{ display:flex; gap:8px; }
+  header.top a.new-btn{ background:var(--brand); color:#fff; text-decoration:none; padding:11px 18px; border-radius:8px; font-weight:700; font-size:13px; box-shadow:var(--shadow); }
+  header.top a.new-btn.alt{ background:#fff; color:var(--brand); border:1px solid var(--line); box-shadow:none; }
 
-  .stats{
-    display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px;
-  }
-  .stat-card{
-    background:#fff; border-radius:10px; box-shadow:var(--shadow); padding:16px 18px;
-  }
+  .stats{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:18px; }
+  .stat-card{ background:#fff; border-radius:10px; box-shadow:var(--shadow); padding:16px 18px; }
   .stat-card .lbl{ font-size:11.5px; color:var(--ink-faint); font-weight:700; margin-bottom:6px;}
-  .stat-card .val{ font-size:20px; font-weight:900; color:var(--brand); font-variant-numeric:tabular-nums;}
+  .stat-card .val{ font-size:19px; font-weight:900; color:var(--brand); font-variant-numeric:tabular-nums;}
 
-  .filter-bar{
-    background:#fff; border-radius:10px; box-shadow:var(--shadow);
-    padding:14px 16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px;
-  }
-  .filter-bar input, .filter-bar select{
-    font-family:inherit; font-size:13px; padding:9px 12px;
-    border:1px solid var(--line); border-radius:8px; background:#fff;
-  }
-  .filter-bar input#searchBox{ flex:1; min-width:200px; }
+  .filter-bar{ background:#fff; border-radius:10px; box-shadow:var(--shadow); padding:14px 16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .filter-bar input, .filter-bar select{ font-family:inherit; font-size:13px; padding:9px 12px; border:1px solid var(--line); border-radius:8px; background:#fff; }
+  .filter-bar input#searchBox{ flex:1; min-width:220px; }
   .filter-bar .count{ margin-left:auto; font-size:12px; color:var(--ink-faint); }
+  .filter-bar .search-hint{ width:100%; font-size:11px; color:var(--ink-faint); }
 
-  table.list{
-    width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden;
-    box-shadow:var(--shadow); font-size:13px;
-  }
-  table.list th{
-    background:var(--brand-2); color:#fff; text-align:left; font-weight:700;
-    padding:11px 12px; white-space:nowrap;
-  }
+  table.list{ width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; box-shadow:var(--shadow); font-size:13px; }
+  table.list th{ background:var(--brand-2); color:#fff; text-align:left; font-weight:700; padding:11px 12px; white-space:nowrap; }
   table.list td{ padding:11px 12px; border-bottom:1px solid var(--line); vertical-align:middle;}
   table.list tr:hover td{ background:var(--accent-bg); }
   table.list td.num{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
-  table.list td.addr{ color:var(--ink-soft); font-size:12.5px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  table.list td.addr{ color:var(--ink-soft); font-size:12.5px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-  .badge{
-    display:inline-block; padding:3px 10px; border-radius:20px; font-size:11.5px; font-weight:700;
-  }
+  .type-badge{ display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; }
+  .type-badge.leak{ background:#e8f0fd; color:#1f5fc0; }
+  .type-badge.trade{ background:#f0eafd; color:#5b2fc0; }
+
+  .badge{ display:inline-block; padding:3px 10px; border-radius:20px; font-size:11.5px; font-weight:700; }
   .badge.작성중{ background:#eef0f3; color:#4b515c; }
-  .badge.발송됨{ background:#e8f0fd; color:#1f5fc0; }
-  .badge.고객확인{ background:#eef8ee; color:#1f7a3d; }
+  .badge.발송됨, .badge.거래처.발송됨{ background:#e8f0fd; color:#1f5fc0; }
+  .badge.고객확인, .badge.확인됨{ background:#eef8ee; color:#1f7a3d; }
   .badge.계약전환{ background:#fff4e0; color:#a3660a; }
   .badge.보류{ background:#fdf1e0; color:#a35c0a; }
   .badge.취소{ background:#fbe9e9; color:#a32e2e; }
 
   select.statusSelect{ font-size:11.5px; padding:4px 6px; border-radius:6px; border:1px solid var(--line); }
-
-  a.openLink{
-    color:var(--brand-2); font-weight:700; text-decoration:none; font-size:12.5px;
-    border:1px solid var(--line); padding:6px 10px; border-radius:6px; white-space:nowrap;
-  }
+  a.openLink{ color:var(--brand-2); font-weight:700; text-decoration:none; font-size:12.5px; border:1px solid var(--line); padding:6px 10px; border-radius:6px; white-space:nowrap; }
   a.openLink:hover{ background:var(--accent-bg); }
-
   .empty{ text-align:center; padding:60px 20px; color:var(--ink-faint); font-size:13px; }
 </style>
 </head>
@@ -120,34 +69,45 @@
 
 <div id="gate">
   <h1>🔒 청인마루 직원 전용</h1>
-  <p>누수복구 견적 목록에 접근하려면 직원 비밀번호를 입력하세요.</p>
+  <p>견적 목록에 접근하려면 직원 비밀번호를 입력하세요.</p>
   <input type="password" id="gatePw" placeholder="비밀번호">
   <button onclick="checkGate()">입장</button>
   <div class="err" id="gateErr">비밀번호가 올바르지 않습니다.</div>
+  <div class="hint2">같은 기기·같은 브라우저에서는 7일간 다시 묻지 않습니다.</div>
 </div>
 
 <div class="wrap" id="mainWrap" style="display:none;">
   <header class="top">
-    <div class="title">누수복구 견적 관리
-      <small>거래처·고객별 견적서를 한 곳에서 검색하고 공유하세요</small>
+    <div class="title">견적 관리
+      <small>누수복구·거래처용 견적서를 한 곳에서 검색하고 공유하세요</small>
     </div>
-    <a class="new-btn" href="leak-estimate.html">＋ 새 견적 작성</a>
+    <div class="btns">
+      <a class="new-btn alt" href="leak-estimate.html?tab=trade">＋ 거래처용 견적</a>
+      <a class="new-btn" href="leak-estimate.html?tab=leak">＋ 누수복구 견적</a>
+    </div>
   </header>
 
   <div class="stats">
     <div class="stat-card"><div class="lbl">전체 견적 건수</div><div class="val" id="statTotal">0</div></div>
+    <div class="stat-card"><div class="lbl">누수복구</div><div class="val" id="statLeak">0</div></div>
+    <div class="stat-card"><div class="lbl">거래처용</div><div class="val" id="statTrade">0</div></div>
     <div class="stat-card"><div class="lbl">이번 달 신규</div><div class="val" id="statMonth">0</div></div>
-    <div class="stat-card"><div class="lbl">계약 전환</div><div class="val" id="statContract">0</div></div>
-    <div class="stat-card"><div class="lbl">이번 달 견적 합계</div><div class="val" id="statAmount">0원</div></div>
+    <div class="stat-card"><div class="lbl">이번 달 합계금액</div><div class="val" id="statAmount">0원</div></div>
   </div>
 
   <div class="filter-bar">
-    <input id="searchBox" placeholder="🔍 고객명 · 거래처 · 현장주소 · 견적번호 · 연락처 검색">
+    <input id="searchBox" placeholder="🔍 고객명 · 거래처 · 현장주소 · 견적번호 · 연락처 검색 (띄어쓰기·초성 검색 가능)">
+    <select id="typeFilter">
+      <option value="">전체 유형</option>
+      <option value="leak">🌊 누수복구</option>
+      <option value="trade">📦 거래처용</option>
+    </select>
     <select id="statusFilter">
       <option value="">전체 상태</option>
       <option value="작성중">작성중</option>
-      <option value="발송됨">고객 발송됨</option>
-      <option value="고객확인">고객 확인</option>
+      <option value="발송됨">발송됨</option>
+      <option value="고객확인">고객/거래처 확인</option>
+      <option value="확인됨">확인됨</option>
       <option value="계약전환">계약 전환</option>
       <option value="보류">보류</option>
       <option value="취소">취소</option>
@@ -159,77 +119,104 @@
       <option value="amount_asc">금액 낮은순</option>
     </select>
     <span class="count" id="resultCount"></span>
+    <div class="search-hint">예: "청인" "ㅊㅇㅁㄹ" "청 인 마루" 모두 같은 결과를 찾습니다.</div>
   </div>
 
   <table class="list">
     <thead>
       <tr>
-        <th>견적번호</th><th>고객명</th><th>거래처/경로</th><th>현장주소</th>
+        <th>유형</th><th>견적번호</th><th>고객명/거래처</th><th>현장주소</th>
         <th>발행일</th><th class="num">합계금액</th><th>담당자</th><th>상태</th><th></th>
       </tr>
     </thead>
     <tbody id="listBody"></tbody>
   </table>
-  <div class="empty" id="emptyMsg" style="display:none;">저장된 견적이 없습니다. 상단의 "새 견적 작성"으로 시작하세요.</div>
+  <div class="empty" id="emptyMsg" style="display:none;">저장된 견적이 없습니다. 상단의 버튼으로 새 견적을 시작하세요.</div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 <script>
-/* ⚠️ estimate.html과 동일한 firebaseConfig 값을 넣어주세요. */
+/* ⚠️ leak-estimate.html과 동일한 firebaseConfig 값을 넣어주세요. */
 const firebaseConfig = {
-  apiKey: "여기에_apiKey_입력",
+  apiKey: "AIzaSyCHdMgp2clJ0y3L1GR-WubpAYKEVYvLcLA",
   authDomain: "maru-quote-history.firebaseapp.com",
-  databaseURL: "https://maru-quote-history-default-rtdb.asia-southeast1.firebasedatabase.app",
+  databaseURL: "https://maru-quote-history-default-rtdb.firebaseio.com",
   projectId: "maru-quote-history",
-  storageBucket: "maru-quote-history.appspot.com",
+  storageBucket: "maru-quote-history.firebasestorage.app",
   messagingSenderId: "936179721364",
-  appId: "여기에_appId_입력"
+  appId: "1:936179721364:web:cbf9e9bb6c71970d400081"
 };
-const DATA_NODE = "leak_estimates";
 
-/* ⚠️ 간단한 직원 공용 비밀번호입니다. 강력한 보안이 필요하면
-   추후 Firebase Authentication(개인별 로그인)으로 교체하는 것을 권장합니다.
-   이 비밀번호는 "화면 진입"만 막는 용도이고, DB 자체의 auth != null
-   규칙은 아래 익명 로그인으로 별도 충족시킵니다. */
+/* ⚠️ 간단한 직원 공용 비밀번호입니다. */
 const STAFF_PASSWORD = "cheongin2026";
+const AUTH_KEY = "cim-leak-auth-v2";
+const AUTH_DAYS = 7;
 
 let db = null;
 let authReadyPromise = Promise.resolve(null);
 try{
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
-
   authReadyPromise = new Promise(function(resolve){
-    firebase.auth().onAuthStateChanged(function(user){
-      if(user) resolve(user);
-    });
+    firebase.auth().onAuthStateChanged(function(user){ if(user) resolve(user); });
   });
-  firebase.auth().signInAnonymously().catch(function(err){
-    console.error("익명 로그인 실패 - Firebase 콘솔 > Authentication에서 '익명' 로그인을 사용 설정했는지 확인하세요.", err);
-  });
+  firebase.auth().signInAnonymously().catch(function(err){ console.error("익명 로그인 실패", err); });
 }catch(e){ console.warn('Firebase 초기화 실패', e); }
 
 let allRows = [];
 
+/* ===== 게이트 (7일 유지) ===== */
 function checkGate(){
   var pw = document.getElementById('gatePw').value;
   if(pw === STAFF_PASSWORD){
-    sessionStorage.setItem('cim-leak-auth', '1');
-    document.getElementById('gate').style.display = 'none';
-    document.getElementById('mainWrap').style.display = 'block';
-    startListening();
+    localStorage.setItem(AUTH_KEY, JSON.stringify({ ts: Date.now() }));
+    enterDashboard();
   } else {
     document.getElementById('gateErr').style.display = 'block';
   }
 }
 window.checkGate = checkGate;
-
-if(sessionStorage.getItem('cim-leak-auth') === '1'){
+function enterDashboard(){
   document.getElementById('gate').style.display = 'none';
   document.getElementById('mainWrap').style.display = 'block';
   startListening();
+}
+(function checkAuthOnLoad(){
+  try{
+    var raw = localStorage.getItem(AUTH_KEY);
+    if(raw){
+      var data = JSON.parse(raw);
+      if(data && data.ts && (Date.now() - data.ts) < AUTH_DAYS*24*60*60*1000){
+        enterDashboard();
+        return;
+      }
+    }
+  }catch(e){}
+})();
+document.getElementById('gatePw').addEventListener('keydown', function(e){ if(e.key==='Enter') checkGate(); });
+
+/* ===== 검색 유틸 (공백 무관 + 초성검색) ===== */
+var CHO = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+function toChosung(str){
+  var out = '';
+  for(var i=0;i<String(str||'').length;i++){
+    var ch = str[i];
+    var code = ch.charCodeAt(0) - 0xAC00;
+    if(code >= 0 && code <= 11171){ out += CHO[Math.floor(code/588)]; }
+    else if(/[ㄱ-ㅎ]/.test(ch)){ out += ch; }
+  }
+  return out;
+}
+function normalizeForSearch(str){ return String(str||'').replace(/\s+/g,'').toLowerCase(); }
+function matchesQuery(haystack, query){
+  var hNorm = normalizeForSearch(haystack), qNorm = normalizeForSearch(query);
+  if(!qNorm) return true;
+  if(hNorm.indexOf(qNorm) !== -1) return true;
+  var hCho = toChosung(haystack), qCho = toChosung(query);
+  if(qCho && hCho.indexOf(qCho) !== -1) return true;
+  return false;
 }
 
 function fmtWon(n){ return Math.round(n||0).toLocaleString('ko-KR') + '원'; }
@@ -241,51 +228,71 @@ function startListening(){
   }
   document.getElementById('listBody').innerHTML = '<tr><td colspan="9" style="padding:30px;text-align:center;color:#889099;">로그인 확인 중...</td></tr>';
   authReadyPromise.then(function(){
-    db.ref(DATA_NODE).on('value', function(snap){
-      var val = snap.val() || {};
-      allRows = Object.keys(val).map(function(id){
-        var rec = val[id];
-        var meta = rec.meta || {};
-        return {
-          id: id,
-          estimateNo: meta.estimateNo || id,
-          customerName: (meta.customerName || '').replace(/\[.*?\]/g,'').trim() || '(미입력)',
-          clientChannel: meta.clientChannel || '',
-          address: (meta.address || '').replace(/\[.*?\]/g,'').trim() || '-',
-          phone: meta.phone || '',
-          issueDate: meta.issueDate || '',
-          grandTotal: meta.grandTotal || 0,
-          manager: meta.manager || '-',
-          status: meta.status || '작성중',
-          updatedAt: meta.updatedAt || 0
-        };
-      });
+    var leakRows = {}, tradeRows = {};
+    var bothLoaded = { leak:false, trade:false };
+
+    function rebuild(){
+      var merged = [];
+      Object.keys(leakRows).forEach(function(id){ merged.push(toRow(id, leakRows[id], 'leak')); });
+      Object.keys(tradeRows).forEach(function(id){ merged.push(toRow(id, tradeRows[id], 'trade')); });
+      allRows = merged;
       render();
+    }
+
+    db.ref('leak_estimates').on('value', function(snap){
+      leakRows = snap.val() || {}; bothLoaded.leak = true; rebuild();
     }, function(err){
       console.error(err);
-      document.getElementById('listBody').innerHTML = '<tr><td colspan="9" style="padding:30px;text-align:center;color:#c0392b;">데이터를 불러오지 못했습니다 (leak_estimates 규칙 또는 익명 로그인 설정 확인)</td></tr>';
+      document.getElementById('listBody').innerHTML = '<tr><td colspan="9" style="padding:30px;text-align:center;color:#c0392b;">leak_estimates를 불러오지 못했습니다 (규칙/로그인 확인)</td></tr>';
+    });
+    db.ref('b2b_estimates').on('value', function(snap){
+      tradeRows = snap.val() || {}; bothLoaded.trade = true; rebuild();
+    }, function(err){
+      console.error(err);
+      // b2b_estimates 규칙이 아직 없을 수 있음 - 조용히 무시하고 누수 견적만 표시
     });
   });
 }
 
-function updateStatus(id, newStatus){
+function toRow(id, rec, type){
+  var meta = rec.meta || {};
+  return {
+    id: id,
+    docType: type,
+    estimateNo: meta.estimateNo || id,
+    customerName: (meta.customerName || '').replace(/\[.*?\]/g,'').trim() || '(미입력)',
+    clientChannel: meta.clientChannel || '',
+    address: (meta.address || '').replace(/\[.*?\]/g,'').trim() || '-',
+    phone: meta.phone || '',
+    issueDate: meta.issueDate || '',
+    grandTotal: meta.grandTotal || 0,
+    manager: meta.manager || '-',
+    status: meta.status || '작성중',
+    updatedAt: meta.updatedAt || 0
+  };
+}
+
+function updateStatus(id, docType, newStatus){
   if(!db) return;
+  var node = docType === 'trade' ? 'b2b_estimates' : 'leak_estimates';
   authReadyPromise.then(function(){
-    db.ref(DATA_NODE + '/' + id + '/meta').update({ status: newStatus, updatedAt: Date.now() });
+    db.ref(node + '/' + id + '/meta').update({ status: newStatus, updatedAt: Date.now() });
   });
 }
 window.updateStatus = updateStatus;
 
 function render(){
-  var q = document.getElementById('searchBox').value.trim().toLowerCase();
+  var q = document.getElementById('searchBox').value.trim();
+  var typeF = document.getElementById('typeFilter').value;
   var statusF = document.getElementById('statusFilter').value;
   var sortV = document.getElementById('sortSelect').value;
 
   var rows = allRows.filter(function(r){
+    if(typeF && r.docType !== typeF) return false;
     if(statusF && r.status !== statusF) return false;
     if(!q) return true;
-    var hay = [r.customerName, r.clientChannel, r.address, r.estimateNo, r.phone].join(' ').toLowerCase();
-    return hay.indexOf(q) !== -1;
+    var hay = [r.customerName, r.clientChannel, r.address, r.estimateNo, r.phone].join(' ');
+    return matchesQuery(hay, q);
   });
 
   rows.sort(function(a,b){
@@ -305,31 +312,32 @@ function render(){
   } else {
     document.getElementById('emptyMsg').style.display = 'none';
     tbody.innerHTML = rows.map(function(r){
-      var statuses = ['작성중','발송됨','고객확인','계약전환','보류','취소'];
-      var opts = statuses.map(function(s){
-        return '<option value="'+s+'"'+(s===r.status?' selected':'')+'>'+s+'</option>';
-      }).join('');
+      var statuses = r.docType === 'trade'
+        ? ['작성중','발송됨','확인됨','계약전환','보류','취소']
+        : ['작성중','발송됨','고객확인','계약전환','보류','취소'];
+      var opts = statuses.map(function(s){ return '<option value="'+s+'"'+(s===r.status?' selected':'')+'>'+s+'</option>'; }).join('');
+      var typeLabel = r.docType === 'trade' ? '<span class="type-badge trade">📦 거래처</span>' : '<span class="type-badge leak">🌊 누수</span>';
       return '<tr>' +
+        '<td>'+typeLabel+'</td>' +
         '<td>'+esc(r.estimateNo)+'</td>' +
-        '<td>'+esc(r.customerName)+'</td>' +
-        '<td>'+esc(r.clientChannel || '-')+'</td>' +
+        '<td>'+esc(r.customerName)+(r.clientChannel?(' <span style="color:#889099;font-size:11px;">('+esc(r.clientChannel)+')</span>'):'')+'</td>' +
         '<td class="addr" title="'+esc(r.address)+'">'+esc(r.address)+'</td>' +
         '<td>'+esc(r.issueDate || '-')+'</td>' +
         '<td class="num">'+fmtWon(r.grandTotal)+'</td>' +
         '<td>'+esc(r.manager)+'</td>' +
-        '<td><select class="statusSelect" onchange="updateStatus(\''+r.id+'\', this.value)">'+opts+'</select></td>' +
-        '<td><a class="openLink" href="leak-estimate.html?id='+encodeURIComponent(r.id)+'">열기 →</a></td>' +
+        '<td><select class="statusSelect" onchange="updateStatus(\''+r.id+'\',\''+r.docType+'\', this.value)">'+opts+'</select></td>' +
+        '<td><a class="openLink" href="leak-estimate.html?tab='+r.docType+'&id='+encodeURIComponent(r.id)+'">열기 →</a></td>' +
         '</tr>';
     }).join('');
   }
 
-  // 통계
   document.getElementById('statTotal').textContent = allRows.length;
+  document.getElementById('statLeak').textContent = allRows.filter(function(r){ return r.docType==='leak'; }).length;
+  document.getElementById('statTrade').textContent = allRows.filter(function(r){ return r.docType==='trade'; }).length;
   var now = new Date();
   var ym = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
   var monthRows = allRows.filter(function(r){ return (r.issueDate||'').indexOf(ym) === 0; });
   document.getElementById('statMonth').textContent = monthRows.length;
-  document.getElementById('statContract').textContent = allRows.filter(function(r){ return r.status === '계약전환'; }).length;
   var monthSum = monthRows.reduce(function(s,r){ return s + (r.grandTotal||0); }, 0);
   document.getElementById('statAmount').textContent = fmtWon(monthSum);
 }
@@ -341,9 +349,9 @@ function esc(s){
 }
 
 document.getElementById('searchBox').addEventListener('input', render);
+document.getElementById('typeFilter').addEventListener('change', render);
 document.getElementById('statusFilter').addEventListener('change', render);
 document.getElementById('sortSelect').addEventListener('change', render);
-document.getElementById('gatePw').addEventListener('keydown', function(e){ if(e.key==='Enter') checkGate(); });
 </script>
 </body>
 </html>

@@ -213,58 +213,63 @@
   .row-del{ border:none; background:none; color:#c0392b; cursor:pointer; font-size:13px; font-weight:700; }
   .sheet-note{ font-size:11px; color:var(--ink-faint); margin-top:4px; }
 
-  @page{ margin:6mm; }
+  @page{ margin:8mm; }
   @media print{
-    body{ background:#fff; padding:0; font-size:10.5px; }
+    *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
+    body{ background:#fff; padding:0; font-size:12px; }
     .toolbar, .tabs, .meta-bar, .error-banner{ display:none !important; }
-    .sheet{ box-shadow:none; border-radius:0; margin:0 auto; padding:4mm 7mm 3mm; max-width:none; }
+    .sheet{ box-shadow:none; border-radius:0; margin:0 auto; padding:5mm 8mm 4mm; max-width:none; }
     .sheet.page-break{ page-break-before:always; }
     [contenteditable="true"]{ background:none!important; box-shadow:none!important; }
     .ti-input, .ti-wrap{ border:none !important; }
     input[type="date"].doc-date, .doc-input-inline{ border:none !important; background:none !important; padding:0 !important; -webkit-appearance:none; appearance:none; }
-    .seal-stamp{ mix-blend-mode:normal; height:34px; }
+    .seal-stamp{ mix-blend-mode:normal; height:36px; }
 
     /* 편집용 UI 요소는 인쇄에서 완전히 제거 */
     .accordion, .trade-search-bar, #tradeSearchHint, #tradeSearchResults, .row-del{ display:none !important; }
-    .client-picker-trigger{ border:none !important; background:none !important; padding:0 !important; min-width:0 !important; }
+    .client-picker-trigger{ border:none !important; background:none !important; padding:0 !important; min-width:0 !important; font-size:11px !important; font-weight:400 !important; color:#1a1d23 !important; }
     .client-picker-trigger .arrow, .client-picker-trigger span:last-child{ display:none !important; }
     .client-picker-panel{ display:none !important; }
 
-    /* 여백/줄간격 최대 압축 */
-    .brand-row{ padding-bottom:4px; margin-bottom:6px; }
-    .brand-name{ font-size:12px; }
-    .brand-tag{ font-size:8.5px; }
-    .doc-title{ font-size:16px; margin:2px 0 1px; }
-    .doc-sub{ font-size:9px; margin-bottom:6px; }
-    table.infogrid{ margin-bottom:5px; font-size:9.5px; }
-    table.infogrid td{ padding:3px 6px; }
-    table.items{ font-size:9px; }
-    table.items th{ padding:3px 3px; }
-    table.items td{ padding:2px 4px; }
-    table.items tr.subrow td{ padding:2px 4px; font-size:8.5px; }
-    table.items tr{ page-break-inside:avoid; }
-    .totals{ font-size:9.5px; }
-    .totals td{ padding:2px 8px; }
-    .totals tr.grand td{ font-size:10.5px; }
-    .pyeong-toggle{ margin:2px 0 4px; padding:3px 6px; font-size:9px; }
-    .pyeong-toggle input{ width:10px; height:10px; }
-    .notes{ margin-top:5px; padding:5px 8px; page-break-inside:avoid; }
-    .notes li{ font-size:8px; line-height:1.3; margin-bottom:0; }
-    .warnbox{ margin-top:4px; padding:5px 8px; page-break-inside:avoid; }
-    .warnbox li{ font-size:8px; line-height:1.3; }
-    .disclaimer-top{ font-size:8px; padding:4px 7px; margin-bottom:6px; line-height:1.3; }
-    .confirm-box{ margin-top:5px; padding:5px 8px; page-break-inside:avoid; }
-    .confirm-box p{ font-size:8.5px; line-height:1.3; margin:0 0 5px; }
-    .sign-line-grid{ gap:10px; }
-    .sign-line .lbl2{ margin-bottom:8px; font-size:9px; }
-    h2.sec{ font-size:11.5px; margin:6px 0 4px; padding-bottom:2px; page-break-after:avoid; }
-    h3.sub{ font-size:10px; margin:4px 0 2px; page-break-after:avoid; }
-    p.body-text{ font-size:9px; line-height:1.3; margin:1px 0 3px; }
-    ul.bullets{ margin:1px 0 4px; }
-    ul.bullets li{ font-size:9px; line-height:1.3; margin-bottom:0; }
-    .cover-tag{ font-size:8px; padding:1px 8px; margin-bottom:2px; }
-    .footdate{ margin:6px 0 4px; font-size:9px; }
-    table.infogrid.sign{ margin-top:4px; }
+    /* 여백은 압축하되, 읽기 편한 글자크기는 유지 */
+    .brand-row{ padding-bottom:5px; margin-bottom:8px; }
+    .brand-name{ font-size:13px; }
+    .brand-tag{ font-size:9.5px; }
+    .doc-title{ font-size:18px; margin:3px 0 1px; }
+    .doc-sub{ font-size:10.5px; margin-bottom:8px; }
+    table.infogrid{ margin-bottom:6px; font-size:11px; }
+    table.infogrid td{ padding:4px 7px; }
+    table.items{ font-size:10.5px; }
+    table.items th{ padding:4px 4px; }
+    table.items td{ padding:3px 5px; }
+    table.items tr.subrow td{ padding:2px 5px; font-size:10px; }
+    table.items tr{ break-inside:avoid; page-break-inside:avoid; }
+    .totals{ font-size:11px; }
+    .totals td{ padding:3px 9px; }
+    .totals tr.grand td{ font-size:12px; }
+    .pyeong-toggle{ margin:3px 0 5px; padding:3px 7px; font-size:10px; }
+    .pyeong-toggle input{ width:11px; height:11px; }
+
+    /* 큰 박스(특이사항/유의사항/확인동의)는 통째로 다음 페이지로 밀리지 않게,
+       줄 단위로만 끊기지 않도록 함 -> 이게 예전에 빈 여백이 컸던 원인 */
+    .notes, .warnbox, .confirm-box{ break-inside:auto; }
+    .notes{ margin-top:6px; padding:6px 10px; }
+    .notes li{ font-size:10px; line-height:1.45; margin-bottom:1px; break-inside:avoid; page-break-inside:avoid; }
+    .warnbox{ margin-top:5px; padding:6px 10px; }
+    .warnbox li{ font-size:10px; line-height:1.45; break-inside:avoid; page-break-inside:avoid; }
+    .disclaimer-top{ font-size:9.5px; padding:5px 9px; margin-bottom:8px; line-height:1.4; }
+    .confirm-box{ margin-top:6px; padding:6px 10px; }
+    .confirm-box p{ font-size:10px; line-height:1.4; margin:0 0 6px; }
+    .sign-line-grid{ gap:12px; }
+    .sign-line .lbl2{ margin-bottom:10px; font-size:10px; }
+    h2.sec{ font-size:12.5px; margin:8px 0 5px; padding-bottom:3px; break-after:avoid; page-break-after:avoid; }
+    h3.sub{ font-size:11px; margin:5px 0 3px; break-after:avoid; page-break-after:avoid; }
+    p.body-text{ font-size:10.5px; line-height:1.4; margin:2px 0 4px; }
+    ul.bullets{ margin:2px 0 5px; }
+    ul.bullets li{ font-size:10.5px; line-height:1.4; margin-bottom:1px; break-inside:avoid; page-break-inside:avoid; }
+    .cover-tag{ font-size:9px; padding:2px 9px; margin-bottom:3px; }
+    .footdate{ margin:8px 0 5px; font-size:10.5px; }
+    table.infogrid.sign{ margin-top:5px; }
   }
 </style>
 </head>
@@ -406,7 +411,7 @@
   </table>
 
   <div class="notes">
-    <div class="h">[특기사항]</div>
+    <div class="h">[특이사항]</div>
     <ul>
       <li contenteditable="true" data-k="note-1">본 견적서는 현장 실측 및 누수로 인한 침수 손상 범위에 근거하여 작성되었습니다.</li>
       <li contenteditable="true" data-k="note-2">바닥 슬래브 함수율 측정 결과에 따라 완전 건조 후 시공이 진행되며, 건조 지연 시 공사 일정이 조정될 수 있습니다.</li>
@@ -415,14 +420,14 @@
       <li contenteditable="true" data-k="note-5">상기 자재 규격은 표준 규격 기준이며, 특정 제조사 품번은 자재 발주 단계에서 확정 안내드립니다.</li>
       <li contenteditable="true" data-k="note-6">본 견적의 유효기간은 발행일로부터 15일이며, 자재 수급 및 원자재 가격 변동에 따라 변경될 수 있습니다.</li>
       <li contenteditable="true" data-k="note-7">본 견적은 예상 공사비 산정 자료이며, 실제 보험금 지급 여부 및 지급 금액을 보장하지 않습니다. 최종 지급 여부와 금액은 보험사 손해사정 결과에 따라 달라질 수 있습니다.</li>
-      <li contenteditable="true" data-k="note-8">시공 완료일로부터 1년간 시공 하자(마감재 들뜸, 이음부 벌어짐 등)에 한해 무상 보수하며, 자연침하·재누수·외부충격·고객 임의 시공 변경으로 인한 손상은 보증 범위에서 제외됩니다.</li>
+      <li contenteditable="true" data-k="note-8">시공 완료일로부터 1년간 시공 하자에 한해 무상 보수하며, 자연침하·재누수·외부충격·임의 변경으로 인한 손상은 제외됩니다.</li>
       <li contenteditable="true" data-k="note-9">10평 미만 시공은 별도 기본 시공비(인건비)가 청구되며, 10평 이상 시공은 시공비가 자재비 단가에 포함되어 별도 청구되지 않습니다.</li>
     </ul>
   </div>
 
   <div class="confirm-box">
     <div class="h">견적 내용 확인 및 동의</div>
-    <p contenteditable="true" data-k="confirm-text">본인은 상기 견적서의 공사 범위, 금액 및 특기사항 전체를 설명 받았으며 그 내용에 동의합니다. 견적서 상의 수량·단가는 실측 및 현장 확인을 기준으로 작성되었으며, 착공 후 현장 여건 변경 시 별도 협의를 거쳐 조정될 수 있습니다.</p>
+    <p contenteditable="true" data-k="confirm-text">본인은 상기 견적서의 공사 범위, 금액 및 특이사항 전체를 설명 받았으며 그 내용에 동의합니다. 견적서 상의 수량·단가는 실측 및 현장 확인을 기준으로 작성되었으며, 착공 후 현장 여건 변경 시 별도 협의를 거쳐 조정될 수 있습니다.</p>
     <div class="sign-line-grid">
       <div class="sign-line"><span class="lbl2">고객 성명</span><div class="fill-line"></div></div>
       <div class="sign-line"><span class="lbl2">서명</span><div class="fill-line"></div></div>
@@ -505,6 +510,7 @@
   <ul class="bullets">
     <li contenteditable="true" data-k="op-diag-1">바닥재 표면 들뜸, 변색, 흑화(곰팡이 발생) 및 변형(휨/뒤틀림) 확인</li>
     <li contenteditable="true" data-k="op-diag-2">마루 이음매(클릭부/접착면) 틈 벌어짐 및 하부 접착층 박리 현상 발생</li>
+    <li contenteditable="true" data-k="op-diag-4">콘크리트 바닥 표면에 남은 약한 시멘트층(레이턴스)으로 인해 접착이 제대로 되지 않아 마루가 들뜨는 현상 발생 가능</li>
     <li contenteditable="true" data-k="op-diag-3">슬래브 잔여 습기로 인한 지속적인 자재 부식 및 악취 유발 상태</li>
   </ul>
 
@@ -555,39 +561,56 @@
 <!-- ================================================================ -->
 <div id="tabTrade" style="display:none;">
 <div class="sheet">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-    <img src="images/logo.png" alt="청인마루" class="brand-logo-img" onerror="this.style.display='none'">
-    <div style="text-align:right;font-size:12.5px;color:var(--ink-soft);">견적번호 <span id="tradeEstNoDisplay">(저장 시 자동 부여)</span> · <input type="date" class="doc-date" data-k="tr-date" value="2026-08-31"></div>
-  </div>
-
-  <div style="font-size:16px;font-weight:900;color:var(--brand);margin-bottom:6px;">
-    <div class="client-picker" id="clientPickerTrade">
-      <button type="button" class="client-picker-trigger" onclick="toggleClientPicker('Trade')" style="font-size:16px;font-weight:900;color:var(--brand);min-width:240px;">
-        <span id="clientPickerTradeLabel" class="ph">거래처명 선택</span><span>▾</span>
-      </button>
-      <div class="client-picker-panel" id="clientPickerPanelTrade">
-        <input type="text" class="cp-search" id="clientPickerSearchTrade" placeholder="검색 또는 새로 입력..." oninput="renderClientPickerList('Trade')" onkeydown="handleClientPickerKey(event,'Trade')">
-        <div class="client-picker-list" id="clientPickerListTrade"></div>
-        <div class="cp-direct-hint">목록에 없으면 입력 후 Enter — 직접 입력한 이름이 바로 사용됩니다.</div>
+  <div class="brand-row">
+    <div class="brand-logo-row">
+      <img src="images/logo.png" alt="청인마루" class="brand-logo-img" onerror="this.style.display='none'">
+      <div>
+        <div class="brand-name">청인마루</div>
+        <div class="brand-tag">Water Damage Floor Restoration</div>
       </div>
     </div>
-    <input type="hidden" data-k="tr-customer" id="trCustomerHidden" value="[거래처명]">
-    귀중
+    <div class="doc-tag">견적번호 <span contenteditable="true" data-k="tr-est-no">TR-2026-0831</span><br>발행일 <input type="date" class="doc-date" data-k="tr-date" value=""></div>
   </div>
-  <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;">참고: <input type="text" class="doc-input-inline" data-k="tr-ref-name" placeholder="담당자명" value=""> <input type="tel" class="doc-input-inline" data-k="tr-ref-phone" placeholder="010-0000-0000" value="010-"></div>
-  <div style="font-size:12.5px;margin-bottom:6px;">아래와 같이 견적합니다.</div>
-  <div style="font-weight:700;font-size:13px;margin-bottom:10px;">현장: <span class="fillme" contenteditable="true" data-k="tr-site">[현장 주소]</span></div>
-  <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:16px;font-size:12px;color:var(--ink-soft);">
-    <span>실측일 <input type="date" class="doc-date" data-k="tr-date-survey" value=""></span>
-    <span>철거일 <input type="date" class="doc-date" data-k="tr-date-demo" value=""></span>
-    <span>공사일 <input type="date" class="doc-date" data-k="tr-date-work" value=""></span>
-  </div>
+
+  <div class="doc-title" style="font-size:22px;">거래처 견적서</div>
+  <div class="doc-sub">아래와 같이 견적합니다.</div>
+
+  <table class="infogrid">
+    <tr>
+      <td class="lbl">수신</td>
+      <td>
+        <div class="client-picker" id="clientPickerTrade">
+          <button type="button" class="client-picker-trigger" onclick="toggleClientPicker('Trade')" style="min-width:190px;">
+            <span id="clientPickerTradeLabel" class="ph">거래처명 선택</span><span>▾</span>
+          </button>
+          <div class="client-picker-panel" id="clientPickerPanelTrade">
+            <input type="text" class="cp-search" id="clientPickerSearchTrade" placeholder="검색 또는 새로 입력..." oninput="renderClientPickerList('Trade')" onkeydown="handleClientPickerKey(event,'Trade')">
+            <div class="client-picker-list" id="clientPickerListTrade"></div>
+            <div class="cp-direct-hint">목록에 없으면 입력 후 Enter — 직접 입력한 이름이 바로 사용됩니다.</div>
+          </div>
+        </div>
+        <input type="hidden" data-k="tr-customer" id="trCustomerHidden" value="[거래처명]">
+        귀중
+      </td>
+      <td class="lbl">참고</td>
+      <td><input type="text" class="doc-input-inline" data-k="tr-ref-name" placeholder="담당자명" value=""> <input type="tel" class="doc-input-inline" data-k="tr-ref-phone" placeholder="010-0000-0000" value="010-"></td>
+    </tr>
+    <tr>
+      <td class="lbl">현장</td>
+      <td class="fillme" colspan="3"><span contenteditable="true" data-k="tr-site">[현장 주소]</span></td>
+    </tr>
+    <tr>
+      <td class="lbl">일정</td>
+      <td colspan="3">실측일 <input type="date" class="doc-date" data-k="tr-date-survey" value="">　철거일 <input type="date" class="doc-date" data-k="tr-date-demo" value="">　공사일 <input type="date" class="doc-date" data-k="tr-date-work" value=""></td>
+    </tr>
+  </table>
 
   <table class="infogrid" style="margin-bottom:10px;">
     <tr><td class="lbl" rowspan="2" style="text-align:center;">공급자</td><td contenteditable="true" data-k="tr-sup-name">청인마루(399-23-00326) · <span contenteditable="true" data-k="tr-sup-type">도소매</span>/<span contenteditable="true" data-k="tr-sup-item">건자재</span></td></tr>
-    <tr><td contenteditable="true" data-k="tr-sup-addr1">인천 연수구 송도동 214번지 송도스마트밸리 E동 1505호</td></tr>
+    <tr><td contenteditable="true" data-k="tr-sup-addr1">인천 연수구 송도미래로30 E동 1505호</td></tr>
     <tr><td class="lbl">연락처</td><td>TEL <span contenteditable="true" data-k="tr-sup-tel">032-210-6268</span> · FAX <span contenteditable="true" data-k="tr-sup-fax">0508-901-1074</span></td></tr>
   </table>
+
 
   <div class="trade-search-bar">
     <input id="tradeSearchInput" placeholder="🔍 자재명 검색 (업체용 단가 구글시트 연동)" onkeydown="if(event.key==='Enter')searchTradePrice()">
@@ -624,8 +647,8 @@
       <li contenteditable="true" data-k="tr-note-3">본 견적의 유효기간은 발행일로부터 15일이며, 자재 수급 상황에 따라 변경될 수 있습니다.</li>
       <li contenteditable="true" data-k="tr-note-4">계약금 30% / 잔금 70% (준공 후 즉시 지급)을 원칙으로 하며, 별도 협의 시 조정 가능합니다.</li>
       <li contenteditable="true" data-k="tr-note-5">자재 발주 완료 후 취소 시 자재비 전액 및 위약금이 청구될 수 있습니다.</li>
-      <li contenteditable="true" data-k="tr-note-6">시공 완료일로부터 1년간 시공 하자에 한해 무상 보수하며, 자연침하·누수·외부충격·임의 시공 변경으로 인한 손상은 제외됩니다.</li>
-      <li contenteditable="true" data-k="tr-note-7">세금계산서는 계약금 및 잔금 입금 확인 후 각각 발행합니다.</li>
+      <li contenteditable="true" data-k="tr-note-6">시공 완료일로부터 1년간 시공 하자에 한해 무상 보수하며, 자연침하·재누수·외부충격·임의 변경으로 인한 손상은 제외됩니다.</li>
+      <li contenteditable="true" data-k="tr-note-7">세금계산서 및 현금영수증은 잔금 완납 후 한꺼번에 발급합니다.</li>
       <li contenteditable="true" data-k="tr-note-8">현장 실측 결과 및 여건(바닥 평활도, 단차, 기존 마감재 상태 등)에 따라 수량·금액이 조정될 수 있습니다.</li>
     </ul>
   </div>
@@ -1106,7 +1129,6 @@ function getTradeMeta(){
 function saveTrade(){
   if(!tradeEstimateId){
     tradeEstimateId = genId('TR');
-    document.getElementById('tradeEstNoDisplay').textContent = tradeEstimateId;
     var url = new URL(window.location.href); url.searchParams.set('id', tradeEstimateId); url.searchParams.set('tab','trade');
     window.history.replaceState({}, '', url);
   }
@@ -1136,7 +1158,6 @@ function loadTradeFromFirebase(id){
         document.getElementById('metaManagerTrade').value = val.meta.manager || '';
         document.getElementById('metaStatusTrade').value = val.meta.status || '작성중';
       }
-      document.getElementById('tradeEstNoDisplay').textContent = id;
       setTradeStatus('불러옴 · 마지막 수정: ' + (val.meta && val.meta.updatedAt ? new Date(val.meta.updatedAt).toLocaleString('ko-KR') : '-'), 'ok');
     }).catch(function(err){
       console.error(err);
@@ -1180,7 +1201,8 @@ function duplicateAsNew(){
     setLeakStatus('복제됨 · 아직 저장 전 (☁️ 견적 저장을 눌러주세요)', '');
   } else {
     tradeEstimateId = null;
-    document.getElementById('tradeEstNoDisplay').textContent = '(저장 시 자동 부여)';
+    var trNoEl = document.querySelector('#tabTrade [data-k="tr-est-no"]');
+    if(trNoEl) trNoEl.textContent = genId('TR');
     setTradeStatus('복제됨 · 아직 저장 전 (☁️ 견적 저장을 눌러주세요)', '');
   }
   var url = new URL(window.location.href);
@@ -1328,14 +1350,28 @@ function syncClientPickerLabel(which){
   var urlId = params.get('id');
   switchTab(urlTab);
 
+  function todayISO(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+
   if(urlTab === 'leak'){
     if(urlId){ leakEstimateId = urlId; loadLeakLocal(); loadLeakFromFirebase(urlId); }
-    else{ loadLeakLocal(); setLeakStatus('새 견적 (아직 저장되지 않음)', ''); }
+    else{
+      var hadLeakDraft = loadLeakLocal();
+      if(!hadLeakDraft){
+        var estDateEl = document.querySelector('#tabLeak [data-k="est-date"]');
+        if(estDateEl) estDateEl.value = todayISO();
+      }
+      setLeakStatus('새 견적 (아직 저장되지 않음)', '');
+    }
     recalcAll();
   } else {
-    if(urlId){ tradeEstimateId = urlId; document.getElementById('tradeEstNoDisplay').textContent = urlId; loadTradeLocal(); loadTradeFromFirebase(urlId); }
+    if(urlId){ tradeEstimateId = urlId; loadTradeLocal(); loadTradeFromFirebase(urlId); }
     else{
-      if(!loadTradeLocal()){ addTradeRow(); addTradeRow(); addTradeRow(); }
+      var hadTradeDraft = loadTradeLocal();
+      if(!hadTradeDraft){
+        addTradeRow(); addTradeRow(); addTradeRow();
+        var trDateEl = document.querySelector('#tabTrade [data-k="tr-date"]');
+        if(trDateEl) trDateEl.value = todayISO();
+      }
       setTradeStatus('새 견적 (아직 저장되지 않음)', '');
     }
   }

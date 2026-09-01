@@ -196,6 +196,7 @@
     border-radius:5px; padding:4px 6px; width:150px;
   }
   input[type="tel"].doc-input-inline{ width:118px; }
+  .doc-input-inline.no-highlight{ background:#fff; border-color:var(--line); }
 
   /* ---- 대표 직인(도장) ---- */
   .seal-stamp{ height:50px; width:auto; vertical-align:middle; margin-left:4px; mix-blend-mode:multiply; }
@@ -239,6 +240,7 @@
     /* 편집용 UI 요소는 인쇄에서 완전히 제거 */
     .accordion, .trade-search-bar, #tradeSearchHint, #tradeSearchResults, .row-del, .add-row-btn{ display:none !important; }
     .li-note{ font-size:9.5px; color:#6b7280; margin-top:1px; }
+    .li-note:empty{ display:none !important; margin-top:0 !important; }
     .client-picker-trigger{ border:none !important; background:none !important; padding:0 !important; min-width:0 !important; font-size:11px !important; font-weight:400 !important; color:#1a1d23 !important; }
     .client-picker-trigger .arrow, .client-picker-trigger span:last-child{ display:none !important; }
     .client-picker-panel{ display:none !important; }
@@ -434,7 +436,7 @@
     </tr>
     <tr>
       <td class="lbl">대표자</td><td><span contenteditable="true" data-k="est-ceo">송원덕</span><img class="seal-stamp" alt="대표 직인"></td>
-      <td class="lbl">연락처</td><td class="fillme"><input type="tel" class="doc-input-inline tel-mobile" data-k="est-phone" value="010-8299-1074"></td>
+      <td class="lbl">연락처</td><td><input type="tel" class="doc-input-inline tel-mobile no-highlight" data-k="est-phone" value="010-8299-1074"></td>
     </tr>
   </table>
 </div>
@@ -646,7 +648,7 @@
   </div>
 
   <div style="margin-top:16px;font-size:12.5px;">입금계좌: <span contenteditable="true" data-k="tr-bank">우리은행 청인마루(1005-403-096419)</span></div>
-  <div style="margin-top:6px;font-size:12.5px;">담당자: 청인마루 대표 <span contenteditable="true" data-k="tr-manager">송원덕</span> <input type="tel" class="doc-input-inline tel-mobile" data-k="tr-manager-phone" value="010-8299-1074"></div>
+  <div style="margin-top:6px;font-size:12.5px;">담당자: 청인마루 대표 <span contenteditable="true" data-k="tr-manager">송원덕</span> <input type="tel" class="doc-input-inline tel-mobile no-highlight" data-k="tr-manager-phone" value="010-8299-1074"></div>
 </div>
 </div><!-- /#tabTrade -->
 

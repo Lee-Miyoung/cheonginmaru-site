@@ -1830,6 +1830,9 @@
   }
 
   // 출고: 기존 방식 그대로 - 전체 브랜드를 아코디언으로 보여줌
+  let expandedPickerProducts = new Set();
+  let expandedPickerModels = new Set();
+
   function renderReturnPickerAllBrands() {
     const listEl = document.getElementById('return-picker-list');
     const q = normSearch(document.getElementById('return-search').value);
@@ -1852,17 +1855,10 @@
     const autoExpand = !!q; // 검색 중이면 자동으로 펼쳐서 보여줌
 
     brandNames.forEach(brand => {
-      // 같은 제품/모델이 여러 로트로 나뉘어 있어도 이름순으로 나란히 묶어서 보이게 정렬
-      const brandItems = groups[brand].sort((a,b) => {
-        const nameCompare = String(a.name||'').localeCompare(String(b.name||''), 'ko');
-        if (nameCompare !== 0) return nameCompare;
-        const modelCompare = String(a.model||'').localeCompare(String(b.model||''), 'ko');
-        if (modelCompare !== 0) return modelCompare;
-        return String(a.lot||'').localeCompare(String(b.lot||''), 'ko');
-      });
       const color = getBrandColor(brand);
       const isOpen = autoExpand || expandedPickerBrands.has(brand);
       const selectedInThisBrand = selectedReturnItem && selectedReturnItem.brand === brand;
+      const brandItems = groups[brand];
 
       const wrap = document.createElement('div');
       wrap.className = 'rounded-2xl border border-[var(--line)] overflow-hidden mb-1.5';
@@ -1884,27 +1880,106 @@
 
       const body = document.createElement('div');
       body.className = isOpen ? 'p-2 space-y-1.5 bg-white' : 'hidden';
-      brandItems.forEach(s => {
-        const isSelected = selectedReturnItem && selectedReturnItem.brand===s.brand && selectedReturnItem.name===s.name && selectedReturnItem.model===s.model && selectedReturnItem.lot===s.lot;
-        const row = document.createElement('button');
-        row.type = 'button';
-        row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 rounded-xl border ' + (isSelected ? 'border-[#8B5E34] bg-[#F6EFE6]' : 'border-[var(--line)] bg-[#FAF8F4]');
-        row.onclick = () => selectReturnItem(s);
-        const pickerSpec = (getModelInfo(s.brand, s.name, s.model) || {}).spec || '';
-        const pickerSpecMismatch = s.actualSpec && s.actualSpec !== pickerSpec;
-        row.innerHTML = `
-          <div class="min-w-0 flex-1">
-            <p class="text-[13px] font-bold text-[#B8B2A3] truncate">${s.name}</p>
-            <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
-            ${pickerSpecMismatch
-              ? `<p class="text-[13px] font-black text-[var(--rust)]"><i class="fas fa-triangle-exclamation mr-1"></i>스펙 다름: ${s.actualSpec}</p>`
-              : (pickerSpec ? `<p class="text-[13px] font-black text-[#8B5E34]"><i class="fas fa-ruler-combined mr-1"></i>${pickerSpec}</p>` : '')}
-            <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}</p>
-            ${(s.orderDate || s.inDate) ? `<p class="text-[12px] text-[#CFC9BB] font-bold">${s.orderDate?('발주 '+s.orderDate):''}${s.inDate?(' · 입고 '+s.inDate):''}</p>` : ''}
-          </div>
-          <span class="text-[15px] font-black text-[#3A342C] num shrink-0">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
+
+      // 브랜드 안에서 제품명별로 묶음
+      const productGroups = {};
+      brandItems.forEach(s => { (productGroups[s.name] = productGroups[s.name] || []).push(s); });
+      const productNames = Object.keys(productGroups).sort((a,b) => {
+        const aMax = Math.max(...productGroups[a].map(s => s.lastTs||0));
+        const bMax = Math.max(...productGroups[b].map(s => s.lastTs||0));
+        return bMax - aMax;
+      });
+
+      productNames.forEach(productName => {
+        const pItems = productGroups[productName];
+        const pTotal = pItems.reduce((sum,s) => sum + s.stock, 0);
+        const productKey = brand + '||' + productName;
+        const pIsOpen = autoExpand || expandedPickerProducts.has(productKey);
+
+        const pWrap = document.createElement('div');
+        pWrap.className = 'rounded-xl border border-[var(--line)] overflow-hidden mb-1.5';
+        const pHeader = document.createElement('button');
+        pHeader.type = 'button';
+        pHeader.className = 'w-full flex items-center justify-between px-3 py-2.5 bg-[#F3F0EA]';
+        pHeader.onclick = () => { if (expandedPickerProducts.has(productKey)) expandedPickerProducts.delete(productKey); else expandedPickerProducts.add(productKey); renderReturnPicker(); };
+        pHeader.innerHTML = `
+          <span class="flex items-center gap-2 min-w-0">
+            <span class="text-[14px] font-black text-[#5C5347] truncate">${productName}</span>
+            <span class="text-[12px] font-bold text-[#B8B2A3] shrink-0">${pItems.length}개</span>
+          </span>
+          <span class="flex items-center gap-1.5 shrink-0">
+            <span class="text-[14px] font-black text-[#3A342C] num">${pTotal.toLocaleString()} <span class="text-[12px] font-bold text-[#8B8477]">BOX</span></span>
+            <i class="fas fa-chevron-down text-[11px] text-[#B8B2A3] brand-accordion-arrow${pIsOpen ? ' open' : ''}"></i>
+          </span>
         `;
-        body.appendChild(row);
+        pWrap.appendChild(pHeader);
+
+        const pBody = document.createElement('div');
+        pBody.className = pIsOpen ? 'divide-y divide-[var(--line)] pl-3' : 'hidden';
+
+        // 제품명 안에서 모델(색상)별로 한 번 더 묶어서 아코디언으로
+        const modelGroups = {};
+        pItems.forEach(s => { (modelGroups[s.model] = modelGroups[s.model] || []).push(s); });
+        const modelNames = Object.keys(modelGroups).sort((a,b) => {
+          // 발주일자가 가장 최근인 모델이 위로 오게
+          const aMax = modelGroups[a].reduce((m,s) => (s.orderDate && s.orderDate > m) ? s.orderDate : m, '');
+          const bMax = modelGroups[b].reduce((m,s) => (s.orderDate && s.orderDate > m) ? s.orderDate : m, '');
+          return bMax.localeCompare(aMax);
+        });
+
+        modelNames.forEach(modelName => {
+          const modelLots = modelGroups[modelName].sort((a,b) => (b.orderDate||'').localeCompare(a.orderDate||'')); // 발주일자 최신순
+          const modelTotal = modelLots.reduce((sum,s) => sum + s.stock, 0);
+          const modelKey = productKey + '||' + modelName;
+          const modelIsOpen = autoExpand || expandedPickerModels.has(modelKey);
+          const info = getModelInfo(brand, productName, modelName);
+          const spec = info && info.spec ? info.spec : '';
+          const selectedInThisModel = selectedReturnItem && selectedReturnItem.brand===brand && selectedReturnItem.name===productName && selectedReturnItem.model===modelName;
+
+          const mWrap = document.createElement('div');
+          mWrap.className = 'border-l-2 rounded-l';
+          mWrap.style.borderColor = color;
+          const mHeader = document.createElement('button');
+          mHeader.type = 'button';
+          mHeader.className = 'w-full flex items-center justify-between pl-3 pr-3.5 py-2.5 bg-white border-b border-[var(--line)]';
+          mHeader.onclick = () => { if (expandedPickerModels.has(modelKey)) expandedPickerModels.delete(modelKey); else expandedPickerModels.add(modelKey); renderReturnPicker(); };
+          mHeader.innerHTML = `
+            <span class="min-w-0 text-left">
+              <span class="text-[15px] font-black text-[#3A342C] truncate block">${modelName}${selectedInThisModel ? ' · 선택됨' : ''}</span>
+              ${spec ? `<span class="text-[12px] font-bold text-[#8B5E34]">${spec}</span>` : ''}
+              <span class="text-[12px] font-bold text-[#B8B2A3] block">로트 ${modelLots.length}개</span>
+            </span>
+            <span class="flex items-center gap-1.5 shrink-0">
+              <span class="text-[15px] font-black text-[#3A342C] num">${modelTotal.toLocaleString()} <span class="text-[12px] font-bold text-[#B8B2A3]">BOX</span></span>
+              <i class="fas fa-chevron-down text-[11px] text-[#B8B2A3] brand-accordion-arrow${modelIsOpen ? ' open' : ''}"></i>
+            </span>
+          `;
+          mWrap.appendChild(mHeader);
+
+          const mBody = document.createElement('div');
+          mBody.className = modelIsOpen ? 'divide-y divide-[var(--line)] bg-[#FCFBF8] pl-4' : 'hidden';
+          modelLots.forEach(s => {
+            const isSelected = selectedReturnItem && selectedReturnItem.brand===s.brand && selectedReturnItem.name===s.name && selectedReturnItem.model===s.model && selectedReturnItem.lot===s.lot;
+            const specMismatch = s.actualSpec && s.actualSpec !== spec;
+            const row = document.createElement('button');
+            row.type = 'button';
+            row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 bg-white active:bg-[#F6EFE6] ' + (isSelected ? 'border-l-4 border-[#8B5E34] bg-[#F6EFE6]' : '');
+            row.onclick = () => selectReturnItem(s);
+            row.innerHTML = `
+              <div class="min-w-0 flex-1">
+                ${specMismatch ? `<p class="text-[13px] font-black text-[var(--rust)] mt-0.5"><i class="fas fa-triangle-exclamation mr-1"></i>스펙 다름: ${s.actualSpec} <span class="text-[#B8B2A3] font-bold">(시트: ${spec || '미기재'})</span></p>` : ''}
+                <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · 생산 '+s.prodDate) : ''}</p>
+                ${(s.orderDate || s.inDate) ? `<p class="text-[13px] font-black" style="color:${color}"><i class="fas fa-calendar-day mr-1"></i>${s.orderDate?('발주 '+s.orderDate):''}${s.inDate?(' · 입고 '+s.inDate):''}</p>` : ''}
+              </div>
+              <span class="text-[15px] font-black text-[#3A342C] num shrink-0">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
+            `;
+            mBody.appendChild(row);
+          });
+          mWrap.appendChild(mBody);
+          pBody.appendChild(mWrap);
+        });
+        pWrap.appendChild(pBody);
+        body.appendChild(pWrap);
       });
       wrap.appendChild(body);
       listEl.appendChild(wrap);

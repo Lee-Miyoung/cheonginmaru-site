@@ -609,6 +609,9 @@
       </div>
 
       <input type="text" id="return-search" class="input-premium" placeholder="브랜드/제품/모델/로트 검색..." oninput="renderReturnPicker()">
+      <select id="return-month-filter" class="input-premium hidden" onchange="renderReturnPicker()">
+        <option value="">전체 발주월</option>
+      </select>
       <div id="return-picker-list" class="space-y-1.5 max-h-72 overflow-y-auto"></div>
       <span id="return-picker-empty-msg" class="hidden"></span>
       <div id="return-selected-panel" class="hidden rounded-xl p-3.5 border"></div>
@@ -1695,12 +1698,14 @@
     if (currentType === '반품') {
       if (!returnBrandFilter) {
         listEl.innerHTML = '<div class="text-center py-10 text-[#B8B2A3] text-[14px]"><i class="fas fa-hand-point-up block text-[22px] mb-2"></i>위에서 반품할 브랜드를 먼저 선택하세요<br><span class="text-[12px]">브랜드를 고르면 그 재고만 발주월별로 보여드려요</span></div>';
+        document.getElementById('return-month-filter').classList.add('hidden');
         return;
       }
       renderReturnPickerByMonth(returnBrandFilter);
       return;
     }
 
+    document.getElementById('return-month-filter').classList.add('hidden');
     renderReturnPickerAllBrands();
   }
 
@@ -1708,16 +1713,35 @@
   function renderReturnPickerByMonth(brand) {
     const listEl = document.getElementById('return-picker-list');
     const q = normSearch(document.getElementById('return-search').value);
+    const monthFilterEl = document.getElementById('return-month-filter');
     const items = stockSummary.filter(s => s.brand === brand && s.stock > 0 && (!q || normSearch(s.name+s.model+(s.lot||'')).includes(q)));
+
+    // 발주월 선택 드롭다운 채우기 (전체 보기 or 특정 월만 보기)
+    const NO_DATE_KEY = '__none__';
+    const allMonthKeys = [...new Set(items.map(s => s.orderDate ? s.orderDate.slice(0,7) : NO_DATE_KEY))].sort((a,b) => {
+      if (a === NO_DATE_KEY) return 1;
+      if (b === NO_DATE_KEY) return -1;
+      return a.localeCompare(b);
+    });
+    const prevMonthValue = monthFilterEl.value;
+    monthFilterEl.innerHTML = '<option value="">전체 발주월</option>' + allMonthKeys.map(mk => {
+      const label = mk === NO_DATE_KEY ? '발주일 미기재' : `${mk.slice(0,4)}년 ${parseInt(mk.slice(5,7),10)}월 발주`;
+      return `<option value="${mk}">${label}</option>`;
+    }).join('');
+    monthFilterEl.value = allMonthKeys.includes(prevMonthValue) ? prevMonthValue : '';
+    monthFilterEl.classList.toggle('hidden', allMonthKeys.length <= 1);
+    const selectedMonth = monthFilterEl.value;
+
+    const filteredItems = selectedMonth ? items.filter(s => (s.orderDate ? s.orderDate.slice(0,7) : NO_DATE_KEY) === selectedMonth) : items;
+
     listEl.innerHTML = '';
-    if (!items.length) {
+    if (!filteredItems.length) {
       listEl.innerHTML = `<div class="text-center py-6 text-[#B8B2A3] text-[14px]">${q ? '검색 결과가 없습니다' : '이 브랜드는 반품 가능한 재고가 없습니다'}</div>`;
       return;
     }
 
-    const NO_DATE_KEY = '__none__';
     const groups = {};
-    items.forEach(s => {
+    filteredItems.forEach(s => {
       const monthKey = s.orderDate ? s.orderDate.slice(0, 7) : NO_DATE_KEY;
       (groups[monthKey] = groups[monthKey] || []).push(s);
     });
@@ -1745,7 +1769,7 @@
 
       monthItems.forEach(s => {
         const card = document.createElement('div');
-        card.className = 'rounded-xl border border-[var(--line)] bg-[#FAF8F4] p-3 mb-1.5';
+        card.className = 'rounded-xl border-2 border-[var(--line)] bg-[#FAF8F4] p-3 mb-1.5 transition-colors';
         const pickerSpec = (getModelInfo(s.brand, s.name, s.model) || {}).spec || '';
         const pickerSpecMismatch = s.actualSpec && s.actualSpec !== pickerSpec;
         card.innerHTML = `
@@ -1765,11 +1789,16 @@
             <div><label class="text-[11px] font-bold text-[#B8B2A3]">반품 수량</label><input type="number" class="rp-qty-input input-premium text-sm mt-0.5" placeholder="박스"></div>
             <div><label class="text-[11px] font-bold text-[#B8B2A3]">반품 사유</label><input type="text" class="rp-memo-input input-premium text-sm mt-0.5" value="시공잔량"></div>
           </div>
-          <button type="button" class="rp-add-btn w-full mt-2 py-2.5 bg-[#8B5E34] text-white rounded-xl font-black text-[13px]"><i class="fas fa-rotate-left mr-1"></i>반품리스트에 추가</button>
+          <button type="button" class="rp-add-btn w-full mt-2 py-2.5 bg-[#8B5E34] text-white rounded-xl font-black text-[13px]"><i class="fas fa-rotate-left mr-1"></i>반품 저장 (재고 반영 + 리스트 추가)</button>
         `;
         const qtyInput = card.querySelector('.rp-qty-input');
         const memoInput = card.querySelector('.rp-memo-input');
         const addBtn = card.querySelector('.rp-add-btn');
+        // 수량을 입력하는 순간 카드 색이 바뀌어서 "지금 이거 작업 중"인 게 눈에 띄게 됨
+        qtyInput.addEventListener('input', () => {
+          const active = parseFloat(qtyInput.value) > 0;
+          card.className = 'rounded-xl border-2 p-3 mb-1.5 transition-colors ' + (active ? 'border-[#8B5E34] bg-[#F6EFE6]' : 'border-[var(--line)] bg-[#FAF8F4]');
+        });
         addBtn.onclick = () => quickCommitReturn(s, qtyInput, memoInput, addBtn);
         listEl.appendChild(card);
       });
@@ -2660,8 +2689,9 @@
   // 이 버튼 하나로: 실제 반품 재고 처리 + 반품리스트 대기목록 추가를 한 번에 함 (따로 '저장' 안 눌러도 됨)
   // 반품 실제 처리(재고 차감) + 반품리스트 대기목록 추가를 한 번에 하는 공용 로직
   function commitReturnAndQueue(item, qty, memo, dateVal) {
+    const finalDate = dateVal || new Date().toISOString().slice(0,10);
     const record = {
-      date: dateVal || new Date().toISOString().slice(0,10),
+      date: finalDate,
       type: '반품',
       brand: item.brand,
       name: item.name,
@@ -2672,6 +2702,7 @@
       vendor: '',
       memo,
       author: getCurrentAuthor(),
+      batchId: item.brand + '__' + finalDate, // 같은 브랜드+같은 날 반품은 기록 목록에서 한 묶음으로 보여주기 위한 표시
       ts: Date.now()
     };
     return fbDatabase.ref('stock_movements').push(record).then(() => {
@@ -2736,13 +2767,22 @@
 3. 되도록 같은 제품/패턴끼리 모아서 적재해 주십시요.
 4. 반품담당자가 직접확인, 서명하여 주십시요.`;
 
+  // 브랜드별로 자주 쓰는 도착지 정보 - 처음 한 번은 이 기본값으로 채워지고, 이후엔 직접 입력한 값이 우선됨
+  const RL_BRAND_ARRIVE_DEFAULTS = {
+    '노바마루(캔마트코리아)': {
+      arrivePerson: '김동영 010-4001-7368',
+      arriveAddr: '경기 이천시 신둔면 황무로 338번지 281 노바마루 2공장'
+    }
+  };
+
   function onReturnListBrandChange() {
     const brand = document.getElementById('rl-brand').value;
     let saved = {};
     try { saved = JSON.parse(localStorage.getItem('cm_return_list_pref_' + brand) || '{}'); } catch(e) {}
+    const brandDefault = RL_BRAND_ARRIVE_DEFAULTS[brand] || {};
     document.getElementById('rl-to-name').value = saved.toName || '';
-    document.getElementById('rl-arrive-addr').value = saved.arriveAddr || '';
-    document.getElementById('rl-arrive-person').value = saved.arrivePerson || '';
+    document.getElementById('rl-arrive-addr').value = saved.arriveAddr || brandDefault.arriveAddr || '';
+    document.getElementById('rl-arrive-person').value = saved.arrivePerson || brandDefault.arrivePerson || '';
     document.getElementById('rl-depart-addr').value = saved.departAddr || '인천 서구 석남동 223-757 청인마루';
     document.getElementById('rl-depart-person').value = saved.departPerson || '대표 송원덕(010-8299-1074)';
     document.getElementById('rl-title').value = saved.title || RL_DEFAULT_TITLE;
@@ -2763,6 +2803,7 @@
     box.innerHTML = '';
     if (!items.length) { box.innerHTML = '<div class="text-center py-4 text-[#B8B2A3] text-[13px]">이 브랜드는 재고가 없습니다</div>'; return; }
     items.forEach(s => {
+      const color = getBrandColor(brand);
       const row = document.createElement('button');
       row.type = 'button';
       row.className = 'w-full text-left flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-[var(--line)] bg-white active:bg-[#F6EFE6] mb-1.5';
@@ -2775,7 +2816,7 @@
           <p class="text-[12px] font-bold text-[#B8B2A3] truncate">${s.name}</p>
           <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
           <p class="text-[12px] text-[#8B8477] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · 생산 '+s.prodDate) : ''}</p>
-          ${s.orderDate ? `<p class="text-[12px] text-[#B8B2A3] font-bold">발주 ${s.orderDate}</p>` : ''}
+          ${s.orderDate ? `<p class="text-[13px] font-black mt-0.5" style="color:${color}"><i class="fas fa-calendar-day mr-1"></i>발주 ${s.orderDate}</p>` : ''}
         </div>
         <div class="text-right shrink-0 flex flex-col items-end gap-1">
           <span class="text-[15px] font-black text-[#3A342C] num">${s.stock.toLocaleString()}<span class="text-[11px] font-bold text-[#B8B2A3]"> BOX</span></span>
@@ -2789,24 +2830,26 @@
   function addReturnListRow(vals) {
     const v = { ...RL_ROW_DEFAULTS, ...(vals || {}) };
     const row = document.createElement('div');
-    row.className = 'bg-white border rounded-xl p-3 space-y-2 ' + (v.committed ? 'border-[#D9E4D0] bg-[#F6FAF3]' : 'border-[var(--line)]');
+    row.className = 'bg-white border rounded-xl p-3.5 space-y-2.5 ' + (v.committed ? 'border-[#D9E4D0] bg-[#F6FAF3]' : 'border-[var(--line)]');
     row.setAttribute('data-rl-row', '');
     row.dataset.committed = v.committed ? 'true' : 'false';
     row.innerHTML = `
-      ${v.committed ? '<p class="text-[12px] font-black text-[#5C7A3D]"><i class="fas fa-circle-check mr-1"></i>이미 반품 처리됨 (재고에 반영됨)</p>' : '<p class="text-[12px] font-black text-amber-600"><i class="fas fa-clock mr-1"></i>대기 중 - 이미지 생성 시 반품 처리됨</p>'}
-      <div class="flex items-start gap-1.5">
-        <div class="flex-1"><label class="text-[11px] font-bold text-[#B8B2A3]">분류(종류)</label><input type="text" class="rl-category input-premium text-sm mt-0.5" placeholder="예: 블랙라벨" value="${v.category}"></div>
-        <div class="flex-1"><label class="text-[11px] font-bold text-[#B8B2A3]">패턴명(제품명)</label><input type="text" class="rl-pattern input-premium text-sm mt-0.5" placeholder="예: 뮤트브라운" value="${v.pattern}"></div>
-        <button type="button" onclick="this.closest('[data-rl-row]').remove(); recalcReturnListTotal();" class="text-[#CFC9BB] hover:text-rose-500 px-1 mt-5"><i class="fas fa-times"></i></button>
+      <div class="flex items-center justify-between">
+        ${v.committed
+          ? '<p class="text-[12px] font-black text-[#5C7A3D]"><i class="fas fa-circle-check mr-1"></i>이미 반품 처리됨 (재고 반영됨)</p>'
+          : '<p class="text-[12px] font-black text-amber-600"><i class="fas fa-clock mr-1"></i>대기 중 - 이미지 생성 시 반품 처리됨</p>'}
+        <button type="button" onclick="this.closest('[data-rl-row]').remove(); recalcReturnListTotal();" class="text-[#CFC9BB] hover:text-rose-500 w-7 h-7 rounded-full flex items-center justify-center shrink-0"><i class="fas fa-times"></i></button>
       </div>
-      <div><label class="text-[11px] font-bold text-[#B8B2A3]">생산LOT</label><input type="text" class="rl-lot input-premium text-sm mt-0.5" placeholder="생산LOT" value="${v.lot}"></div>
-      <div class="grid grid-cols-2 gap-1.5">
-        <div><label class="text-[11px] font-bold text-[var(--rust)]">발주일자 *필수</label><input type="date" class="rl-order-date input-premium text-sm mt-0.5" value="${v.orderDate}"></div>
-        <div><label class="text-[11px] font-bold text-[#B8B2A3]">생산일자 (선택)</label><input type="date" class="rl-prod-date input-premium text-sm mt-0.5" value="${v.prodDate}"></div>
+      <div><label class="text-[11px] font-bold text-[#B8B2A3]">분류(종류)</label><input type="text" class="rl-category input-premium text-sm mt-1 w-full" placeholder="예: 블랙라벨" value="${v.category}"></div>
+      <div><label class="text-[11px] font-bold text-[#B8B2A3]">패턴명(제품명)</label><input type="text" class="rl-pattern input-premium text-sm mt-1 w-full" placeholder="예: 뮤트브라운" value="${v.pattern}"></div>
+      <div><label class="text-[11px] font-bold text-[#B8B2A3]">생산LOT</label><input type="text" class="rl-lot input-premium text-sm mt-1 w-full" placeholder="생산LOT" value="${v.lot}"></div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label class="text-[11px] font-bold text-[var(--rust)]">발주일자 *필수</label><input type="date" class="rl-order-date input-premium text-sm mt-1 w-full" value="${v.orderDate}"></div>
+        <div><label class="text-[11px] font-bold text-[#B8B2A3]">생산일자 (선택)</label><input type="date" class="rl-prod-date input-premium text-sm mt-1 w-full" value="${v.prodDate}"></div>
       </div>
-      <div class="flex gap-1.5">
-        <div><label class="text-[11px] font-bold text-[#B8B2A3]">박스수</label><input type="number" class="rl-qty input-premium text-sm mt-0.5" placeholder="박스" value="${v.qty}" style="width:90px" ${v.committed ? 'readonly' : ''} oninput="recalcReturnListTotal()"></div>
-        <div class="flex-1"><label class="text-[11px] font-bold text-[#B8B2A3]">특이사항/비고</label><input type="text" class="rl-note input-premium text-sm mt-0.5" placeholder="예: 시공잔량" value="${v.note}"></div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label class="text-[11px] font-bold text-[#B8B2A3]">박스수</label><input type="number" class="rl-qty input-premium text-sm mt-1 w-full" placeholder="박스" value="${v.qty}" ${v.committed ? 'readonly' : ''} oninput="recalcReturnListTotal()"></div>
+        <div><label class="text-[11px] font-bold text-[#B8B2A3]">특이사항/비고</label><input type="text" class="rl-note input-premium text-sm mt-1 w-full" placeholder="예: 시공잔량" value="${v.note}"></div>
       </div>
     `;
     document.getElementById('rl-rows').appendChild(row);
@@ -2859,6 +2902,7 @@
       vendor: toName,
       memo: r.note || '시공잔량',
       author: getCurrentAuthor(),
+      batchId: brand + '__' + dateVal,
       ts: Date.now()
     }));
 
@@ -2980,35 +3024,94 @@
       .filter(r => !logTypeFilter || r.type === logTypeFilter);
   }
 
+  let expandedLogBatches = new Set();
+  function toggleLogBatch(batchId) {
+    if (expandedLogBatches.has(batchId)) expandedLogBatches.delete(batchId); else expandedLogBatches.add(batchId);
+    renderLog();
+  }
+
+  function buildLogRow(r) {
+    const isScheduled = isFutureShipment(r);
+    const badgeStyle = isScheduled ? 'bg-amber-100 text-amber-600' : r.type==='입고' ? 'bg-[#EFE2CF] text-[#8B5E34]' : r.type==='반품' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600';
+    const dateLabel = r.type==='입고' ? '입고' : r.type==='출고' ? '출고' : '반품';
+    const row = document.createElement('div');
+    row.className = 'bg-white border border-[var(--line)] rounded-xl p-3 flex justify-between items-center';
+    row.innerHTML = `
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-1.5 mb-0.5">
+          <span class="text-[15px] font-black px-1.5 py-0.5 rounded-full ${badgeStyle}">${isScheduled ? '예정 출고' : r.type}</span>
+          <span class="text-[13px] text-[#B8B2A3] font-bold">${dateLabel} ${r.date||''}${r.type==='입고' && r.orderDate?(' · 발주 '+r.orderDate):''}</span>
+          ${r.author ? `<span class="text-[12px] text-[#CFC9BB] font-bold ml-auto"><i class="fas fa-user mr-0.5"></i>${r.author}</span>` : ''}
+        </div>
+        <p class="text-sm font-black text-[#3A342C] truncate">${r.brand} · ${r.name} · ${r.model}</p>
+        <p class="text-[14px] text-[#B8B2A3] font-bold">${r.qty}BOX ${r.price?('· '+Number(r.price).toLocaleString()+'원(VAT별도)'):''}${r.priceIncVat?(' / '+Number(r.priceIncVat).toLocaleString()+'원(VAT포함)'):''} ${r.vendor?('· '+r.vendor):''}</p>
+        <p class="text-[13px] text-[#CFC9BB] font-bold">${r.lot?('로트: '+r.lot):''} ${r.prodDate?('· 생산일 '+r.prodDate):''}</p>
+        ${r.memo ? `<p class="text-[13px] font-bold text-[#8B5E34] mt-0.5"><i class="fas fa-note-sticky mr-1"></i>${r.memo}</p>` : ''}
+      </div>
+      ${ logTab === 'trash'
+        ? `<div class="flex flex-col gap-1 shrink-0"><button onclick="restoreLog('${r.key}')" class="text-emerald-500 hover:text-[var(--moss)] text-xs px-2 py-1 bg-[#F1F5F1] rounded-lg font-bold"><i class="fas fa-rotate-left mr-1"></i>복구</button><button onclick="permanentDeleteLog('${r.key}')" class="text-[#B8B2A3] hover:text-rose-500 text-[13px] px-2">완전삭제</button></div>`
+        : `<div class="flex flex-col gap-1.5 shrink-0"><button onclick="openEditRecord('${r.key}')" class="text-[#8B5E34] hover:text-[#6E4A29] px-2"><i class="fas fa-pen"></i></button><button onclick="deleteLog('${r.key}')" class="text-[#CFC9BB] hover:text-rose-500 px-2"><i class="fas fa-trash"></i></button></div>`
+      }
+    `;
+    return row;
+  }
+
+  // 같은 브랜드+같은 날 한꺼번에 처리한 반품 여러 건을 하나의 묶음 카드로 보여줌 (펼치면 개별 건들 그대로 수정/삭제 가능)
+  function buildBatchLogCard(items) {
+    const first = items[0];
+    const totalQty = items.reduce((s,r) => s + (Number(r.qty)||0), 0);
+    const isOpen = expandedLogBatches.has(first.batchId);
+    const wrap = document.createElement('div');
+    wrap.className = 'rounded-xl border border-amber-300 bg-amber-50 overflow-hidden';
+
+    const header = document.createElement('button');
+    header.type = 'button';
+    header.className = 'w-full text-left p-3 flex items-center justify-between gap-2';
+    header.onclick = () => toggleLogBatch(first.batchId);
+    header.innerHTML = `
+      <div class="min-w-0">
+        <div class="flex items-center gap-1.5 mb-0.5">
+          <span class="text-[15px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-600">반품 일괄</span>
+          <span class="text-[13px] text-[#8B8477] font-bold">${first.date}</span>
+        </div>
+        <p class="text-sm font-black text-[#3A342C] truncate">${first.brand} · ${items.length}건 · 총 ${totalQty.toLocaleString()}BOX</p>
+      </div>
+      <i class="fas fa-chevron-down text-[13px] text-[#B8B2A3] brand-accordion-arrow${isOpen ? ' open' : ''} shrink-0"></i>
+    `;
+    wrap.appendChild(header);
+
+    if (isOpen) {
+      const body = document.createElement('div');
+      body.className = 'p-2 space-y-1.5 bg-white';
+      items.forEach(r => body.appendChild(buildLogRow(r)));
+      wrap.appendChild(body);
+    }
+    return wrap;
+  }
+
   function renderLog() {
     const box = document.getElementById('log-list');
     const list = getFilteredLogList();
     box.innerHTML = '';
     if (!list.length) { box.innerHTML = `<div class="text-center py-8 text-[#B8B2A3] text-sm">${logTab==='trash'?'휴지통이 비어있습니다':'기록이 없습니다'}</div>`; return; }
+
+    // 같은 브랜드+같은 날 한꺼번에 처리한 반품은 하나로 묶어서 보여줌 (리스트가 너무 길어져서 헷갈리는 것 방지)
+    const batchGroups = {};
     list.forEach(r => {
-      const isScheduled = isFutureShipment(r);
-      const badgeStyle = isScheduled ? 'bg-amber-100 text-amber-600' : r.type==='입고' ? 'bg-[#EFE2CF] text-[#8B5E34]' : r.type==='반품' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600';
-      const dateLabel = r.type==='입고' ? '입고' : r.type==='출고' ? '출고' : '반품';
-      const row = document.createElement('div');
-      row.className = 'bg-white border border-[var(--line)] rounded-xl p-3 flex justify-between items-center';
-      row.innerHTML = `
-        <div class="min-w-0 flex-1">
-          <div class="flex items-center gap-1.5 mb-0.5">
-            <span class="text-[15px] font-black px-1.5 py-0.5 rounded-full ${badgeStyle}">${isScheduled ? '예정 출고' : r.type}</span>
-            <span class="text-[13px] text-[#B8B2A3] font-bold">${dateLabel} ${r.date||''}${r.type==='입고' && r.orderDate?(' · 발주 '+r.orderDate):''}</span>
-            ${r.author ? `<span class="text-[12px] text-[#CFC9BB] font-bold ml-auto"><i class="fas fa-user mr-0.5"></i>${r.author}</span>` : ''}
-          </div>
-          <p class="text-sm font-black text-[#3A342C] truncate">${r.brand} · ${r.name} · ${r.model}</p>
-          <p class="text-[14px] text-[#B8B2A3] font-bold">${r.qty}BOX ${r.price?('· '+Number(r.price).toLocaleString()+'원(VAT별도)'):''}${r.priceIncVat?(' / '+Number(r.priceIncVat).toLocaleString()+'원(VAT포함)'):''} ${r.vendor?('· '+r.vendor):''}</p>
-          <p class="text-[13px] text-[#CFC9BB] font-bold">${r.lot?('로트: '+r.lot):''} ${r.prodDate?('· 생산일 '+r.prodDate):''}</p>
-          ${r.memo ? `<p class="text-[13px] font-bold text-[#8B5E34] mt-0.5"><i class="fas fa-note-sticky mr-1"></i>${r.memo}</p>` : ''}
-        </div>
-        ${ logTab === 'trash'
-          ? `<div class="flex flex-col gap-1 shrink-0"><button onclick="restoreLog('${r.key}')" class="text-emerald-500 hover:text-[var(--moss)] text-xs px-2 py-1 bg-[#F1F5F1] rounded-lg font-bold"><i class="fas fa-rotate-left mr-1"></i>복구</button><button onclick="permanentDeleteLog('${r.key}')" class="text-[#B8B2A3] hover:text-rose-500 text-[13px] px-2">완전삭제</button></div>`
-          : `<div class="flex flex-col gap-1.5 shrink-0"><button onclick="openEditRecord('${r.key}')" class="text-[#8B5E34] hover:text-[#6E4A29] px-2"><i class="fas fa-pen"></i></button><button onclick="deleteLog('${r.key}')" class="text-[#CFC9BB] hover:text-rose-500 px-2"><i class="fas fa-trash"></i></button></div>`
-        }
-      `;
-      box.appendChild(row);
+      if (r.type === '반품' && r.batchId && logTab !== 'trash') {
+        (batchGroups[r.batchId] = batchGroups[r.batchId] || []).push(r);
+      }
+    });
+    const renderedBatches = new Set();
+
+    list.forEach(r => {
+      if (r.type === '반품' && r.batchId && logTab !== 'trash' && batchGroups[r.batchId].length > 1) {
+        if (renderedBatches.has(r.batchId)) return; // 이미 이 묶음을 그렸으면 건너뜀
+        renderedBatches.add(r.batchId);
+        box.appendChild(buildBatchLogCard(batchGroups[r.batchId]));
+      } else {
+        box.appendChild(buildLogRow(r));
+      }
     });
   }
 

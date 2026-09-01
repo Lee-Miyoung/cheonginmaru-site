@@ -441,7 +441,7 @@
 
 <div id="image-lightbox" class="modal-overlay" style="overflow:auto;">
   <div class="relative w-full h-full flex items-center justify-center p-2" onclick="closeImageLightbox()">
-    <img id="image-lightbox-img" src="" class="rounded-xl mx-auto" style="width:100%; height:auto; touch-action:pinch-zoom;" onclick="event.stopPropagation(); toggleImageZoom();" ondblclick="event.stopPropagation(); toggleImageZoom();">
+    <img id="image-lightbox-img" src="" class="rounded-xl mx-auto" style="max-width:100%; max-height:85vh; width:auto; height:auto; touch-action:pinch-zoom;" onclick="event.stopPropagation(); toggleImageZoom();" ondblclick="event.stopPropagation(); toggleImageZoom();">
     <button id="lightbox-prev" onclick="event.stopPropagation(); lightboxNav(-1);" class="hidden fixed left-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/90 flex items-center justify-center z-10"><i class="fas fa-chevron-left"></i></button>
     <button id="lightbox-next" onclick="event.stopPropagation(); lightboxNav(1);" class="hidden fixed right-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/90 flex items-center justify-center z-10"><i class="fas fa-chevron-right"></i></button>
     <button onclick="closeImageLightbox()" class="fixed top-4 right-4 w-10 h-10 rounded-full bg-white/90 flex items-center justify-center z-10"><i class="fas fa-times"></i></button>
@@ -1178,9 +1178,15 @@
   function renderNoticeImagePreview() {
     const box = document.getElementById('notice-images-preview');
     box.innerHTML = '';
-    pendingNoticeImages.forEach(img => {
+    pendingNoticeImages.forEach((img, idx) => {
       const cell = document.createElement('div');
       cell.className = 'relative';
+      const moveButtons = `
+        <div class="absolute bottom-1 left-1 right-1 flex justify-between">
+          <button type="button" onclick="moveNoticePendingImage('${img.id}', -1)" class="w-5 h-5 rounded-full bg-black/50 text-white text-[10px] flex items-center justify-center ${idx===0 ? 'invisible' : ''}"><i class="fas fa-chevron-left"></i></button>
+          <button type="button" onclick="moveNoticePendingImage('${img.id}', 1)" class="w-5 h-5 rounded-full bg-black/50 text-white text-[10px] flex items-center justify-center ${idx===pendingNoticeImages.length-1 ? 'invisible' : ''}"><i class="fas fa-chevron-right"></i></button>
+        </div>
+      `;
       if (img.type === 'pdf') {
         cell.innerHTML = `
           <a href="${img.dataUrl}" target="_blank" class="w-full h-20 rounded-lg border border-[var(--line)] bg-[#F6EFE6] flex flex-col items-center justify-center gap-0.5 px-1">
@@ -1193,10 +1199,23 @@
         cell.innerHTML = `
           <img src="${img.dataUrl}" class="w-full h-20 object-cover rounded-lg border border-[var(--line)]">
           <button type="button" onclick="removeNoticePendingImage('${img.id}')" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[var(--rust)] text-white text-[11px] flex items-center justify-center"><i class="fas fa-times"></i></button>
+          ${pendingNoticeImages.length > 1 ? moveButtons : ''}
         `;
       }
       box.appendChild(cell);
     });
+  }
+
+  // 사진 순서 앞뒤로 바꾸기 (예: 처음 올린 사진이 맨 뒤에 나오게 하고 싶을 때)
+  function moveNoticePendingImage(id, direction) {
+    const idx = pendingNoticeImages.findIndex(img => img.id === id);
+    if (idx === -1) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= pendingNoticeImages.length) return;
+    const temp = pendingNoticeImages[idx];
+    pendingNoticeImages[idx] = pendingNoticeImages[newIdx];
+    pendingNoticeImages[newIdx] = temp;
+    renderNoticeImagePreview();
   }
 
   function saveNotice() {
@@ -2373,7 +2392,8 @@
   function renderStockList() {
     const q = normSearch(document.getElementById('stock-search').value);
     const box = document.getElementById('stock-list');
-    const filtered = stockSummary.filter(s => !q || normSearch(s.brand + s.name + s.model + (s.lot||'')).includes(q));
+    // 재고가 0(또는 그 이하)인 건 재고 현황에 남아있을 필요가 없음 - 입출고 기록에서만 확인하면 됨
+    const filtered = stockSummary.filter(s => s.stock > 0 && (!q || normSearch(s.brand + s.name + s.model + (s.lot||'')).includes(q)));
     document.getElementById('stock-count').innerText = `${filtered.length}개 품목`;
     box.innerHTML = '';
     if (!filtered.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-base">기록이 없습니다</div>'; return; }
@@ -2395,7 +2415,7 @@
     brandNames.forEach(brand => {
       const items = groups[brand].sort((a,b) => (b.lastTs||0) - (a.lastTs||0)); // 최근 입출고된 품목이 위로
       const totalBox = items.reduce((sum, s) => sum + s.stock, 0);
-      const lowCount = items.filter(s => s.stock <= 0).length;
+
       const isOpen = autoExpand || expandedBrands.has(brand);
       const color = getBrandColor(brand);
 
@@ -2413,7 +2433,7 @@
           <span class="brand-drag-handle text-[#CFC9BB] px-1 -ml-1 shrink-0" style="touch-action:none; cursor:grab;"><i class="fas fa-grip-lines"></i></span>
           <span class="brand-dot" style="background:${color}"></span>
           <span class="text-[17px] font-black truncate" style="color:${color}">${brand}</span>
-          <span class="text-[13px] font-bold text-[#B8B2A3] shrink-0">${items.length}개${lowCount ? ' · 부족 ' + lowCount : ''}</span>
+          <span class="text-[13px] font-bold text-[#B8B2A3] shrink-0">${items.length}개</span>
         </span>
         <span class="flex items-center gap-2 shrink-0">
           <span class="text-base font-black text-[#3A342C] num">${totalBox.toLocaleString()} <span class="text-[13px] font-bold text-[#8B8477]">BOX</span></span>
@@ -2444,7 +2464,6 @@
           return String(a.lot||'').localeCompare(String(b.lot||''), 'ko'); // 같은 모델이면 로트번호 순
         });
         const pTotal = pItems.reduce((sum, s) => sum + s.stock, 0);
-        const pLow = pItems.filter(s => s.stock <= 0).length;
         const productKey = brand + '||' + productName;
         const pIsOpen = autoExpand || expandedProducts.has(productKey);
 
@@ -2457,7 +2476,7 @@
         pHeader.innerHTML = `
           <span class="flex items-center gap-2 min-w-0">
             <span class="text-[14px] font-black text-[#5C5347] truncate">${productName}</span>
-            <span class="text-[12px] font-bold text-[#B8B2A3] shrink-0">${pItems.length}개${pLow ? ' · 부족 ' + pLow : ''}</span>
+            <span class="text-[12px] font-bold text-[#B8B2A3] shrink-0">${pItems.length}개</span>
           </span>
           <span class="flex items-center gap-1.5 shrink-0">
             <span class="text-[14px] font-black text-[#3A342C] num">${pTotal.toLocaleString()} <span class="text-[12px] font-bold text-[#8B8477]">BOX</span></span>
@@ -2467,7 +2486,7 @@
         pWrap.appendChild(pHeader);
 
         const pBody = document.createElement('div');
-        pBody.className = pIsOpen ? 'divide-y divide-[var(--line)]' : 'hidden';
+        pBody.className = pIsOpen ? 'divide-y divide-[var(--line)] pl-3' : 'hidden';
 
         // 모델(색상)별로 한 번 더 묶어서 아코디언으로 - 로트가 여러 개인 모델이 쭉 나열되지 않고 접어둘 수 있게 함
         const modelGroups = {};
@@ -2482,22 +2501,23 @@
         modelNames.forEach(modelName => {
           const modelLots = modelGroups[modelName].sort((a,b) => (b.orderDate||'').localeCompare(a.orderDate||'')); // 발주일자 최신순
           const modelTotal = modelLots.reduce((sum, s) => sum + s.stock, 0);
-          const modelLow = modelLots.filter(s => s.stock <= 0).length;
           const modelKey = productKey + '||' + modelName;
           const modelIsOpen = autoExpand || expandedModels.has(modelKey);
           const info = getModelInfo(brand, productName, modelName);
           const spec = info && info.spec ? info.spec : '';
 
           const mWrap = document.createElement('div');
+          mWrap.className = 'border-l-2 rounded-l';
+          mWrap.style.borderColor = color;
           const mHeader = document.createElement('button');
           mHeader.type = 'button';
-          mHeader.className = 'w-full flex items-center justify-between px-3.5 py-2.5 bg-white border-b border-[var(--line)]';
+          mHeader.className = 'w-full flex items-center justify-between pl-3 pr-3.5 py-2.5 bg-white border-b border-[var(--line)]';
           mHeader.onclick = () => toggleModelGroup(modelKey);
           mHeader.innerHTML = `
             <span class="min-w-0 text-left">
               <span class="text-[15px] font-black text-[#3A342C] truncate block">${modelName}</span>
               ${spec ? `<span class="text-[12px] font-bold text-[#8B5E34]">${spec}</span>` : ''}
-              <span class="text-[12px] font-bold text-[#B8B2A3] block">로트 ${modelLots.length}개${modelLow ? ' · 부족 ' + modelLow : ''}</span>
+              <span class="text-[12px] font-bold text-[#B8B2A3] block">로트 ${modelLots.length}개</span>
             </span>
             <span class="flex items-center gap-1.5 shrink-0">
               <span class="text-[15px] font-black ${modelTotal<=0 ? 'text-[var(--rust)]' : 'text-[#3A342C]'} num">${modelTotal.toLocaleString()} <span class="text-[12px] font-bold text-[#B8B2A3]">BOX</span></span>
@@ -2507,7 +2527,7 @@
           mWrap.appendChild(mHeader);
 
           const mBody = document.createElement('div');
-          mBody.className = modelIsOpen ? 'divide-y divide-[var(--line)] bg-[#FCFBF8]' : 'hidden';
+          mBody.className = modelIsOpen ? 'divide-y divide-[var(--line)] bg-[#FCFBF8] pl-4' : 'hidden';
           modelLots.forEach(s => {
             const low = s.stock <= 0;
             const specMismatch = s.actualSpec && s.actualSpec !== spec;
@@ -2519,7 +2539,7 @@
               <div class="min-w-0 flex-1">
                 ${specMismatch ? `<p class="text-[13px] font-black text-[var(--rust)] mt-0.5"><i class="fas fa-triangle-exclamation mr-1"></i>스펙 다름: ${s.actualSpec} <span class="text-[#B8B2A3] font-bold">(시트: ${spec || '미기재'})</span></p>` : ''}
                 <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · 생산 '+s.prodDate) : ''}</p>
-                ${(s.orderDate || s.inDate) ? `<p class="text-[13px] font-black text-[#8B5E34]"><i class="fas fa-calendar-day mr-1"></i>${s.orderDate?('발주 '+s.orderDate):''}${s.inDate?(' · 입고 '+s.inDate):''}</p>` : ''}
+                ${(s.orderDate || s.inDate) ? `<p class="text-[13px] font-black" style="color:${color}"><i class="fas fa-calendar-day mr-1"></i>${s.orderDate?('발주 '+s.orderDate):''}${s.inDate?(' · 입고 '+s.inDate):''}</p>` : ''}
               </div>
               <span class="flex items-center gap-1.5 shrink-0">
                 <span class="text-[17px] font-black ${low ? 'text-[var(--rust)]' : 'text-[#3A342C]'} num">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
@@ -3535,15 +3555,31 @@
   function openImageLightbox(images, startIndex) {
     lightboxImages = Array.isArray(images) ? images : [images];
     lightboxIndex = startIndex || 0;
-    imageZoomedIn = true; // 클릭하면 바로 확대된(잘 보이는) 상태로 열림
+    imageZoomedIn = false; // 기본값은 "화면에 꽉 차게, 잘리지 않고 전체가 보이는" 상태 - 필요하면 탭해서 확대
     renderLightboxImage();
     document.getElementById('image-lightbox').style.display = 'flex';
+  }
+
+  // 확대 안 한 기본 상태: 어떤 기기/사진 비율이든 절대 안 잘리고 전체가 보이게 함 (max-width/max-height로 항상 화면 안에 맞춤)
+  // 확대한 상태: 실제 크기를 키워서 스크롤로 세세하게 볼 수 있게 함
+  function applyLightboxZoomStyle(img) {
+    if (imageZoomedIn) {
+      img.style.maxWidth = 'none';
+      img.style.maxHeight = 'none';
+      img.style.width = '220%';
+      img.style.height = 'auto';
+    } else {
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '85vh';
+      img.style.width = 'auto';
+      img.style.height = 'auto';
+    }
   }
 
   function renderLightboxImage() {
     const img = document.getElementById('image-lightbox-img');
     img.src = lightboxImages[lightboxIndex] || '';
-    img.style.width = imageZoomedIn ? '220%' : '100%';
+    applyLightboxZoomStyle(img);
     const multi = lightboxImages.length > 1;
     document.getElementById('lightbox-prev').classList.toggle('hidden', !multi || lightboxIndex === 0);
     document.getElementById('lightbox-next').classList.toggle('hidden', !multi || lightboxIndex === lightboxImages.length - 1);
@@ -3556,24 +3592,26 @@
     const next = lightboxIndex + delta;
     if (next < 0 || next >= lightboxImages.length) return;
     lightboxIndex = next;
-    renderLightboxImage(); // 확대 상태(imageZoomedIn)는 그대로 유지한 채 다음 사진으로 전환
+    imageZoomedIn = false; // 다음 사진으로 넘어가면 다시 "전체 보이는" 기본 상태로 (이전 사진의 확대 상태가 이어지면 또 잘려보일 수 있어서)
+    renderLightboxImage();
     document.getElementById('image-lightbox').scrollTop = 0;
     document.getElementById('image-lightbox').scrollLeft = 0;
   }
 
   function closeImageLightbox() {
     document.getElementById('image-lightbox').style.display = 'none';
-    document.getElementById('image-lightbox-img').style.width = '100%';
     imageZoomedIn = false;
+    const img = document.getElementById('image-lightbox-img');
+    applyLightboxZoomStyle(img);
     lightboxImages = [];
     lightboxIndex = 0;
   }
 
-  // 핀치줌이 잘 안 먹는 인앱 브라우저 대비 - 탭하면 확대/축소 전환 (실제 너비를 바꿔서 스크롤로 끝까지 볼 수 있게 함)
+  // 핀치줌이 잘 안 먹는 인앱 브라우저 대비 - 탭하면 확대/축소 전환 (실제 크기를 바꿔서 스크롤로 끝까지 볼 수 있게 함)
   function toggleImageZoom() {
     const img = document.getElementById('image-lightbox-img');
     imageZoomedIn = !imageZoomedIn;
-    img.style.width = imageZoomedIn ? '220%' : '100%';
+    applyLightboxZoomStyle(img);
   }
 
   // 공지/거래처 사진 클릭 시 - 해당 항목의 전체 사진 배열 + 누른 순번을 라이트박스에 전달 (인라인 onclick 대신 위임 방식 - 특수문자 이스케이프 문제 방지)

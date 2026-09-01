@@ -29,7 +29,8 @@
   .toolbar{ max-width:820px; margin:0 auto 10px; display:flex; flex-direction:column; gap:10px; }
   .toolbar-row{ display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
   .toolbar .hint{ font-size:15px; color:var(--ink-faint); }
-  .toolbar .btns{ display:flex; gap:10px; flex-wrap:wrap; }
+  .toolbar .btns{ display:flex; gap:10px; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:4px; }
+  .toolbar .btns button, .toolbar .btns a.btn{ flex-shrink:0; }
   .toolbar button, .toolbar a.btn{
     font-family:inherit; font-size:17px; font-weight:700; border:none; border-radius:9px;
     padding:14px 22px; cursor:pointer; box-shadow:var(--shadow); text-decoration:none; display:inline-block;
@@ -427,15 +428,15 @@
   <div class="notes">
     <div class="h">[특이사항]</div>
     <ul>
-      <li contenteditable="true" data-k="note-1">본 견적서는 현장 실측 및 누수로 인한 침수 손상 범위에 근거하여 작성되었습니다.</li>
-      <li contenteditable="true" data-k="note-2">바닥 슬래브 함수율 측정 결과에 따라 완전 건조 후 시공이 진행되며, 건조 지연 시 공사 일정이 조정될 수 있습니다.</li>
-      <li contenteditable="true" data-k="note-3">마루 철거 시 하부 미장 바닥 상태(크랙, 단차 등)에 따라 추가 미장/샌딩 비용이 발생할 수 있습니다.</li>
-      <li contenteditable="true" data-k="note-4">기존 바닥재 단종(생산 중단)으로 부분 보수가 불가하여 전체 재시공 범위로 산정하였습니다.</li>
-      <li contenteditable="true" data-k="note-5">상기 자재 규격은 표준 규격 기준이며, 특정 제조사 품번은 자재 발주 단계에서 확정 안내드립니다.</li>
-      <li contenteditable="true" data-k="note-6">본 견적의 유효기간은 발행일로부터 15일이며, 자재 수급 및 원자재 가격 변동에 따라 변경될 수 있습니다.</li>
-      <li contenteditable="true" data-k="note-7">본 견적은 예상 공사비 산정 자료이며, 실제 보험금 지급 여부 및 지급 금액을 보장하지 않습니다. 최종 지급 여부와 금액은 보험사 손해사정 결과에 따라 달라질 수 있습니다.</li>
-      <li contenteditable="true" data-k="note-8">시공 완료일로부터 1년간 시공 하자에 한해 무상 보수하며, 자연침하·재누수·외부충격·임의 변경으로 인한 손상은 제외됩니다.</li>
-      <li contenteditable="true" data-k="note-9">10평 미만 시공은 별도 기본 시공비(인건비)가 청구되며, 10평 이상 시공은 시공비가 자재비 단가에 포함되어 별도 청구되지 않습니다.</li>
+      <li class="rich-text" contenteditable="true" data-k="note-1">본 견적서는 <b>현장 실측</b> 및 누수로 인한 침수 손상 범위에 근거하여 작성되었습니다.</li>
+      <li class="rich-text" contenteditable="true" data-k="note-2">바닥 슬래브 함수율 측정 결과에 따라 <b>완전 건조 후 시공</b>이 진행되며, 건조 지연 시 공사 일정이 조정될 수 있습니다.</li>
+      <li class="rich-text" contenteditable="true" data-k="note-3">마루 철거 시 하부 미장 바닥 상태(크랙, 단차 등)에 따라 <b>추가 비용이 발생할 수 있습니다.</b></li>
+      <li class="rich-text" contenteditable="true" data-k="note-4">기존 바닥재 단종(생산 중단)으로 부분 보수가 불가하여 <b>전체 재시공</b> 범위로 산정하였습니다.</li>
+      <li class="rich-text" contenteditable="true" data-k="note-5">상기 자재 규격은 표준 규격 기준이며, 특정 제조사 품번은 자재 발주 단계에서 확정 안내드립니다.</li>
+      <li class="rich-text" contenteditable="true" data-k="note-6">본 견적의 유효기간은 <b>발행일로부터 15일</b>이며, 자재 수급 및 원자재 가격 변동에 따라 변경될 수 있습니다.</li>
+      <li class="rich-text" contenteditable="true" data-k="note-7">본 견적은 예상 공사비 산정 자료이며, <b>실제 보험금 지급 여부 및 지급 금액을 보장하지 않습니다.</b> 최종 지급 여부와 금액은 보험사 손해사정 결과에 따라 달라질 수 있습니다.</li>
+      <li class="rich-text" contenteditable="true" data-k="note-8"><b>시공 완료일로부터 1년간</b> 시공 하자에 한해 무상 보수하며, <b>자연침하·재누수·외부충격·임의 변경으로 인한 손상은 제외됩니다.</b></li>
+      <li class="rich-text" contenteditable="true" data-k="note-9"><b>10평 미만</b> 시공은 별도 기본 시공비(인건비)가 청구되며, <b>10평 이상</b> 시공은 시공비가 자재비 단가에 포함되어 별도 청구되지 않습니다.</li>
     </ul>
   </div>
 
@@ -548,8 +549,8 @@
   <div class="warnbox">
     <div class="h">⚠ 유의사항</div>
     <ul>
-      <li contenteditable="true" data-k="op-warn-1">본 소견서는 복구 공사의 필요 범위를 안내하는 참고 자료이며, 보험금 지급 승인 여부를 보장하지 않습니다.</li>
-      <li contenteditable="true" data-k="op-warn-2">시공 전/중/후 현장 사진을 반드시 촬영·보관하며, 사진 미확보 구간에 대해서는 추후 하자 여부 판정이 어려울 수 있습니다.</li>
+      <li class="rich-text" contenteditable="true" data-k="op-warn-1">본 소견서는 복구 공사의 필요 범위를 안내하는 참고 자료이며, <b>보험금 지급 승인 여부를 보장하지 않습니다.</b></li>
+      <li class="rich-text" contenteditable="true" data-k="op-warn-2"><b>시공 전/중/후 현장 사진을 반드시 촬영·보관</b>하며, 사진 미확보 구간에 대해서는 추후 하자 여부 판정이 어려울 수 있습니다.</li>
     </ul>
   </div>
 
@@ -656,14 +657,14 @@
   <div class="notes">
     <div class="h">[특이사항]</div>
     <ul>
-      <li contenteditable="true" data-k="tr-note-1">상기 견적은 예상 소요량이며 실제 시공 시 소요된 수량으로 정산합니다. 현장 바닥 상태에 따라 추가 시공비가 발생할 수 있습니다.</li>
-      <li contenteditable="true" data-k="tr-note-2">시공일은 협의 후 진행합니다 (보일러 가동 최소 5일 이상 · 충분한 습기 제거 후 시공하여야 하자를 예방할 수 있습니다).</li>
-      <li contenteditable="true" data-k="tr-note-3">본 견적의 유효기간은 발행일로부터 15일이며, 자재 수급 상황에 따라 변경될 수 있습니다.</li>
-      <li contenteditable="true" data-k="tr-note-4">계약금 30% / 잔금 70% (준공 후 즉시 지급)을 원칙으로 하며, 별도 협의 시 조정 가능합니다.</li>
-      <li contenteditable="true" data-k="tr-note-5">자재 발주 완료 후 취소 시 자재비 전액 및 위약금이 청구될 수 있습니다.</li>
-      <li contenteditable="true" data-k="tr-note-6">시공 완료일로부터 1년간 시공 하자에 한해 무상 보수하며, 자연침하·재누수·외부충격·임의 변경으로 인한 손상은 제외됩니다.</li>
-      <li contenteditable="true" data-k="tr-note-7">세금계산서 및 현금영수증은 잔금 완납 후 한꺼번에 발급합니다.</li>
-      <li contenteditable="true" data-k="tr-note-8">현장 실측 결과 및 여건(바닥 평활도, 단차, 기존 마감재 상태 등)에 따라 수량·금액이 조정될 수 있습니다.</li>
+      <li class="rich-text" contenteditable="true" data-k="tr-note-1">상기 견적은 예상 소요량이며 실제 시공 시 소요된 수량으로 정산합니다. 현장 바닥 상태에 따라 <b>추가 시공비가 발생할 수 있습니다.</b></li>
+      <li class="rich-text" contenteditable="true" data-k="tr-note-2">시공일은 협의 후 진행합니다 (<b>보일러 가동 최소 5일 이상</b> · 충분한 습기 제거 후 시공하여야 하자를 예방할 수 있습니다).</li>
+      <li class="rich-text" contenteditable="true" data-k="tr-note-3">본 견적의 유효기간은 <b>발행일로부터 15일</b>이며, 자재 수급 상황에 따라 변경될 수 있습니다.</li>
+      <li class="rich-text" contenteditable="true" data-k="tr-note-4"><b>계약금 30% / 잔금 70%</b> (준공 후 즉시 지급)을 원칙으로 하며, 별도 협의 시 조정 가능합니다.</li>
+      <li class="rich-text" contenteditable="true" data-k="tr-note-5">자재 발주 완료 후 취소 시 <b>자재비 전액 및 위약금이 청구될 수 있습니다.</b></li>
+      <li class="rich-text" contenteditable="true" data-k="tr-note-6"><b>시공 완료일로부터 1년간</b> 시공 하자에 한해 무상 보수하며, <b>자연침하·재누수·외부충격·임의 변경으로 인한 손상은 제외됩니다.</b></li>
+      <li class="rich-text" contenteditable="true" data-k="tr-note-7">세금계산서 및 현금영수증은 <b>잔금 완납 후 한꺼번에 발급합니다.</b></li>
+      <li class="rich-text" contenteditable="true" data-k="tr-note-8">현장 실측 결과 및 여건(바닥 평활도, 단차, 기존 마감재 상태 등)에 따라 <b>수량·금액이 조정될 수 있습니다.</b></li>
     </ul>
   </div>
 
@@ -905,8 +906,16 @@ function recalcAll(){
   renderLeakItems();
   return num(document.getElementById('grandTotal').textContent);
 }
-function getFieldValue(el){ return (el.tagName === 'INPUT') ? el.value : el.textContent; }
-function setFieldValue(el, v){ if(el.tagName === 'INPUT'){ el.value = v; } else { el.textContent = v; } }
+function getFieldValue(el){
+  if(el.tagName === 'INPUT') return el.value;
+  if(el.classList && el.classList.contains('rich-text')) return el.innerHTML;
+  return el.textContent;
+}
+function setFieldValue(el, v){
+  if(el.tagName === 'INPUT'){ el.value = v; }
+  else if(el.classList && el.classList.contains('rich-text')){ el.innerHTML = v; }
+  else { el.textContent = v; }
+}
 
 function collectLeakDocData(){
   var data = {};

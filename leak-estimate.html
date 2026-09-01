@@ -225,6 +225,26 @@
   .row-del{ border:none; background:none; color:#c0392b; cursor:pointer; font-size:13px; font-weight:700; }
   .sheet-note{ font-size:11px; color:var(--ink-faint); margin-top:4px; }
 
+  /* ---- 이미지 저장 오버레이 (아이폰/아이패드 대응) ---- */
+  .img-save-overlay{
+    position:fixed; inset:0; background:rgba(20,24,33,.78); z-index:9999;
+    display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto;
+  }
+  .img-save-inner{
+    background:#fff; border-radius:14px; padding:20px; max-width:640px; width:100%;
+    max-height:90vh; overflow:auto; box-shadow:var(--shadow);
+  }
+  .img-save-hint{ font-size:13.5px; line-height:1.6; color:var(--brand); background:var(--accent-bg); border-radius:8px; padding:12px 14px; margin-bottom:14px; }
+  .img-save-item{ margin-bottom:16px; }
+  .img-save-name{ font-size:12px; color:var(--ink-faint); margin-bottom:6px; font-weight:700; }
+  .img-save-item img{ width:100%; border:1px solid var(--line); border-radius:6px; display:block; }
+  .img-save-loading{ text-align:center; padding:40px 10px; color:var(--ink-faint); font-size:13px; }
+  .img-save-err{ color:#c0392b; font-size:13px; padding:10px; background:#fdeaea; border-radius:8px; }
+  .img-save-close{
+    display:block; width:100%; padding:13px; font-size:15px; font-weight:700;
+    background:var(--brand); color:#fff; border:none; border-radius:9px; cursor:pointer; margin-top:6px;
+  }
+
   @page{ margin:8mm; }
   @media print{
     *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
@@ -786,25 +806,23 @@ var leakEstimateId = null;
 function defaultLeakGroups(){
   return [
     { key:1, name:'① 철거', items:[
-      { item:'침수 바닥재(강마루) 철거', spec:'거실+주방', unit:'평', qty:24, price:15000, note:'손상 부위 전체 철거' },
-      { item:'걸레받이 철거', spec:'기존 걸레받이', unit:'m', qty:45, price:3000, note:'' },
-      { item:'바닥 샌딩 작업', spec:'본드 찌꺼기 제거', unit:'평', qty:24, price:8000, note:'재시공 전 바닥면 정리' },
+      { item:'침수 바닥재(강마루) 철거', spec:'거실+주방', unit:'평', qty:10, price:25000, note:'손상 부위 전체 철거' },
+      { item:'걸레받이 철거', spec:'기존 걸레받이', unit:'개', qty:10, price:3000, note:'' },
+      { item:'바닥 샌딩 작업', spec:'본드 찌꺼기 제거', unit:'평', qty:10, price:100000, note:'재시공 전 바닥면 정리' },
       { item:'보양 작업', spec:'공사 구간 양생 보호', unit:'식', qty:1, price:150000, note:'' }
     ]},
     { key:2, name:'② 자재', items:[
-      { item:'강마루', spec:'7.5T×115W×800L 강마루급', unit:'평', qty:24, price:85000, note:'기존재 동급 규격' },
-      { item:'걸레받이(신재)', spec:'동일 톤 매칭', unit:'m', qty:45, price:12000, note:'' },
-      { item:'마감 프로파일', spec:'문턱/줄눈대', unit:'개', qty:8, price:25000, note:'' },
-      { item:'친환경 접착제', spec:'황토풀 계열', unit:'식', qty:1, price:480000, note:'누수 전용 접착제' },
-      { item:'실리콘 및 부속자재', spec:'마감용', unit:'식', qty:1, price:120000, note:'' }
+      { item:'강마루', spec:'7.5T×115W×800L 강마루급', unit:'평', qty:10, price:12000, note:'기존재 동급 규격' },
+      { item:'걸레받이(신재)', spec:'동일 톤 매칭', unit:'개', qty:15, price:8000, note:'' },
+      { item:'마감 프로파일', spec:'문턱/줄눈대', unit:'개', qty:2, price:20000, note:'' },
+      { item:'친환경 접착제', spec:'황토풀 계열', unit:'박스', qty:5, price:40000, note:'누수 전용 접착제' }
     ]},
     { key:3, name:'③ 시공비', items:[
-      { item:'전문 시공 기사 인건비', spec:'2인 × 2일', unit:'품', qty:4, price:220000, note:'10평 미만 기본 시공비 (10평 이상은 자재비에 포함)' }
+      { item:'전문 시공 기사 인건비', spec:'2인 × 2일', unit:'품', qty:2, price:280000, note:'10평 미만 기본 시공비 (10평 이상은 자재비에 포함)' }
     ]},
     { key:4, name:'④ 폐기물·경비', items:[
       { item:'폐목재/폐마루 수거·운반처리', spec:'산업폐기물 처리', unit:'식', qty:1, price:250000, note:'' },
-      { item:'자재 상하차 및 운반비', spec:'', unit:'식', qty:1, price:180000, note:'' },
-      { item:'현장 정리비', spec:'공사 후 청소', unit:'식', qty:1, price:100000, note:'' }
+      { item:'자재 상하차 및 운반비', spec:'', unit:'식', qty:1, price:100000, note:'' }
     ]}
   ];
 }
@@ -1362,26 +1380,75 @@ async function saveAsImage(){
   var wrap = document.getElementById(currentTab === 'leak' ? 'tabLeak' : 'tabTrade');
   var sheets = wrap.querySelectorAll('.sheet');
   if(!sheets.length){ alert('캡처할 내용이 없습니다.'); return; }
+  if(typeof html2canvas === 'undefined'){
+    alert('이미지 저장 기능을 불러오지 못했습니다. 인터넷 연결을 확인하고 페이지를 새로고침한 뒤 다시 시도해주세요.');
+    return;
+  }
   var names = currentTab === 'leak'
     ? ['누수복구_견적서', '누수복구_소견서']
     : ['거래처용_견적서'];
+
+  var overlay = openImageSaveOverlay();
   for(var i=0; i<sheets.length; i++){
     try{
       var canvas = await html2canvas(sheets[i], { scale: 2, backgroundColor: '#ffffff', useCORS: true });
-      var link = document.createElement('a');
-      link.download = (names[i] || ('견적서_' + (i+1))) + '.png';
-      link.href = canvas.toDataURL('image/png');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      await new Promise(function(resolve){ setTimeout(resolve, 350); });
+      var dataUrl = canvas.toDataURL('image/png');
+      var filename = (names[i] || ('견적서_' + (i+1))) + '.png';
+      addImageToSaveOverlay(dataUrl, filename);
+      try{
+        var link = document.createElement('a');
+        link.download = filename;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }catch(dlErr){ console.warn('자동 다운로드는 실패했지만 화면의 이미지로 저장할 수 있습니다.', dlErr); }
     }catch(err){
-      console.error('이미지 저장 실패', err);
-      alert('이미지 생성 중 오류가 발생했습니다: ' + (err && err.message ? err.message : err));
+      console.error('이미지 생성 실패', err);
+      addImageSaveError('이미지 생성 중 오류: ' + (err && err.message ? err.message : err));
     }
   }
 }
 window.saveAsImage = saveAsImage;
+
+/* 아이패드/아이폰 사파리는 <a download> 자동 다운로드가 잘 안 먹는 경우가 많아서,
+   화면에 이미지를 직접 띄워주고 "길게 눌러 저장"하도록 안내한다. (데스크톱에서는
+   위의 자동 다운로드도 같이 시도되므로 대부분 바로 다운로드된다.) */
+function openImageSaveOverlay(){
+  var old = document.getElementById('imgSaveOverlay');
+  if(old) old.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'imgSaveOverlay';
+  overlay.className = 'img-save-overlay';
+  overlay.innerHTML =
+    '<div class="img-save-inner">' +
+      '<div class="img-save-hint">📱 아이폰/아이패드: 이미지를 <b>길게 눌러</b> "사진에 저장"을 선택하세요.<br>PC: 자동으로 다운로드되며, 안 되면 이미지에서 <b>마우스 우클릭 → 이미지 저장</b>하세요.</div>' +
+      '<div class="img-save-list" id="imgSaveList"><div class="img-save-loading">이미지 생성 중...</div></div>' +
+      '<button type="button" class="img-save-close" onclick="document.getElementById(\'imgSaveOverlay\').remove()">닫기</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  return overlay;
+}
+function addImageToSaveOverlay(dataUrl, filename){
+  var list = document.getElementById('imgSaveList');
+  if(!list) return;
+  var loading = list.querySelector('.img-save-loading');
+  if(loading) loading.remove();
+  var item = document.createElement('div');
+  item.className = 'img-save-item';
+  item.innerHTML = '<div class="img-save-name">' + esc(filename) + '</div><img src="' + dataUrl + '" alt="' + esc(filename) + '">';
+  list.appendChild(item);
+}
+function addImageSaveError(msg){
+  var list = document.getElementById('imgSaveList');
+  if(!list) return;
+  var loading = list.querySelector('.img-save-loading');
+  if(loading) loading.remove();
+  var err = document.createElement('div');
+  err.className = 'img-save-item img-save-err';
+  err.textContent = '⚠ ' + msg;
+  list.appendChild(err);
+}
 
 /* ===================== 거래처 선택 아코디언 (검색 + 목록 + 직접입력) =====================
    leak_estimates의 거래처/경로·고객명, b2b_estimates의 거래처명을 모아서

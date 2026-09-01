@@ -2198,7 +2198,12 @@
 
     const records = Object.entries(movements)
       .filter(([k,r]) => r.brand===brand && r.name===name && r.model===model && (!filterByLot || (r.lot||'')===(lot||'')))
-      .map(([k,r]) => ({ key: k, ...r })).sort((a,b) => (b.ts||0) - (a.ts||0));
+      .map(([k,r]) => ({ key: k, ...r }))
+      .sort((a,b) => { // 실제 거래일자(날짜) 기준으로 최신이 위로 - 입력/수정 순서(ts)가 아니라 진짜 날짜 순서대로
+        const dateCompare = (b.date||'').localeCompare(a.date||'');
+        if (dateCompare !== 0) return dateCompare;
+        return (b.ts||0) - (a.ts||0); // 같은 날짜면 최근에 입력/수정한 것이 위로
+      });
     const box = document.getElementById('ih-timeline');
     box.innerHTML = '';
     if (!records.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-base">기록이 없습니다</div>'; return; }
@@ -2238,6 +2243,12 @@
   let expandedProducts = new Set();
   function toggleProductGroup(key) {
     if (expandedProducts.has(key)) expandedProducts.delete(key); else expandedProducts.add(key);
+    renderStockList();
+  }
+
+  let expandedModels = new Set();
+  function toggleModelGroup(key) {
+    if (expandedModels.has(key)) expandedModels.delete(key); else expandedModels.add(key);
     renderStockList();
   }
 
@@ -2457,30 +2468,68 @@
 
         const pBody = document.createElement('div');
         pBody.className = pIsOpen ? 'divide-y divide-[var(--line)]' : 'hidden';
-        pItems.forEach(s => {
-          const low = s.stock <= 0;
-          const info = getModelInfo(s.brand, s.name, s.model);
+
+        // 모델(색상)별로 한 번 더 묶어서 아코디언으로 - 로트가 여러 개인 모델이 쭉 나열되지 않고 접어둘 수 있게 함
+        const modelGroups = {};
+        pItems.forEach(s => { (modelGroups[s.model] = modelGroups[s.model] || []).push(s); });
+        const modelNames = Object.keys(modelGroups).sort((a,b) => {
+          // 발주일자가 가장 최근인 모델이 위로 오게
+          const aMax = modelGroups[a].reduce((m,s) => (s.orderDate && s.orderDate > m) ? s.orderDate : m, '');
+          const bMax = modelGroups[b].reduce((m,s) => (s.orderDate && s.orderDate > m) ? s.orderDate : m, '');
+          return bMax.localeCompare(aMax);
+        });
+
+        modelNames.forEach(modelName => {
+          const modelLots = modelGroups[modelName].sort((a,b) => (b.orderDate||'').localeCompare(a.orderDate||'')); // 발주일자 최신순
+          const modelTotal = modelLots.reduce((sum, s) => sum + s.stock, 0);
+          const modelLow = modelLots.filter(s => s.stock <= 0).length;
+          const modelKey = productKey + '||' + modelName;
+          const modelIsOpen = autoExpand || expandedModels.has(modelKey);
+          const info = getModelInfo(brand, productName, modelName);
           const spec = info && info.spec ? info.spec : '';
-          const specMismatch = s.actualSpec && s.actualSpec !== spec;
-          const row = document.createElement('button');
-          row.type = 'button';
-          row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 bg-white active:bg-[#F6EFE6] ' + (low ? 'bg-[#FBF1EE]' : '');
-          row.onclick = () => openItemHistory(s.brand, s.name, s.model, s.lot || '');
-          row.innerHTML = `
-            <div class="min-w-0 flex-1">
-              <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
-              ${specMismatch
-                ? `<p class="text-[14px] font-black text-[var(--rust)] mt-0.5"><i class="fas fa-triangle-exclamation mr-1"></i>스펙 다름: ${s.actualSpec} <span class="text-[#B8B2A3] font-bold">(시트: ${spec || '미기재'})</span></p>`
-                : (spec ? `<p class="text-[14px] font-black text-[#8B5E34] mt-0.5"><i class="fas fa-ruler-combined mr-1"></i>${spec}</p>` : '')}
-              <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · 생산 '+s.prodDate) : ''}</p>
-              ${(s.orderDate || s.inDate) ? `<p class="text-[12px] text-[#CFC9BB] font-bold">${s.orderDate?('발주 '+s.orderDate):''}${s.inDate?(' · 입고 '+s.inDate):''}</p>` : ''}
-            </div>
+
+          const mWrap = document.createElement('div');
+          const mHeader = document.createElement('button');
+          mHeader.type = 'button';
+          mHeader.className = 'w-full flex items-center justify-between px-3.5 py-2.5 bg-white border-b border-[var(--line)]';
+          mHeader.onclick = () => toggleModelGroup(modelKey);
+          mHeader.innerHTML = `
+            <span class="min-w-0 text-left">
+              <span class="text-[15px] font-black text-[#3A342C] truncate block">${modelName}</span>
+              ${spec ? `<span class="text-[12px] font-bold text-[#8B5E34]">${spec}</span>` : ''}
+              <span class="text-[12px] font-bold text-[#B8B2A3] block">로트 ${modelLots.length}개${modelLow ? ' · 부족 ' + modelLow : ''}</span>
+            </span>
             <span class="flex items-center gap-1.5 shrink-0">
-              <span class="text-[17px] font-black ${low ? 'text-[var(--rust)]' : 'text-[#3A342C]'} num">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
-              <i class="fas fa-chevron-right text-[12px] text-[#CFC9BB]"></i>
+              <span class="text-[15px] font-black ${modelTotal<=0 ? 'text-[var(--rust)]' : 'text-[#3A342C]'} num">${modelTotal.toLocaleString()} <span class="text-[12px] font-bold text-[#B8B2A3]">BOX</span></span>
+              <i class="fas fa-chevron-down text-[11px] text-[#B8B2A3] brand-accordion-arrow${modelIsOpen ? ' open' : ''}"></i>
             </span>
           `;
-          pBody.appendChild(row);
+          mWrap.appendChild(mHeader);
+
+          const mBody = document.createElement('div');
+          mBody.className = modelIsOpen ? 'divide-y divide-[var(--line)] bg-[#FCFBF8]' : 'hidden';
+          modelLots.forEach(s => {
+            const low = s.stock <= 0;
+            const specMismatch = s.actualSpec && s.actualSpec !== spec;
+            const row = document.createElement('button');
+            row.type = 'button';
+            row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 bg-white active:bg-[#F6EFE6] ' + (low ? 'bg-[#FBF1EE]' : '');
+            row.onclick = () => openItemHistory(s.brand, s.name, s.model, s.lot || '');
+            row.innerHTML = `
+              <div class="min-w-0 flex-1">
+                ${specMismatch ? `<p class="text-[13px] font-black text-[var(--rust)] mt-0.5"><i class="fas fa-triangle-exclamation mr-1"></i>스펙 다름: ${s.actualSpec} <span class="text-[#B8B2A3] font-bold">(시트: ${spec || '미기재'})</span></p>` : ''}
+                <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · 생산 '+s.prodDate) : ''}</p>
+                ${(s.orderDate || s.inDate) ? `<p class="text-[13px] font-black text-[#8B5E34]"><i class="fas fa-calendar-day mr-1"></i>${s.orderDate?('발주 '+s.orderDate):''}${s.inDate?(' · 입고 '+s.inDate):''}</p>` : ''}
+              </div>
+              <span class="flex items-center gap-1.5 shrink-0">
+                <span class="text-[17px] font-black ${low ? 'text-[var(--rust)]' : 'text-[#3A342C]'} num">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
+                <i class="fas fa-chevron-right text-[12px] text-[#CFC9BB]"></i>
+              </span>
+            `;
+            mBody.appendChild(row);
+          });
+          mWrap.appendChild(mBody);
+          pBody.appendChild(mWrap);
         });
         pWrap.appendChild(pBody);
         body.appendChild(pWrap);
@@ -3043,7 +3092,11 @@
     const q = normSearch(document.getElementById('log-search').value);
     const source = logTab === 'trash' ? movementsTrash : movements;
     return Object.keys(source).map(key => ({ key, ...source[key] }))
-      .sort((a,b) => (b.ts||0) - (a.ts||0))
+      .sort((a,b) => { // 실제 거래일자 기준으로 최신이 위로
+        const dateCompare = (b.date||'').localeCompare(a.date||'');
+        if (dateCompare !== 0) return dateCompare;
+        return (b.ts||0) - (a.ts||0);
+      })
       .filter(r => !q || normSearch(r.brand+r.name+r.model).includes(q))
       .filter(r => !logTypeFilter || r.type === logTypeFilter);
   }

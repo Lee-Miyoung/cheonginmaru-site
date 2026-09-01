@@ -2560,7 +2560,7 @@
   }
 
   // ===== 반품 리스트 만들기 (브랜드별로 재고에서 골라 추가해서 한 장의 이미지로 생성) =====
-  const RL_ROW_DEFAULTS = { category: '', pattern: '', lot: '', orderDate: '', prodDate: '', qty: '', note: '시공잔량' };
+  const RL_ROW_DEFAULTS = { category: '', pattern: '', lot: '', orderDate: '', prodDate: '', qty: '', note: '시공잔량', committed: false };
 
   function openReturnListModal() {
     // 실제 재고가 있는 브랜드만 골라야 반품리스트를 만들 수 있음
@@ -2645,20 +2645,54 @@
   }
 
   // 반품 탭에서 재고를 고른 뒤, 이 버튼으로 "반품리스트"에도 바로 담을 수 있음
+  // 이 버튼 하나로: 실제 반품 재고 처리 + 반품리스트 대기목록 추가를 한 번에 함 (따로 '저장' 안 눌러도 됨)
   function addCurrentReturnToList() {
     if (!selectedReturnItem) return showToast('먼저 반품할 재고를 선택하세요');
     const qty = parseFloat(document.getElementById('in-qty').value) || 0;
-    queueForReturnList({
+    if (qty <= 0) return showToast('수량을 입력하세요');
+    if (qty > selectedReturnItem.stock) return showToast(`현재 재고(${selectedReturnItem.stock}BOX)보다 많이 반품할 수 없어요`, true);
+    const memo = document.getElementById('in-memo').value.trim();
+    if (!memo) return showToast('반품 사유를 메모에 적어주세요');
+    const dateVal = document.getElementById('in-date').value || new Date().toISOString().slice(0,10);
+
+    const record = {
+      date: dateVal,
+      type: '반품',
       brand: selectedReturnItem.brand,
-      category: selectedReturnItem.name,
-      pattern: selectedReturnItem.model,
+      name: selectedReturnItem.name,
+      model: selectedReturnItem.model,
       lot: selectedReturnItem.lot || '',
-      orderDate: selectedReturnItem.orderDate || '',
       prodDate: selectedReturnItem.prodDate || '',
-      qty: qty || '',
-      note: document.getElementById('in-memo').value.trim() || '시공잔량'
+      qty,
+      vendor: document.getElementById('in-vendor').value,
+      memo,
+      author: getCurrentAuthor(),
+      ts: Date.now()
+    };
+
+    const capturedItem = selectedReturnItem; // 아래 비동기 콜백 안에서 안전하게 쓰기 위해 미리 붙잡아둠
+    fbDatabase.ref('stock_movements').push(record).then(() => {
+      queueForReturnList({
+        brand: capturedItem.brand,
+        category: capturedItem.name,
+        pattern: capturedItem.model,
+        lot: capturedItem.lot || '',
+        orderDate: capturedItem.orderDate || '',
+        prodDate: capturedItem.prodDate || '',
+        qty,
+        note: memo,
+        committed: true // 이미 실제로 반품 처리(재고 차감)까지 끝난 항목이라는 표시 - 나중에 이미지 만들 때 중복 처리 방지
+      });
+      showToast('✅ 반품 처리 완료 + 반품리스트에도 추가했어요', true);
+      selectedReturnItem = null;
+      document.getElementById('return-selected-panel').classList.add('hidden');
+      document.getElementById('in-qty').value = '';
+      document.getElementById('in-memo').value = '';
+      document.getElementById('return-search').value = '';
+      renderReturnPicker();
+    }).catch((err) => {
+      showToast('반품 처리 실패: ' + (err && err.message ? err.message : err), true);
     });
-    showToast('📄 반품리스트 대기목록에 추가했어요 (아래에서 바로 확인 가능)', true);
   }
 
   // 브랜드마다 수신처/도착지 정보가 다르니, 한 번 입력해두면 다음에 그 브랜드 고를 때 자동으로 불러옴
@@ -2721,9 +2755,11 @@
   function addReturnListRow(vals) {
     const v = { ...RL_ROW_DEFAULTS, ...(vals || {}) };
     const row = document.createElement('div');
-    row.className = 'bg-white border border-[var(--line)] rounded-xl p-3 space-y-2';
+    row.className = 'bg-white border rounded-xl p-3 space-y-2 ' + (v.committed ? 'border-[#D9E4D0] bg-[#F6FAF3]' : 'border-[var(--line)]');
     row.setAttribute('data-rl-row', '');
+    row.dataset.committed = v.committed ? 'true' : 'false';
     row.innerHTML = `
+      ${v.committed ? '<p class="text-[12px] font-black text-[#5C7A3D]"><i class="fas fa-circle-check mr-1"></i>이미 반품 처리됨 (재고에 반영됨)</p>' : '<p class="text-[12px] font-black text-amber-600"><i class="fas fa-clock mr-1"></i>대기 중 - 이미지 생성 시 반품 처리됨</p>'}
       <div class="flex items-start gap-1.5">
         <div class="flex-1"><label class="text-[11px] font-bold text-[#B8B2A3]">분류(종류)</label><input type="text" class="rl-category input-premium text-sm mt-0.5" placeholder="예: 블랙라벨" value="${v.category}"></div>
         <div class="flex-1"><label class="text-[11px] font-bold text-[#B8B2A3]">패턴명(제품명)</label><input type="text" class="rl-pattern input-premium text-sm mt-0.5" placeholder="예: 뮤트브라운" value="${v.pattern}"></div>
@@ -2735,7 +2771,7 @@
         <div><label class="text-[11px] font-bold text-[#B8B2A3]">생산일자 (선택)</label><input type="date" class="rl-prod-date input-premium text-sm mt-0.5" value="${v.prodDate}"></div>
       </div>
       <div class="flex gap-1.5">
-        <div><label class="text-[11px] font-bold text-[#B8B2A3]">박스수</label><input type="number" class="rl-qty input-premium text-sm mt-0.5" placeholder="박스" value="${v.qty}" style="width:90px" oninput="recalcReturnListTotal()"></div>
+        <div><label class="text-[11px] font-bold text-[#B8B2A3]">박스수</label><input type="number" class="rl-qty input-premium text-sm mt-0.5" placeholder="박스" value="${v.qty}" style="width:90px" ${v.committed ? 'readonly' : ''} oninput="recalcReturnListTotal()"></div>
         <div class="flex-1"><label class="text-[11px] font-bold text-[#B8B2A3]">특이사항/비고</label><input type="text" class="rl-note input-premium text-sm mt-0.5" placeholder="예: 시공잔량" value="${v.note}"></div>
       </div>
     `;
@@ -2751,7 +2787,8 @@
       orderDate: row.querySelector('.rl-order-date').value,
       prodDate: row.querySelector('.rl-prod-date').value,
       qty: parseFloat(row.querySelector('.rl-qty').value) || 0,
-      note: row.querySelector('.rl-note').value.trim()
+      note: row.querySelector('.rl-note').value.trim(),
+      committed: row.dataset.committed === 'true'
     })).filter(r => r.pattern || r.qty); // 완전히 빈 행은 제외
   }
 
@@ -2765,12 +2802,46 @@
     if (!rows.length) return showToast('품목을 1개 이상 입력하세요');
     const missingOrderDate = rows.filter(r => !r.orderDate);
     if (missingOrderDate.length) return showToast(`발주일자가 없는 품목이 ${missingOrderDate.length}개 있어요. 반품은 발주일 기준이라 꼭 입력해주세요`, true);
+    const zeroQty = rows.filter(r => !r.committed && (!r.qty || r.qty <= 0));
+    if (zeroQty.length) return showToast(`박스수가 입력 안 된 품목이 ${zeroQty.length}개 있어요. 실제 반품 처리를 위해 꼭 입력해주세요`, true);
+
     const brand = document.getElementById('rl-brand').value;
+    const dateVal = document.getElementById('rl-date').value || new Date().toISOString().slice(0,10);
+    const toName = document.getElementById('rl-to-name').value.trim();
+
+    // 아직 실제 반품 처리가 안 된(대기 중인) 품목들을 여기서 실제로 재고에 반영함 - 이래야 리스트랑 실제 재고가 항상 일치함
+    const uncommittedRows = rows.filter(r => !r.committed);
+    document.getElementById('rl-status').innerText = uncommittedRows.length ? '반품 처리 중...' : '이미지 만드는 중...';
+
+    const savePromises = uncommittedRows.map(r => fbDatabase.ref('stock_movements').push({
+      date: dateVal,
+      type: '반품',
+      brand,
+      name: r.category,
+      model: r.pattern,
+      lot: r.lot,
+      prodDate: r.prodDate || '',
+      qty: r.qty,
+      vendor: toName,
+      memo: r.note || '시공잔량',
+      author: getCurrentAuthor(),
+      ts: Date.now()
+    }));
+
+    Promise.all(savePromises).then(() => {
+      // 방금 처리한 품목들을 화면에도 "이미 처리됨" 상태로 다시 그려줌
+      document.getElementById('rl-rows').innerHTML = '';
+      rows.forEach(r => addReturnListRow({ ...r, committed: true }));
+      finalizeReturnListImage(rows, brand, dateVal, toName);
+    }).catch((err) => {
+      document.getElementById('rl-status').innerText = '❌ 반품 처리 실패: ' + (err && err.message ? err.message : err);
+    });
+  }
+
+  function finalizeReturnListImage(rows, brand, dateVal, toName) {
     const fromName = document.getElementById('rl-from-name').value.trim() || '청인마루';
     const fromPerson = document.getElementById('rl-from-person').value.trim();
-    const dateVal = document.getElementById('rl-date').value;
     const dateDisplay = dateVal ? `${dateVal.slice(0,4)}년${parseInt(dateVal.slice(5,7))}월${parseInt(dateVal.slice(8,10))}일` : '';
-    const toName = document.getElementById('rl-to-name').value.trim();
     const arriveAddr = document.getElementById('rl-arrive-addr').value.trim();
     const arrivePerson = document.getElementById('rl-arrive-person').value.trim();
     const departAddr = document.getElementById('rl-depart-addr').value.trim();

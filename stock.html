@@ -612,6 +612,7 @@
       <div id="return-picker-list" class="space-y-1.5 max-h-72 overflow-y-auto"></div>
       <span id="return-picker-empty-msg" class="hidden"></span>
       <div id="return-selected-panel" class="hidden rounded-xl p-3.5 border"></div>
+      <div id="rl-queue-preview" class="hidden rounded-xl border border-[#D9E4D0] bg-[#F3F7EE] p-3"></div>
     </div>
 
     <div id="lot-proddate-row" class="date-row grid grid-cols-2 gap-2.5">
@@ -1611,6 +1612,7 @@
     document.getElementById('return-brand-filter-wrap').classList.toggle('hidden', t !== '반품');
     if (t === '반품') { populateReturnBrandFilter(); }
     updateReturnBrandFilterUI();
+    renderReturnQueuePreview();
     if (isPick) {
       renderReturnPicker();
     } else {
@@ -1645,6 +1647,7 @@
     document.getElementById('return-search').value = '';
     updateReturnBrandFilterUI();
     renderReturnPicker();
+    renderReturnQueuePreview();
   }
 
   function clearReturnBrandFilter() {
@@ -1655,6 +1658,7 @@
     document.getElementById('return-search').value = '';
     updateReturnBrandFilterUI();
     renderReturnPicker();
+    renderReturnQueuePreview();
   }
 
   function updateReturnBrandFilterUI() {
@@ -1751,7 +1755,7 @@
             ${pickerSpecMismatch
               ? `<p class="text-[13px] font-black text-[var(--rust)]"><i class="fas fa-triangle-exclamation mr-1"></i>스펙 다름: ${s.actualSpec}</p>`
               : (pickerSpec ? `<p class="text-[13px] font-black text-[#8B5E34]"><i class="fas fa-ruler-combined mr-1"></i>${pickerSpec}</p>` : '')}
-            <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}</p>
+            <p class="text-[13px] text-[#B8B2A3] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · 생산 '+s.prodDate) : ''}</p>
           </div>
           <span class="text-[15px] font-black text-[#3A342C] num shrink-0">${s.stock.toLocaleString()} <span class="text-[13px] font-bold text-[#B8B2A3]">BOX</span></span>
         `;
@@ -2587,9 +2591,10 @@
   }
   function queueForReturnList(item) {
     const queue = getReturnListQueue();
-    queue.push(item);
+    queue.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2,7), ...item });
     localStorage.setItem('cm_rl_pending_queue', JSON.stringify(queue));
     updateReturnListQueueBadge();
+    renderReturnQueuePreview();
   }
   function consumeReturnListQueueForBrand(brand) {
     const queue = getReturnListQueue();
@@ -2597,7 +2602,14 @@
     const remaining = queue.filter(q => q.brand !== brand);
     localStorage.setItem('cm_rl_pending_queue', JSON.stringify(remaining));
     updateReturnListQueueBadge();
+    renderReturnQueuePreview();
     return matching;
+  }
+  function removeFromReturnQueue(id) {
+    const queue = getReturnListQueue().filter(q => q.id !== id);
+    localStorage.setItem('cm_rl_pending_queue', JSON.stringify(queue));
+    updateReturnListQueueBadge();
+    renderReturnQueuePreview();
   }
   function updateReturnListQueueBadge() {
     const badge = document.getElementById('rl-queue-badge');
@@ -2605,6 +2617,31 @@
     const count = getReturnListQueue().length;
     badge.classList.toggle('hidden', count === 0);
     badge.innerText = count;
+  }
+
+  // 지금 고른 브랜드 기준으로, 반품리스트에 대기 중인 항목을 이 화면(반품 탭)에서 바로 보여줌 - 헤더 안 열어봐도 확인 가능
+  function renderReturnQueuePreview() {
+    const box = document.getElementById('rl-queue-preview');
+    if (!box) return;
+    if (currentType !== '반품' || !returnBrandFilter) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+    const items = getReturnListQueue().filter(q => q.brand === returnBrandFilter);
+    if (!items.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+    box.classList.remove('hidden');
+    const totalQty = items.reduce((s,q) => s + (Number(q.qty)||0), 0);
+    box.innerHTML = `
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-[13px] font-black text-[#5C7A3D]"><i class="fas fa-file-invoice mr-1"></i>${returnBrandFilter} 반품리스트 대기 중 · ${items.length}개 (${totalQty.toLocaleString()}박스)</span>
+        <button type="button" onclick="openReturnListModal()" class="text-[12px] font-black text-white bg-[#5C7A3D] px-2.5 py-1 rounded-lg">열기</button>
+      </div>
+      <div class="space-y-1">
+        ${items.map(q => `
+          <div class="flex items-center justify-between bg-white border border-[#D9E4D0] rounded-lg px-2.5 py-1.5">
+            <span class="text-[13px] font-bold text-[#3A342C] truncate">${q.pattern || q.category || '품목'} <span class="text-[#B8B2A3] font-bold">${q.qty ? '· '+q.qty+'박스' : ''}</span></span>
+            <button type="button" onclick="removeFromReturnQueue('${q.id}')" class="text-[#CFC9BB] hover:text-rose-500 px-1 shrink-0"><i class="fas fa-times"></i></button>
+          </div>
+        `).join('')}
+      </div>
+    `;
   }
 
   // 반품 탭에서 재고를 고른 뒤, 이 버튼으로 "반품리스트"에도 바로 담을 수 있음
@@ -2621,7 +2658,7 @@
       qty: qty || '',
       note: document.getElementById('in-memo').value.trim() || '시공잔량'
     });
-    showToast('📄 반품리스트 대기목록에 추가했어요 (헤더의 문서 아이콘에서 확인)', true);
+    showToast('📄 반품리스트 대기목록에 추가했어요 (아래에서 바로 확인 가능)', true);
   }
 
   // 브랜드마다 수신처/도착지 정보가 다르니, 한 번 입력해두면 다음에 그 브랜드 고를 때 자동으로 불러옴
@@ -2660,17 +2697,22 @@
     items.forEach(s => {
       const row = document.createElement('button');
       row.type = 'button';
-      row.className = 'w-full text-left flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg active:bg-[#F6EFE6]';
+      row.className = 'w-full text-left flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-[var(--line)] bg-white active:bg-[#F6EFE6] mb-1.5';
       row.onclick = () => {
         addReturnListRow({ category: s.name, pattern: s.model, lot: s.lot || '', orderDate: s.orderDate || '', prodDate: s.prodDate || '', qty: '', note: '시공잔량' });
         showToast('반품 목록에 추가됨');
       };
       row.innerHTML = `
         <div class="min-w-0 flex-1">
-          <p class="text-[13px] font-bold text-[#3A342C] truncate">${s.name} · ${s.model}</p>
-          <p class="text-[12px] text-[#B8B2A3] font-bold">${s.lot ? ('로트 '+s.lot) : '로트 미기재'} · 현재 ${s.stock}BOX${s.orderDate?(' · 발주 '+s.orderDate):''}</p>
+          <p class="text-[12px] font-bold text-[#B8B2A3] truncate">${s.name}</p>
+          <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>
+          <p class="text-[12px] text-[#8B8477] font-bold mt-0.5">${s.lot ? ('로트 '+s.lot) : '로트 미기재'}${s.prodDate ? (' · 생산 '+s.prodDate) : ''}</p>
+          ${s.orderDate ? `<p class="text-[12px] text-[#B8B2A3] font-bold">발주 ${s.orderDate}</p>` : ''}
         </div>
-        <i class="fas fa-plus-circle text-[#5C7A3D] text-[18px] shrink-0"></i>
+        <div class="text-right shrink-0 flex flex-col items-end gap-1">
+          <span class="text-[15px] font-black text-[#3A342C] num">${s.stock.toLocaleString()}<span class="text-[11px] font-bold text-[#B8B2A3]"> BOX</span></span>
+          <i class="fas fa-circle-plus text-[#5C7A3D] text-[18px]"></i>
+        </div>
       `;
       box.appendChild(row);
     });
@@ -2679,22 +2721,22 @@
   function addReturnListRow(vals) {
     const v = { ...RL_ROW_DEFAULTS, ...(vals || {}) };
     const row = document.createElement('div');
-    row.className = 'bg-white border border-[var(--line)] rounded-xl p-2.5 space-y-1.5';
+    row.className = 'bg-white border border-[var(--line)] rounded-xl p-3 space-y-2';
     row.setAttribute('data-rl-row', '');
     row.innerHTML = `
-      <div class="flex gap-1.5">
-        <input type="text" class="rl-category input-premium text-sm flex-1" placeholder="분류" value="${v.category}">
-        <input type="text" class="rl-pattern input-premium text-sm flex-1" placeholder="패턴명" value="${v.pattern}">
-        <button type="button" onclick="this.closest('[data-rl-row]').remove(); recalcReturnListTotal();" class="text-[#CFC9BB] hover:text-rose-500 px-1"><i class="fas fa-times"></i></button>
+      <div class="flex items-start gap-1.5">
+        <div class="flex-1"><label class="text-[11px] font-bold text-[#B8B2A3]">분류(종류)</label><input type="text" class="rl-category input-premium text-sm mt-0.5" placeholder="예: 블랙라벨" value="${v.category}"></div>
+        <div class="flex-1"><label class="text-[11px] font-bold text-[#B8B2A3]">패턴명(제품명)</label><input type="text" class="rl-pattern input-premium text-sm mt-0.5" placeholder="예: 뮤트브라운" value="${v.pattern}"></div>
+        <button type="button" onclick="this.closest('[data-rl-row]').remove(); recalcReturnListTotal();" class="text-[#CFC9BB] hover:text-rose-500 px-1 mt-5"><i class="fas fa-times"></i></button>
       </div>
-      <input type="text" class="rl-lot input-premium text-sm" placeholder="생산LOT" value="${v.lot}">
+      <div><label class="text-[11px] font-bold text-[#B8B2A3]">생산LOT</label><input type="text" class="rl-lot input-premium text-sm mt-0.5" placeholder="생산LOT" value="${v.lot}"></div>
       <div class="grid grid-cols-2 gap-1.5">
         <div><label class="text-[11px] font-bold text-[var(--rust)]">발주일자 *필수</label><input type="date" class="rl-order-date input-premium text-sm mt-0.5" value="${v.orderDate}"></div>
         <div><label class="text-[11px] font-bold text-[#B8B2A3]">생산일자 (선택)</label><input type="date" class="rl-prod-date input-premium text-sm mt-0.5" value="${v.prodDate}"></div>
       </div>
       <div class="flex gap-1.5">
-        <input type="number" class="rl-qty input-premium text-sm" placeholder="박스" value="${v.qty}" style="max-width:90px" oninput="recalcReturnListTotal()">
-        <input type="text" class="rl-note input-premium text-sm flex-1" placeholder="특이사항/비고 (예: 시공잔량)" value="${v.note}">
+        <div><label class="text-[11px] font-bold text-[#B8B2A3]">박스수</label><input type="number" class="rl-qty input-premium text-sm mt-0.5" placeholder="박스" value="${v.qty}" style="width:90px" oninput="recalcReturnListTotal()"></div>
+        <div class="flex-1"><label class="text-[11px] font-bold text-[#B8B2A3]">특이사항/비고</label><input type="text" class="rl-note input-premium text-sm mt-0.5" placeholder="예: 시공잔량" value="${v.note}"></div>
       </div>
     `;
     document.getElementById('rl-rows').appendChild(row);

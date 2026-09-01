@@ -258,6 +258,7 @@
         <button onclick="closeModal('item-history-modal')" class="w-8 h-8 rounded-full bg-[#E7E1D3] flex items-center justify-center shrink-0 ml-2"><i class="fas fa-times"></i></button>
       </div>
       <p id="ih-current-stock" class="text-[14px] font-black text-[var(--moss)] mt-1"></p>
+      <button id="ih-scope-toggle" class="hidden text-[12px] font-bold text-[#8B5E34] bg-[#F6EFE6] px-2.5 py-1 rounded-lg mt-1.5"></button>
     </div>
     <div id="ih-timeline" class="p-4 overflow-y-auto flex-1 space-y-3 bg-[#FAF8F4]"></div>
   </div>
@@ -794,6 +795,10 @@
       if (document.getElementById('log-modal').style.display === 'flex') renderLog();
       if (document.getElementById('monthly-modal').style.display === 'flex') renderMonthlyStats();
       if (document.getElementById('scheduled-shipments-modal').style.display === 'flex') openScheduledShipmentsModal();
+      if (document.getElementById('item-history-modal').style.display === 'flex' && currentItemHistoryContext) {
+        const c = currentItemHistoryContext;
+        openItemHistory(c.brand, c.name, c.model, c.lot);
+      }
     }, err => {
       const dbg = document.getElementById('debug-count');
       if (dbg) dbg.innerText = '(읽기 실패: ' + err.code + ')';
@@ -2168,13 +2173,32 @@
   let expandedBrands = new Set();
 
   // ===== 품목 히스토리: 입고→출고→반품 전체 흐름을 한 화면에서 =====
-  function openItemHistory(brand, name, model) {
+  // 마지막으로 연 품목 히스토리를 기억해뒀다가, 실시간으로 데이터가 바뀌면(수정/삭제 등) 열려있는 채로 자동 새로고침하기 위함
+  let currentItemHistoryContext = null;
+
+  function openItemHistory(brand, name, model, lot) {
+    const filterByLot = lot !== undefined; // 재고 현황에서 특정 로트를 눌렀으면 그 로트만, 아니면 전체 로트 합쳐서 봄
+    currentItemHistoryContext = { brand, name, model, lot: filterByLot ? lot : undefined };
+
     document.getElementById('ih-brand-name').innerText = `${brand} · ${name}`;
-    document.getElementById('ih-model').innerText = model;
-    const totalStock = stockSummary.filter(s => s.brand===brand && s.name===name && s.model===model).reduce((a,s)=>a+s.stock,0);
+    document.getElementById('ih-model').innerText = model + (filterByLot ? ` · 로트 ${lot || '미기재'}` : '');
+
+    const matchesScope = s => s.brand===brand && s.name===name && s.model===model && (!filterByLot || (s.lot||'')===(lot||''));
+    const totalStock = stockSummary.filter(matchesScope).reduce((a,s)=>a+s.stock,0);
     document.getElementById('ih-current-stock').innerHTML = `<i class="fas fa-warehouse mr-1"></i>현재 재고 ${totalStock.toLocaleString()} BOX`;
 
-    const records = Object.entries(movements).filter(([k,r]) => r.brand===brand && r.name===name && r.model===model).map(([k,r]) => ({ key: k, ...r })).sort((a,b) => (b.ts||0) - (a.ts||0));
+    const toggleBtn = document.getElementById('ih-scope-toggle');
+    if (filterByLot) {
+      toggleBtn.classList.remove('hidden');
+      toggleBtn.innerText = '전체 로트 함께 보기';
+      toggleBtn.onclick = () => openItemHistory(brand, name, model);
+    } else {
+      toggleBtn.classList.add('hidden');
+    }
+
+    const records = Object.entries(movements)
+      .filter(([k,r]) => r.brand===brand && r.name===name && r.model===model && (!filterByLot || (r.lot||'')===(lot||'')))
+      .map(([k,r]) => ({ key: k, ...r })).sort((a,b) => (b.ts||0) - (a.ts||0));
     const box = document.getElementById('ih-timeline');
     box.innerHTML = '';
     if (!records.length) { box.innerHTML = '<div class="text-center py-8 text-[#B8B2A3] text-base">기록이 없습니다</div>'; return; }
@@ -2441,7 +2465,7 @@
           const row = document.createElement('button');
           row.type = 'button';
           row.className = 'w-full text-left flex justify-between items-center gap-2 px-3.5 py-3 bg-white active:bg-[#F6EFE6] ' + (low ? 'bg-[#FBF1EE]' : '');
-          row.onclick = () => openItemHistory(s.brand, s.name, s.model);
+          row.onclick = () => openItemHistory(s.brand, s.name, s.model, s.lot || '');
           row.innerHTML = `
             <div class="min-w-0 flex-1">
               <p class="text-[15px] font-black text-[#3A342C] truncate">${s.model}</p>

@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<script>
-  // ===== 오프라인에서도 이 페이지 자체가 열리도록 서비스워커 등록 =====
-  // scope를 '/price.html'로 좁혀서, 마루견적서(index.html)/재고관리(stock.html)에는 전혀 영향 없음
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw-price.js', { scope: '/price.html' }).catch(function(){});
-    });
-  }
-</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>청인마루 거래처 단가표</title>
@@ -280,6 +271,42 @@
     margin-left:auto; font-size:11px; font-weight:800; color:#fff;
     background:var(--bc,var(--accent)); padding:5px 12px; border-radius:100px;
   }
+  .cat-btn{
+    display:inline-flex; align-items:center; gap:3px; font-size:10.5px; font-weight:800;
+    color:var(--bc,var(--accent)); background:#fff; border:1px solid var(--bc,var(--accent));
+    padding:4px 10px; border-radius:100px; cursor:pointer; flex-shrink:0;
+  }
+  .cat-btn:active{transform:scale(.95);}
+
+  /* ═══ 카탈로그 팝업 ═══ */
+  .catalog-modal{
+    display:none; position:fixed; inset:0; background:rgba(11,20,36,.72); z-index:200;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .catalog-modal.open{display:flex;}
+  .catalog-box{
+    background:#fff; border-radius:var(--r-l); max-width:480px; width:100%;
+    max-height:82vh; display:flex; flex-direction:column; overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.4);
+  }
+  .catalog-head{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:16px 18px; border-bottom:1px solid var(--line); font-size:15px; font-weight:900;
+    color:var(--ink); flex-shrink:0;
+  }
+  .catalog-close{
+    background:#f5f1e8; border:none; width:30px; height:30px; border-radius:50%;
+    font-size:14px; font-weight:900; color:#7a6f5d; cursor:pointer; flex-shrink:0;
+  }
+  .catalog-body{overflow-y:auto; padding:16px 18px 20px;}
+  .catalog-body img{width:100%; border-radius:var(--r-s); margin-bottom:12px; display:block;}
+  .catalog-body img:last-child{margin-bottom:0;}
+  .catalog-link-btn{
+    display:block; text-align:center; margin-top:6px; padding:12px 16px;
+    background:var(--navy); color:var(--gold); font-weight:900; font-size:13px;
+    border-radius:100px; text-decoration:none;
+  }
+  .catalog-empty{text-align:center; color:#a1957d; font-size:13px; font-weight:600; padding:30px 0;}
 
   /* ═══ 패턴 카드 ═══ */
   .pattern-card{
@@ -528,6 +555,16 @@
 
 <button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="맨 위로">↑</button>
 
+<div id="catalogModal" class="catalog-modal" onclick="if(event.target===this) closeCatalog()">
+  <div class="catalog-box">
+    <div class="catalog-head">
+      <span id="catalogTitle">카탈로그</span>
+      <button type="button" class="catalog-close" onclick="closeCatalog()">✕</button>
+    </div>
+    <div class="catalog-body" id="catalogBody"></div>
+  </div>
+</div>
+
 <script>
 /* ============================================================
    Firebase 초기화
@@ -573,6 +610,7 @@ const CACHE_KEY = 'cm_price_cache_v5';
 
 let RAW_DATA = [];
 let NOTICES = { info: [], urgentList: [] };
+let CATALOGS = {};
 let PROCESSED_PATTERNS = [];
 let dataFetchPromise = null;
 
@@ -584,6 +622,7 @@ try {
     if (data && data.prices) {
       RAW_DATA = data.prices;
       NOTICES = data.notices || { info: [], urgentList: [] };
+      CATALOGS = data.catalogs || {};
       PROCESSED_PATTERNS = groupData(RAW_DATA);
     }
   }
@@ -613,6 +652,7 @@ dataFetchPromise = fetchWithRetry(FEED_URL)
   .then(json => {
     RAW_DATA = json.prices || [];
     NOTICES = json.notices || { info: [], urgentList: [] };
+    CATALOGS = json.catalogs || {};
     PROCESSED_PATTERNS = groupData(RAW_DATA);
     try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: json, ts: Date.now() })); } catch(e){}
     return json;
@@ -638,48 +678,17 @@ function grantAccess(clientName){
 (async function checkTokenAndStart(){
   const token = new URLSearchParams(window.location.search).get('t');
   if (!token) { denyAccess('링크에 접속 코드가 없습니다. 담당자에게 전달받은 링크 그대로 접속해주세요.'); return; }
-
-  const GRANT_CACHE_KEY = 'cm_price_grant_' + token;
-  const OFFLINE_GRACE_MS = 24 * 60 * 60 * 1000; // 오프라인 접속 유효기간: 마지막 정상확인 후 하루까지만
-
-  function tryOfflineGrant(reasonMsg) {
-    try {
-      const cached = JSON.parse(localStorage.getItem(GRANT_CACHE_KEY) || 'null');
-      const withinGrace = cached && cached.ts && (Date.now() - cached.ts < OFFLINE_GRACE_MS);
-      if (cached && withinGrace && cached.active !== false && (!cached.expiresAt || Date.now() < cached.expiresAt)) {
-        grantAccess(cached.clientName); // 예전에 확인됐던 접속이면, 오프라인이어도 그대로 열어줌 (가격표는 이미 로컬 캐시에 저장돼있음)
-        return true;
-      }
-    } catch(e) {}
-    denyAccess(reasonMsg || '오프라인 상태입니다. 온라인으로 한 번 재확인이 필요해요 (마지막 확인 후 일정 기간이 지났거나, 접속 기록이 없어요).');
-    return false;
-  }
-
   try {
-    // 1. 익명 로그인 및 토큰 확인 - 응답이 4초 넘게 없으면(오프라인 등) 예전 확인 기록으로 대체
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000));
-    await Promise.race([firebase.auth().signInAnonymously(), timeout]);
-    const snap = await Promise.race([fbDatabase.ref('priceAccessTokens/' + token).once('value'), timeout]);
+    // 1. 익명 로그인 및 토큰 확인
+    await firebase.auth().signInAnonymously();
+    const snap = await fbDatabase.ref('priceAccessTokens/' + token).once('value');
     const data = snap.val();
-
-    if (!data || data.active === false) {
-      try { localStorage.removeItem(GRANT_CACHE_KEY); } catch(e) {} // 차단된 링크면 예전 오프라인 통과 기록도 즉시 무효화
-      denyAccess('유효하지 않거나 비활성화된 링크입니다.'); return;
-    }
-    if (data.expiresAt && Date.now() > data.expiresAt) {
-      try { localStorage.removeItem(GRANT_CACHE_KEY); } catch(e) {}
-      denyAccess('이 링크의 유효기간이 만료되었습니다. 담당자에게 문의해주세요.'); return;
-    }
+    
+    if (!data || data.active === false) { denyAccess('유효하지 않거나 비활성화된 링크입니다.'); return; }
+    if (data.expiresAt && Date.now() > data.expiresAt) { denyAccess('이 링크의 유효기간이 만료되었습니다. 담당자에게 문의해주세요.'); return; }
 
     // 2. 화면 즉시 오픈 (대기 시간 제거)
     grantAccess(data.clientName);
-
-    // 이번에 정상 확인된 접속 정보를 저장해둠 - 다음에 오프라인일 때 이걸로 대신 열어줌 (단, 유효기간 3일 한정)
-    try {
-      localStorage.setItem(GRANT_CACHE_KEY, JSON.stringify({
-        clientName: data.clientName, expiresAt: data.expiresAt || null, active: data.active !== false, ts: Date.now()
-      }));
-    } catch(e) {}
 
     // 3. 접속 통계는 백그라운드에서 비동기 처리 (사용자 화면 열리는 속도에 영향 없음)
     fbDatabase.ref('priceAccessTokens/' + token).update({
@@ -688,8 +697,7 @@ function grantAccess(clientName){
     }).catch(()=>{});
   } catch (e) {
     console.error(e);
-    // 온라인 확인이 실패/시간초과 - 예전에 확인됐던 링크면 오프라인으로라도 열어줌
-    tryOfflineGrant();
+    denyAccess('접속 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
   }
 })();
 
@@ -915,6 +923,7 @@ function retryLoad(){
     .then(json => {
       RAW_DATA = json.prices || [];
       NOTICES = json.notices || { info: [], urgentList: [] };
+      CATALOGS = json.catalogs || {};
       PROCESSED_PATTERNS = groupData(RAW_DATA);
       try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: json, ts: Date.now() })); } catch(e){}
       return json;
@@ -1036,7 +1045,7 @@ function renderList(){
 
     return `
       <div class="brand-group" style="--bc:${bc}">
-        <div class="brand-title"><span class="dot"></span>${brandTitleHL}<span class="count">${items.length}개 패턴</span></div>
+        <div class="brand-title"><span class="dot"></span>${brandTitleHL}${CATALOGS[brand] ? `<button type="button" class="cat-btn" onclick="event.stopPropagation(); openCatalog('${brand.replace(/'/g,"\\'")}')">📷 카탈로그</button>` : ''}<span class="count">${items.length}개 패턴</span></div>
         <div class="cards-wrap">
           ${items.map((p, i) => renderPatternCard(p, brand + '_' + i, qFolded, qLen)).join('')}
         </div>
@@ -1120,6 +1129,30 @@ function toggleCard(id){
   openState[id] = !openState[id];
   const el = document.querySelector('.pattern-card[data-id="' + CSS.escape(id) + '"]');
   if (el) el.classList.toggle('open');
+}
+
+/* 브랜드 카탈로그 팝업 */
+function openCatalog(brand){
+  const data = CATALOGS[brand];
+  if (!data) return;
+  document.getElementById('catalogTitle').innerText = brand + ' 카탈로그';
+  const body = document.getElementById('catalogBody');
+  const images = data.images || [];
+  let html = '';
+  images.forEach(fname => {
+    html += `<img src="images/${fname}" alt="${brand}" loading="lazy" onerror="this.style.display='none'">`;
+  });
+  if (data.link) {
+    html += `<a class="catalog-link-btn" href="${data.link}" target="_blank" rel="noopener">📄 전체 카탈로그 보기</a>`;
+  }
+  if (!images.length && !data.link) {
+    html = '<div class="catalog-empty">등록된 자료가 없습니다.</div>';
+  }
+  body.innerHTML = html;
+  document.getElementById('catalogModal').classList.add('open');
+}
+function closeCatalog(){
+  document.getElementById('catalogModal').classList.remove('open');
 }
 
 /* 맨 위로 버튼 */

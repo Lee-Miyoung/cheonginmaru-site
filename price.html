@@ -1140,7 +1140,7 @@ function openCatalog(brand){
   const images = data.images || [];
   let html = '';
   images.forEach(fname => {
-    html += `<img src="images/${fname}" alt="${brand}" loading="lazy" onerror="this.style.display='none'">`;
+    html += `<img src="images/${fname}" alt="${brand}" onerror="this.style.display='none'">`;
   });
   if (data.link) {
     html += `<a class="catalog-link-btn" href="${data.link}" target="_blank" rel="noopener">📄 전체 카탈로그 보기</a>`;

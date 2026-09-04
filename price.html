@@ -718,6 +718,12 @@ function fmtFactor(f){
   if (!n || isNaN(n)) return null;
   return (Math.round(n*100)/100).toString();
 }
+// factor 칸에 숫자가 아니라 글자(예: '평')가 써있으면 "평 단위 상품"으로 인식
+function isPyeongFactor(f){
+  const s = String(f || '').trim();
+  if (!s) return false;
+  return isNaN(parseFloat(s));
+}
 
 /* ============================================================
    초고속 한글 검색 및 인덱싱 유틸
@@ -1063,7 +1069,8 @@ function renderPatternCard(p, id, qFolded, qLen){
   const isMulti = p.variants.length > 1;
   const totalModels = p.variants.reduce((s, v) => s + Math.max(v.models.length, 1), 0);
   const isJangpan = String(p.brand).includes('장판');
-  const unitLabel = isJangpan ? '/ 평 (부가세 별도)' : '/ BOX (부가세 별도)';
+  const isPyeongUnit = isJangpan || p.variants.some(v => isPyeongFactor(v.factor));
+  const unitLabel = isPyeongUnit ? '/ 평 (부가세 별도)' : '/ BOX (부가세 별도)';
 
   let priceHTML;
   if (isMulti) {
@@ -1081,8 +1088,10 @@ function renderPatternCard(p, id, qFolded, qLen){
 
   const firstSpec = p.variants[0].spec;
   const firstFactor = fmtFactor(p.variants[0].factor);
+  const firstIsPyeong = isPyeongFactor(p.variants[0].factor);
+  const firstUnitChip = isJangpan ? '' : firstIsPyeong ? '<span class="box-chip">평 기준</span>' : (firstFactor ? `<span class="box-chip">1BOX = ${firstFactor}㎡</span>` : '');
   const specLine = !isMulti
-    ? `${firstSpec ? `<span>${firstSpec}</span>` : ''}${(!isJangpan && firstFactor) ? `<span class="box-chip">1BOX = ${firstFactor}㎡</span>` : ''}<span>· 색상 ${totalModels}종</span>`
+    ? `${firstSpec ? `<span>${firstSpec}</span>` : ''}${firstUnitChip}<span>· 색상 ${totalModels}종</span>`
     : `<span>색상 ${totalModels}종 · 규격은 펼쳐서 확인</span>`;
 
   const highlightedName = qFolded ? highlightWithIndex(p.nameIndex, qFolded, qLen) : p.name;
@@ -1102,6 +1111,8 @@ function renderPatternCard(p, id, qFolded, qLen){
         <div class="model-inner">
           ${p.variants.map(v => {
             const factorTxt = fmtFactor(v.factor);
+            const vIsPyeong = isPyeongFactor(v.factor);
+            const vUnitChip = isJangpan ? '' : vIsPyeong ? '<span class="box-chip">평 기준</span>' : (factorTxt ? `<span class="box-chip">1BOX = ${factorTxt}㎡</span>` : '');
             const chipsHTML = `
               <div class="chips">
                 ${v.models.length ? v.models.map(m => {
@@ -1114,7 +1125,7 @@ function renderPatternCard(p, id, qFolded, qLen){
             return `
             <div class="variant-block">
               <div class="variant-head">
-                <span class="spec-txt">${v.spec || ''} ${(!isJangpan && factorTxt) ? `<span class="box-chip">1BOX = ${factorTxt}㎡</span>` : ''}</span>
+                <span class="spec-txt">${v.spec || ''} ${vUnitChip}</span>
                 <span class="vprice">${(v.firm_price||0).toLocaleString()}원</span>
               </div>
               ${chipsHTML}
@@ -1140,7 +1151,7 @@ function openCatalog(brand){
   const images = data.images || [];
   let html = '';
   images.forEach(fname => {
-    html += `<img src="images/${fname}" alt="${brand}" onerror="this.style.display='none'">`;
+    html += `<img src="images/${fname}" alt="${brand}" loading="lazy" onerror="this.style.display='none'">`;
   });
   if (data.link) {
     html += `<a class="catalog-link-btn" href="${data.link}" target="_blank" rel="noopener">📄 전체 카탈로그 보기</a>`;

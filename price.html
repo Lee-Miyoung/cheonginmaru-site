@@ -36,8 +36,8 @@
   .wrap{max-width:700px; margin:0 auto; padding:0 0 84px;}
 
   /* ═══ 긴급 공지 ═══ */
-  .fn-title-row{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px;}
-  .fn-title-actions{display:flex; align-items:center; gap:6px; margin-left:auto;}
+  .fn-title-row{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; flex-wrap:wrap;}
+  .fn-title-actions{display:flex; align-items:center; gap:6px; margin-left:auto; flex-wrap:wrap;}
   .print-bell{
     display:inline-flex; align-items:center; gap:5px; border:1px solid var(--line);
     background:#fff; color:#5b5142; font-size:11.5px; font-weight:900;
@@ -469,57 +469,35 @@
   .wrap.ready{display:block; animation:pageIn .4s cubic-bezier(.2,.7,.3,1);}
   @keyframes pageIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
 
-  /* ═══ 인쇄용(PDF저장) 스타일 — 페이지 수 최소화 버전 ═══ */
+  /* ═══ 인쇄 전용 콘텐츠 (JS가 직접 3단/2단으로 배치해서 만듦) ═══ */
+  #printColumns{ display:none; }
+
   @media print{
     @page{ margin:8mm; size:A4 landscape; }
     body{ background:#fff !important; }
 
-    /* 인쇄에서 숨길 요소들 (검색/필터/버튼류/배너/모달/색상칩 전부) */
-    #gate, .kakao-warn, .top-help-link, .help-link, .site-link,
-    .search-bar, .brand-filter, .brand-accordion, #topBtn,
-    .urgent-bell, .urgent-panel, .print-bell, .cat-btn, .chev,
-    .catalog-modal, .header-trust, .badge-row, .footnote,
-    .model-panel, .price-unit, .price-multi-badge, .pattern-spec .box-chip{
-      display:none !important;
-    }
+    /* 화면용 UI는 전부 숨기고 인쇄 전용 콘텐츠만 표시 */
+    #gate, .kakao-warn, .wrap, #topBtn, .catalog-modal{ display:none !important; }
+    #printColumns{ display:block !important; }
 
-    .wrap{ display:block !important; }
-    header{ box-shadow:none !important; padding:0 !important; margin-bottom:4px !important; }
-    .header-flex{ padding:0 !important; }
-    .logo-row{ display:none !important; }
-    .client-hero{ font-size:12px !important; margin:0 !important; }
-    .stat-bar{ display:none !important; }
-    .header-notice{ font-size:8px !important; padding:2px 5px !important; margin-top:2px !important; }
+    .print-page-head{
+      font-size:11px; font-weight:900; margin-bottom:6px; padding-bottom:4px;
+      border-bottom:1.5px solid #333;
+    }
+    .print-cols-row{ display:flex; gap:12px; align-items:flex-start; }
+    .print-col{ flex:1 1 0; min-width:0; }
 
-    /* 전체 목록을 하나의 다단(3단) 흐름으로 이어서, 빈 공간 없이 위에서부터 채움 */
-    #listRoot{
-      column-count:3 !important; column-gap:10px !important; column-fill:auto !important;
+    .p-brand{
+      font-size:10.5px; font-weight:900; margin:6px 0 2px; padding-bottom:1px;
+      border-bottom:1.2px solid #333; break-after:avoid;
     }
-
-    /* 브랜드 그룹: 여백 최소화, 컬럼 사이에서 자연스럽게 이어짐 */
-    .brand-group{ margin:0 0 3px !important; }
-    .brand-title{
-      font-size:10.5px !important; padding:1.5px 0 !important; margin-bottom:1px !important;
-      border-bottom:1.2px solid #333 !important; gap:4px !important;
-      break-after:avoid !important; break-inside:avoid !important;
-    }
-    .brand-title .count{ font-size:8px !important; }
-
-    .cards-wrap{ display:block !important; }
-    .pattern-card{
-      break-inside:avoid; margin-bottom:0 !important; border:none !important;
-      box-shadow:none !important; border-bottom:1px dotted #ccc !important;
-      border-radius:0 !important;
-    }
-    .pattern-card::before{ display:none !important; }
-    .pattern-row{
-      padding:1.5px 0 !important; gap:3px !important; cursor:default !important;
-      align-items:baseline !important;
-    }
-    .pattern-name{ font-size:8.5px !important; margin-bottom:0 !important; line-height:1.25 !important; }
-    .pattern-spec{ font-size:6.5px !important; color:#888 !important; }
-    .price-num, .price-range{ font-size:8.5px !important; }
-    .new-badge{ font-size:6px !important; padding:0 2px !important; }
+    .print-col > .p-brand:first-child{ margin-top:0; }
+    .p-item{ break-inside:avoid; padding:1.5px 0; border-bottom:1px dotted #ddd; }
+    .p-item-top{ display:flex; justify-content:space-between; gap:6px; }
+    .p-name{ font-size:8.5px; font-weight:800; }
+    .p-price{ font-size:8.5px; font-weight:900; white-space:nowrap; }
+    .p-spec{ font-size:6.5px; color:#888; }
+    .p-models{ font-size:6.5px; color:#555; line-height:1.35; }
   }
 </style>
 </head>
@@ -582,8 +560,11 @@
     <div class="fn-title-row">
       <div class="fn-title">📋 거래 안내</div>
       <div class="fn-title-actions">
-        <button type="button" class="print-bell" id="printBell" onclick="printPriceList()">
-          🖨️ 인쇄 / PDF저장
+        <button type="button" class="print-bell" id="printBellSimple" onclick="printSimple()">
+          🖨️ 인쇄(가격만)
+        </button>
+        <button type="button" class="print-bell" id="printBellDetailed" onclick="printDetailed()">
+          🖨️ 인쇄(모델포함)
         </button>
         <button type="button" class="urgent-bell" id="urgentBell" onclick="toggleUrgentPanel()">
           <span class="ub-icon">🔔</span> 긴급 공지 <span class="ub-badge" id="ubBadge">1</span>
@@ -619,6 +600,8 @@
 </div>
 
 <button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="맨 위로">↑</button>
+
+<div id="printColumns"></div>
 
 <div id="catalogModal" class="catalog-modal" onclick="if(event.target===this) closeCatalog()">
   <div class="catalog-box">
@@ -1220,9 +1203,106 @@ function closeCatalog(){
   document.getElementById('catalogModal').classList.remove('open');
 }
 
-/* 인쇄 / PDF저장 — 모델명(색상칩)은 빼고 브랜드·패턴명·가격만 3단으로 촘촘히 인쇄 */
-function printPriceList(){
-  window.print();
+/* ============================================================
+   인쇄 / PDF저장 — CSS 다단(column-count)은 모바일 사파리에서
+   페이지 분할이 깨지므로 사용하지 않고, JS로 직접 항목을
+   N개 컬럼에 나눠 담은 뒤 flex로 나란히 배치한다.
+   ============================================================ */
+function getPrintByBrand(){
+  const rawQ = document.getElementById('searchInput').value.trim();
+  const qObj = rawQ ? stripWithMap(rawQ) : null;
+  const qFolded = qObj ? foldForSearch(qObj.stripped) : '';
+
+  const byBrand = {};
+  PROCESSED_PATTERNS.forEach(p => {
+    if (selectedBrand && p.brand !== selectedBrand) return;
+    let hit = !qFolded;
+    if (qFolded) {
+      hit = p.brandIndex.folded.includes(qFolded)
+        || p.nameIndex.folded.includes(qFolded)
+        || p.variants.some(v => v.models.some(m => m.searchIndex.folded.includes(qFolded)));
+    }
+    if (!hit) return;
+    (byBrand[p.brand] = byBrand[p.brand] || []).push(p);
+  });
+  return byBrand;
+}
+
+function buildPrintRows(mode){
+  const byBrand = getPrintByBrand();
+  const rows = [];
+  Object.keys(byBrand).forEach(brand => {
+    rows.push({ type:'brand', text: brand, w:1 });
+    byBrand[brand].forEach(p => {
+      const isMulti = p.variants.length > 1;
+      let priceText;
+      if (isMulti) {
+        const prices = p.variants.map(v => v.firm_price).filter(Boolean);
+        priceText = `${Math.min(...prices).toLocaleString()}~${Math.max(...prices).toLocaleString()}원`;
+      } else {
+        priceText = `${(p.variants[0].firm_price||0).toLocaleString()}원`;
+      }
+      const spec = p.variants[0].spec || '';
+      let modelsText = '';
+      let w = 1;
+      if (mode === 'detailed') {
+        const names = [];
+        p.variants.forEach(v => (v.models||[]).forEach(m => names.push(m.name)));
+        modelsText = names.join(', ');
+        w += Math.ceil(modelsText.length / 46); // 대략적인 줄 수 가중치
+      }
+      rows.push({ type:'item', name:p.name, spec, price:priceText, models:modelsText, w });
+    });
+  });
+  return rows;
+}
+
+function splitIntoColumns(rows, numCols){
+  const totalW = rows.reduce((s,r)=>s+r.w,0);
+  const target = totalW / numCols;
+  const cols = Array.from({length:numCols}, () => []);
+  let ci = 0, acc = 0;
+  rows.forEach(r => {
+    if (acc >= target && ci < numCols - 1){ ci++; acc = 0; }
+    cols[ci].push(r);
+    acc += r.w;
+  });
+  return cols;
+}
+
+function printRowHTML(r){
+  if (r.type === 'brand'){
+    return `<div class="p-brand">${r.text}</div>`;
+  }
+  return `<div class="p-item">
+    <div class="p-item-top"><span class="p-name">${r.name}</span><span class="p-price">${r.price}</span></div>
+    ${r.spec ? `<div class="p-spec">${r.spec}</div>` : ''}
+    ${r.models ? `<div class="p-models">${r.models}</div>` : ''}
+  </div>`;
+}
+
+function renderPrintColumns(mode){
+  const numCols = mode === 'detailed' ? 2 : 3;
+  const rows = buildPrintRows(mode);
+  const cols = splitIntoColumns(rows, numCols);
+  const colsHTML = cols.map(c => `<div class="print-col">${c.map(printRowHTML).join('')}</div>`).join('');
+
+  const clientEl = document.getElementById('clientName');
+  const dateEl = document.getElementById('baseDate');
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'}`;
+
+  document.getElementById('printColumns').innerHTML = `
+    <div class="print-page-head">${headText}</div>
+    <div class="print-cols-row">${colsHTML}</div>`;
+}
+
+function printSimple(){
+  renderPrintColumns('simple');
+  setTimeout(() => window.print(), 30);
+}
+function printDetailed(){
+  renderPrintColumns('detailed');
+  setTimeout(() => window.print(), 30);
 }
 
 /* 맨 위로 버튼 */

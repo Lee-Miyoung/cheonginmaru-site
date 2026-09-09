@@ -37,6 +37,13 @@
 
   /* ═══ 긴급 공지 ═══ */
   .fn-title-row{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px;}
+  .fn-title-actions{display:flex; align-items:center; gap:6px; margin-left:auto;}
+  .print-bell{
+    display:inline-flex; align-items:center; gap:5px; border:1px solid var(--line);
+    background:#fff; color:#5b5142; font-size:11.5px; font-weight:900;
+    padding:5px 11px; border-radius:100px; cursor:pointer; user-select:none;
+  }
+  .print-bell:active{transform:scale(.95);}
   .urgent-bell{
     display:none; align-items:center; gap:5px; border:1px solid rgba(220,38,38,.35);
     background:rgba(220,38,38,.08); color:#b91c1c; font-size:11.5px; font-weight:900;
@@ -461,6 +468,38 @@
   .wrap{display:none;}
   .wrap.ready{display:block; animation:pageIn .4s cubic-bezier(.2,.7,.3,1);}
   @keyframes pageIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+
+  /* ═══ 인쇄용(PDF저장) 스타일 ═══ */
+  @media print{
+    @page{ margin:12mm; }
+    body{ background:#fff !important; }
+
+    /* 인쇄에서 숨길 요소들 (검색/필터/버튼류/배너/모달 등) */
+    #gate, .kakao-warn, .top-help-link, .help-link, .site-link,
+    .search-bar, .brand-filter, .brand-accordion, #topBtn,
+    .urgent-bell, .urgent-panel, .print-bell, .cat-btn, .chev,
+    .catalog-modal, .header-trust, .badge-row{
+      display:none !important;
+    }
+
+    .wrap{ display:block !important; }
+    header{ box-shadow:none !important; }
+
+    /* 카드/모델 정보를 전부 펼쳐서 인쇄 */
+    .pattern-card .model-panel{
+      max-height:none !important;
+      border-top:1px solid var(--line-2) !important;
+    }
+    .pattern-row{ cursor:default !important; }
+    .pattern-card{
+      break-inside:avoid;
+      box-shadow:none !important;
+      border:1px solid #ddd !important;
+    }
+    .brand-group{ break-inside:avoid-page; }
+    .cards-wrap{ display:block !important; }
+    .cards-wrap .pattern-card{ margin-bottom:8px !important; }
+  }
 </style>
 </head>
 <body>
@@ -521,9 +560,14 @@
   <div class="footnote">
     <div class="fn-title-row">
       <div class="fn-title">📋 거래 안내</div>
-      <button type="button" class="urgent-bell" id="urgentBell" onclick="toggleUrgentPanel()">
-        <span class="ub-icon">🔔</span> 긴급 공지 <span class="ub-badge" id="ubBadge">1</span>
-      </button>
+      <div class="fn-title-actions">
+        <button type="button" class="print-bell" id="printBell" onclick="printPriceList()">
+          🖨️ 인쇄 / PDF저장
+        </button>
+        <button type="button" class="urgent-bell" id="urgentBell" onclick="toggleUrgentPanel()">
+          <span class="ub-icon">🔔</span> 긴급 공지 <span class="ub-badge" id="ubBadge">1</span>
+        </button>
+      </div>
     </div>
     <div class="urgent-panel" id="urgentPanel">
       <div class="urgent-panel-inner" id="urgentPanelInner"></div>
@@ -717,12 +761,6 @@ function fmtFactor(f){
   const n = parseFloat(f);
   if (!n || isNaN(n)) return null;
   return (Math.round(n*100)/100).toString();
-}
-// factor 칸에 숫자가 아니라 글자(예: '평')가 써있으면 "평 단위 상품"으로 인식
-function isPyeongFactor(f){
-  const s = String(f || '').trim();
-  if (!s) return false;
-  return isNaN(parseFloat(s));
 }
 
 /* ============================================================
@@ -1069,8 +1107,7 @@ function renderPatternCard(p, id, qFolded, qLen){
   const isMulti = p.variants.length > 1;
   const totalModels = p.variants.reduce((s, v) => s + Math.max(v.models.length, 1), 0);
   const isJangpan = String(p.brand).includes('장판');
-  const isPyeongUnit = isJangpan || p.variants.some(v => isPyeongFactor(v.factor));
-  const unitLabel = isPyeongUnit ? '/ 평 (부가세 별도)' : '/ BOX (부가세 별도)';
+  const unitLabel = isJangpan ? '/ 평 (부가세 별도)' : '/ BOX (부가세 별도)';
 
   let priceHTML;
   if (isMulti) {
@@ -1088,10 +1125,8 @@ function renderPatternCard(p, id, qFolded, qLen){
 
   const firstSpec = p.variants[0].spec;
   const firstFactor = fmtFactor(p.variants[0].factor);
-  const firstIsPyeong = isPyeongFactor(p.variants[0].factor);
-  const firstUnitChip = isJangpan ? '' : firstIsPyeong ? '<span class="box-chip">평 기준</span>' : (firstFactor ? `<span class="box-chip">1BOX = ${firstFactor}㎡</span>` : '');
   const specLine = !isMulti
-    ? `${firstSpec ? `<span>${firstSpec}</span>` : ''}${firstUnitChip}<span>· 색상 ${totalModels}종</span>`
+    ? `${firstSpec ? `<span>${firstSpec}</span>` : ''}${(!isJangpan && firstFactor) ? `<span class="box-chip">1BOX = ${firstFactor}㎡</span>` : ''}<span>· 색상 ${totalModels}종</span>`
     : `<span>색상 ${totalModels}종 · 규격은 펼쳐서 확인</span>`;
 
   const highlightedName = qFolded ? highlightWithIndex(p.nameIndex, qFolded, qLen) : p.name;
@@ -1111,8 +1146,6 @@ function renderPatternCard(p, id, qFolded, qLen){
         <div class="model-inner">
           ${p.variants.map(v => {
             const factorTxt = fmtFactor(v.factor);
-            const vIsPyeong = isPyeongFactor(v.factor);
-            const vUnitChip = isJangpan ? '' : vIsPyeong ? '<span class="box-chip">평 기준</span>' : (factorTxt ? `<span class="box-chip">1BOX = ${factorTxt}㎡</span>` : '');
             const chipsHTML = `
               <div class="chips">
                 ${v.models.length ? v.models.map(m => {
@@ -1125,7 +1158,7 @@ function renderPatternCard(p, id, qFolded, qLen){
             return `
             <div class="variant-block">
               <div class="variant-head">
-                <span class="spec-txt">${v.spec || ''} ${vUnitChip}</span>
+                <span class="spec-txt">${v.spec || ''} ${(!isJangpan && factorTxt) ? `<span class="box-chip">1BOX = ${factorTxt}㎡</span>` : ''}</span>
                 <span class="vprice">${(v.firm_price||0).toLocaleString()}원</span>
               </div>
               ${chipsHTML}
@@ -1151,7 +1184,7 @@ function openCatalog(brand){
   const images = data.images || [];
   let html = '';
   images.forEach(fname => {
-    html += `<img src="images/${fname}" alt="${brand}" loading="lazy" onerror="this.style.display='none'">`;
+    html += `<img src="images/${fname}" alt="${brand}" onerror="this.style.display='none'">`;
   });
   if (data.link) {
     html += `<a class="catalog-link-btn" href="${data.link}" target="_blank" rel="noopener">📄 전체 카탈로그 보기</a>`;
@@ -1164,6 +1197,11 @@ function openCatalog(brand){
 }
 function closeCatalog(){
   document.getElementById('catalogModal').classList.remove('open');
+}
+
+/* 인쇄 / PDF저장 — 지금 화면에 보이는 목록을 그대로, 색상칩까지 전부 펼쳐서 인쇄합니다 */
+function printPriceList(){
+  window.print();
 }
 
 /* 맨 위로 버튼 */

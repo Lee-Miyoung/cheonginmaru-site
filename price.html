@@ -476,7 +476,7 @@
   #printColumns{ display:none; }
 
   @media print{
-    @page{ margin:6mm; size:A4 landscape; }
+    @page{ margin:6mm; size:A4 portrait; }
     body{ background:#fff !important; }
 
     /* 화면용 UI는 전부 숨기고 인쇄 전용 콘텐츠만 표시 */
@@ -799,6 +799,13 @@ function applyPrintPermission(){
    ============================================================ */
 let openState = {};
 let selectedBrand = null;
+
+// "장판/데코타일/하우시스"류 브랜드는 목록과 인쇄본 모두에서 항상 맨 뒤로 보낸다
+const BRAND_SORT_LAST_PATTERNS = ['장판', '데코타일', '하우시스'];
+function sortBrandKeys(keys){
+  const isLast = k => BRAND_SORT_LAST_PATTERNS.some(p => k.includes(p));
+  return keys.filter(k => !isLast(k)).concat(keys.filter(k => isLast(k)));
+}
 
 const BRAND_COLORS = ['#1e3a8a','#7f1d3a','#14532d','#78350f','#3730a3','#155e63'];
 const brandColorMap = {};
@@ -1125,7 +1132,7 @@ function renderList(){
   });
 
   const root = document.getElementById('listRoot');
-  const brands = Object.keys(byBrand);
+  const brands = sortBrandKeys(Object.keys(byBrand));
   if (brands.length === 0) {
     root.innerHTML = '<div class="empty">검색 결과가 없습니다.</div>';
     return;
@@ -1276,7 +1283,7 @@ function getPrintByBrand(){
 function buildPrintRows(mode){
   const byBrand = getPrintByBrand();
   const rows = [];
-  Object.keys(byBrand).forEach(brand => {
+  sortBrandKeys(Object.keys(byBrand)).forEach(brand => {
     const brandColor = colorFor(brand);
     rows.push({ type:'brand', text: brand, color: brandColor, brand, brandColor, w:1.6 });
     const isJangpan = String(brand).includes('장판');
@@ -1428,12 +1435,13 @@ function renderPrintColumns(mode){
   // 컴퓨터에서 인쇄할 때 "가로 방향"을 선택 안 하면 페이지가 좁아져서
   // 글자가 더 많이 줄바꿈되고 순서가 꼬일 수 있으니, 그런 경우에도
   // 안전하도록 넉넉히 보수적으로 잡았다.
-  const perColumn = mode === 'detailed' ? 26 : 50;
+  // 세로(portrait)는 가로보다 폭이 좁아서 줄바꿈이 더 많이 생기므로 용량을 낮춤
+  const perColumn = mode === 'detailed' ? 17 : 34;
   const rows = buildPrintRows(mode);
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v18)</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v20)</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){
     document.getElementById('printColumns').innerHTML = `

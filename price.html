@@ -688,7 +688,7 @@
    더 받아와서 버전이 다르면 자동으로 새로고침한다.
    ★ 배포할 때마다 이 숫자만 하나씩 올려주면 됨 ★
    ============================================================ */
-const BUILD_VERSION = 'b2';
+const BUILD_VERSION = 'b3';
 (function autoUpdateCheck(){
   try {
     const bustUrl = location.pathname + (location.search ? location.search + '&' : '?') + '_fresh=' + Date.now();
@@ -1528,7 +1528,7 @@ function renderPrintColumns(mode){
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v25)</span><br>
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v26)</span><br>
     <span class="p-vat-note">＊ 표시된 모든 금액은 부가세(VAT) 별도 금액입니다</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){
@@ -1601,6 +1601,7 @@ async function printSimple(){
   const btn = document.getElementById('printBellSimple');
   if (btn) btn.disabled = true;
   const ready = await ensurePrintDataReady();
+  try { await document.fonts.ready; } catch(e){}
   if (btn) btn.disabled = false;
   if (!ready){ alert('가격 데이터를 아직 불러오는 중입니다. 몇 초 후 다시 눌러주세요.'); return; }
   renderPrintColumns('simple');
@@ -1611,6 +1612,7 @@ async function printDetailed(){
   const btn = document.getElementById('printBellDetailed');
   if (btn) btn.disabled = true;
   const ready = await ensurePrintDataReady();
+  try { await document.fonts.ready; } catch(e){}
   if (btn) btn.disabled = false;
   if (!ready){ alert('가격 데이터를 아직 불러오는 중입니다. 몇 초 후 다시 눌러주세요.'); return; }
   renderPrintColumns('detailed');

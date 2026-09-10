@@ -535,7 +535,6 @@
     }
     .p-footer-title{ font-size:10px; font-weight:900; margin-bottom:4px; }
     .p-footer-line{ font-size:8px; color:#444; line-height:1.5; }
-    .p-debug{ font-size:7px; color:#0a7d3c; font-family:monospace; }
   }
 
   /* ═══ 인쇄 페이지 나누기 계산용 "숨은 측정 모드" ═══
@@ -689,7 +688,7 @@
    더 받아와서 버전이 다르면 자동으로 새로고침한다.
    ★ 배포할 때마다 이 숫자만 하나씩 올려주면 됨 ★
    ============================================================ */
-const BUILD_VERSION = 'b4';
+const BUILD_VERSION = 'b5';
 (function autoUpdateCheck(){
   try {
     const bustUrl = location.pathname + (location.search ? location.search + '&' : '?') + '_fresh=' + Date.now();
@@ -1529,7 +1528,7 @@ function renderPrintColumns(mode){
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v27-진단)</span><br>
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v28)</span><br>
     <span class="p-vat-note">＊ 표시된 모든 금액은 부가세(VAT) 별도 금액입니다</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){
@@ -1547,16 +1546,10 @@ function renderPrintColumns(mode){
 
   // ── 각 줄의 진짜 렌더링 높이를 실측 → 칸을 실제로 꽉 채울 때까지 담는다 ──
   const heights = measureRowHeights(rows, colWmm);
-  const headBufferPx = 105; // 안내줄(2줄)+진단줄 + "(계속)" 브랜드바가 추가될 수 있는 여유분
+  const headBufferPx = 90; // 안내줄(2줄) + "(계속)" 브랜드바가 추가될 수 있는 여유분
   // 화면 측정과 실제 인쇄 렌더링 사이 미세한 오차로 칸이 페이지 경계를 살짝
   // 넘어가 버리면(→ 엉뚱한 빈 페이지 발생) 안 되므로 살짝 더 여유를 둔다
-  const rawPageHeightPx = mmToPx(usableHmm);
-  const colHeightPx = (rawPageHeightPx - headBufferPx) * 0.95;
-
-  // ★ 임시 진단용 — 기기별로 실제 측정값이 뭐가 다른지 눈으로 비교하기 위함
-  const debugInfo = `[진단] 화면폭:${window.innerWidth} DPR:${window.devicePixelRatio} `
-    + `페이지높이px:${rawPageHeightPx.toFixed(1)} 칸높이예산:${colHeightPx.toFixed(1)} `
-    + `줄1높이:${(heights[0]||0).toFixed(1)} 폰트준비:${document.fonts ? document.fonts.status : 'N/A'}`;
+  const colHeightPx = (mmToPx(usableHmm) - headBufferPx) * 0.95;
 
   const pages = paginateRowsByHeight(rows, heights, numCols, colHeightPx);
 
@@ -1590,7 +1583,7 @@ function renderPrintColumns(mode){
     : '';
 
   document.getElementById('printColumns').innerHTML = `
-    <div class="print-page-head">${headText}<br><span class="p-debug">${debugInfo}</span></div>
+    <div class="print-page-head">${headText}</div>
     ${pagesHTML}
     ${footerHTML}`;
 }

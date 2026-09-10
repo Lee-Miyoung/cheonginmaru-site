@@ -487,9 +487,11 @@
       font-size:10px; font-weight:900; margin-bottom:4px; padding-bottom:3px;
       border-bottom:1.5px solid #333;
     }
+    .p-head-note{ font-weight:700; color:#888; }
+    .print-page{ }
+    .print-page-break{ break-after: page; page-break-after: always; }
     .print-cols-row{ display:flex; gap:9px; align-items:flex-start; }
     .print-col{ flex:1 1 0; min-width:0; overflow-wrap:break-word; word-break:break-word; }
-    .print-cols-row.cols-4 .print-col{ font-size:7.8px; }
 
     .p-brand{
       font-size:10.5px; font-weight:900; margin:6px 0 2px; padding:2.5px 5px;
@@ -513,11 +515,12 @@
     .p-item{ padding:1.5px 0; border-bottom:1px dotted #ccc; overflow-wrap:break-word; word-break:break-word; }
     .p-item-variant{ padding-left:6px; border-bottom:1px dotted #e2e2e2; }
     .p-item-top{ display:flex; justify-content:space-between; align-items:baseline; gap:6px; break-after:avoid; }
-    .p-name{ font-size:9px; font-weight:800; flex:1; }
-    .p-price{ font-size:9px; font-weight:900; white-space:nowrap; }
+    .p-name{ font-size:9px; font-weight:800; flex:1; color:#111; }
+    .p-price{ font-size:9px; font-weight:900; white-space:nowrap; color:#a05a12; }
     .p-spec{ font-size:7.5px; color:#555; margin-top:1px; }
     .p-spec-inline{ font-size:7.5px; color:#333; font-weight:700; flex:1; }
     .p-models{ font-size:7px; color:#444; line-height:1.4; margin-top:1px; overflow-wrap:break-word; word-break:break-word; }
+    .p-empty{ font-size:11px; color:#888; padding:20px 0; text-align:center; }
   }
 </style>
 </head>
@@ -1328,17 +1331,29 @@ function buildPrintRows(mode){
   return rows;
 }
 
-function splitIntoColumns(rows, numCols){
-  const totalW = rows.reduce((s,r)=>s+r.w,0);
-  const target = totalW / numCols;
-  const cols = Array.from({length:numCols}, () => []);
-  let ci = 0, acc = 0;
-  rows.forEach(r => {
-    if (acc >= target && ci < numCols - 1){ ci++; acc = 0; }
-    cols[ci].push(r);
-    acc += r.w;
-  });
-  return cols;
+/* 페이지를 JS가 직접 나눔: 한 페이지 안에서 1열→2열→3열 순서로 채우고,
+   그 페이지가 다 차면 다음 "페이지" 블록으로 넘어간다.
+   (브라우저의 자동 다단/자동 페이지분할에 기대지 않아 순서가 항상 예측 가능함) */
+function paginateRows(rows, numCols, targetPages){
+  const totalW = rows.reduce((s,r)=>s+r.w,0) || 1;
+  const perColumn = totalW / (numCols * targetPages);
+  const pages = [];
+  let idx = 0;
+  let guard = 0;
+  while (idx < rows.length && guard < 200){
+    guard++;
+    const page = Array.from({length:numCols}, () => []);
+    for (let c = 0; c < numCols; c++){
+      let acc = 0;
+      while (idx < rows.length && (acc < perColumn || page[c].length === 0)){
+        page[c].push(rows[idx]);
+        acc += rows[idx].w;
+        idx++;
+      }
+    }
+    pages.push(page);
+  }
+  return pages;
 }
 
 function discTagHTML(discStatus){
@@ -1373,25 +1388,58 @@ function printRowHTML(r){
 }
 
 function renderPrintColumns(mode){
-  const numCols = mode === 'detailed' ? 2 : 4;
+  const numCols = mode === 'detailed' ? 2 : 3;
+  const targetPages = mode === 'detailed' ? 4 : 3;
   const rows = buildPrintRows(mode);
-  const cols = splitIntoColumns(rows, numCols);
-  const colsHTML = cols.map(c => `<div class="print-col">${c.map(printRowHTML).join('')}</div>`).join('');
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'}`;
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} · <span class="p-head-note">최신 단가는 사이트에서 확인하세요</span>`;
+
+  if (!rows.length){
+    document.getElementById('printColumns').innerHTML = `
+      <div class="print-page-head">${headText}</div>
+      <div class="p-empty">표시할 항목이 없습니다. (검색/필터를 초기화한 뒤 다시 시도해주세요)</div>`;
+    return;
+  }
+
+  const pages = paginateRows(rows, numCols, targetPages);
+  const pagesHTML = pages.map((page, pi) => {
+    const colsHTML = page.map(c => `<div class="print-col">${c.map(printRowHTML).join('')}</div>`).join('');
+    const isLast = pi === pages.length - 1;
+    return `<div class="print-page${isLast ? '' : ' print-page-break'}">
+      <div class="print-cols-row cols-${numCols}">${colsHTML}</div>
+    </div>`;
+  }).join('');
 
   document.getElementById('printColumns').innerHTML = `
     <div class="print-page-head">${headText}</div>
-    <div class="print-cols-row cols-${numCols}">${colsHTML}</div>`;
+    ${pagesHTML}`;
 }
 
-function printSimple(){
+/* 인쇄 직전, 가격 데이터가 아직 다 안 불러와졌으면(새로고침 직후 등)
+   빈 인쇄물이 나가는 걸 막고 안내 문구를 띄운다 */
+async function ensurePrintDataReady(){
+  if (PROCESSED_PATTERNS.length) return true;
+  try { await dataFetchPromise; } catch(e){}
+  return PROCESSED_PATTERNS.length > 0;
+}
+
+async function printSimple(){
+  const btn = document.getElementById('printBellSimple');
+  if (btn) btn.disabled = true;
+  const ready = await ensurePrintDataReady();
+  if (btn) btn.disabled = false;
+  if (!ready){ alert('가격 데이터를 아직 불러오는 중입니다. 몇 초 후 다시 눌러주세요.'); return; }
   renderPrintColumns('simple');
   setTimeout(() => window.print(), 30);
 }
-function printDetailed(){
+async function printDetailed(){
+  const btn = document.getElementById('printBellDetailed');
+  if (btn) btn.disabled = true;
+  const ready = await ensurePrintDataReady();
+  if (btn) btn.disabled = false;
+  if (!ready){ alert('가격 데이터를 아직 불러오는 중입니다. 몇 초 후 다시 눌러주세요.'); return; }
   renderPrintColumns('detailed');
   setTimeout(() => window.print(), 30);
 }

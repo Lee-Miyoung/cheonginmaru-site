@@ -547,6 +547,7 @@
     }
     .p-footer-title{ font-size:10px; font-weight:900; margin-bottom:4px; }
     .p-footer-line{ font-size:8px; color:#444; line-height:1.5; }
+    .p-debug{ font-size:7px; color:#0a7d3c; font-family:monospace; }
   }
 
   /* ═══ 인쇄 페이지 나누기 계산용 "숨은 측정 표" ═══
@@ -709,7 +710,7 @@
    더 받아와서 버전이 다르면 자동으로 새로고침한다.
    ★ 배포할 때마다 이 숫자만 하나씩 올려주면 됨 ★
    ============================================================ */
-const BUILD_VERSION = 'b16';
+const BUILD_VERSION = 'b17';
 (function autoUpdateCheck(){
   try {
     const bustUrl = location.pathname + (location.search ? location.search + '&' : '?') + '_fresh=' + Date.now();
@@ -1550,7 +1551,7 @@ function renderPrintColumns(mode){
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v39)</span><br>
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v40-진단)</span><br>
     <span class="p-vat-note">＊ 표시된 모든 금액은 부가세(VAT) 별도 금액입니다</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){
@@ -1567,8 +1568,16 @@ function renderPrintColumns(mode){
   const colWmm = (usableWmm - GAP_MM * (numCols + 1)) / numCols;
 
   const heights = measureRowHeights(rows, colWmm);
-  const headBufferPx = 90;
-  const colHeightPx = (mmToPx(usableHmm) - headBufferPx) * 0.93;
+  const headBufferPx = 130;
+  const rawPageHeightPx = mmToPx(usableHmm);
+  const colHeightPx = (rawPageHeightPx - headBufferPx) * 0.93;
+
+  // ★ 임시 진단용
+  const sumFirst10 = heights.slice(0, 10).reduce((a,b)=>a+b, 0);
+  const debugInfo = `[진단] 화면폭:${window.innerWidth} DPR:${window.devicePixelRatio} `
+    + `colWmm:${colWmm.toFixed(1)} 페이지높이px:${rawPageHeightPx.toFixed(1)} 칸높이예산:${colHeightPx.toFixed(1)} `
+    + `줄1~10높이:[${heights.slice(0,10).map(h=>h.toFixed(0)).join(',')}] 합:${sumFirst10.toFixed(0)} `
+    + `총줄수:${rows.length} 폰트준비:${document.fonts ? document.fonts.status : 'N/A'}`;
 
   const pages = paginateRowsByHeight(rows, heights, numCols, colHeightPx);
 
@@ -1602,7 +1611,7 @@ function renderPrintColumns(mode){
     : '';
 
   document.getElementById('printColumns').innerHTML = `
-    <div class="print-page-head">${headText}</div>
+    <div class="print-page-head">${headText}<br><span class="p-debug">${debugInfo}</span></div>
     ${pagesHTML}
     ${footerHTML}`;
 }

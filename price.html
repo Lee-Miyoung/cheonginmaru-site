@@ -504,8 +504,19 @@
        (같은 파일이면 어떤 기기에서 인쇄해도 항상 동일하게 나옴) */
     .print-page{ }
     .print-page-break{ break-after: page; page-break-after: always; }
-    .print-cols-row{ display:flex; gap:9px; align-items:flex-start; }
-    .print-col{ flex:1 1 0; min-width:0; overflow-wrap:break-word; word-break:break-word; }
+    /* 아이패드/아이폰의 인쇄 렌더링 엔진이 flexbox를 제대로 지원하지 않아
+       옆으로 안 가고 세로로 쌓이는 문제가 있어서, 모든 브라우저가 예외
+       없이 지원하는 아주 오래된 방식(float)으로 확실하게 옆으로 배치한다. */
+    .print-cols-row{ display:block; }
+    .print-cols-row::after{ content:""; display:block; clear:both; }
+    .print-col{
+      float:left; overflow-wrap:break-word; word-break:break-word;
+      box-sizing:border-box;
+    }
+    .print-cols-row.cols-3 .print-col{ width:64.4mm; margin-right:2.4mm; }
+    .print-cols-row.cols-3 .print-col:last-child{ margin-right:0; }
+    .print-cols-row.cols-2 .print-col{ width:97.8mm; margin-right:2.4mm; }
+    .print-cols-row.cols-2 .print-col:last-child{ margin-right:0; }
     .print-col > .p-brand:first-child{ margin-top:0; }
 
     .p-brand{
@@ -703,7 +714,7 @@
    더 받아와서 버전이 다르면 자동으로 새로고침한다.
    ★ 배포할 때마다 이 숫자만 하나씩 올려주면 됨 ★
    ============================================================ */
-const BUILD_VERSION = 'b6';
+const BUILD_VERSION = 'b7';
 (function autoUpdateCheck(){
   try {
     const bustUrl = location.pathname + (location.search ? location.search + '&' : '?') + '_fresh=' + Date.now();
@@ -1543,7 +1554,7 @@ function renderPrintColumns(mode){
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v29)</span><br>
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v30)</span><br>
     <span class="p-vat-note">＊ 표시된 모든 금액은 부가세(VAT) 별도 금액입니다</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){

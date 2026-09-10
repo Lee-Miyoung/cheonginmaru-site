@@ -490,15 +490,14 @@
     .p-head-note{ font-weight:900; color:#c0331c; }
     .p-ver{ font-weight:400; color:#bbb; font-size:8px; }
 
-    /* 1열이 길어지면 2열로, 2열이 길어지면 3열로, 다 차면 다음 페이지로 —
-       브라우저가 실제 렌더링 높이를 기준으로 정확히 계산하므로
-       JS로 어림잡아 페이지를 미리 나누는 것보다 훨씬 정확하고 순서가 안 꼬임 */
-    .print-flow{
-      column-fill:auto; column-gap:9px;
-    }
-    .print-flow.cols-3{ column-count:3; }
-    .print-flow.cols-2{ column-count:2; }
-    .p-col-item{ overflow-wrap:break-word; word-break:break-word; }
+    /* 기기/브라우저마다 다르게 나오는 CSS 자동 다단(column-count) 대신,
+       페이지를 직접 명시적으로 나눠서 항상 1열→2열→3열→다음 페이지 순서를 고정.
+       (같은 파일이면 어떤 기기에서 인쇄해도 항상 동일하게 나옴) */
+    .print-page{ }
+    .print-page-break{ break-after: page; page-break-after: always; }
+    .print-cols-row{ display:flex; gap:9px; align-items:flex-start; }
+    .print-col{ flex:1 1 0; min-width:0; overflow-wrap:break-word; word-break:break-word; }
+    .print-col > .p-brand:first-child{ margin-top:0; }
 
     .p-brand{
       font-size:10.5px; font-weight:900; margin:6px 0 2px; padding:2.5px 5px;
@@ -512,8 +511,8 @@
     .p-tag{ font-size:6.8px; font-weight:900; padding:0 3px; border-radius:2px; margin:0 3px; white-space:nowrap; }
     .p-tag-disc{ background:#d92626; color:#fff; }
     .p-tag-planned{ background:#e08a1e; color:#fff; }
-    /* 단종: 빨간 취소선 + 볼드로 확실하게 강조 / 단종예정: 주황 볼드 */
-    .p-name-disc, .p-model-disc{ text-decoration:line-through; text-decoration-color:#d92626; color:#d92626; font-weight:900; }
+    /* 단종: 빨간 밑줄 + 볼드로 확실하게 강조 / 단종예정: 주황 볼드 */
+    .p-name-disc, .p-model-disc{ text-decoration:underline; text-decoration-color:#d92626; text-decoration-thickness:1.6px; color:#d92626; font-weight:900; }
     .p-name-planned, .p-model-planned{ color:#c9711a; font-weight:900; }
 
     /* 길게 이어지는 색상/모델 목록이 페이지를 통째로 건너뛰지 않고
@@ -1350,14 +1349,38 @@ function buildPrintRows(mode){
   return rows;
 }
 
+/* 페이지를 JS가 직접 나눔: 한 페이지 안에서 1열→2열→3열 순서로 채우고,
+   그 페이지가 다 차면 다음 "페이지" 블록으로 넘어간다.
+   브라우저의 자동 다단 기능(기기마다 다르게 동작)에 기대지 않고
+   명시적으로 나누기 때문에 어떤 기기·브라우저에서 인쇄해도 항상 동일한 순서로 나온다. */
+function paginateRows(rows, numCols, perColumn){
+  const pages = [];
+  let idx = 0;
+  let guard = 0;
+  while (idx < rows.length && guard < 400){
+    guard++;
+    const page = Array.from({length:numCols}, () => []);
+    for (let c = 0; c < numCols; c++){
+      let acc = 0;
+      while (idx < rows.length && (acc < perColumn || page[c].length === 0)){
+        page[c].push(rows[idx]);
+        acc += rows[idx].w;
+        idx++;
+      }
+    }
+    pages.push(page);
+  }
+  return pages;
+}
+
 function discTagHTML(discStatus){
   if (discStatus === 'discontinued') return '<span class="p-tag p-tag-disc">단종</span>';
   if (discStatus === 'planned') return '<span class="p-tag p-tag-planned">단종예정</span>';
   return '';
 }
 function discNameCls(discStatus){
-  if (discStatus === 'discontinued') return ' class="p-name-disc"';
-  if (discStatus === 'planned') return ' class="p-name-planned"';
+  if (discStatus === 'discontinued') return 'p-name-disc';
+  if (discStatus === 'planned') return 'p-name-planned';
   return '';
 }
 
@@ -1375,7 +1398,7 @@ function printRowHTML(r){
     </div>`;
   }
   return `<div class="p-item">
-    <div class="p-item-top"><span class="p-name"${discNameCls(r.discStatus)}>${r.name}</span>${discTagHTML(r.discStatus)}<span class="p-price">${r.price}</span></div>
+    <div class="p-item-top"><span class="p-name ${discNameCls(r.discStatus)}">${r.name}</span>${discTagHTML(r.discStatus)}<span class="p-price">${r.price}</span></div>
     ${r.spec ? `<div class="p-spec">${r.spec}</div>` : ''}
     ${r.models ? `<div class="p-models">${r.models}</div>` : ''}
   </div>`;
@@ -1383,11 +1406,15 @@ function printRowHTML(r){
 
 function renderPrintColumns(mode){
   const numCols = mode === 'detailed' ? 2 : 3;
+  // 칸 하나가 실제 페이지 한 장을 절대 넘지 않도록 보수적으로 잡은 값
+  // (기기마다 렌더링 높이가 달라 정확히 잴 수 없어서, 넘치는 것보다
+  //  살짝 여백이 남는 쪽이 훨씬 안전 — 순서가 꼬이지 않는 게 최우선)
+  const perColumn = mode === 'detailed' ? 26 : 48;
   const rows = buildPrintRows(mode);
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v15)</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v16)</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){
     document.getElementById('printColumns').innerHTML = `
@@ -1396,14 +1423,18 @@ function renderPrintColumns(mode){
     return;
   }
 
-  // 브라우저의 실제 다단(column) 레이아웃에 맡긴다: 1열이 꽉 차면 2열로,
-  // 2열이 꽉 차면 3열로, 그것도 다 차면 자동으로 다음 페이지의 1열로 —
-  // 실제 렌더링 높이를 기준으로 계산되므로 순서가 절대 안 꼬이고 여백도 안 남는다.
-  const itemsHTML = rows.map(r => `<div class="p-col-item">${printRowHTML(r)}</div>`).join('');
+  const pages = paginateRows(rows, numCols, perColumn);
+  const pagesHTML = pages.map((page, pi) => {
+    const colsHTML = page.map(c => `<div class="print-col">${c.map(printRowHTML).join('')}</div>`).join('');
+    const isLast = pi === pages.length - 1;
+    return `<div class="print-page${isLast ? '' : ' print-page-break'}">
+      <div class="print-cols-row cols-${numCols}">${colsHTML}</div>
+    </div>`;
+  }).join('');
 
   document.getElementById('printColumns').innerHTML = `
     <div class="print-page-head">${headText}</div>
-    <div class="print-flow cols-${numCols}">${itemsHTML}</div>`;
+    ${pagesHTML}`;
 }
 
 /* 인쇄 직전, 가격 데이터가 아직 다 안 불러와졌으면(새로고침 직후 등)

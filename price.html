@@ -2,6 +2,9 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>청인마루 거래처 단가표</title>
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
@@ -488,16 +491,32 @@
     .print-col{ flex:1 1 0; min-width:0; }
 
     .p-brand{
-      font-size:10.5px; font-weight:900; margin:6px 0 2px; padding-bottom:1px;
-      border-bottom:1.2px solid #333; break-after:avoid;
+      font-size:11.5px; font-weight:900; margin:8px 0 3px; padding:3px 6px;
+      background:var(--pc); color:#fff; border-radius:3px; break-after:avoid;
+      break-before:auto;
     }
     .print-col > .p-brand:first-child{ margin-top:0; }
-    .p-item{ break-inside:avoid; padding:1.5px 0; border-bottom:1px dotted #ddd; }
-    .p-item-top{ display:flex; justify-content:space-between; gap:6px; }
-    .p-name{ font-size:8.5px; font-weight:800; }
-    .p-price{ font-size:8.5px; font-weight:900; white-space:nowrap; }
-    .p-spec{ font-size:6.5px; color:#888; }
-    .p-models{ font-size:6.5px; color:#555; line-height:1.35; }
+
+    .p-subhead{
+      font-size:8.8px; font-weight:900; margin:4px 0 1px; color:#222;
+      border-bottom:1px solid #999; break-after:avoid;
+    }
+    .p-tag{ font-size:7px; font-weight:900; padding:0 3px; border-radius:2px; margin:0 3px; white-space:nowrap; }
+    .p-tag-disc{ background:#333; color:#fff; }
+    .p-tag-planned{ background:#e08a1e; color:#fff; }
+    .p-name-disc{ text-decoration:line-through; color:#999; }
+    .p-name-planned{ color:#c9711a; }
+    .p-model-disc{ text-decoration:line-through; color:#aaa; }
+    .p-model-planned{ color:#c9711a; }
+
+    .p-item{ break-inside:avoid; padding:2px 0; border-bottom:1px dotted #ccc; }
+    .p-item-variant{ padding-left:6px; border-bottom:1px dotted #e2e2e2; }
+    .p-item-top{ display:flex; justify-content:space-between; align-items:baseline; gap:6px; }
+    .p-name{ font-size:9.5px; font-weight:800; flex:1; }
+    .p-price{ font-size:9.5px; font-weight:900; white-space:nowrap; }
+    .p-spec{ font-size:8px; color:#555; margin-top:1px; }
+    .p-spec-inline{ font-size:8px; color:#333; font-weight:700; flex:1; }
+    .p-models{ font-size:7.5px; color:#444; line-height:1.4; margin-top:1px; }
   }
 </style>
 </head>
@@ -654,7 +673,7 @@ function openInExternalBrowser(){
    단가 데이터 + 공지사항 (동시접속 대비 SWR 초고속 캐시)
    ============================================================ */
 const FEED_URL = 'https://script.google.com/macros/s/AKfycbzyafI_d2PZiE_AYS4Y5f9uBQjK5ULCxX21hk2Z5BMDcbktNT9NnF8mUb_HhA8hJqy9Fw/exec';
-const CACHE_KEY = 'cm_price_cache_v5';
+const CACHE_KEY = 'cm_price_cache_v6';
 
 let RAW_DATA = [];
 let NOTICES = { info: [], urgentList: [] };
@@ -680,7 +699,9 @@ try {
 function fetchWithTimeout(url, timeoutMs){
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-  return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
+  // 캐시된 옛날 응답을 절대 쓰지 않도록 매번 새 요청으로 강제
+  const bustUrl = url + (url.includes('?') ? '&' : '?') + '_ts=' + Date.now();
+  return fetch(bustUrl, { signal: controller.signal, cache: 'no-store' }).finally(() => clearTimeout(timer));
 }
 
 // 실패(또는 시간초과)하면 잠깐 쉬었다가 자동으로 재시도 (최대 3회)
@@ -1232,26 +1253,74 @@ function buildPrintRows(mode){
   const byBrand = getPrintByBrand();
   const rows = [];
   Object.keys(byBrand).forEach(brand => {
-    rows.push({ type:'brand', text: brand, w:1 });
+    rows.push({ type:'brand', text: brand, color: colorFor(brand), w:1.6 });
+    const isJangpan = String(brand).includes('장판');
+
     byBrand[brand].forEach(p => {
       const isMulti = p.variants.length > 1;
-      let priceText;
-      if (isMulti) {
-        const prices = p.variants.map(v => v.firm_price).filter(Boolean);
-        priceText = `${Math.min(...prices).toLocaleString()}~${Math.max(...prices).toLocaleString()}원`;
-      } else {
-        priceText = `${(p.variants[0].firm_price||0).toLocaleString()}원`;
+
+      // ── 단일 스펙 상품: 기존처럼 한 줄 ──
+      if (!isMulti) {
+        const v = p.variants[0];
+        const factorTxt = fmtFactor(v.factor);
+        const specParts = [];
+        if (v.spec) specParts.push(v.spec);
+        if (!isJangpan && factorTxt) specParts.push(`1BOX=${factorTxt}㎡`);
+        const spec = specParts.join(' · ');
+
+        let modelsHTML = '';
+        let w = 1;
+        if (mode === 'detailed') {
+          const names = (v.models||[]).map(m => {
+            const cls = m.discStatus === 'discontinued' ? ' class="p-model-disc"'
+                      : m.discStatus === 'planned' ? ' class="p-model-planned"' : '';
+            return `<span${cls}>${m.name}</span>`;
+          });
+          modelsHTML = names.join(', ');
+          w += Math.ceil(names.join(', ').replace(/<[^>]+>/g,'').length / 38);
+        }
+        rows.push({
+          type:'item', name:p.name, spec,
+          price:`${(v.firm_price||0).toLocaleString()}원`,
+          models: modelsHTML, discStatus: p.discStatus, w
+        });
+        return;
       }
-      const spec = p.variants[0].spec || '';
-      let modelsText = '';
-      let w = 1;
-      if (mode === 'detailed') {
-        const names = [];
-        p.variants.forEach(v => (v.models||[]).forEach(m => names.push(m.name)));
-        modelsText = names.join(', ');
-        w += Math.ceil(modelsText.length / 46); // 대략적인 줄 수 가중치
+
+      // ── 수종/규격별로 가격이 다른 상품 (예: 원목마루) ──
+      const prices = p.variants.map(v => v.firm_price).filter(Boolean);
+      const rangeText = `${Math.min(...prices).toLocaleString()}~${Math.max(...prices).toLocaleString()}원`;
+
+      if (mode !== 'detailed') {
+        // 간단버전: 패턴명 + 가격범위만 (수종별 상이 표기)
+        rows.push({
+          type:'item', name:p.name, spec:'규격/수종별 가격 상이 → 모델포함판 참고',
+          price:rangeText, models:'', discStatus:p.discStatus, w:1
+        });
+        return;
       }
-      rows.push({ type:'item', name:p.name, spec, price:priceText, models:modelsText, w });
+
+      // 상세버전: 패턴명을 소제목으로, 수종(변형)마다 스펙+가격+모델을 개별 표시
+      rows.push({ type:'subhead', text:p.name, discStatus:p.discStatus, w:0.8 });
+      p.variants.forEach(v => {
+        const factorTxt = fmtFactor(v.factor);
+        const specParts = [];
+        if (v.spec) specParts.push(v.spec);
+        if (!isJangpan && factorTxt) specParts.push(`1BOX=${factorTxt}㎡`);
+        const spec = specParts.join(' · ');
+        const names = (v.models||[]).map(m => {
+          const cls = m.discStatus === 'discontinued' ? ' class="p-model-disc"'
+                    : m.discStatus === 'planned' ? ' class="p-model-planned"' : '';
+          return `<span${cls}>${m.name}</span>`;
+        });
+        const modelsHTML = names.join(', ');
+        rows.push({
+          type:'variant', spec,
+          price:`${(v.firm_price||0).toLocaleString()}원`,
+          models: modelsHTML,
+          w: 1 + Math.ceil(names.join(', ').replace(/<[^>]+>/g,'').length / 38)
+        });
+      });
     });
   });
   return rows;
@@ -1270,12 +1339,32 @@ function splitIntoColumns(rows, numCols){
   return cols;
 }
 
+function discTagHTML(discStatus){
+  if (discStatus === 'discontinued') return '<span class="p-tag p-tag-disc">단종</span>';
+  if (discStatus === 'planned') return '<span class="p-tag p-tag-planned">단종예정</span>';
+  return '';
+}
+function discNameCls(discStatus){
+  if (discStatus === 'discontinued') return ' class="p-name-disc"';
+  if (discStatus === 'planned') return ' class="p-name-planned"';
+  return '';
+}
+
 function printRowHTML(r){
   if (r.type === 'brand'){
-    return `<div class="p-brand">${r.text}</div>`;
+    return `<div class="p-brand" style="--pc:${r.color}">${r.text}</div>`;
+  }
+  if (r.type === 'subhead'){
+    return `<div class="p-subhead">${r.text}${discTagHTML(r.discStatus)}</div>`;
+  }
+  if (r.type === 'variant'){
+    return `<div class="p-item p-item-variant">
+      <div class="p-item-top"><span class="p-spec p-spec-inline">${r.spec}</span><span class="p-price">${r.price}</span></div>
+      ${r.models ? `<div class="p-models">${r.models}</div>` : ''}
+    </div>`;
   }
   return `<div class="p-item">
-    <div class="p-item-top"><span class="p-name">${r.name}</span><span class="p-price">${r.price}</span></div>
+    <div class="p-item-top"><span class="p-name"${discNameCls(r.discStatus)}>${r.name}</span>${discTagHTML(r.discStatus)}<span class="p-price">${r.price}</span></div>
     ${r.spec ? `<div class="p-spec">${r.spec}</div>` : ''}
     ${r.models ? `<div class="p-models">${r.models}</div>` : ''}
   </div>`;

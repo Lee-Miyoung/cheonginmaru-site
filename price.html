@@ -508,6 +508,7 @@
       font-size:9.5px; font-weight:900; margin:4px 0 1px; color:#222;
       border-bottom:1px solid #999; break-after:avoid;
     }
+    .p-subnote{ font-size:6.8px; color:#a05a12; font-style:italic; margin:0 0 2px; }
     .p-tag{ font-size:7.2px; font-weight:900; padding:0 3px; border-radius:2px; margin:0 3px; white-space:nowrap; }
     .p-tag-disc{ background:#d92626; color:#fff; }
     .p-tag-planned{ background:#e08a1e; color:#fff; }
@@ -525,8 +526,15 @@
     .p-price{ font-size:10px; font-weight:900; white-space:nowrap; color:#a05a12; }
     .p-spec{ font-size:8.5px; color:#555; margin-top:1px; }
     .p-spec-inline{ font-size:8.5px; color:#333; font-weight:700; flex:1; }
-    .p-models{ font-size:8px; color:#444; line-height:1.4; margin-top:1px; overflow-wrap:break-word; word-break:break-word; }
+    .p-models{ font-size:9px; color:#444; line-height:1.42; margin-top:1px; overflow-wrap:break-word; word-break:break-word; }
     .p-empty{ font-size:11px; color:#888; padding:20px 0; text-align:center; }
+    .p-vat-note{ font-weight:900; color:#333; }
+    .p-footer{
+      margin-top:14px; padding-top:8px; border-top:1.5px solid #333;
+      break-before:auto;
+    }
+    .p-footer-title{ font-size:10px; font-weight:900; margin-bottom:4px; }
+    .p-footer-line{ font-size:8px; color:#444; line-height:1.5; }
   }
 
   /* ═══ 인쇄 페이지 나누기 계산용 "숨은 측정 모드" ═══
@@ -543,6 +551,7 @@
     font-size:9.5px; font-weight:900; margin:4px 0 1px; color:#222;
     border-bottom:1px solid #999;
   }
+  .pm-mode .p-subnote{ font-size:6.8px; color:#a05a12; font-style:italic; margin:0 0 2px; }
   .pm-mode .p-tag{ font-size:7.2px; font-weight:900; padding:0 3px; border-radius:2px; margin:0 3px; white-space:nowrap; }
   .pm-mode .p-tag-disc{ background:#d92626; color:#fff; }
   .pm-mode .p-tag-planned{ background:#e08a1e; color:#fff; }
@@ -555,7 +564,7 @@
   .pm-mode .p-price{ font-size:10px; font-weight:900; white-space:nowrap; color:#a05a12; }
   .pm-mode .p-spec{ font-size:8.5px; color:#555; margin-top:1px; }
   .pm-mode .p-spec-inline{ font-size:8.5px; color:#333; font-weight:700; flex:1; }
-  .pm-mode .p-models{ font-size:8px; color:#444; line-height:1.4; margin-top:1px; overflow-wrap:break-word; word-break:break-word; }
+  .pm-mode .p-models{ font-size:9px; color:#444; line-height:1.42; margin-top:1px; overflow-wrap:break-word; word-break:break-word; }
 </style>
 </head>
 <body>
@@ -1350,7 +1359,10 @@ function buildPrintRows(mode){
       // ── 수종/규격별로 가격이 다른 상품 (예: 원목마루) ──
       // 간단판/상세판 모두 패턴명을 소제목으로 두고, 변형마다 스펙+가격을 따로 보여준다.
       // (색상/모델명은 상세판에서만 추가로 붙는다)
-      rows.push({ type:'subhead', text:p.name, discStatus:p.discStatus, w:0.8, brand, brandColor });
+      rows.push({
+        type:'subhead', text:p.name, discStatus:p.discStatus, w:0.8, brand, brandColor,
+        note: mode !== 'detailed' ? '※ 규격이 같아도 수종에 따라 가격이 다릅니다 · 상세 모델명은 모델포함 인쇄본 참고' : ''
+      });
       p.variants.forEach(v => {
         const factorTxt = fmtFactor(v.factor);
         const specParts = [];
@@ -1458,7 +1470,7 @@ function printRowHTML(r){
     return `<div class="p-brand" style="--pc:${r.color}">${r.text}</div>`;
   }
   if (r.type === 'subhead'){
-    return `<div class="p-subhead">${r.text}${discTagHTML(r.discStatus)}</div>`;
+    return `<div class="p-subhead">${r.text}${discTagHTML(r.discStatus)}</div>${r.note ? `<div class="p-subnote">${r.note}</div>` : ''}`;
   }
   if (r.type === 'variant'){
     return `<div class="p-item p-item-variant">
@@ -1473,13 +1485,24 @@ function printRowHTML(r){
   </div>`;
 }
 
+/* 공지사항 텍스트를 인쇄용으로 안전하게 변환 (링크는 눌러지지 않으니 괄호 안 주소로 풀어줌) */
+function printSafeNoticeText(text){
+  if (!text) return '';
+  let t = String(text);
+  t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1 ($2)');
+  t = t.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  t = t.replace(/\s*\(?\bnew\b\)?/gi, ' [NEW]');
+  return t;
+}
+
 function renderPrintColumns(mode){
   const numCols = mode === 'detailed' ? 2 : 3;
   const rows = buildPrintRows(mode);
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v23)</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v24)</span><br>
+    <span class="p-vat-note">＊ 표시된 모든 금액은 부가세(VAT) 별도 금액입니다</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){
     document.getElementById('printColumns').innerHTML = `
@@ -1496,7 +1519,7 @@ function renderPrintColumns(mode){
 
   // ── 각 줄의 진짜 렌더링 높이를 실측 → 칸을 실제로 꽉 채울 때까지 담는다 ──
   const heights = measureRowHeights(rows, colWmm);
-  const headBufferPx = 70; // 맨 위 안내줄 + "(계속)" 브랜드바가 추가될 수 있는 여유분
+  const headBufferPx = 90; // 안내줄(2줄) + "(계속)" 브랜드바가 추가될 수 있는 여유분
   // 화면 측정과 실제 인쇄 렌더링 사이 미세한 오차로 칸이 페이지 경계를 살짝
   // 넘어가 버리면(→ 엉뚱한 빈 페이지 발생) 안 되므로 살짝 더 여유를 둔다
   const colHeightPx = (mmToPx(usableHmm) - headBufferPx) * 0.95;
@@ -1521,9 +1544,21 @@ function renderPrintColumns(mode){
     </div>`;
   }).join('');
 
+  // 화면의 "거래 안내(공지)" 내용을 인쇄본 맨 아래에도 그대로 실어준다
+  const noticeLines = []
+    .concat((NOTICES && NOTICES.urgentList) || [])
+    .concat((NOTICES && NOTICES.info) || []);
+  const footerHTML = noticeLines.length
+    ? `<div class="p-footer">
+        <div class="p-footer-title">📋 거래 안내</div>
+        ${noticeLines.map(t => `<div class="p-footer-line">· ${printSafeNoticeText(t)}</div>`).join('')}
+      </div>`
+    : '';
+
   document.getElementById('printColumns').innerHTML = `
     <div class="print-page-head">${headText}</div>
-    ${pagesHTML}`;
+    ${pagesHTML}
+    ${footerHTML}`;
 }
 
 /* 인쇄 직전, 가격 데이터가 아직 다 안 불러와졌으면(새로고침 직후 등)

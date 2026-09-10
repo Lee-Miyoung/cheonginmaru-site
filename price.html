@@ -711,7 +711,7 @@
    더 받아와서 버전이 다르면 자동으로 새로고침한다.
    ★ 배포할 때마다 이 숫자만 하나씩 올려주면 됨 ★
    ============================================================ */
-const BUILD_VERSION = 'b9';
+const BUILD_VERSION = 'b10';
 (function autoUpdateCheck(){
   try {
     const bustUrl = location.pathname + (location.search ? location.search + '&' : '?') + '_fresh=' + Date.now();
@@ -1468,7 +1468,14 @@ function measureRowHeights(rows, colWidthMm){
     root.appendChild(d);
     return d;
   });
-  const heights = wraps.map(d => d.getBoundingClientRect().height);
+  const heights = wraps.map((d, i) => {
+    let h = d.getBoundingClientRect().height;
+    // 사파리 등 일부 브라우저에서 특정 줄의 높이가 0/NaN으로 이상하게 측정되면
+    // 그 뒤 계산이 전부 틀어지므로, 말이 안 되게 작은 값은 최소 줄 높이로 보정한다
+    const MIN_ROW_PX = 14;
+    if (!h || !isFinite(h) || h < MIN_ROW_PX) h = MIN_ROW_PX;
+    return h;
+  });
   document.body.removeChild(root);
   return heights;
 }
@@ -1551,7 +1558,7 @@ function renderPrintColumns(mode){
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v32)</span><br>
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v33)</span><br>
     <span class="p-vat-note">＊ 표시된 모든 금액은 부가세(VAT) 별도 금액입니다</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){
@@ -1621,12 +1628,21 @@ async function ensurePrintDataReady(){
   return PROCESSED_PATTERNS.length > 0;
 }
 
+/* 사파리 등 일부 브라우저는 폰트/레이아웃이 안정되기 직전에 높이를 재면
+   미세하게 다른 값이 나올 수 있어서, 화면이 두 번 더 그려질 때까지 기다린다 */
+function waitTwoFrames(){
+  return new Promise(resolve => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  });
+}
+
 async function printSimple(){
   if (!PRINT_ENABLED){ alert('이 거래처는 인쇄 기능이 제공되지 않습니다.'); return; }
   const btn = document.getElementById('printBellSimple');
   if (btn) btn.disabled = true;
   const ready = await ensurePrintDataReady();
   try { await document.fonts.ready; } catch(e){}
+  await waitTwoFrames();
   if (btn) btn.disabled = false;
   if (!ready){ alert('가격 데이터를 아직 불러오는 중입니다. 몇 초 후 다시 눌러주세요.'); return; }
   renderPrintColumns('simple');
@@ -1638,6 +1654,7 @@ async function printDetailed(){
   if (btn) btn.disabled = true;
   const ready = await ensurePrintDataReady();
   try { await document.fonts.ready; } catch(e){}
+  await waitTwoFrames();
   if (btn) btn.disabled = false;
   if (!ready){ alert('가격 데이터를 아직 불러오는 중입니다. 몇 초 후 다시 눌러주세요.'); return; }
   renderPrintColumns('detailed');

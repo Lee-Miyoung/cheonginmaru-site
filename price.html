@@ -476,7 +476,7 @@
   #printColumns{ display:none; }
 
   @media print{
-    @page{ margin:8mm; size:A4 landscape; }
+    @page{ margin:6mm; size:A4 landscape; }
     body{ background:#fff !important; }
 
     /* 화면용 UI는 전부 숨기고 인쇄 전용 콘텐츠만 표시 */
@@ -484,43 +484,45 @@
     #printColumns{ display:block !important; }
 
     .print-page-head{
-      font-size:11px; font-weight:900; margin-bottom:6px; padding-bottom:4px;
+      font-size:10px; font-weight:900; margin-bottom:4px; padding-bottom:3px;
       border-bottom:1.5px solid #333;
     }
-    .print-cols-row{ display:flex; gap:12px; align-items:flex-start; }
-    .print-col{ flex:1 1 0; min-width:0; }
+    .print-cols-row{ display:flex; gap:9px; align-items:flex-start; }
+    .print-col{ flex:1 1 0; min-width:0; overflow-wrap:break-word; word-break:break-word; }
+    .print-cols-row.cols-4 .print-col{ font-size:7.8px; }
 
     .p-brand{
-      font-size:11.5px; font-weight:900; margin:8px 0 3px; padding:3px 6px;
+      font-size:10.5px; font-weight:900; margin:6px 0 2px; padding:2.5px 5px;
       background:var(--pc); color:#fff; border-radius:3px; break-after:avoid;
-      break-before:auto;
     }
     .print-col > .p-brand:first-child{ margin-top:0; }
 
     .p-subhead{
-      font-size:8.8px; font-weight:900; margin:4px 0 1px; color:#222;
+      font-size:8.5px; font-weight:900; margin:4px 0 1px; color:#222;
       border-bottom:1px solid #999; break-after:avoid;
     }
-    .p-tag{ font-size:7px; font-weight:900; padding:0 3px; border-radius:2px; margin:0 3px; white-space:nowrap; }
-    .p-tag-disc{ background:#333; color:#fff; }
+    .p-tag{ font-size:6.8px; font-weight:900; padding:0 3px; border-radius:2px; margin:0 3px; white-space:nowrap; }
+    .p-tag-disc{ background:#d92626; color:#fff; }
     .p-tag-planned{ background:#e08a1e; color:#fff; }
-    .p-name-disc{ text-decoration:line-through; color:#999; }
-    .p-name-planned{ color:#c9711a; }
-    .p-model-disc{ text-decoration:line-through; color:#aaa; }
-    .p-model-planned{ color:#c9711a; }
+    /* 단종: 빨간 취소선 + 볼드로 확실하게 강조 / 단종예정: 주황 볼드 */
+    .p-name-disc, .p-model-disc{ text-decoration:line-through; text-decoration-color:#d92626; color:#d92626; font-weight:900; }
+    .p-name-planned, .p-model-planned{ color:#c9711a; font-weight:900; }
 
-    .p-item{ break-inside:avoid; padding:2px 0; border-bottom:1px dotted #ccc; }
+    /* 길게 이어지는 색상/모델 목록이 페이지를 통째로 건너뛰지 않고
+       칸 안에서 그대로 줄바꿈되도록 break-inside를 강제하지 않음 */
+    .p-item{ padding:1.5px 0; border-bottom:1px dotted #ccc; overflow-wrap:break-word; word-break:break-word; }
     .p-item-variant{ padding-left:6px; border-bottom:1px dotted #e2e2e2; }
-    .p-item-top{ display:flex; justify-content:space-between; align-items:baseline; gap:6px; }
-    .p-name{ font-size:9.5px; font-weight:800; flex:1; }
-    .p-price{ font-size:9.5px; font-weight:900; white-space:nowrap; }
-    .p-spec{ font-size:8px; color:#555; margin-top:1px; }
-    .p-spec-inline{ font-size:8px; color:#333; font-weight:700; flex:1; }
-    .p-models{ font-size:7.5px; color:#444; line-height:1.4; margin-top:1px; }
+    .p-item-top{ display:flex; justify-content:space-between; align-items:baseline; gap:6px; break-after:avoid; }
+    .p-name{ font-size:9px; font-weight:800; flex:1; }
+    .p-price{ font-size:9px; font-weight:900; white-space:nowrap; }
+    .p-spec{ font-size:7.5px; color:#555; margin-top:1px; }
+    .p-spec-inline{ font-size:7.5px; color:#333; font-weight:700; flex:1; }
+    .p-models{ font-size:7px; color:#444; line-height:1.4; margin-top:1px; overflow-wrap:break-word; word-break:break-word; }
   }
 </style>
 </head>
 <body>
+
 
 <div id="gate">
   <div id="kakaoWarnBanner" class="kakao-warn" style="display:none">
@@ -1371,7 +1373,7 @@ function printRowHTML(r){
 }
 
 function renderPrintColumns(mode){
-  const numCols = mode === 'detailed' ? 2 : 3;
+  const numCols = mode === 'detailed' ? 2 : 4;
   const rows = buildPrintRows(mode);
   const cols = splitIntoColumns(rows, numCols);
   const colsHTML = cols.map(c => `<div class="print-col">${c.map(printRowHTML).join('')}</div>`).join('');
@@ -1382,7 +1384,7 @@ function renderPrintColumns(mode){
 
   document.getElementById('printColumns').innerHTML = `
     <div class="print-page-head">${headText}</div>
-    <div class="print-cols-row">${colsHTML}</div>`;
+    <div class="print-cols-row cols-${numCols}">${colsHTML}</div>`;
 }
 
 function printSimple(){

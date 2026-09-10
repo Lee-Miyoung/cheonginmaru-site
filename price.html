@@ -479,6 +479,15 @@
     @page{ margin:6mm; size:A4 portrait; }
     body{ background:#fff !important; }
 
+    /* 크롬(컴퓨터)과 사파리(아이패드/아이폰)가 커스텀 폰트(Pretendard)를
+       인쇄 시 미세하게 다르게 렌더링해서 줄바꿈 위치가 달라지고, 그 결과
+       페이지 수까지 기기마다 달라지는 문제가 있었다. 인쇄물만큼은 각
+       기기에 이미 내장된 한글 시스템 폰트를 써서 이 차이를 없앤다. */
+    #printColumns, #printColumns *{
+      font-family:-apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕",
+        "Apple SD Gothic Neo", sans-serif !important;
+    }
+
     /* 화면용 UI는 전부 숨기고 인쇄 전용 콘텐츠만 표시 */
     #gate, .kakao-warn, .wrap, #topBtn, .catalog-modal{ display:none !important; }
     #printColumns{ display:block !important; }
@@ -543,6 +552,12 @@
   .pm-mode{
     position:fixed; top:-99999px; left:-99999px; visibility:hidden; background:#fff;
     -webkit-text-size-adjust:100%; text-size-adjust:100%;
+    font-family:-apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕",
+      "Apple SD Gothic Neo", sans-serif;
+  }
+  .pm-mode *{
+    font-family:-apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕",
+      "Apple SD Gothic Neo", sans-serif !important;
   }
   .pm-mode .p-brand{
     font-size:11.5px; font-weight:900; margin:6px 0 2px; padding:2.5px 5px;
@@ -688,7 +703,7 @@
    더 받아와서 버전이 다르면 자동으로 새로고침한다.
    ★ 배포할 때마다 이 숫자만 하나씩 올려주면 됨 ★
    ============================================================ */
-const BUILD_VERSION = 'b5';
+const BUILD_VERSION = 'b6';
 (function autoUpdateCheck(){
   try {
     const bustUrl = location.pathname + (location.search ? location.search + '&' : '?') + '_fresh=' + Date.now();
@@ -1528,7 +1543,7 @@ function renderPrintColumns(mode){
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v28)</span><br>
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v29)</span><br>
     <span class="p-vat-note">＊ 표시된 모든 금액은 부가세(VAT) 별도 금액입니다</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){

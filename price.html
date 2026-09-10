@@ -499,16 +499,17 @@
     .p-head-note{ font-weight:900; color:#c0331c; }
     .p-ver{ font-weight:400; color:#bbb; font-size:8px; }
 
-    /* 1열이 꽉 차면 2열로, 2열이 꽉 차면 3열로, 그것도 차면 다음 페이지로 —
-       브라우저 표준 신문 다단 기능. 실제 인쇄 시점에 브라우저가 진짜 글자
-       크기를 보고 직접 나누므로 "잘못 잰 크기 때문에 어긋나는" 문제 자체가
-       있을 수 없다. */
-    .print-flow{
-      column-fill:auto; column-gap:6mm;
+    /* 표(table) 레이아웃 — HTML 최초기부터 있던 기능이라 인쇄 시 옆으로
+       나란히 배치하는 걸 가장 안정적으로 지원한다. */
+    .print-page{ }
+    .print-page-break{ break-after: page; page-break-after: always; }
+    .print-cols-table{
+      table-layout:fixed; width:100%; border-collapse:separate; border-spacing:2.4mm 0;
     }
-    .print-flow.cols-3{ column-count:3; }
-    .print-flow.cols-2{ column-count:2; }
-    .p-col-item{ break-inside:avoid; overflow-wrap:break-word; word-break:break-word; }
+    .print-col{
+      vertical-align:top; overflow-wrap:break-word; word-break:break-word;
+    }
+    .print-col > .p-brand:first-child{ margin-top:0; }
 
     .p-brand{
       font-size:11.5px; font-weight:900; margin:6px 0 2px; padding:2.5px 5px;
@@ -547,6 +548,45 @@
     .p-footer-title{ font-size:10px; font-weight:900; margin-bottom:4px; }
     .p-footer-line{ font-size:8px; color:#444; line-height:1.5; }
   }
+
+  /* ═══ 인쇄 페이지 나누기 계산용 "숨은 측정 표" ═══
+     실제 인쇄에 쓰는 것과 완전히 동일한 <table><td> 구조로 재기 위한 것.
+     화면에는 안 보이게 숨긴다. */
+  table.pm-mode{
+    position:absolute; top:0; left:0; z-index:-1;
+    visibility:hidden; pointer-events:none; background:#fff;
+    border-collapse:collapse;
+    -webkit-text-size-adjust:100%; text-size-adjust:100%;
+    font-family:-apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕",
+      "Apple SD Gothic Neo", sans-serif;
+  }
+  table.pm-mode *{
+    font-family:-apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕",
+      "Apple SD Gothic Neo", sans-serif !important;
+  }
+  table.pm-mode td{ padding:0; }
+  table.pm-mode .p-brand{
+    font-size:11.5px; font-weight:900; margin:6px 0 2px; padding:2.5px 5px;
+    background:var(--pc); color:#fff; border-radius:3px;
+  }
+  table.pm-mode .p-subhead{
+    font-size:9.5px; font-weight:900; margin:4px 0 1px; color:#222;
+    border-bottom:1px solid #999;
+  }
+  table.pm-mode .p-subnote{ font-size:6.8px; color:#a05a12; font-style:italic; margin:0 0 2px; }
+  table.pm-mode .p-tag{ font-size:7.2px; font-weight:900; padding:0 3px; border-radius:2px; margin:0 3px; white-space:nowrap; }
+  table.pm-mode .p-tag-disc{ background:#d92626; color:#fff; }
+  table.pm-mode .p-tag-planned{ background:#e08a1e; color:#fff; }
+  table.pm-mode .p-name-disc, table.pm-mode .p-model-disc{ text-decoration:line-through; text-decoration-color:#d92626; text-decoration-thickness:1.6px; color:#d92626; font-weight:900; }
+  table.pm-mode .p-name-planned, table.pm-mode .p-model-planned{ color:#c9711a; font-weight:900; }
+  table.pm-mode .p-item{ padding:1.5px 0; border-bottom:1px dotted #ccc; overflow-wrap:break-word; word-break:break-word; }
+  table.pm-mode .p-item-variant{ padding-left:6px; border-bottom:1px dotted #e2e2e2; }
+  table.pm-mode .p-item-top{ display:flex; justify-content:space-between; align-items:baseline; gap:6px; }
+  table.pm-mode .p-name{ font-size:10px; font-weight:800; flex:1; color:#111; }
+  table.pm-mode .p-price{ font-size:10px; font-weight:900; white-space:nowrap; color:#a05a12; }
+  table.pm-mode .p-spec{ font-size:8.5px; color:#555; margin-top:1px; }
+  table.pm-mode .p-spec-inline{ font-size:8.5px; color:#333; font-weight:700; flex:1; }
+  table.pm-mode .p-models{ font-size:9px; color:#444; line-height:1.42; margin-top:1px; overflow-wrap:break-word; word-break:break-word; }
 </style>
 </head>
 <body>
@@ -669,7 +709,7 @@
    더 받아와서 버전이 다르면 자동으로 새로고침한다.
    ★ 배포할 때마다 이 숫자만 하나씩 올려주면 됨 ★
    ============================================================ */
-const BUILD_VERSION = 'b14';
+const BUILD_VERSION = 'b16';
 (function autoUpdateCheck(){
   try {
     const bustUrl = location.pathname + (location.search ? location.search + '&' : '?') + '_fresh=' + Date.now();
@@ -1438,18 +1478,79 @@ function printSafeNoticeText(text){
   return t;
 }
 
-/* 인쇄 페이지 구성 — JS가 몰래 화면 밖에서 크기를 재서 페이지를 미리 나누던
-   방식은 "잰 크기"와 "실제 인쇄될 크기"가 기기별로 미세하게 어긋날 수 있어
-   계속 문제가 됐다. 이제 그 계산을 전부 없애고, 브라우저 표준 신문 다단
-   기능(column-count)에 맡긴다 — 브라우저가 실제 인쇄 시점에 진짜 글자
-   크기를 보고 직접 나누므로 "잘못 잰 크기" 자체가 있을 수 없다. */
+/* 인쇄 페이지 크기를 mm 단위로 실측하기 위한 보조 함수 */
+function mmToPx(mm){
+  const probe = document.createElement('div');
+  probe.style.cssText = `position:absolute; top:0; left:0; z-index:-1; visibility:hidden; width:${mm}mm; height:${mm}mm;`;
+  document.body.appendChild(probe);
+  const px = probe.getBoundingClientRect().height;
+  document.body.removeChild(probe);
+  return px;
+}
+
+/* 실제 인쇄에 쓰이는 것과 완전히 똑같은 <table><td> 구조로 재서,
+   div로 잴 때와 td에 넣을 때 사파리에서 미묘하게 다르게 계산되던
+   차이를 없앤다. */
+function measureRowHeights(rows, colWidthMm){
+  const table = document.createElement('table');
+  table.className = 'pm-mode';
+  table.style.width = colWidthMm + 'mm';
+  table.style.tableLayout = 'fixed';
+  const tbody = document.createElement('tbody');
+  const trs = rows.map(r => {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.innerHTML = printRowHTML(r);
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return tr;
+  });
+  table.appendChild(tbody);
+  document.body.appendChild(table);
+  const heights = trs.map(tr => {
+    let h = tr.getBoundingClientRect().height;
+    const MIN_ROW_PX = 14;
+    if (!h || !isFinite(h) || h < MIN_ROW_PX) h = MIN_ROW_PX;
+    return h;
+  });
+  document.body.removeChild(table);
+  return heights;
+}
+
+/* 페이지를 JS가 직접 나눔: 한 페이지 안에서 1열→2열→3열 순서로,
+   실측한 진짜 높이를 기준으로 칸을 꽉 채우고, 다 차면 다음 페이지로. */
+function paginateRowsByHeight(rows, heights, numCols, colHeightPx){
+  const pages = [];
+  let idx = 0;
+  let guard = 0;
+  while (idx < rows.length && guard < 400){
+    guard++;
+    const page = Array.from({length:numCols}, () => []);
+    for (let c = 0; c < numCols; c++){
+      let acc = 0;
+      while (idx < rows.length && page[c].length === 0){
+        page[c].push(rows[idx]);
+        acc += heights[idx];
+        idx++;
+      }
+      while (idx < rows.length && acc + heights[idx] <= colHeightPx){
+        page[c].push(rows[idx]);
+        acc += heights[idx];
+        idx++;
+      }
+    }
+    pages.push(page);
+  }
+  return pages;
+}
+
 function renderPrintColumns(mode){
   const numCols = mode === 'detailed' ? 2 : 3;
   const rows = buildPrintRows(mode);
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v37)</span><br>
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v39)</span><br>
     <span class="p-vat-note">＊ 표시된 모든 금액은 부가세(VAT) 별도 금액입니다</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){
@@ -1459,7 +1560,35 @@ function renderPrintColumns(mode){
     return;
   }
 
-  const itemsHTML = rows.map(r => `<div class="p-col-item">${printRowHTML(r)}</div>`).join('');
+  // ── A4 세로 기준 실제 지면 크기 계산 ──
+  const PAGE_W_MM = 210, PAGE_H_MM = 297, MARGIN_MM = 6, GAP_MM = 2.4;
+  const usableWmm = PAGE_W_MM - MARGIN_MM * 2;
+  const usableHmm = PAGE_H_MM - MARGIN_MM * 2;
+  const colWmm = (usableWmm - GAP_MM * (numCols + 1)) / numCols;
+
+  const heights = measureRowHeights(rows, colWmm);
+  const headBufferPx = 90;
+  const colHeightPx = (mmToPx(usableHmm) - headBufferPx) * 0.93;
+
+  const pages = paginateRowsByHeight(rows, heights, numCols, colHeightPx);
+
+  // 어떤 열의 첫 줄이 브랜드 헤더가 아니면(=이전 열에서 이어지는 브랜드면)
+  // 그 브랜드명을 이 열 맨 위에도 한 번 더 표시해서 어떤 회사인지 항상 보이게 함
+  pages.forEach(page => {
+    page.forEach(col => {
+      if (col.length && col[0].type !== 'brand' && col[0].brand){
+        col.unshift({ type:'brand', text: `${col[0].brand} (계속)`, color: col[0].brandColor, w:0 });
+      }
+    });
+  });
+
+  const pagesHTML = pages.map((page, pi) => {
+    const colsHTML = page.map(c => `<td class="print-col">${c.map(printRowHTML).join('')}</td>`).join('');
+    const isLast = pi === pages.length - 1;
+    return `<div class="print-page${isLast ? '' : ' print-page-break'}">
+      <table class="print-cols-table"><tbody><tr>${colsHTML}</tr></tbody></table>
+    </div>`;
+  }).join('');
 
   // 화면의 "거래 안내(공지)" 내용을 인쇄본 맨 아래에도 그대로 실어준다
   const noticeLines = []
@@ -1474,7 +1603,7 @@ function renderPrintColumns(mode){
 
   document.getElementById('printColumns').innerHTML = `
     <div class="print-page-head">${headText}</div>
-    <div class="print-flow cols-${numCols}">${itemsHTML}</div>
+    ${pagesHTML}
     ${footerHTML}`;
 }
 

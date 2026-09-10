@@ -500,15 +500,15 @@
     .print-col > .p-brand:first-child{ margin-top:0; }
 
     .p-brand{
-      font-size:10.5px; font-weight:900; margin:6px 0 2px; padding:2.5px 5px;
+      font-size:11.5px; font-weight:900; margin:6px 0 2px; padding:2.5px 5px;
       background:var(--pc); color:#fff; border-radius:3px; break-after:avoid; break-inside:avoid;
     }
 
     .p-subhead{
-      font-size:8.5px; font-weight:900; margin:4px 0 1px; color:#222;
+      font-size:9.5px; font-weight:900; margin:4px 0 1px; color:#222;
       border-bottom:1px solid #999; break-after:avoid;
     }
-    .p-tag{ font-size:6.8px; font-weight:900; padding:0 3px; border-radius:2px; margin:0 3px; white-space:nowrap; }
+    .p-tag{ font-size:7.2px; font-weight:900; padding:0 3px; border-radius:2px; margin:0 3px; white-space:nowrap; }
     .p-tag-disc{ background:#d92626; color:#fff; }
     .p-tag-planned{ background:#e08a1e; color:#fff; }
     /* 단종: 빨간 밑줄 + 볼드로 확실하게 강조 / 단종예정: 주황 볼드 */
@@ -521,11 +521,11 @@
     .p-item{ padding:1.5px 0; border-bottom:1px dotted #ccc; overflow-wrap:break-word; word-break:break-word; }
     .p-item-variant{ padding-left:6px; border-bottom:1px dotted #e2e2e2; }
     .p-item-top{ display:flex; justify-content:space-between; align-items:baseline; gap:6px; break-after:avoid; }
-    .p-name{ font-size:9px; font-weight:800; flex:1; color:#111; }
-    .p-price{ font-size:9px; font-weight:900; white-space:nowrap; color:#a05a12; }
-    .p-spec{ font-size:7.5px; color:#555; margin-top:1px; }
-    .p-spec-inline{ font-size:7.5px; color:#333; font-weight:700; flex:1; }
-    .p-models{ font-size:7px; color:#444; line-height:1.4; margin-top:1px; overflow-wrap:break-word; word-break:break-word; }
+    .p-name{ font-size:10px; font-weight:800; flex:1; color:#111; }
+    .p-price{ font-size:10px; font-weight:900; white-space:nowrap; color:#a05a12; }
+    .p-spec{ font-size:8.5px; color:#555; margin-top:1px; }
+    .p-spec-inline{ font-size:8.5px; color:#333; font-weight:700; flex:1; }
+    .p-models{ font-size:8px; color:#444; line-height:1.4; margin-top:1px; overflow-wrap:break-word; word-break:break-word; }
     .p-empty{ font-size:11px; color:#888; padding:20px 0; text-align:center; }
   }
 
@@ -536,14 +536,14 @@
     position:fixed; top:-99999px; left:-99999px; visibility:hidden; background:#fff;
   }
   .pm-mode .p-brand{
-    font-size:10.5px; font-weight:900; margin:6px 0 2px; padding:2.5px 5px;
+    font-size:11.5px; font-weight:900; margin:6px 0 2px; padding:2.5px 5px;
     background:var(--pc); color:#fff; border-radius:3px;
   }
   .pm-mode .p-subhead{
-    font-size:8.5px; font-weight:900; margin:4px 0 1px; color:#222;
+    font-size:9.5px; font-weight:900; margin:4px 0 1px; color:#222;
     border-bottom:1px solid #999;
   }
-  .pm-mode .p-tag{ font-size:6.8px; font-weight:900; padding:0 3px; border-radius:2px; margin:0 3px; white-space:nowrap; }
+  .pm-mode .p-tag{ font-size:7.2px; font-weight:900; padding:0 3px; border-radius:2px; margin:0 3px; white-space:nowrap; }
   .pm-mode .p-tag-disc{ background:#d92626; color:#fff; }
   .pm-mode .p-tag-planned{ background:#e08a1e; color:#fff; }
   .pm-mode .p-name-disc, .pm-mode .p-model-disc{ text-decoration:line-through; text-decoration-color:#d92626; text-decoration-thickness:1.6px; color:#d92626; font-weight:900; }
@@ -551,11 +551,11 @@
   .pm-mode .p-item{ padding:1.5px 0; border-bottom:1px dotted #ccc; overflow-wrap:break-word; word-break:break-word; }
   .pm-mode .p-item-variant{ padding-left:6px; border-bottom:1px dotted #e2e2e2; }
   .pm-mode .p-item-top{ display:flex; justify-content:space-between; align-items:baseline; gap:6px; }
-  .pm-mode .p-name{ font-size:9px; font-weight:800; flex:1; color:#111; }
-  .pm-mode .p-price{ font-size:9px; font-weight:900; white-space:nowrap; color:#a05a12; }
-  .pm-mode .p-spec{ font-size:7.5px; color:#555; margin-top:1px; }
-  .pm-mode .p-spec-inline{ font-size:7.5px; color:#333; font-weight:700; flex:1; }
-  .pm-mode .p-models{ font-size:7px; color:#444; line-height:1.4; margin-top:1px; overflow-wrap:break-word; word-break:break-word; }
+  .pm-mode .p-name{ font-size:10px; font-weight:800; flex:1; color:#111; }
+  .pm-mode .p-price{ font-size:10px; font-weight:900; white-space:nowrap; color:#a05a12; }
+  .pm-mode .p-spec{ font-size:8.5px; color:#555; margin-top:1px; }
+  .pm-mode .p-spec-inline{ font-size:8.5px; color:#333; font-weight:700; flex:1; }
+  .pm-mode .p-models{ font-size:8px; color:#444; line-height:1.4; margin-top:1px; overflow-wrap:break-word; word-break:break-word; }
 </style>
 </head>
 <body>
@@ -1348,19 +1348,8 @@ function buildPrintRows(mode){
       }
 
       // ── 수종/규격별로 가격이 다른 상품 (예: 원목마루) ──
-      const prices = p.variants.map(v => v.firm_price).filter(Boolean);
-      const rangeText = `${Math.min(...prices).toLocaleString()}~${Math.max(...prices).toLocaleString()}원`;
-
-      if (mode !== 'detailed') {
-        // 간단버전: 패턴명 + 가격범위만 (수종별 상이 표기)
-        rows.push({
-          type:'item', name:p.name, spec:'규격/수종별 가격 상이 → 모델포함판 참고',
-          price:rangeText, models:'', discStatus:p.discStatus, w:1, brand, brandColor
-        });
-        return;
-      }
-
-      // 상세버전: 패턴명을 소제목으로, 수종(변형)마다 스펙+가격+모델을 개별 표시
+      // 간단판/상세판 모두 패턴명을 소제목으로 두고, 변형마다 스펙+가격을 따로 보여준다.
+      // (색상/모델명은 상세판에서만 추가로 붙는다)
       rows.push({ type:'subhead', text:p.name, discStatus:p.discStatus, w:0.8, brand, brandColor });
       p.variants.forEach(v => {
         const factorTxt = fmtFactor(v.factor);
@@ -1368,17 +1357,19 @@ function buildPrintRows(mode){
         if (v.spec) specParts.push(v.spec);
         if (!isJangpan && factorTxt) specParts.push(`1BOX=${factorTxt}㎡`);
         const spec = specParts.join(' · ');
-        const names = (v.models||[]).map(m => {
-          const cls = m.discStatus === 'discontinued' ? ' class="p-model-disc"'
-                    : m.discStatus === 'planned' ? ' class="p-model-planned"' : '';
-          return `<span${cls}>${m.name}</span>`;
-        });
-        const modelsHTML = names.join(', ');
+        let modelsHTML = '';
+        if (mode === 'detailed') {
+          const names = (v.models||[]).map(m => {
+            const cls = m.discStatus === 'discontinued' ? ' class="p-model-disc"'
+                      : m.discStatus === 'planned' ? ' class="p-model-planned"' : '';
+            return `<span${cls}>${m.name}</span>`;
+          });
+          modelsHTML = names.join(', ');
+        }
         rows.push({
           type:'variant', spec,
           price:`${(v.firm_price||0).toLocaleString()}원`,
-          models: modelsHTML, brand, brandColor,
-          w: 1 + Math.ceil(names.join(', ').replace(/<[^>]+>/g,'').length / 38)
+          models: modelsHTML, brand, brandColor, w:1
         });
       });
     });
@@ -1488,7 +1479,7 @@ function renderPrintColumns(mode){
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v22)</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v23)</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){
     document.getElementById('printColumns').innerHTML = `
@@ -1505,8 +1496,10 @@ function renderPrintColumns(mode){
 
   // ── 각 줄의 진짜 렌더링 높이를 실측 → 칸을 실제로 꽉 채울 때까지 담는다 ──
   const heights = measureRowHeights(rows, colWmm);
-  const headBufferPx = 60; // 맨 위 안내줄 + "(계속)" 브랜드바가 추가될 수 있는 여유분
-  const colHeightPx = mmToPx(usableHmm) - headBufferPx;
+  const headBufferPx = 70; // 맨 위 안내줄 + "(계속)" 브랜드바가 추가될 수 있는 여유분
+  // 화면 측정과 실제 인쇄 렌더링 사이 미세한 오차로 칸이 페이지 경계를 살짝
+  // 넘어가 버리면(→ 엉뚱한 빈 페이지 발생) 안 되므로 살짝 더 여유를 둔다
+  const colHeightPx = (mmToPx(usableHmm) - headBufferPx) * 0.95;
 
   const pages = paginateRowsByHeight(rows, heights, numCols, colHeightPx);
 

@@ -504,19 +504,17 @@
        (같은 파일이면 어떤 기기에서 인쇄해도 항상 동일하게 나옴) */
     .print-page{ }
     .print-page-break{ break-after: page; page-break-after: always; }
-    /* 아이패드/아이폰의 인쇄 렌더링 엔진이 flexbox를 제대로 지원하지 않아
-       옆으로 안 가고 세로로 쌓이는 문제가 있어서, 모든 브라우저가 예외
-       없이 지원하는 아주 오래된 방식(float)으로 확실하게 옆으로 배치한다. */
-    .print-cols-row{ display:block; }
-    .print-cols-row::after{ content:""; display:block; clear:both; }
-    .print-col{
-      float:left; overflow-wrap:break-word; word-break:break-word;
-      box-sizing:border-box;
+    /* flexbox도, float도 인쇄 페이지 나누기와 궁합이 안 맞는 브라우저가 있어서,
+       옆으로 나란히 배치하는 용도로 가장 오래되고 인쇄 지원이 검증된
+       "표(table) 레이아웃"으로 확실하게 고정한다. */
+    .print-cols-row{
+      display:table; table-layout:fixed; width:100%;
+      border-collapse:separate; border-spacing:2.4mm 0;
     }
-    .print-cols-row.cols-3 .print-col{ width:64.4mm; margin-right:2.4mm; }
-    .print-cols-row.cols-3 .print-col:last-child{ margin-right:0; }
-    .print-cols-row.cols-2 .print-col{ width:97.8mm; margin-right:2.4mm; }
-    .print-cols-row.cols-2 .print-col:last-child{ margin-right:0; }
+    .print-col{
+      display:table-cell; vertical-align:top;
+      overflow-wrap:break-word; word-break:break-word;
+    }
     .print-col > .p-brand:first-child{ margin-top:0; }
 
     .p-brand{
@@ -714,7 +712,7 @@
    더 받아와서 버전이 다르면 자동으로 새로고침한다.
    ★ 배포할 때마다 이 숫자만 하나씩 올려주면 됨 ★
    ============================================================ */
-const BUILD_VERSION = 'b7';
+const BUILD_VERSION = 'b8';
 (function autoUpdateCheck(){
   try {
     const bustUrl = location.pathname + (location.search ? location.search + '&' : '?') + '_fresh=' + Date.now();
@@ -1554,7 +1552,7 @@ function renderPrintColumns(mode){
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v30)</span><br>
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v31)</span><br>
     <span class="p-vat-note">＊ 표시된 모든 금액은 부가세(VAT) 별도 금액입니다</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){
@@ -1568,7 +1566,9 @@ function renderPrintColumns(mode){
   const PAGE_W_MM = 210, PAGE_H_MM = 297, MARGIN_MM = 6, GAP_MM = 2.4; // gap 9px ≈ 2.4mm
   const usableWmm = PAGE_W_MM - MARGIN_MM * 2;
   const usableHmm = PAGE_H_MM - MARGIN_MM * 2;
-  const colWmm = (usableWmm - GAP_MM * (numCols - 1)) / numCols;
+  // 표(table) 레이아웃은 border-spacing이 칸 사이뿐 아니라 양 끝에도 붙으므로
+  // 간격 개수가 (칸 수 + 1)개다 — 실제 렌더링과 정확히 같은 폭으로 측정하기 위함
+  const colWmm = (usableWmm - GAP_MM * (numCols + 1)) / numCols;
 
   // ── 각 줄의 진짜 렌더링 높이를 실측 → 칸을 실제로 꽉 채울 때까지 담는다 ──
   const heights = measureRowHeights(rows, colWmm);

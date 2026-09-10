@@ -504,16 +504,15 @@
        (같은 파일이면 어떤 기기에서 인쇄해도 항상 동일하게 나옴) */
     .print-page{ }
     .print-page-break{ break-after: page; page-break-after: always; }
-    /* flexbox도, float도 인쇄 페이지 나누기와 궁합이 안 맞는 브라우저가 있어서,
-       옆으로 나란히 배치하는 용도로 가장 오래되고 인쇄 지원이 검증된
-       "표(table) 레이아웃"으로 확실하게 고정한다. */
-    .print-cols-row{
-      display:table; table-layout:fixed; width:100%;
-      border-collapse:separate; border-spacing:2.4mm 0;
+    /* flexbox도, CSS display:table도 브라우저/인쇄엔진에 따라 신뢰도가
+       달랐어서, 이번엔 CSS 흉내가 아니라 진짜 HTML <table> 태그를 쓴다.
+       표는 HTML 최초기부터 있던 기능이라 어떤 인쇄엔진도 다르게 해석할
+       여지가 없다. */
+    .print-cols-table{
+      table-layout:fixed; width:100%; border-collapse:separate; border-spacing:2.4mm 0;
     }
     .print-col{
-      display:table-cell; vertical-align:top;
-      overflow-wrap:break-word; word-break:break-word;
+      vertical-align:top; overflow-wrap:break-word; word-break:break-word;
     }
     .print-col > .p-brand:first-child{ margin-top:0; }
 
@@ -712,7 +711,7 @@
    더 받아와서 버전이 다르면 자동으로 새로고침한다.
    ★ 배포할 때마다 이 숫자만 하나씩 올려주면 됨 ★
    ============================================================ */
-const BUILD_VERSION = 'b8';
+const BUILD_VERSION = 'b9';
 (function autoUpdateCheck(){
   try {
     const bustUrl = location.pathname + (location.search ? location.search + '&' : '?') + '_fresh=' + Date.now();
@@ -1552,7 +1551,7 @@ function renderPrintColumns(mode){
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v31)</span><br>
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v32)</span><br>
     <span class="p-vat-note">＊ 표시된 모든 금액은 부가세(VAT) 별도 금액입니다</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){
@@ -1590,10 +1589,10 @@ function renderPrintColumns(mode){
   });
 
   const pagesHTML = pages.map((page, pi) => {
-    const colsHTML = page.map(c => `<div class="print-col">${c.map(printRowHTML).join('')}</div>`).join('');
+    const colsHTML = page.map(c => `<td class="print-col">${c.map(printRowHTML).join('')}</td>`).join('');
     const isLast = pi === pages.length - 1;
     return `<div class="print-page${isLast ? '' : ' print-page-break'}">
-      <div class="print-cols-row cols-${numCols}">${colsHTML}</div>
+      <table class="print-cols-table"><tbody><tr>${colsHTML}</tr></tbody></table>
     </div>`;
   }).join('');
 

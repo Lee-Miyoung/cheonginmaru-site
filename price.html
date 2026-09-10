@@ -489,16 +489,21 @@
     }
     .p-head-note{ font-weight:900; color:#c0331c; }
     .p-ver{ font-weight:400; color:#bbb; font-size:8px; }
-    .print-page{ }
-    .print-page-break{ break-after: page; page-break-after: always; }
-    .print-cols-row{ display:flex; gap:9px; align-items:flex-start; }
-    .print-col{ flex:1 1 0; min-width:0; overflow-wrap:break-word; word-break:break-word; }
+
+    /* 1열이 길어지면 2열로, 2열이 길어지면 3열로, 다 차면 다음 페이지로 —
+       브라우저가 실제 렌더링 높이를 기준으로 정확히 계산하므로
+       JS로 어림잡아 페이지를 미리 나누는 것보다 훨씬 정확하고 순서가 안 꼬임 */
+    .print-flow{
+      column-fill:auto; column-gap:9px;
+    }
+    .print-flow.cols-3{ column-count:3; }
+    .print-flow.cols-2{ column-count:2; }
+    .p-col-item{ overflow-wrap:break-word; word-break:break-word; }
 
     .p-brand{
       font-size:10.5px; font-weight:900; margin:6px 0 2px; padding:2.5px 5px;
-      background:var(--pc); color:#fff; border-radius:3px; break-after:avoid;
+      background:var(--pc); color:#fff; border-radius:3px; break-after:avoid; break-inside:avoid;
     }
-    .print-col > .p-brand:first-child{ margin-top:0; }
 
     .p-subhead{
       font-size:8.5px; font-weight:900; margin:4px 0 1px; color:#222;
@@ -743,11 +748,20 @@ function showGate(title, msg){
 function denyAccess(msg){
   showGate('접근 권한이 없습니다', msg || '전달받은 링크가 정확한지 확인해주세요. 문의: 청인마루');
 }
+let PRINT_ENABLED = true; // 거래처토큰 시트의 "인쇄허용" 값으로 결정됨 (기본값: 허용)
+
 function grantAccess(clientName){
   document.getElementById('gate').classList.add('hidden');
   document.getElementById('mainWrap').classList.add('ready');
   document.getElementById('clientName').innerText = clientName || '거래처';
   loadData();
+}
+
+function applyPrintPermission(){
+  const simpleBtn = document.getElementById('printBellSimple');
+  const detailedBtn = document.getElementById('printBellDetailed');
+  if (simpleBtn) simpleBtn.style.display = PRINT_ENABLED ? '' : 'none';
+  if (detailedBtn) detailedBtn.style.display = PRINT_ENABLED ? '' : 'none';
 }
 
 (async function checkTokenAndStart(){
@@ -761,6 +775,10 @@ function grantAccess(clientName){
     
     if (!data || data.active === false) { denyAccess('유효하지 않거나 비활성화된 링크입니다.'); return; }
     if (data.expiresAt && Date.now() > data.expiresAt) { denyAccess('이 링크의 유효기간이 만료되었습니다. 담당자에게 문의해주세요.'); return; }
+
+    // printEnabled가 명시적으로 false인 경우에만 인쇄 버튼을 숨김 (그 외/미설정은 기본 허용)
+    PRINT_ENABLED = data.printEnabled !== false;
+    applyPrintPermission();
 
     // 2. 화면 즉시 오픈 (대기 시간 제거)
     grantAccess(data.clientName);
@@ -1332,29 +1350,6 @@ function buildPrintRows(mode){
   return rows;
 }
 
-/* 페이지를 JS가 직접 나눔: 한 페이지 안에서 1열→2열→3열 순서로 채우고,
-   그 페이지가 다 차면 다음 "페이지" 블록으로 넘어간다.
-   (브라우저의 자동 다단/자동 페이지분할에 기대지 않아 순서가 항상 예측 가능함) */
-function paginateRows(rows, numCols, perColumn){
-  const pages = [];
-  let idx = 0;
-  let guard = 0;
-  while (idx < rows.length && guard < 400){
-    guard++;
-    const page = Array.from({length:numCols}, () => []);
-    for (let c = 0; c < numCols; c++){
-      let acc = 0;
-      while (idx < rows.length && (acc < perColumn || page[c].length === 0)){
-        page[c].push(rows[idx]);
-        acc += rows[idx].w;
-        idx++;
-      }
-    }
-    pages.push(page);
-  }
-  return pages;
-}
-
 function discTagHTML(discStatus){
   if (discStatus === 'discontinued') return '<span class="p-tag p-tag-disc">단종</span>';
   if (discStatus === 'planned') return '<span class="p-tag p-tag-planned">단종예정</span>';
@@ -1388,14 +1383,11 @@ function printRowHTML(r){
 
 function renderPrintColumns(mode){
   const numCols = mode === 'detailed' ? 2 : 3;
-  // 페이지 수를 억지로 맞추지 않고, 칸 하나가 실제로 다 찰 만큼 넉넉하게 채운 뒤
-  // 넘치면 자연스럽게 다음 페이지로 — 그래야 페이지마다 빈 여백이 안 생김
-  const perColumn = mode === 'detailed' ? 34 : 62;
   const rows = buildPrintRows(mode);
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v14)</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v15)</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){
     document.getElementById('printColumns').innerHTML = `
@@ -1404,18 +1396,14 @@ function renderPrintColumns(mode){
     return;
   }
 
-  const pages = paginateRows(rows, numCols, perColumn);
-  const pagesHTML = pages.map((page, pi) => {
-    const colsHTML = page.map(c => `<div class="print-col">${c.map(printRowHTML).join('')}</div>`).join('');
-    const isLast = pi === pages.length - 1;
-    return `<div class="print-page${isLast ? '' : ' print-page-break'}">
-      <div class="print-cols-row cols-${numCols}">${colsHTML}</div>
-    </div>`;
-  }).join('');
+  // 브라우저의 실제 다단(column) 레이아웃에 맡긴다: 1열이 꽉 차면 2열로,
+  // 2열이 꽉 차면 3열로, 그것도 다 차면 자동으로 다음 페이지의 1열로 —
+  // 실제 렌더링 높이를 기준으로 계산되므로 순서가 절대 안 꼬이고 여백도 안 남는다.
+  const itemsHTML = rows.map(r => `<div class="p-col-item">${printRowHTML(r)}</div>`).join('');
 
   document.getElementById('printColumns').innerHTML = `
     <div class="print-page-head">${headText}</div>
-    ${pagesHTML}`;
+    <div class="print-flow cols-${numCols}">${itemsHTML}</div>`;
 }
 
 /* 인쇄 직전, 가격 데이터가 아직 다 안 불러와졌으면(새로고침 직후 등)
@@ -1427,6 +1415,7 @@ async function ensurePrintDataReady(){
 }
 
 async function printSimple(){
+  if (!PRINT_ENABLED){ alert('이 거래처는 인쇄 기능이 제공되지 않습니다.'); return; }
   const btn = document.getElementById('printBellSimple');
   if (btn) btn.disabled = true;
   const ready = await ensurePrintDataReady();
@@ -1436,6 +1425,7 @@ async function printSimple(){
   setTimeout(() => window.print(), 30);
 }
 async function printDetailed(){
+  if (!PRINT_ENABLED){ alert('이 거래처는 인쇄 기능이 제공되지 않습니다.'); return; }
   const btn = document.getElementById('printBellDetailed');
   if (btn) btn.disabled = true;
   const ready = await ensurePrintDataReady();

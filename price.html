@@ -709,7 +709,7 @@
    더 받아와서 버전이 다르면 자동으로 새로고침한다.
    ★ 배포할 때마다 이 숫자만 하나씩 올려주면 됨 ★
    ============================================================ */
-const BUILD_VERSION = 'b18';
+const BUILD_VERSION = 'b19';
 (function autoUpdateCheck(){
   try {
     const bustUrl = location.pathname + (location.search ? location.search + '&' : '?') + '_fresh=' + Date.now();
@@ -1519,12 +1519,14 @@ function measureRowHeights(rows, colWidthMm){
 
 /* 페이지를 JS가 직접 나눔: 한 페이지 안에서 1열→2열→3열 순서로,
    실측한 진짜 높이를 기준으로 칸을 꽉 채우고, 다 차면 다음 페이지로. */
-function paginateRowsByHeight(rows, heights, numCols, colHeightPx){
+function paginateRowsByHeight(rows, heights, numCols, firstPageColHeightPx, colHeightPx){
   const pages = [];
   let idx = 0;
   let guard = 0;
+  let isFirstPage = true;
   while (idx < rows.length && guard < 400){
     guard++;
+    const budget = isFirstPage ? firstPageColHeightPx : colHeightPx;
     const page = Array.from({length:numCols}, () => []);
     for (let c = 0; c < numCols; c++){
       let acc = 0;
@@ -1533,13 +1535,14 @@ function paginateRowsByHeight(rows, heights, numCols, colHeightPx){
         acc += heights[idx];
         idx++;
       }
-      while (idx < rows.length && acc + heights[idx] <= colHeightPx){
+      while (idx < rows.length && acc + heights[idx] <= budget){
         page[c].push(rows[idx]);
         acc += heights[idx];
         idx++;
       }
     }
     pages.push(page);
+    isFirstPage = false;
   }
   return pages;
 }
@@ -1550,7 +1553,7 @@ function renderPrintColumns(mode){
 
   const clientEl = document.getElementById('clientName');
   const dateEl = document.getElementById('baseDate');
-  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v41)</span><br>
+  const headText = `${clientEl ? clientEl.innerText : ''}님 거래처 단가표 · 조회일 ${dateEl ? dateEl.innerText : ''} 기준 · ${mode === 'detailed' ? '색상/모델명 포함' : '가격 간단버전'} <span class="p-ver">(v42)</span><br>
     <span class="p-vat-note">＊ 표시된 모든 금액은 부가세(VAT) 별도 금액입니다</span> · <span class="p-head-note">⚠ 인쇄물은 참고용 · 최신 단가는 사이트에서 확인하세요</span>`;
 
   if (!rows.length){
@@ -1567,10 +1570,11 @@ function renderPrintColumns(mode){
   const colWmm = (usableWmm - GAP_MM * (numCols + 1)) / numCols;
 
   const heights = measureRowHeights(rows, colWmm);
-  const headBufferPx = 90;
-  const colHeightPx = (mmToPx(usableHmm) - headBufferPx) * 0.93;
+  const headBufferPx = 20; // 안내줄은 1페이지에만 나오므로 1페이지 예산에서만 뺀다
+  const fullColHeightPx = mmToPx(usableHmm);
+  const firstPageColHeightPx = fullColHeightPx - headBufferPx;
 
-  const pages = paginateRowsByHeight(rows, heights, numCols, colHeightPx);
+  const pages = paginateRowsByHeight(rows, heights, numCols, firstPageColHeightPx, fullColHeightPx);
 
   // 어떤 열의 첫 줄이 브랜드 헤더가 아니면(=이전 열에서 이어지는 브랜드면)
   // 그 브랜드명을 이 열 맨 위에도 한 번 더 표시해서 어떤 회사인지 항상 보이게 함

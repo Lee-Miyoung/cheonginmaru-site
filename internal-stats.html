@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>거래처 접속 현황</title>
+<style>
+  :root{
+    --navy:#0b1424; --navy-2:#152238;
+    --gold:#e8ab3c; --accent:#a05a12;
+    --line:#e4e0d8; --bg:#f7f5f0;
+    --ok:#1e6b3a; --warn:#a02020; --muted:#8a8578;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Pretendard Variable','Noto Sans KR',sans-serif;
+    background:var(--bg); color:#22201b;
+  }
+  header{
+    background:var(--navy); color:#fff; padding:22px 20px 18px;
+  }
+  header h1{ margin:0 0 4px; font-size:19px; font-weight:900; }
+  header p{ margin:0; font-size:12.5px; color:#aab3c4; }
+
+  .toolbar{
+    display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+    padding:14px 20px; background:#fff; border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:5;
+  }
+  .toolbar input[type="text"]{
+    flex:1; min-width:160px; padding:9px 12px; border:1.5px solid var(--line);
+    border-radius:8px; font-size:13.5px; font-family:inherit;
+  }
+  .toolbar select{
+    padding:9px 10px; border:1.5px solid var(--line); border-radius:8px;
+    font-size:13px; font-family:inherit; background:#fff;
+  }
+  .toolbar .stat{
+    font-size:12.5px; color:var(--muted); white-space:nowrap;
+  }
+  .toolbar button{
+    padding:9px 14px; border:none; border-radius:8px; background:var(--navy);
+    color:#fff; font-weight:800; font-size:13px; cursor:pointer;
+  }
+  .toolbar button:active{ transform:scale(.97); }
+
+  #status{ padding:40px 20px; text-align:center; color:var(--muted); font-size:14px; }
+  #status.err{ color:var(--warn); font-weight:700; }
+
+  .tablewrap{ overflow-x:auto; padding:0 0 40px; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; min-width:760px; }
+  thead th{
+    position:sticky; top:53px; background:#fff; text-align:left;
+    padding:10px 14px; font-size:11.5px; color:var(--muted); font-weight:800;
+    border-bottom:2px solid var(--navy); cursor:pointer; user-select:none;
+    white-space:nowrap;
+  }
+  thead th:hover{ color:var(--navy); }
+  thead th.sorted::after{ content:" " attr(data-dir); }
+  tbody tr{ border-bottom:1px solid var(--line); }
+  tbody tr:hover{ background:#fbf9f4; }
+  tbody td{ padding:11px 14px; vertical-align:top; }
+  .client-name{ font-weight:800; }
+  .token-id{ font-size:11px; color:var(--muted); font-family:monospace; }
+  .badge{
+    display:inline-block; font-size:11px; font-weight:800; padding:2px 8px;
+    border-radius:100px;
+  }
+  .badge-on{ background:#e6f2ea; color:var(--ok); }
+  .badge-off{ background:#fbe8e8; color:var(--warn); }
+  .count-num{ font-weight:900; font-variant-numeric:tabular-nums; }
+  .count-zero{ color:var(--muted); font-weight:600; }
+  .last-access{ font-variant-numeric:tabular-nums; }
+  .last-access.never{ color:var(--muted); }
+  .row-inactive{ opacity:.5; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>청인마루 거래처 접속 현황</h1>
+  <p>거래처명 · 접속 횟수 · 마지막 접속일 — Firebase priceAccessTokens 기준</p>
+</header>
+
+<div class="toolbar">
+  <input type="text" id="searchBox" placeholder="거래처명으로 검색...">
+  <select id="filterSelect">
+    <option value="all">전체</option>
+    <option value="never">한 번도 접속 안 함</option>
+    <option value="inactive">비활성(active=false)</option>
+    <option value="printoff">인쇄 비허용</option>
+  </select>
+  <span class="stat" id="statLine"></span>
+  <button id="refreshBtn">새로고침</button>
+</div>
+
+<div id="status">불러오는 중입니다...</div>
+<div class="tablewrap" id="tableWrap" style="display:none">
+  <table>
+    <thead>
+      <tr>
+        <th data-key="clientName">거래처명</th>
+        <th data-key="token">토큰</th>
+        <th data-key="active">상태</th>
+        <th data-key="printEnabled">인쇄</th>
+        <th data-key="accessCount">접속횟수</th>
+        <th data-key="lastAccessedAt">마지막 접속</th>
+        <th data-key="expiresAt">만료일</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCHdMgp2clJ0y3L1GR-WubpAYKEVYvLcLA",
+  authDomain: "maru-quote-history.firebaseapp.com",
+  databaseURL: "https://maru-quote-history-default-rtdb.firebaseio.com",
+  projectId: "maru-quote-history",
+  storageBucket: "maru-quote-history.firebasestorage.app",
+  messagingSenderId: "936179721364",
+  appId: "1:936179721364:web:cbf9e9bb6c71970d400081"
+};
+firebase.initializeApp(firebaseConfig);
+const fbDatabase = firebase.database();
+
+let ROWS = [];
+let sortKey = 'lastAccessedAt';
+let sortDir = -1; // 최신 접속 먼저
+
+function fmtDate(ms){
+  if (!ms) return null;
+  const d = new Date(ms);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function render(){
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  const filter = document.getElementById('filterSelect').value;
+
+  let rows = ROWS.filter(r => {
+    if (q && !(r.clientName||'').toLowerCase().includes(q) && !r.token.toLowerCase().includes(q)) return false;
+    if (filter === 'never' && r.accessCount) return false;
+    if (filter === 'inactive' && r.active !== false) return false;
+    if (filter === 'printoff' && r.printEnabled !== false) return false;
+    return true;
+  });
+
+  rows.sort((a,b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (sortKey === 'clientName' || sortKey === 'token'){
+      av = (av||'').toLowerCase(); bv = (bv||'').toLowerCase();
+      return av < bv ? -1*sortDir : av > bv ? 1*sortDir : 0;
+    }
+    av = av || 0; bv = bv || 0;
+    return (av - bv) * sortDir;
+  });
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = rows.map(r => `
+    <tr class="${r.active === false ? 'row-inactive' : ''}">
+      <td class="client-name">${r.clientName || '(이름없음)'}</td>
+      <td class="token-id">${r.token}</td>
+      <td>${r.active === false ? '<span class="badge badge-off">비활성</span>' : '<span class="badge badge-on">활성</span>'}</td>
+      <td>${r.printEnabled === false ? '<span class="badge badge-off">차단</span>' : '<span class="badge badge-on">허용</span>'}</td>
+      <td>${r.accessCount ? `<span class="count-num">${r.accessCount}</span>` : '<span class="count-zero">0</span>'}</td>
+      <td class="last-access ${r.lastAccessedAt ? '' : 'never'}">${fmtDate(r.lastAccessedAt) || '접속 기록 없음'}</td>
+      <td>${r.expiresAt ? fmtDate(r.expiresAt) : '-'}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="7" style="text-align:center; color:#8a8578; padding:30px;">조건에 맞는 거래처가 없습니다.</td></tr>';
+
+  const totalAccessed = ROWS.filter(r => r.accessCount).length;
+  document.getElementById('statLine').textContent =
+    `전체 ${ROWS.length}곳 · 접속함 ${totalAccessed}곳 · 표시 ${rows.length}곳`;
+
+  document.querySelectorAll('thead th').forEach(th => {
+    th.classList.toggle('sorted', th.dataset.key === sortKey);
+    th.dataset.dir = sortDir === 1 ? '▲' : '▼';
+  });
+}
+
+function loadData(){
+  document.getElementById('status').style.display = 'block';
+  document.getElementById('status').className = '';
+  document.getElementById('status').textContent = '불러오는 중입니다...';
+  document.getElementById('tableWrap').style.display = 'none';
+
+  firebase.auth().signInAnonymously()
+    .then(() => fbDatabase.ref('priceAccessTokens').once('value'))
+    .then(snap => {
+      const data = snap.val() || {};
+      ROWS = Object.keys(data).map(token => ({ token, ...data[token] }));
+      document.getElementById('status').style.display = 'none';
+      document.getElementById('tableWrap').style.display = 'block';
+      render();
+    })
+    .catch(err => {
+      document.getElementById('status').className = 'err';
+      document.getElementById('status').innerHTML =
+        `데이터를 불러오지 못했습니다.<br><span style="font-weight:400; font-size:12.5px;">${err.message}</span>` +
+        `<br><br style="line-height:2"><span style="font-weight:400; font-size:12.5px; color:#8a8578;">` +
+        `Firebase 보안 규칙이 priceAccessTokens 전체 읽기를 막고 있을 수 있습니다. ` +
+        `개발자에게 규칙 확인을 요청해주세요.</span>`;
+      console.error(err);
+    });
+}
+
+document.getElementById('searchBox').addEventListener('input', render);
+document.getElementById('filterSelect').addEventListener('change', render);
+document.getElementById('refreshBtn').addEventListener('click', loadData);
+document.querySelectorAll('thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.key;
+    if (sortKey === key) sortDir *= -1;
+    else { sortKey = key; sortDir = (key === 'clientName' || key === 'token') ? 1 : -1; }
+    render();
+  });
+});
+
+loadData();
+</script>
+</body>
+</html>

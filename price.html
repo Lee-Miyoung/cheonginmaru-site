@@ -770,6 +770,9 @@ function openInExternalBrowser(){
    ============================================================ */
 const FEED_URL = 'https://script.google.com/macros/s/AKfycbzyafI_d2PZiE_AYS4Y5f9uBQjK5ULCxX21hk2Z5BMDcbktNT9NnF8mUb_HhA8hJqy9Fw/exec';
 const CACHE_KEY = 'cm_price_cache_v6';
+// 보안 수정: 페이지 접속 시 URL의 ?t=토큰 값을 읽어서, 데이터 요청할 때마다 같이 실어 보낸다.
+// (Apps Script 쪽에서 이 토큰을 검사해야 실제로 의미가 있음 — Apps Script 코드도 같이 수정 필요)
+const PAGE_TOKEN = new URLSearchParams(window.location.search).get('t') || '';
 
 let RAW_DATA = [];
 let NOTICES = { info: [], urgentList: [] };
@@ -813,7 +816,7 @@ function fetchWithRetry(url, attemptsLeft){
 }
 
 // 백그라운드에서 최신 데이터 가져오기
-dataFetchPromise = fetchWithRetry(FEED_URL)
+dataFetchPromise = fetchWithRetry(FEED_URL + '?t=' + encodeURIComponent(PAGE_TOKEN))
   .then(json => {
     RAW_DATA = json.prices || [];
     NOTICES = json.notices || { info: [], urgentList: [] };
@@ -1109,7 +1112,7 @@ function onSearchInput(){
 function retryLoad(){
   const root = document.getElementById('listRoot');
   root.innerHTML = '<div class="empty">다시 불러오는 중입니다...</div>';
-  dataFetchPromise = fetchWithRetry(FEED_URL)
+  dataFetchPromise = fetchWithRetry(FEED_URL + '?t=' + encodeURIComponent(PAGE_TOKEN))
     .then(json => {
       RAW_DATA = json.prices || [];
       NOTICES = json.notices || { info: [], urgentList: [] };

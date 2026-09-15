@@ -687,8 +687,10 @@
   // ===== 1) 900개 품목 조회 - 마루견적서(index.html)가 이미 쓰고 있는 공개 링크를 그대로 재사용 =====
   //     읽기 전용 GET 요청이라 견적서/파트너가격 쪽에는 전혀 영향 없음. 새로 만들 것도, 공개 설정할 것도 없음.
   const MASTER_SHEET_URL = "https://script.google.com/macros/s/AKfycbxHU1h6Vu2W5Yovgm8yRJKIoALUdpeLQULRdCKdVMtnER2QewMbFBAn0Q1s30hvtFpP/exec";
-  // 매입단가(비밀 단가) 조회용 - 견적서(index.html)의 ADMIN_KEY와 동일해야 시트의 원가 컬럼이 열림
-  const ADMIN_KEY = "cm_wondeok_7d3f9k";
+  // 매입단가(비밀 단가) 조회용.
+  // 보안 수정: 예전엔 여기 고정된 비밀키 문자열이 그대로 적혀 있어서, 페이지 소스만 봐도
+  // 원가 데이터를 열 수 있는 열쇠가 그대로 노출됐음. 이제는 로그인할 때 입력한 비밀번호(1306)를
+  // 그 세션 동안만 sessionStorage에 담아뒀다가 그 값을 서버로 보낸다 (브라우저를 완전히 닫으면 사라짐).
 
   // ===== 2) Firebase - 견적서(index.html)와 동일한 프로젝트를 그대로 재사용 =====
   //     stock_movements 라는 새 저장공간만 씀. quote_history(견적기록)는 전혀 건드리지 않음.
@@ -751,15 +753,17 @@
     syncDateDisplay('in-order-date');
     syncDateDisplay('in-prod-date');
     setupDateBoxClicks();
-    if (localStorage.getItem('cm_stock_auth') === 'valid') {
+    if (sessionStorage.getItem('cm_stock_auth') === 'valid') {
       document.getElementById('login-gate').style.display = 'none';
       init();
     }
   };
 
   function checkLogin() {
-    if (btoa(document.getElementById('app-password').value) === 'MTMwNg==') { // 1306
-      localStorage.setItem('cm_stock_auth', 'valid');
+    const typed = document.getElementById('app-password').value;
+    if (btoa(typed) === 'MTMwNg==') { // 1306
+      sessionStorage.setItem('cm_stock_auth', 'valid');
+      sessionStorage.setItem('cm_stock_pin', typed);
       document.getElementById('login-gate').style.display = 'none';
       init();
     } else { alert('비밀번호 오류'); }
@@ -1566,7 +1570,7 @@
 
   async function loadCostData() {
     try {
-      const res = await fetch(`${MASTER_SHEET_URL}?k=${encodeURIComponent(ADMIN_KEY)}`);
+      const res = await fetch(`${MASTER_SHEET_URL}?k=${encodeURIComponent(sessionStorage.getItem('cm_stock_pin') || '')}`);
       const jsonData = await res.json();
       buildCostDataFromJson(jsonData);
       try { localStorage.setItem(COST_CACHE_KEY, JSON.stringify(jsonData)); } catch(e) {}

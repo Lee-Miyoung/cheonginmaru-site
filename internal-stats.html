@@ -78,6 +78,12 @@
     background:#fff; font-size:11.5px; font-weight:700; cursor:pointer; color:#8a8578;
   }
   .reset-btn:hover{ border-color:var(--warn); color:var(--warn); }
+  .delete-btn{
+    padding:5px 10px; border:1.5px solid var(--line); border-radius:7px;
+    background:#fff; font-size:11.5px; font-weight:700; cursor:pointer; color:#8a8578;
+    margin-left:6px;
+  }
+  .delete-btn:hover{ border-color:var(--warn); background:var(--warn); color:#fff; }
 </style>
 </head>
 <body>
@@ -178,7 +184,7 @@ function render(){
       <td>${r.accessCount ? `<span class="count-num">${r.accessCount}</span>` : '<span class="count-zero">0</span>'}</td>
       <td class="last-access ${r.lastAccessedAt ? '' : 'never'}">${fmtDate(r.lastAccessedAt) || '접속 기록 없음'}</td>
       <td>${r.expiresAt ? fmtDate(r.expiresAt) : '-'}</td>
-      <td><button class="reset-btn" data-token="${r.token}">초기화</button></td>
+      <td><button class="reset-btn" data-token="${r.token}">초기화</button><button class="delete-btn" data-token="${r.token}">삭제</button></td>
     </tr>
   `).join('') || '<tr><td colspan="8" style="text-align:center; color:#8a8578; padding:30px;">조건에 맞는 거래처가 없습니다.</td></tr>';
 
@@ -206,13 +212,34 @@ function resetAccessCount(token, clientName){
   });
 }
 
+function deleteToken(token, clientName){
+  if (!confirm(`"${clientName || token}"(토큰: ${token})을 완전히 삭제할까요?\n이 작업은 되돌릴 수 없습니다.\n(구글시트에서 이미 지운 옛날 토큰을 정리할 때 사용하세요)`)) return;
+  fbDatabase.ref('priceAccessTokens/' + token).remove()
+    .then(() => {
+      ROWS = ROWS.filter(r => r.token !== token);
+      render();
+    })
+    .catch(err => {
+      alert('삭제에 실패했습니다: ' + err.message);
+    });
+}
+
 // 표가 다시 그려져도 계속 작동하도록, 버튼 대신 표(tbody)에 한 번만 걸어둔다
 document.getElementById('tbody').addEventListener('click', (e) => {
-  const btn = e.target.closest('.reset-btn');
-  if (!btn) return;
-  const token = btn.dataset.token;
-  const row = ROWS.find(r => r.token === token);
-  resetAccessCount(token, row ? row.clientName : '');
+  const resetBtn = e.target.closest('.reset-btn');
+  const deleteBtn = e.target.closest('.delete-btn');
+  if (resetBtn){
+    const token = resetBtn.dataset.token;
+    const row = ROWS.find(r => r.token === token);
+    resetAccessCount(token, row ? row.clientName : '');
+    return;
+  }
+  if (deleteBtn){
+    const token = deleteBtn.dataset.token;
+    const row = ROWS.find(r => r.token === token);
+    deleteToken(token, row ? row.clientName : '');
+    return;
+  }
 });
 
 function loadData(){

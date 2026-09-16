@@ -714,7 +714,7 @@
   // 보안 강화: 익명 로그인 대신, 실제 직원 계정(이메일+비밀번호)으로 로그인하게 바뀜.
   // 로그인 상태는 Firebase가 알아서 기억해주므로, 브라우저를 껐다 켜도 자동으로 로그인됩니다.
   firebase.auth().onAuthStateChanged(function(user) {
-    if (user) {
+    if (user && !user.isAnonymous) {
       authReady = true;
       document.getElementById('fb-badge').innerText = '🟢 실시간 연결됨 (전체 기기 공유)';
       document.getElementById('login-gate').style.display = 'none';
@@ -722,6 +722,11 @@
     } else {
       authReady = false;
       document.getElementById('fb-badge').innerText = '직원 계정으로 로그인해주세요';
+      document.getElementById('login-gate').style.display = 'flex';
+      if (user && user.isAnonymous) {
+        // 예전 코드가 남겨둔 익명 로그인 흔적 — 로그아웃시켜서 반드시 실제 로그인을 거치게 함
+        firebase.auth().signOut();
+      }
     }
   });
 

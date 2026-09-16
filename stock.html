@@ -90,8 +90,10 @@
     <h2 class="text-xl font-black text-[#2B2622] mb-1">청인마루 재고·거래처 관리</h2>
     <p class="text-xs text-[#8B8477] font-bold mb-1">Stock System</p>
     <p id="fb-badge" class="text-[15px] font-bold text-[#B8B2A3] mb-6">연결 확인 중...</p>
+    <input type="email" id="staff-email" class="w-full p-4 bg-[#F3F0EA] rounded-xl text-center text-lg font-black outline-none focus:ring-2 ring-[#8B5E34] mb-3" placeholder="이메일" onkeyup="if(event.keyCode==13) checkLogin()">
     <input type="password" id="app-password" class="w-full p-4 bg-[#F3F0EA] rounded-xl text-center text-lg font-black outline-none focus:ring-2 ring-[#8B5E34] mb-4" placeholder="PASSWORD" onkeyup="if(event.keyCode==13) checkLogin()">
     <button onclick="checkLogin()" class="w-full py-4 bg-[#2B2622] text-white rounded-xl font-black text-lg">접속하기</button>
+    <p id="login-err" class="text-xs text-red-500 font-bold mt-3" style="display:none;">이메일 또는 비밀번호가 올바르지 않습니다.</p>
   </div>
 </div>
 
@@ -708,13 +710,20 @@
   firebase.initializeApp(firebaseConfig);
   fbDatabase = firebase.database();
   let authReady = false;
-  firebase.auth().signInAnonymously()
-    .then(() => { authReady = true; document.getElementById('fb-badge').innerText = '🟢 실시간 연결됨 (전체 기기 공유)'; })
-    .catch(err => {
-      console.error('Firebase 인증 실패', err);
-      document.getElementById('fb-badge').innerText = '🔴 연결 실패: ' + (err && err.code ? err.code : err);
-      showToast('⚠️ 로그인 연결 실패: ' + (err && err.code ? err.code : err), true);
-    });
+
+  // 보안 강화: 익명 로그인 대신, 실제 직원 계정(이메일+비밀번호)으로 로그인하게 바뀜.
+  // 로그인 상태는 Firebase가 알아서 기억해주므로, 브라우저를 껐다 켜도 자동으로 로그인됩니다.
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+      authReady = true;
+      document.getElementById('fb-badge').innerText = '🟢 실시간 연결됨 (전체 기기 공유)';
+      document.getElementById('login-gate').style.display = 'none';
+      init();
+    } else {
+      authReady = false;
+      document.getElementById('fb-badge').innerText = '직원 계정으로 로그인해주세요';
+    }
+  });
 
   let masterData = {}; // { brand: { product: [model,...] } }
   let costDataMap = {}; // { "brand||name||model": {ex, inc} } - 매입단가(비밀 단가), VAT별도/포함
@@ -753,20 +762,19 @@
     syncDateDisplay('in-order-date');
     syncDateDisplay('in-prod-date');
     setupDateBoxClicks();
-    if (sessionStorage.getItem('cm_stock_auth') === 'valid') {
-      document.getElementById('login-gate').style.display = 'none';
-      init();
-    }
+    // 로그인 상태 확인·게이트 숨김·init() 호출은 위쪽 onAuthStateChanged가 전담합니다.
   };
 
   function checkLogin() {
-    const typed = document.getElementById('app-password').value;
-    if (btoa(typed) === 'MTMwNg==') { // 1306
-      sessionStorage.setItem('cm_stock_auth', 'valid');
-      sessionStorage.setItem('cm_stock_pin', typed);
-      document.getElementById('login-gate').style.display = 'none';
-      init();
-    } else { alert('비밀번호 오류'); }
+    const email = document.getElementById('staff-email').value.trim();
+    const pw = document.getElementById('app-password').value;
+    document.getElementById('login-err').style.display = 'none';
+    firebase.auth().signInWithEmailAndPassword(email, pw)
+      .catch(function(err) {
+        console.error('로그인 실패', err);
+        document.getElementById('login-err').style.display = 'block';
+      });
+    // 로그인 성공 시 화면 전환·init() 호출은 onAuthStateChanged가 자동으로 처리합니다.
   }
 
   function init() {
@@ -1570,7 +1578,9 @@
 
   async function loadCostData() {
     try {
-      const res = await fetch(`${MASTER_SHEET_URL}?k=${encodeURIComponent(sessionStorage.getItem('cm_stock_pin') || '')}`);
+      // ⚠️ 실제 로그인으로 바뀌면서 더는 세션에 저장된 PIN이 없어, 임시로 값을 그대로 넣어둠.
+      // 이건 아직 완전히 해결 안 된 부분 — Apps Script 쪽 원가 조회 인증 방식은 나중에 별도로 다시 손봐야 함.
+      const res = await fetch(`${MASTER_SHEET_URL}?k=${encodeURIComponent('1306')}`);
       const jsonData = await res.json();
       buildCostDataFromJson(jsonData);
       try { localStorage.setItem(COST_CACHE_KEY, JSON.stringify(jsonData)); } catch(e) {}

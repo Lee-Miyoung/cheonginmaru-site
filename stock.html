@@ -1591,9 +1591,11 @@
 
   async function loadCostData() {
     try {
-      // ⚠️ 실제 로그인으로 바뀌면서 더는 세션에 저장된 PIN이 없어, 임시로 값을 그대로 넣어둠.
-      // 이건 아직 완전히 해결 안 된 부분 — Apps Script 쪽 원가 조회 인증 방식은 나중에 별도로 다시 손봐야 함.
-      const res = await fetch(`${MASTER_SHEET_URL}?k=${encodeURIComponent('1306')}`);
+      // 보안 강화: 고정된 "1306" 대신, 로그인한 직원의 진짜 증명서(ID 토큰)를 서버로 보내서
+      // Apps Script가 구글에 직접 검증하게 함. 브루트포스로 뚫을 수 없음.
+      const user = firebase.auth().currentUser;
+      const idToken = user ? await user.getIdToken() : '';
+      const res = await fetch(`${MASTER_SHEET_URL}?k=${encodeURIComponent(idToken)}`);
       const jsonData = await res.json();
       buildCostDataFromJson(jsonData);
       try { localStorage.setItem(COST_CACHE_KEY, JSON.stringify(jsonData)); } catch(e) {}

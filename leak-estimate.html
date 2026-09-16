@@ -306,10 +306,28 @@
     .footdate{ margin:8px 0 5px; font-size:10.5px; }
     table.infogrid.sign{ margin-top:5px; }
   }
+
+  #gate{ max-width:360px; margin:120px auto; background:#fff; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.12); padding:32px 28px; text-align:center; }
+  #gate h1{ font-size:16px; margin:0 0 6px; }
+  #gate p{ font-size:12px; color:#888; margin:0 0 18px; }
+  #gate input{ width:100%; padding:11px 12px; font-size:14px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px; font-family:inherit; box-sizing:border-box; }
+  #gate button{ width:100%; padding:11px; font-size:14px; font-weight:700; background:#0b1424; color:#fff; border:none; border-radius:8px; cursor:pointer; }
+  #gate .err{ color:#c0392b; font-size:12px; margin-top:8px; display:none; }
+  #gate .hint2{ font-size:11px; color:#888; margin-top:14px; }
 </style>
 </head>
 <body>
 
+<div id="gate">
+  <h1>🔒 청인마루 직원 전용</h1>
+  <p>견적 작성 도구입니다. 직원 비밀번호를 입력하세요.</p>
+  <input type="password" id="gatePw" placeholder="비밀번호">
+  <button onclick="checkGate()">입장</button>
+  <div class="err" id="gateErr">비밀번호가 올바르지 않습니다.</div>
+  <div class="hint2">같은 기기·같은 브라우저에서는 7일간 다시 묻지 않습니다.</div>
+</div>
+
+<div id="mainWrap" style="display:none;">
 
 <div class="tabs">
   <button class="tab-btn active" data-tab="leak" onclick="switchTab('leak')">🌊 누수복구 견적</button>
@@ -673,6 +691,8 @@
 </div>
 </div><!-- /#tabTrade -->
 
+</div><!-- /#mainWrap -->
+
 <!-- ==== Firebase (compat SDK) ==== -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
@@ -724,6 +744,38 @@ try{
   console.warn("Firebase 초기화 실패", e);
   showError('Firebase 초기화 실패: ' + (e && e.message ? e.message : e) + ' — firebaseConfig 값이 예전 예시 그대로 남아있지 않은지, 최신 파일을 쓰고 있는지 확인해주세요.');
 }
+
+/* ===== 게이트 (7일 유지, 다른 직원 전용 페이지와 비밀번호·로그인 상태 공유) ===== */
+const STAFF_PASSWORD = "1306";
+const AUTH_KEY = "cim-staff-auth-v1";
+const AUTH_DAYS = 7;
+
+function checkGate(){
+  const pw = document.getElementById('gatePw').value;
+  if (pw === STAFF_PASSWORD){
+    localStorage.setItem(AUTH_KEY, JSON.stringify({ ts: Date.now() }));
+    enterApp();
+  } else {
+    document.getElementById('gateErr').style.display = 'block';
+  }
+}
+function enterApp(){
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('mainWrap').style.display = 'block';
+  if (typeof startLeakEstimateApp === 'function') startLeakEstimateApp();
+}
+(function checkAuthOnLoad(){
+  try{
+    const raw = localStorage.getItem(AUTH_KEY);
+    if (raw){
+      const data = JSON.parse(raw);
+      if (data && data.ts && (Date.now() - data.ts) < AUTH_DAYS*24*60*60*1000){
+        enterApp();
+      }
+    }
+  }catch(e){}
+})();
+document.getElementById('gatePw').addEventListener('keydown', function(e){ if(e.key==='Enter') checkGate(); });
 </script>
 <script>
 /* ===================== 공통 유틸 ===================== */
@@ -1561,8 +1613,8 @@ function syncClientPickerLabel(which){
   }
 }
 
-/* ===================== 초기화 ===================== */
-(function init(){
+/* ===================== 초기화 (게이트 통과 후에만 실행) ===================== */
+function startLeakEstimateApp(){
   var params = new URL(window.location.href).searchParams;
   var urlTab = params.get('tab') || 'leak';
   var urlId = params.get('id');
@@ -1600,7 +1652,7 @@ function syncClientPickerLabel(which){
   syncClientPickerLabel('Leak');
   syncClientPickerLabel('Trade');
   loadKnownClients();
-})();
+}
 </script>
 </body>
 </html>

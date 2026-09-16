@@ -84,10 +84,28 @@
     margin-left:6px;
   }
   .delete-btn:hover{ border-color:var(--warn); background:var(--warn); color:#fff; }
+
+  #gate{ max-width:360px; margin:120px auto; background:#fff; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.12); padding:32px 28px; text-align:center; }
+  #gate h1{ font-size:16px; color:var(--navy); margin:0 0 6px; }
+  #gate p{ font-size:12px; color:var(--muted); margin:0 0 18px; }
+  #gate input{ width:100%; padding:11px 12px; font-size:14px; border:1px solid var(--line); border-radius:8px; margin-bottom:10px; font-family:inherit; box-sizing:border-box; }
+  #gate button{ width:100%; padding:11px; font-size:14px; font-weight:700; background:var(--navy); color:#fff; border:none; border-radius:8px; cursor:pointer; }
+  #gate .err{ color:#c0392b; font-size:12px; margin-top:8px; display:none; }
+  #gate .hint2{ font-size:11px; color:var(--muted); margin-top:14px; }
 </style>
 </head>
 <body>
 
+<div id="gate">
+  <h1>🔒 청인마루 직원 전용</h1>
+  <p>거래처 접속 현황을 보려면 직원 비밀번호를 입력하세요.</p>
+  <input type="password" id="gatePw" placeholder="비밀번호">
+  <button onclick="checkGate()">입장</button>
+  <div class="err" id="gateErr">비밀번호가 올바르지 않습니다.</div>
+  <div class="hint2">같은 기기·같은 브라우저에서는 7일간 다시 묻지 않습니다.</div>
+</div>
+
+<div id="mainWrap" style="display:none;">
 <header>
   <h1>청인마루 거래처 접속 현황</h1>
   <p>거래처명 · 접속 횟수 · 마지막 접속일 — Firebase priceAccessTokens 기준</p>
@@ -123,6 +141,7 @@
     <tbody id="tbody"></tbody>
   </table>
 </div>
+</div>
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -140,6 +159,38 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const fbDatabase = firebase.database();
+
+/* ===== 게이트 (7일 유지, 다른 직원 전용 페이지와 비밀번호·로그인 상태 공유) ===== */
+const STAFF_PASSWORD = "1306";
+const AUTH_KEY = "cim-staff-auth-v1";
+const AUTH_DAYS = 7;
+
+function checkGate(){
+  const pw = document.getElementById('gatePw').value;
+  if (pw === STAFF_PASSWORD){
+    localStorage.setItem(AUTH_KEY, JSON.stringify({ ts: Date.now() }));
+    enterDashboard();
+  } else {
+    document.getElementById('gateErr').style.display = 'block';
+  }
+}
+function enterDashboard(){
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('mainWrap').style.display = 'block';
+  loadData();
+}
+(function checkAuthOnLoad(){
+  try{
+    const raw = localStorage.getItem(AUTH_KEY);
+    if (raw){
+      const data = JSON.parse(raw);
+      if (data && data.ts && (Date.now() - data.ts) < AUTH_DAYS*24*60*60*1000){
+        enterDashboard();
+      }
+    }
+  }catch(e){}
+})();
+document.getElementById('gatePw').addEventListener('keydown', function(e){ if(e.key==='Enter') checkGate(); });
 
 let ROWS = [];
 let sortKey = 'lastAccessedAt';
@@ -279,8 +330,6 @@ document.querySelectorAll('thead th').forEach(th => {
     render();
   });
 });
-
-loadData();
 </script>
 </body>
 </html>

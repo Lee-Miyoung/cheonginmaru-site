@@ -67,6 +67,11 @@
 </head>
 <body>
 
+<div id="staffBadge" style="display:none; position:fixed; top:10px; right:10px; z-index:99999; background:#fff; border:1px solid #e4e0d8; border-radius:20px; padding:6px 12px; font-size:12px; color:#555; box-shadow:0 2px 6px rgba(0,0,0,.08); align-items:center; gap:8px;">
+  <span id="staffBadgeEmail"></span>
+  <button onclick="firebase.auth().signOut()" style="border:none;background:#f3f0ea;border-radius:12px;padding:3px 10px;font-size:11px;cursor:pointer;color:#a05a12;font-weight:700;">로그아웃</button>
+</div>
+
 <div id="gate">
   <h1>🔒 청인마루 직원 전용</h1>
   <p>견적 목록에 접근하려면 직원 계정으로 로그인하세요.</p>
@@ -158,10 +163,11 @@ try{
     firebase.auth().onAuthStateChanged(function(user){
       if (user && !user.isAnonymous) {
         resolve(user);
-        enterDashboard();
+        enterDashboard(user);
       } else {
         document.getElementById('gate').style.display = 'block';
         document.getElementById('mainWrap').style.display = 'none';
+        document.getElementById('staffBadge').style.display = 'none';
         if (user && user.isAnonymous) {
           // 예전 코드가 남겨둔 익명 로그인 흔적 — 로그아웃시켜서 반드시 실제 로그인을 거치게 함
           firebase.auth().signOut();
@@ -186,9 +192,11 @@ function checkGate(){
   // 로그인 성공 시 화면 전환·startListening() 호출은 위 onAuthStateChanged가 처리합니다.
 }
 window.checkGate = checkGate;
-function enterDashboard(){
+function enterDashboard(user){
   document.getElementById('gate').style.display = 'none';
   document.getElementById('mainWrap').style.display = 'block';
+  document.getElementById('staffBadgeEmail').textContent = user.email;
+  document.getElementById('staffBadge').style.display = 'flex';
   startListening();
 }
 document.getElementById('gatePw').addEventListener('keydown', function(e){ if(e.key==='Enter') checkGate(); });

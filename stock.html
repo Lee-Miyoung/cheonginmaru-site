@@ -83,6 +83,11 @@
 </head>
 <body class="antialiased">
 
+<div id="staffBadge" style="display:none; position:fixed; top:10px; right:10px; z-index:99999; background:#fff; border:1px solid #E4E0D8; border-radius:20px; padding:6px 12px; font-size:12px; color:#555; box-shadow:0 2px 6px rgba(0,0,0,.08); align-items:center; gap:8px;">
+  <span id="staffBadgeEmail"></span>
+  <button onclick="firebase.auth().signOut()" style="border:none;background:#F3F0EA;border-radius:12px;padding:3px 10px;font-size:11px;cursor:pointer;color:#8B5E34;font-weight:700;">로그아웃</button>
+</div>
+
 <div id="toast">저장되었습니다</div>
 
 <div id="login-gate">
@@ -718,11 +723,14 @@
       authReady = true;
       document.getElementById('fb-badge').innerText = '🟢 실시간 연결됨 (전체 기기 공유)';
       document.getElementById('login-gate').style.display = 'none';
+      document.getElementById('staffBadgeEmail').textContent = user.email;
+      document.getElementById('staffBadge').style.display = 'flex';
       init();
     } else {
       authReady = false;
       document.getElementById('fb-badge').innerText = '직원 계정으로 로그인해주세요';
       document.getElementById('login-gate').style.display = 'flex';
+      document.getElementById('staffBadge').style.display = 'none';
       if (user && user.isAnonymous) {
         // 예전 코드가 남겨둔 익명 로그인 흔적 — 로그아웃시켜서 반드시 실제 로그인을 거치게 함
         firebase.auth().signOut();

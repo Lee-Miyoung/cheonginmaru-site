@@ -29,11 +29,11 @@
   .toolbar{ max-width:820px; margin:0 auto 10px; display:flex; flex-direction:column; gap:10px; }
   .toolbar-row{ display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
   .toolbar .hint{ font-size:15px; color:var(--ink-faint); }
-  .toolbar .btns{ display:flex; gap:10px; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:4px; }
+  .toolbar .btns{ display:flex; gap:8px; flex-wrap:wrap; }
   .toolbar .btns button, .toolbar .btns a.btn{ flex-shrink:0; }
   .toolbar button, .toolbar a.btn{
-    font-family:inherit; font-size:17px; font-weight:700; border:none; border-radius:9px;
-    padding:14px 22px; cursor:pointer; box-shadow:var(--shadow); text-decoration:none; display:inline-block;
+    font-family:inherit; font-size:14px; font-weight:700; border:none; border-radius:9px;
+    padding:10px 14px; cursor:pointer; box-shadow:var(--shadow); text-decoration:none; display:inline-block;
   }
   .toolbar button.primary, .toolbar a.btn.primary{ background:var(--brand); color:#fff; }
   .toolbar button.ghost, .toolbar a.btn.ghost{ background:#fff; color:var(--brand); border:1px solid var(--line); box-shadow:none; }
@@ -338,13 +338,13 @@
   <div class="toolbar-row">
     <div class="hint">✏️ 문서의 어떤 글자든 탭해서 바로 수정하세요. 저장 버튼을 눌러야 전 직원이 공유된 목록에서 볼 수 있습니다.</div>
     <div class="btns">
+      <button class="primary" onclick="manualSave()">☁️ 견적 저장</button>
+      <button class="ghost" onclick="duplicateAsNew()">📑 복제해서 새 견적</button>
       <a class="btn ghost" href="leak-dashboard.html">📋 견적 목록으로</a>
       <button class="ghost" onclick="startNewEstimate()">＋ 새 견적</button>
       <button class="ghost" onclick="if(confirm('처음 예시 내용으로 되돌릴까요? 저장하지 않은 수정 내용이 사라집니다.')) resetActiveTab()">↺ 초기화</button>
       <button class="primary" onclick="window.print()">🖨️ PDF로 저장 / 인쇄</button>
       <button class="ghost" onclick="saveAsImage()">🖼️ 이미지로 저장</button>
-      <button class="ghost" onclick="duplicateAsNew()">📑 복제해서 새 견적</button>
-      <button class="primary" onclick="manualSave()">☁️ 견적 저장</button>
     </div>
   </div>
 

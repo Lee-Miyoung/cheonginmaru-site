@@ -69,11 +69,11 @@
 
 <div id="gate">
   <h1>🔒 청인마루 직원 전용</h1>
-  <p>견적 목록에 접근하려면 직원 비밀번호를 입력하세요.</p>
+  <p>견적 목록에 접근하려면 직원 계정으로 로그인하세요.</p>
+  <input type="email" id="gateEmail" placeholder="이메일">
   <input type="password" id="gatePw" placeholder="비밀번호">
   <button onclick="checkGate()">입장</button>
-  <div class="err" id="gateErr">비밀번호가 올바르지 않습니다.</div>
-  <div class="hint2">같은 기기·같은 브라우저에서는 7일간 다시 묻지 않습니다.</div>
+  <div class="err" id="gateErr">이메일 또는 비밀번호가 올바르지 않습니다.</div>
 </div>
 
 <div class="wrap" id="mainWrap" style="display:none;">
@@ -149,33 +149,41 @@ const firebaseConfig = {
   appId: "1:936179721364:web:cbf9e9bb6c71970d400081"
 };
 
-/* ⚠️ 간단한 직원 공용 비밀번호입니다. */
-const STAFF_PASSWORD = "1306";
-const AUTH_KEY = "cim-staff-auth-v1"; // internal-stats.html, leak-estimate.html과 공유되는 키
-const AUTH_DAYS = 7;
-
 let db = null;
 let authReadyPromise = Promise.resolve(null);
 try{
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
   authReadyPromise = new Promise(function(resolve){
-    firebase.auth().onAuthStateChanged(function(user){ if(user) resolve(user); });
+    firebase.auth().onAuthStateChanged(function(user){
+      if (user && !user.isAnonymous) {
+        resolve(user);
+        enterDashboard();
+      } else {
+        document.getElementById('gate').style.display = 'block';
+        document.getElementById('mainWrap').style.display = 'none';
+        if (user && user.isAnonymous) {
+          // 예전 코드가 남겨둔 익명 로그인 흔적 — 로그아웃시켜서 반드시 실제 로그인을 거치게 함
+          firebase.auth().signOut();
+        }
+      }
+    });
   });
-  firebase.auth().signInAnonymously().catch(function(err){ console.error("익명 로그인 실패", err); });
 }catch(e){ console.warn('Firebase 초기화 실패', e); }
 
 let allRows = [];
 
-/* ===== 게이트 (7일 유지) ===== */
+/* ===== 게이트: 실제 직원 계정(이메일+비밀번호) 로그인 ===== */
 function checkGate(){
+  var email = document.getElementById('gateEmail').value.trim();
   var pw = document.getElementById('gatePw').value;
-  if(pw === STAFF_PASSWORD){
-    localStorage.setItem(AUTH_KEY, JSON.stringify({ ts: Date.now() }));
-    enterDashboard();
-  } else {
-    document.getElementById('gateErr').style.display = 'block';
-  }
+  document.getElementById('gateErr').style.display = 'none';
+  firebase.auth().signInWithEmailAndPassword(email, pw)
+    .catch(function(err){
+      console.error('로그인 실패', err);
+      document.getElementById('gateErr').style.display = 'block';
+    });
+  // 로그인 성공 시 화면 전환·startListening() 호출은 위 onAuthStateChanged가 처리합니다.
 }
 window.checkGate = checkGate;
 function enterDashboard(){
@@ -183,18 +191,6 @@ function enterDashboard(){
   document.getElementById('mainWrap').style.display = 'block';
   startListening();
 }
-(function checkAuthOnLoad(){
-  try{
-    var raw = localStorage.getItem(AUTH_KEY);
-    if(raw){
-      var data = JSON.parse(raw);
-      if(data && data.ts && (Date.now() - data.ts) < AUTH_DAYS*24*60*60*1000){
-        enterDashboard();
-        return;
-      }
-    }
-  }catch(e){}
-})();
 document.getElementById('gatePw').addEventListener('keydown', function(e){ if(e.key==='Enter') checkGate(); });
 
 /* ===== 검색 유틸 (공백 무관 + 초성검색) ===== */

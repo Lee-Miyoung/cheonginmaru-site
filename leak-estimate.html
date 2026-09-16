@@ -725,6 +725,9 @@ const firebaseConfig = {
 /* ⚠️ 업체용 단가 구글시트 연동 URL. price.html이 이미 쓰고 있는 것과 동일한
    FEED_URL을 그대로 재사용합니다 (읽기만 하므로 price.html에는 영향 없음). */
 const TRADE_PRICE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzyafI_d2PZiE_AYS4Y5f9uBQjK5ULCxX21hk2Z5BMDcbktNT9NnF8mUb_HhA8hJqy9Fw/exec";
+// 길고 무작위인 전용 토큰 — 이 파일에만 있고, 다른 세 파일의 로그인 비밀번호(1306)와는 무관함.
+// 무작위 대입으로 못 맞히도록 짧은 숫자가 아니라 이런 형태로 만들어둠.
+const TRADE_PRICE_TOKEN = "internal_estimate_9f3k2r";
 
 let db = null;
 let firebaseReady = false;
@@ -1276,7 +1279,7 @@ async function ensureTradePriceList(){
   if(!TRADE_PRICE_SHEET_URL) return { rows:null, error:'URL_NOT_SET' };
   if(tradePriceCache) return { rows: tradePriceCache, error:null };
   try{
-    var res = await fetch(TRADE_PRICE_SHEET_URL);
+    var res = await fetch(TRADE_PRICE_SHEET_URL + '?t=' + encodeURIComponent(TRADE_PRICE_TOKEN));
     if(!res.ok){
       return { rows:null, error:'HTTP ' + res.status + ' 응답 (배포 URL/권한을 확인하세요)' };
     }

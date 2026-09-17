@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>청인마루 답변 모음</title>
+<style>
+  :root{
+    --brand:#2d6a4f;
+    --brand-light:#40916c;
+    --bg:#f5f6f4;
+    --card:#ffffff;
+    --border:#e2e5e0;
+    --text:#1b1e1c;
+    --sub:#6b716c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  /* ---------- 로그인 화면 ---------- */
+  #loginScreen{
+    position:fixed;inset:0;background:var(--bg);
+    display:flex;align-items:center;justify-content:center;
+    z-index:999;padding:20px;
+  }
+  #loginBox{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:16px;padding:36px 28px;width:100%;max-width:340px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.06);text-align:center;
+  }
+  #loginBox h1{font-size:18px;margin:0 0 4px;}
+  #loginBox p{font-size:13px;color:var(--sub);margin:0 0 20px;}
+  #loginBox input{
+    width:100%;padding:12px 14px;border:1px solid var(--border);
+    border-radius:10px;font-size:15px;margin-bottom:10px;text-align:center;
+  }
+  #loginBox button{
+    width:100%;padding:12px;border:none;border-radius:10px;
+    background:var(--brand);color:#fff;font-size:15px;font-weight:600;
+    cursor:pointer;
+  }
+  #loginBox button:active{background:var(--brand-light);}
+  #loginError{color:#d64545;font-size:12px;height:16px;margin-top:6px;}
+
+  /* ---------- 본문 ---------- */
+  #app{display:none;max-width:720px;margin:0 auto;padding:16px 14px 60px;}
+  header.top{
+    position:sticky;top:0;background:var(--bg);z-index:10;
+    padding:10px 0 12px;
+  }
+  header.top h1{font-size:19px;margin:0 0 12px;}
+  #searchBox{
+    width:100%;padding:13px 16px;border-radius:12px;border:1px solid var(--border);
+    font-size:15px;background:var(--card);
+  }
+  #catRow{
+    display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:2px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  #catRow::-webkit-scrollbar{display:none;}
+  .cat-chip{
+    flex:0 0 auto;padding:8px 14px;border-radius:999px;border:1px solid var(--border);
+    background:var(--card);font-size:13px;color:var(--sub);cursor:pointer;white-space:nowrap;
+  }
+  .cat-chip.active{background:var(--brand);border-color:var(--brand);color:#fff;}
+
+  #list{margin-top:12px;display:flex;flex-direction:column;gap:10px;}
+  .item{
+    background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:14px 16px;cursor:pointer;transition:box-shadow .15s;
+  }
+  .item:active{box-shadow:0 0 0 2px var(--brand-light) inset;}
+  .item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;}
+  .item-title{font-size:15px;font-weight:600;}
+  .item-cat{
+    font-size:11px;color:var(--brand);background:#eaf4ee;padding:3px 8px;
+    border-radius:6px;flex:0 0 auto;
+  }
+  .item-body{
+    font-size:13.5px;color:#3c403d;line-height:1.5;white-space:pre-wrap;
+    max-height:60px;overflow:hidden;position:relative;
+  }
+  .item.expanded .item-body{max-height:none;}
+  .item-body.clamped::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:24px;
+    background:linear-gradient(transparent,var(--card));
+  }
+  .copy-btn{
+    margin-top:10px;font-size:12.5px;color:#fff;background:var(--brand);
+    border:none;padding:8px 14px;border-radius:8px;cursor:pointer;
+  }
+  .copy-btn.copied{background:#888;}
+
+  #empty{text-align:center;color:var(--sub);font-size:13px;padding:40px 0;}
+  #status{text-align:center;color:var(--sub);font-size:12px;padding:10px 0;}
+
+  #toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:#222;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;
+    opacity:0;transition:all .25s;z-index:50;pointer-events:none;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div id="loginBox">
+    <h1>청인마루 답변 모음</h1>
+    <p>내부 직원용 · 비밀번호를 입력하세요</p>
+    <input type="password" id="pwInput" placeholder="비밀번호" inputmode="numeric">
+    <button onclick="tryLogin()">입장</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<div id="app">
+  <header class="top">
+    <h1>고객 문의 답변 모음</h1>
+    <input type="text" id="searchBox" placeholder="키워드로 검색 (예: 배송, AS, 하자, 견적)">
+    <div id="catRow"></div>
+  </header>
+  <div id="status">불러오는 중...</div>
+  <div id="list"></div>
+  <div id="empty" style="display:none;">검색 결과가 없어요.</div>
+</div>
+
+<div id="toast">복사됐어요</div>
+
+<script>
+/* =========================================================
+   설정 (여기만 필요에 따라 바꾸면 됩니다)
+   ========================================================= */
+// 1) 접속 비밀번호
+const SITE_PASSWORD = "cheongin1004";
+
+// 2) 구글시트를 "웹에 게시 > CSV" 한 링크를 여기에 붙여넣으세요.
+//    (파일 > 공유 > 웹에 게시 > 시트 선택 > CSV 형식 선택 > 게시)
+//    비워두면 아래 SAMPLE_DATA로 동작합니다 (테스트용).
+const SHEET_CSV_URL = "";
+
+// 시트가 없을 때 보여줄 샘플 데이터 (시트 연결 전 테스트용)
+const SAMPLE_DATA = [
+  // ── 상담/방문견적 ──
+  {cat:"상담/견적", title:"방문 실측(견적)은 비용이 드나요?", body:"네, 방문 실측 및 견적은 무료로 진행해드리고 있습니다. 편하신 날짜와 시간 알려주시면 일정 조율해드릴게요 :)", kw:"방문 실측 견적 무료 비용"},
+  {cat:"상담/견적", title:"도면만 있어도 견적 가능한가요?", body:"네, 가능합니다. 다만 도면의 치수가 명확하지 않으면 예상견적으로 안내드리는 점 양해 부탁드려요. 정확한 물량과 최종 금액은 현장 실측 후 확정됩니다.", kw:"도면 견적 예상견적 치수"},
+  {cat:"상담/견적", title:"견적서 유효기간이 있나요?", body:"본 견적은 고객님이 제공해주신 정보를 바탕으로 산출된 가견적이며, 현장 실측 시 벽면 상태나 구조에 따라 금액이 달라질 수 있습니다. 견적서는 계약(선금) 또는 완납 시 유효한 정식 견적으로 전환되며, 그 전까지는 실측 유상이신 점 참고 부탁드립니다.", kw:"견적서 유효기간 가견적 정식견적"},
+
+  // ── 자재 소요량/산출 ──
+  {cat:"자재소요량", title:"필요한 박스 수는 어떻게 계산하나요?", body:"평수와 벽면 길이를 기준으로 산출하지만, 도면상 치수가 명확하지 않으면 대략적인 예상 수량으로 먼저 안내드려요. 정확한 물량은 실측 후 확정됩니다. (예: 9~10박스 예상 시 견적은 9박스로 산정)", kw:"박스 수량 계산 소요량 산출"},
+  {cat:"자재소요량", title:"자투리 자재도 활용해서 비용을 아낄 수 있나요?", body:"최대한 공간에 맞게 자재를 아껴서 사용하지만, 자투리 자재를 쓸 때는 결 홈이 맞아야 하고, 자투리가 많이 남는다고 아무데나 막 쓰면 세로줄이 생겨서 디자인적으로 예쁘지 않아요. 그래서 절감보다 디자인 완성도를 우선으로 고려해서 배치해드리고 있습니다.", kw:"자투리 자재 절감 세로줄 디자인"},
+  {cat:"자재소요량", title:"시그니월 아트월을 추가하면 자재가 얼마나 늘어나나요?", body:"이번 시공처럼 기본 벽면 외에 아트월 공간이 함께 포함되면, 아트월 면적만큼 자재 물량이 추가됩니다. (예: 아트월 포함 시 21장 11박스, 아트월 제외 시 약 9박스) 정확한 수량은 실측 후 확정해드려요.", kw:"시그니월 아트월 자재 추가 박스"},
+
+  // ── 제품/자재 선택 ──
+  {cat:"제품문의", title:"강마루와 강화마루 차이가 뭔가요?", body:"강마루는 원목 무늬목 위에 강화 코팅을, 강화마루는 HDF 합판에 필름을 입힌 제품이에요. 강마루가 질감이 자연스럽고 내구성이 더 좋아 주거공간에 많이 쓰입니다.", kw:"강마루 강화마루 차이"},
+  {cat:"제품문의", title:"강마루 보드형과 합판형은 뭐가 다른가요?", body:"보드형과 합판형의 차이는 마루 측면 단면을 보면 알 수 있어요. 육안으로 구분이 어려우시면, 아파트 분양 받으실 때 안내받은 마루 종류와 모델명을 알려주셔도 확인 가능합니다.", kw:"강마루 보드형 합판형 차이 마루 종류"},
+  {cat:"제품문의", title:"우리집 기존 마루 재질을 어떻게 확인하나요?", body:"마루 측면(단면)을 보시면 대략 구분이 가능하고, 정확하게 확인하시려면 아파트 분양 당시 고지된 마루 종류·모델명을 확인해주시는 게 가장 정확해요. 알려주시면 저희가 같이 확인해드릴게요.", kw:"기존 마루 재질 확인 모델명 분양"},
+  {cat:"제품문의", title:"시그니월을 이어 붙이면 이음선(가로줄)이 보이나요?", body:"시그니월은 바닥에서부터 맞춰 올라가는 구조라 2단 이상 시공 시 윗쪽에 가로줄이 생길 수 있어요. 우물형 천장이면 상대적으로 가려지는 편이고, 사진상으로는 가로줄이 도드라져 보여도 실제로는 보기 싫을 정도는 아니에요. 저희 홈페이지 시공사례를 참고하시면 실물 느낌 확인하실 수 있어요.", kw:"시그니월 이음선 가로줄 2단시공 우물천장"},
+  {cat:"제품문의", title:"무문선 시공이 가능한가요?", body:"무문선 관련해서는 지면(문자)으로 설명드리기 한계가 있어서, 담당자가 직접 전화드려서 자세히 안내드리고 있어요. 편하신 연락처 남겨주시면 연결해드릴게요.", kw:"무문선 시공 몰딩"},
+
+  // ── 시공 준비 (실측/구조) ──
+  {cat:"시공준비", title:"실측은 언제, 어떻게 진행되나요?", body:"현장 방문해서 벽면·바닥 치수와 상태를 직접 확인하는 방식으로 진행돼요. 실측 후 정확한 물량과 최종 견적을 다시 안내드립니다. 방문 일정은 편하신 날짜로 조율 가능해요.", kw:"실측 방문 일정 절차"},
+  {cat:"시공준비", title:"천장 높이(층고)는 왜 확인하나요?", body:"천장 높이에 따라 벽장재 소요량과 이음선 위치가 달라져요. 기본층고와 우물천장까지의 높이가 다른 경우가 많고, 요즘 신축 아파트는 2500mm가 넘는 곳도 있어서 정확한 높이를 확인해주셔야 정확한 물량 산출이 가능해요.", kw:"천장높이 층고 우물천장 신축아파트"},
+  {cat:"시공준비", title:"거주 중인 세대인데 비닐보양도 해주시나요?", body:"거주세대의 경우 자재·바닥 보호를 위한 비닐보양이 필요한데, 상황에 따라 서비스로 처리해드리는 경우도 있어요. 견적 문의 시 거주 여부를 함께 알려주시면 반영해서 안내드릴게요.", kw:"비닐보양 거주세대 서비스"},
+
+  // ── 시공 일정 ──
+  {cat:"일정예약", title:"시공 예약은 얼마나 미리 해야 하나요?", body:"네, 자재 확보가 문제가 될 수 있으니 최소 한 달 전에는 연락 주세요.", kw:"일정 예약 자재확보 미리 연락"},
+  {cat:"일정예약", title:"주말 시공도 가능한가요?", body:"주말 시공은 관리사무소 민원 때문에 불가한 곳이 많아요. 평일 시공은 대부분 가능하니 이사 일정에 맞춰 평일로 조율해주시면 됩니다.", kw:"주말시공 평일시공 민원"},
+  {cat:"일정예약", title:"이사 날짜에 맞춰 시공받고 싶어요", body:"이사 예정일 알려주시면 그에 맞춰 시공 일정 잡아드려요. 다만 자재 확보 시간이 필요하니 최소 한 달 전에는 미리 연락 주시는 게 안전합니다.", kw:"이사일정 시공날짜 맞춤"},
+
+  // ── 입주민/관리사무소 ──
+  {cat:"입주민/관리", title:"공사 소음이 많이 나나요?", body:"마루 시공만큼의 소음은 아니지만, 벽장재도 자재 재단 과정에서 소음이 발생할 수밖에 없어요. 관리실에 미리 신고해주시는 걸 권해드려요.", kw:"공사소음 소음 재단"},
+  {cat:"입주민/관리", title:"공사할 때 입주민 동의가 필요한가요?", body:"입주민 동의 여부는 아파트마다 기준이 달라서 관리사무소에 직접 문의해보셔야 해요. 저희 쪽에서도 확인 가능한 부분은 함께 알아봐드릴게요.", kw:"입주민동의 관리사무소 민원"},
+  {cat:"입주민/관리", title:"관리사무소에 뭐라고 신고해야 하나요?", body:"공사 예정일과 시간대, 시공 종류(벽장재/마루 등)를 관리사무소에 미리 알려주시고 소음 관련 공지를 요청하시면 돼요. 정확한 절차는 단지마다 다를 수 있어 관리사무소에 확인해주세요.", kw:"관리사무소 신고 공사공지"},
+
+  // ── 시공 순서 ──
+  {cat:"시공순서", title:"벽시공이랑 도배 순서가 어떻게 되나요?", body:"네, 벽시공 다음 도배하셔야 해요.", kw:"시공순서 벽시공 도배 우물천장"},
+  {cat:"시공순서", title:"우물천장 도배랑 벽장재는 순서가 어떻게 되나요?", body:"벽장재 시공이 먼저 진행되고, 그 다음 도배(천장 포함) 순서로 진행하시는 게 맞습니다. 순서가 바뀌면 마감선이 어긋날 수 있어요.", kw:"우물천장 도배 순서 벽장재"},
+
+  // ── 철거 ──
+  {cat:"철거", title:"기존 바닥재 철거 시 실측을 안 했는데 문제 없나요?", body:"철거 전 실측 없이 진행하신 경우, 자재 소요량이나 바닥 상태 파악이 어려워 추가 비용이나 일정 지연이 생길 수 있어요. 지금이라도 현재 상태 사진 보내주시면 확인 후 안내드릴게요.", kw:"철거 실측 안함 바닥 상태"},
+  {cat:"철거", title:"셀프로 철거하다가 막혔어요, 도와주실 수 있나요?", body:"셀프로 하시다가 막히시는 경우 종종 있어요. 현재 상태 사진 보내주시면 확인 후, 남은 철거와 시공을 이어서 진행해드릴 수 있는지 안내드릴게요.", kw:"셀프철거 실패 도움 이어서시공"},
+  {cat:"철거", title:"기존 걸레받이를 살리면서 철거 가능한가요?", body:"가능은 하지만, 구조상 기존 바닥재를 걸레받이가 물고 있는 형태라 철거 과정에서 굉장히 까다롭고 손이 많이 가는 작업이에요. 작업자가 최대한 조심스럽게 진행해도 기존 바닥재에 미세한 흔적이 남는 경우가 간혹 발생할 수 있는 점 미리 안내드립니다.", kw:"걸레받이 살리기 철거 까다로움"},
+
+  // ── 결제 ──
+  {cat:"결제", title:"결제는 현금이랑 카드랑 동일한가요?", body:"현금결제도 무조건 현금영수증 발급이에요. 저희가 성실신고 대상사업자라 금방 걸려요. (신용카드 결제 시엔 실측 시 전액 선결제만 가능해요. 이동형 체크기 이용) 죄송하지만 링크 결제는 불가합니다.", kw:"결제 현금 카드 현금영수증 선결제"},
+  {cat:"결제", title:"카드 결제는 언제 하나요?", body:"신용카드 결제는 실측 시 전액 선결제로만 가능하고, 이동형 체크기로 현장에서 결제 도와드려요. 링크 결제는 불가한 점 양해 부탁드립니다.", kw:"카드결제 선결제 이동형체크기"},
+  {cat:"결제", title:"현금영수증 꼭 받아야 하나요?", body:"네, 현금 결제 시에도 무조건 현금영수증을 발급해드리고 있어요. 저희가 성실신고 대상사업자라서 예외 없이 진행되는 부분 양해 부탁드립니다.", kw:"현금영수증 필수 성실신고"},
+
+  // ── AS/하자 ──
+  {cat:"AS/하자", title:"바닥이 들뜨거나 소리가 나요", body:"불편을 드려 죄송합니다. 사진 몇 장만 보내주시면 상태 확인 후 AS 일정 빠르게 안내드리겠습니다. 시공 후 하자는 보증기간 내 무상 처리됩니다.", kw:"들뜸 소리 하자 AS"},
+  {cat:"AS/하자", title:"철거 중 기존 바닥재에 흔적이 생겼어요", body:"이번 현장과 같이 기존 걸레받이를 그대로 살리면서 철거를 진행하는 작업은, 구조상 기존 바닥재를 걸레받이가 물고 있는 형태라 철거 과정에서도 굉장히 까다롭고 손이 많이 가는 작업입니다. 작업자분들께서 최대한 조심스럽게 진행하셨으나, 아무리 주의를 기울여도 철거 중에 기존 바닥재가 예상치 못하게 튀거나 자극을 주어 미세한 흔적이 남는 경우가 간혹 발생합니다.\n\n이 부분도 철거팀에게 요청해둔 상태이니 답변 오는대로 전화드릴게요.", kw:"철거 바닥재 손상 흔적 걸레받이 AS"},
+  {cat:"AS/하자", title:"하자 접수는 어떻게 하나요?", body:"하자 부위 사진과 현상(들뜸, 소음, 틈 벌어짐 등)을 함께 보내주시면 확인 후 AS 일정을 안내드려요. 보증기간 내 시공 하자는 무상으로 처리됩니다.", kw:"하자접수 방법 보증기간"},
+];
+
+/* ========================================================= */
+
+let ALL_DATA = [];
+let currentCat = "전체";
+
+function tryLogin(){
+  const val = document.getElementById('pwInput').value;
+  if(val === SITE_PASSWORD){
+    localStorage.setItem('cim_reply_auth','1');
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    loadData();
+  } else {
+    document.getElementById('loginError').textContent = '비밀번호가 틀렸습니다.';
+  }
+}
+document.getElementById('pwInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter') tryLogin();
+});
+if(localStorage.getItem('cim_reply_auth')==='1'){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadData();
+}
+
+function parseCSV(text){
+  // 간단한 CSV 파서 (쉼표/따옴표/줄바꿈 처리)
+  const rows=[];
+  let row=[],field='',inQuotes=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(text[i+1] === '"'){ field+='"'; i++; }
+        else inQuotes=false;
+      } else field+=c;
+    } else {
+      if(c === '"') inQuotes=true;
+      else if(c === ','){ row.push(field); field=''; }
+      else if(c === '\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else if(c === '\r'){}
+      else field+=c;
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  return rows.filter(r=>r.length && r.some(c=>c.trim()!==''));
+}
+
+async function loadData(){
+  const statusEl = document.getElementById('status');
+  if(!SHEET_CSV_URL){
+    ALL_DATA = SAMPLE_DATA;
+    statusEl.textContent = "샘플 데이터로 표시 중 (구글시트 미연결)";
+    setTimeout(()=>statusEl.textContent='', 3000);
+    buildCategories();
+    render();
+    return;
+  }
+  try{
+    const res = await fetch(SHEET_CSV_URL + (SHEET_CSV_URL.includes('?')?'&':'?') + 'cachebust=' + Date.now());
+    const text = await res.text();
+    const rows = parseCSV(text);
+    const header = rows[0].map(h=>h.trim());
+    const idxCat = header.findIndex(h=>h.includes('카테고리'));
+    const idxTitle = header.findIndex(h=>h.includes('제목')||h.includes('질문'));
+    const idxBody = header.findIndex(h=>h.includes('답변'));
+    const idxKw = header.findIndex(h=>h.includes('키워드'));
+    ALL_DATA = rows.slice(1).map(r=>({
+      cat: (r[idxCat]||'기타').trim(),
+      title: (r[idxTitle]||'').trim(),
+      body: (r[idxBody]||'').trim(),
+      kw: (idxKw>-1? r[idxKw]:'').trim()
+    })).filter(d=>d.title || d.body);
+    statusEl.textContent = '';
+  }catch(err){
+    console.error(err);
+    ALL_DATA = SAMPLE_DATA;
+    statusEl.textContent = "시트를 불러오지 못해 샘플 데이터로 표시 중입니다.";
+  }
+  buildCategories();
+  render();
+}
+
+function buildCategories(){
+  const cats = ["전체", ...new Set(ALL_DATA.map(d=>d.cat).filter(Boolean))];
+  const row = document.getElementById('catRow');
+  row.innerHTML = '';
+  cats.forEach(c=>{
+    const chip = document.createElement('div');
+    chip.className = 'cat-chip' + (c===currentCat?' active':'');
+    chip.textContent = c;
+    chip.onclick = ()=>{ currentCat=c; render(); buildCategories(); };
+    row.appendChild(chip);
+  });
+}
+
+function render(){
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  const list = document.getElementById('list');
+  const empty = document.getElementById('empty');
+  list.innerHTML = '';
+
+  let filtered = ALL_DATA.filter(d=>{
+    const matchesCat = currentCat==='전체' || d.cat===currentCat;
+    const haystack = (d.title+' '+d.body+' '+d.kw).toLowerCase();
+    const matchesQuery = !q || haystack.includes(q);
+    return matchesCat && matchesQuery;
+  });
+
+  empty.style.display = filtered.length? 'none':'block';
+
+  filtered.forEach((d,i)=>{
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.innerHTML = `
+      <div class="item-top">
+        <div class="item-title">${escapeHtml(d.title)}</div>
+        <div class="item-cat">${escapeHtml(d.cat)}</div>
+      </div>
+      <div class="item-body clamped">${escapeHtml(d.body)}</div>
+      <button class="copy-btn">복사하기</button>
+    `;
+    el.querySelector('.item-body').addEventListener('click', ()=>{
+      el.classList.toggle('expanded');
+      el.querySelector('.item-body').classList.toggle('clamped');
+    });
+    el.querySelector('.copy-btn').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      copyText(d.body, e.target);
+    });
+    list.appendChild(el);
+  });
+}
+
+function escapeHtml(str){
+  return (str||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function copyText(text, btn){
+  navigator.clipboard.writeText(text).then(()=>{
+    showToast();
+    if(btn){
+      const old = btn.textContent;
+      btn.textContent = '복사됨 ✓';
+      btn.classList.add('copied');
+      setTimeout(()=>{ btn.textContent = old; btn.classList.remove('copied'); }, 1500);
+    }
+  });
+}
+
+function showToast(){
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1400);
+}
+
+document.getElementById('searchBox').addEventListener('input', render);
+</script>
+</body>
+</html>

@@ -48,16 +48,23 @@
   }
   .print-bell:active{transform:scale(.95);}
   .urgent-bell{
-    display:none; align-items:center; gap:5px; border:1px solid rgba(232,171,60,.5);
-    background:var(--gold-soft); color:#7a5410; font-size:11.5px; font-weight:900;
-    padding:5px 11px; border-radius:100px; cursor:pointer; user-select:none;
+    display:none; align-items:center; gap:6px; border:1px solid var(--gold);
+    background:linear-gradient(100deg, var(--gold) 0%, var(--gold-2) 100%);
+    color:#3d2a06; font-size:12px; font-weight:900;
+    padding:7px 13px; border-radius:100px; cursor:pointer; user-select:none;
+    box-shadow:0 3px 10px rgba(232,171,60,.4);
+    animation:bellPulse 2s ease-in-out infinite;
   }
   .urgent-bell:active{transform:scale(.95);}
-  .urgent-bell .ub-icon{font-size:13px;}
+  .urgent-bell .ub-icon{font-size:14px;}
   .urgent-bell .ub-badge{
-    background:var(--accent); color:#fff; font-size:10px; font-weight:900;
-    min-width:16px; height:16px; border-radius:100px; display:inline-flex;
+    background:var(--navy); color:var(--gold-2); font-size:10px; font-weight:900;
+    min-width:17px; height:17px; border-radius:100px; display:inline-flex;
     align-items:center; justify-content:center; padding:0 4px;
+  }
+  @keyframes bellPulse{
+    0%,100%{box-shadow:0 3px 10px rgba(232,171,60,.4);}
+    50%{box-shadow:0 3px 16px rgba(232,171,60,.75);}
   }
   .urgent-panel{
     max-height:0; overflow:hidden; transition:max-height .25s ease;
@@ -65,13 +72,20 @@
   }
   .urgent-panel.open{max-height:900px; margin-bottom:12px;}
   .urgent-panel-inner{
-    background:#fffdf7; border:1px solid #eedcb8; border-left:4px solid var(--gold);
-    border-radius:var(--r-s); padding:12px 14px; font-size:12.5px; font-weight:700;
-    color:#5b4a28; line-height:1.75;
+    background:linear-gradient(135deg, #fff6e0 0%, #fdecc4 100%);
+    border:1.5px solid #f0c876; border-radius:var(--r-m);
+    padding:12px; box-shadow:0 2px 10px rgba(232,171,60,.22);
   }
-  .urgent-panel-inner b{color:var(--wood); font-weight:900;}
-  .urgent-panel-inner .up-item{margin-bottom:6px;}
+  .urgent-panel-inner .up-item{
+    display:flex; align-items:flex-start; gap:8px;
+    background:#fff; border:1px solid #f3ddab; border-left:3px solid var(--gold);
+    border-radius:9px; padding:9px 11px; margin-bottom:7px;
+    font-size:12.5px; font-weight:700; color:#4a3714; line-height:1.65;
+    box-shadow:0 1px 3px rgba(160,110,20,.08);
+  }
   .urgent-panel-inner .up-item:last-child{margin-bottom:0;}
+  .urgent-panel-inner .up-item .up-icon{font-size:13.5px; flex-shrink:0; line-height:1.5;}
+  .urgent-panel-inner b{color:var(--wood); font-weight:900;}
 
   /* ═══ 헤더 ═══ */
   header{
@@ -708,7 +722,7 @@
    더 받아와서 버전이 다르면 자동으로 새로고침한다.
    ★ 배포할 때마다 이 숫자만 하나씩 올려주면 됨 ★
    ============================================================ */
-const BUILD_VERSION = 'b22';
+const BUILD_VERSION = 'b23';
 function autoUpdateCheck(){
   try {
     const bustUrl = location.pathname + (location.search ? location.search + '&' : '?') + '_fresh=' + Date.now();
@@ -1194,7 +1208,7 @@ function renderNotices(){
   if (list.length > 0) {
     bell.style.display = 'inline-flex';
     badge.innerText = list.length;
-    panelInner.innerHTML = list.map(t => `<div class="up-item">🆕 ${renderNoticeText(t)}</div>`).join('');
+    panelInner.innerHTML = list.map(t => `<div class="up-item"><span class="up-icon">🆕</span><span>${renderNoticeText(t)}</span></div>`).join('');
     if (!urgentPanelAutoOpened) {
       urgentPanelAutoOpened = true;
       document.getElementById('urgentPanel').classList.toggle('open', urgentPanelOpen);

@@ -376,8 +376,15 @@
         </div>
         <div id="notice-links-rows" class="space-y-2"></div>
       </div>
-      <input type="file" id="notice-images-input" accept="image/*,application/pdf" multiple class="input-premium text-sm" onchange="handleNoticeImageSelect(event)">
-      <p class="text-[12px] text-[#B8B2A3] font-bold">사진은 위 textarea에 카톡처럼 붙여넣기(Ctrl+V)도 돼요. PDF는 5MB까지 첨부 가능해요.</p>
+      <input type="file" id="notice-images-input" accept="image/*,application/pdf,.xls,.xlsx,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" multiple class="input-premium text-sm" onchange="handleNoticeImageSelect(event)">
+      <p class="text-[12px] text-[#B8B2A3] font-bold">사진은 위 textarea에 카톡처럼 붙여넣기(Ctrl+V)도 돼요. PDF·엑셀 파일은 5MB까지 첨부 가능해요.</p>
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-[13px] font-black text-[#8B8477]">🏷️ 회사/카테고리 태그 (선택, 여러 개 추가 가능)</span>
+          <button type="button" onclick="addNoticeTagRow()" class="text-[12px] font-black text-[#8B5E34] bg-[#F6EFE6] px-2.5 py-1 rounded-lg"><i class="fas fa-plus mr-1"></i>추가</button>
+        </div>
+        <div id="notice-tags-rows" class="space-y-2"></div>
+      </div>
       <div id="notice-images-preview" class="grid grid-cols-3 gap-2"></div>
       <button id="notice-submit-btn" onclick="saveNotice()" class="w-full py-2.5 bg-[#2B2622] text-white rounded-xl text-sm font-black"><i class="fas fa-plus mr-1"></i> 공지 등록</button>
     </div>
@@ -863,23 +870,28 @@
       hint.innerHTML = '<i class="fas fa-grip-lines mr-1"></i>손잡이를 끌어서 순서를 바꿀 수 있어요';
       listEl.appendChild(hint);
     }
-    list.slice(0, 10).forEach(n => {
+    const PREVIEW_LIMIT = 20;
+    list.slice(0, PREVIEW_LIMIT).forEach(n => {
       const links = n.links || (n.link ? [{ title: '바로가기', url: n.link }] : []);
-      // 공지 맨 앞 [회사명] 태그를 읽어서, 그 회사만의 고유 색으로 구분되게 함 (재고 브랜드 색상이랑 같은 방식)
+      // 태그(회사/카테고리)를 읽어서, 그 태그만의 고유 색으로 구분되게 함 (재고 브랜드 색상이랑 같은 방식)
+      const tagList = getNoticeDisplayTags(n);
+      const tagColor = tagList.length ? getBrandColor(tagList[0]) : '#B8B2A3';
       const tagMatch = (n.text || '').match(/^\[(.+?)\]/);
-      const tagColor = tagMatch ? getBrandColor(tagMatch[1]) : '#B8B2A3';
 
       const row = document.createElement('div');
       row.dataset.noticeKey = n.key;
-      row.className = 'w-full px-3 py-2.5 flex items-center gap-2';
+      row.className = 'w-full px-3 py-2.5';
       row.style.borderLeft = `4px solid ${tagColor}`;
+
+      const topRow = document.createElement('div');
+      topRow.className = 'flex items-center gap-2';
 
       const handle = document.createElement('span');
       handle.className = 'notice-drag-handle text-[#CFC9BB] px-1 shrink-0';
       handle.style.touchAction = 'none';
       handle.style.cursor = 'grab';
       handle.innerHTML = '<i class="fas fa-grip-lines"></i>';
-      row.appendChild(handle);
+      topRow.appendChild(handle);
       attachNoticeDragHandle(handle, row, listEl);
 
       const textBtn = document.createElement('button');
@@ -887,14 +899,15 @@
       textBtn.onclick = () => openNoticeModal(n.key);
       textBtn.className = 'flex-1 min-w-0 text-left flex items-center gap-2 rounded-lg active:bg-[#F6EFE6] py-0.5';
       const firstLine = (n.text || '').split('\n')[0] || '공지';
+      // 대괄호 [ ] 안 글씨는 배지(뱃지) 스타일로 강조
       const displayLine = tagMatch
-        ? firstLine.replace(tagMatch[0], `<span style="color:${tagColor}; font-weight:900;">${tagMatch[0]}</span>`)
+        ? firstLine.replace(tagMatch[0], `<span style="display:inline-block; background:${tagColor}22; color:${tagColor}; font-weight:900; padding:1px 6px; border-radius:6px;">${tagMatch[1]}</span>`)
         : firstLine;
       textBtn.innerHTML = `
         <span class="text-[13px] font-bold text-[#3A342C] truncate">${displayLine}</span>
         <span class="text-[11px] text-[#B8B2A3] font-bold shrink-0">${n.ts ? new Date(n.ts).toLocaleDateString() : ''}</span>
       `;
-      row.appendChild(textBtn);
+      topRow.appendChild(textBtn);
       if (links.length) {
         const linkWrap = document.createElement('span');
         linkWrap.className = 'flex items-center gap-1 shrink-0';
@@ -906,16 +919,23 @@
           a.innerText = l.title || '바로가기';
           linkWrap.appendChild(a);
         });
-        row.appendChild(linkWrap);
+        topRow.appendChild(linkWrap);
+      }
+      row.appendChild(topRow);
+      if (tagList.length > 1) {
+        const chipsWrap = document.createElement('div');
+        chipsWrap.className = 'pl-6 pt-0.5';
+        chipsWrap.innerHTML = renderNoticeTagChips(tagList);
+        row.appendChild(chipsWrap);
       }
       listEl.appendChild(row);
     });
-    if (list.length > 10) {
+    if (list.length > PREVIEW_LIMIT) {
       const more = document.createElement('button');
       more.type = 'button';
       more.onclick = () => openNoticeModal();
       more.className = 'w-full text-center px-4 py-2 text-[12px] font-bold text-[#8B5E34] bg-[#F6EFE6]';
-      more.innerText = `+ ${list.length - 10}개 더 보기`;
+      more.innerText = `+ ${list.length - PREVIEW_LIMIT}개 더 보기`;
       listEl.appendChild(more);
     }
   }
@@ -949,12 +969,50 @@
     }).filter(l => l.url); // 주소 없는 행은 저장 안 함
   }
 
+  // ===== 공지 태그 (회사/카테고리별, 여러 개 추가 가능) =====
+  function addNoticeTagRow(value) {
+    const row = document.createElement('div');
+    row.className = 'flex gap-2';
+    row.setAttribute('data-notice-tag-row', '');
+    const safeVal = value ? String(value).replace(/"/g, '&quot;') : '';
+    row.innerHTML = `
+      <input type="text" class="notice-tag-value input-premium text-sm" style="flex:1" placeholder="예: 노바마루, 홈페이지, 재고 및 주문" value="${safeVal}">
+      <button type="button" onclick="this.closest('[data-notice-tag-row]').remove()" class="text-[#CFC9BB] hover:text-rose-500 px-2 shrink-0"><i class="fas fa-times"></i></button>
+    `;
+    document.getElementById('notice-tags-rows').appendChild(row);
+  }
+
+  function clearNoticeTagRows() {
+    document.getElementById('notice-tags-rows').innerHTML = '';
+  }
+
+  function getNoticeTagsFromForm() {
+    return Array.from(document.querySelectorAll('[data-notice-tag-row]')).map(row => row.querySelector('.notice-tag-value').value.trim()).filter(Boolean);
+  }
+
+  // 공지의 태그 목록을 구함: 직접 지정한 tags가 있으면 그걸 쓰고, 없으면 옛날처럼 맨 앞 [회사명]에서 하나 뽑아서 씀 (예전 공지들과 호환)
+  function getNoticeDisplayTags(n) {
+    if (n.tags && n.tags.length) return n.tags;
+    const tagMatch = (n.text || '').match(/^\[(.+?)\]/);
+    return tagMatch ? [tagMatch[1]] : [];
+  }
+
+  // 태그(들)을 뱃지 칩으로 렌더링 (각 태그는 고유 색상)
+  function renderNoticeTagChips(tags) {
+    if (!tags || !tags.length) return '';
+    return `<div class="flex flex-wrap gap-1.5 mb-1.5">${tags.map(t => {
+      const c = getBrandColor(t);
+      return `<span class="inline-block text-[11px] font-black px-2 py-0.5 rounded-full" style="background:${c}22; color:${c};">${t}</span>`;
+    }).join('')}</div>`;
+  }
+
   function openNoticeModal(focusKey) {
     editingNoticeKey = null;
     pendingNoticeImages = [];
     noticeDetailKey = focusKey || null;
     document.getElementById('notice-input').value = '';
     clearNoticeLinkRows();
+    clearNoticeTagRows();
     document.getElementById('notice-images-input').value = '';
     document.getElementById('notice-submit-btn').innerHTML = '<i class="fas fa-plus mr-1"></i> 공지 등록';
     renderNoticeImagePreview();
@@ -1076,14 +1134,18 @@
   function buildNoticeRow(n, draggable) {
       const row = document.createElement('div');
       row.dataset.noticeKey = n.key;
+      const tagList = getNoticeDisplayTags(n);
       const tagMatch = (n.text || '').match(/^\[(.+?)\]/);
-      const tagColor = tagMatch ? getBrandColor(tagMatch[1]) : null;
+      const tagColor = tagList.length ? getBrandColor(tagList[0]) : null;
       row.className = 'bg-white border border-[var(--line)] rounded-xl p-3 transition-all';
       if (tagColor) row.style.borderLeft = `4px solid ${tagColor}`;
+      const tagChipsHtml = renderNoticeTagChips(tagList);
       let imgsHtml = '';
       let pdfsHtml = '';
-      const imageItems = (n.images || []).filter(img => img.type !== 'pdf');
+      let filesHtml = '';
+      const imageItems = (n.images || []).filter(img => img.type !== 'pdf' && img.type !== 'file');
       const pdfItems = (n.images || []).filter(img => img.type === 'pdf');
+      const fileItems = (n.images || []).filter(img => img.type === 'file');
       if (imageItems.length === 1) {
         imgsHtml = `<img src="${imageItems[0].dataUrl}" data-notice-lightbox="${n.key}" data-idx="0" class="notice-lightbox-img w-full max-h-56 object-cover rounded-lg border border-[var(--line)] cursor-pointer mt-2">`;
       } else if (imageItems.length > 1) {
@@ -1097,14 +1159,18 @@
       if (pdfItems.length) {
         pdfsHtml = `<div class="flex flex-wrap gap-1.5 mt-2">${pdfItems.map(p => `<a href="${p.dataUrl}" target="_blank" class="inline-flex items-center gap-1.5 text-[13px] font-black text-[#3A342C] bg-[#F3F0EA] border border-[var(--line)] px-3 py-1.5 rounded-lg"><i class="fas fa-file-pdf text-[var(--rust)]"></i>${p.name}</a>`).join('')}</div>`;
       }
+      if (fileItems.length) {
+        filesHtml = `<div class="flex flex-wrap gap-1.5 mt-2">${fileItems.map(f => `<a href="${f.dataUrl}" download="${f.name}" class="inline-flex items-center gap-1.5 text-[13px] font-black text-[#3A342C] bg-[#EAF3E5] border border-[var(--line)] px-3 py-1.5 rounded-lg"><i class="fas fa-file-excel text-[#3F7D3F]"></i>${f.name}</a>`).join('')}</div>`;
+      }
       const links = n.links || (n.link ? [{ title: '바로가기', url: n.link }] : []); // 예전 단일 링크 방식도 계속 표시됨
       const linkHtml = links.length
         ? `<div class="flex flex-wrap gap-1.5 mt-2">${links.map(l => `<a href="${l.url}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-[13px] font-black text-white bg-[#8B5E34] px-3 py-1.5 rounded-lg"><i class="fas fa-arrow-up-right-from-square"></i>${l.title || '바로가기'}</a>`).join('')}</div>`
         : '';
       const displayText = tagMatch
-        ? (n.text || '').replace(tagMatch[0], `<span style="color:${tagColor}; font-weight:900;">${tagMatch[0]}</span>`)
+        ? (n.text || '').replace(tagMatch[0], `<span style="display:inline-block; background:${tagColor}22; color:${tagColor}; font-weight:900; padding:1px 7px; border-radius:6px;">${tagMatch[1]}</span>`)
         : (n.text || '');
       row.innerHTML = `
+        ${tagChipsHtml ? `<div class="mb-1.5">${tagChipsHtml}</div>` : ''}
         <div class="flex items-start gap-2">
           ${draggable ? '<span class="notice-drag-handle text-[#CFC9BB] px-1 pt-1 shrink-0" style="touch-action:none; cursor:grab;"><i class="fas fa-grip-lines"></i></span>' : ''}
           <p class="text-[14px] font-bold text-[#3A342C] whitespace-pre-wrap flex-1">${displayText}</p>
@@ -1112,6 +1178,7 @@
         ${linkHtml}
         ${imgsHtml}
         ${pdfsHtml}
+        ${filesHtml}
         <div class="flex justify-between items-center mt-2.5 pt-2.5 border-t border-[var(--line)]">
           <p class="text-[12px] text-[#B8B2A3] font-bold">${n.author||''} · ${n.ts ? new Date(n.ts).toLocaleDateString() : ''}</p>
           <div class="flex gap-1.5 shrink-0">
@@ -1136,6 +1203,8 @@
     clearNoticeLinkRows();
     const existingLinks = n.links || (n.link ? [{ title: '바로가기', url: n.link }] : []); // 예전 단일 링크 방식도 이어서 편집 가능
     existingLinks.forEach(l => addNoticeLinkRow(l.title, l.url));
+    clearNoticeTagRows();
+    getNoticeDisplayTags(n).forEach(t => addNoticeTagRow(t));
     document.getElementById('notice-submit-btn').innerHTML = '<i class="fas fa-save mr-1"></i> 수정 저장';
     renderNoticeImagePreview();
     document.querySelector('#notice-modal .p-3.border-b').scrollIntoView({ behavior: 'smooth' });
@@ -1157,6 +1226,18 @@
     });
   }
 
+  // 엑셀/CSV 파일 판별: MIME 타입이 브라우저마다 다르게 잡히는 경우가 많아서 확장자로도 같이 확인
+  function isSpreadsheetFile(file) {
+    const excelTypes = [
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
+      'text/csv'
+    ];
+    if (excelTypes.includes(file.type)) return true;
+    return /\.(xlsx|xls|csv)$/i.test(file.name || '');
+  }
+
   async function processNoticeFiles(files) {
     if (!files.length) return;
     showToast('파일 처리 중...');
@@ -1166,9 +1247,15 @@
           if (file.size > 5 * 1024 * 1024) { showToast('PDF는 5MB까지만 첨부 가능해요: ' + file.name, true); continue; }
           const dataUrl = await readFileAsDataUrl(file);
           pendingNoticeImages.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2,7), name: file.name, dataUrl, type: 'pdf' });
+        } else if (isSpreadsheetFile(file)) {
+          if (file.size > 5 * 1024 * 1024) { showToast('엑셀 파일은 5MB까지만 첨부 가능해요: ' + file.name, true); continue; }
+          const dataUrl = await readFileAsDataUrl(file);
+          pendingNoticeImages.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2,7), name: file.name, dataUrl, type: 'file' });
         } else if (file.type.startsWith('image/')) {
           const dataUrl = await compressImageFile(file, 1400, 0.78);
           pendingNoticeImages.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2,7), name: file.name || '이미지', dataUrl, type: 'image' });
+        } else {
+          showToast('지원하지 않는 파일 형식이에요: ' + file.name, true);
         }
       } catch(e) { showToast('파일 처리 실패: ' + file.name); }
     }
@@ -1221,6 +1308,14 @@
           </a>
           <button type="button" onclick="removeNoticePendingImage('${img.id}')" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[var(--rust)] text-white text-[11px] flex items-center justify-center"><i class="fas fa-times"></i></button>
         `;
+      } else if (img.type === 'file') {
+        cell.innerHTML = `
+          <a href="${img.dataUrl}" download="${img.name}" class="w-full h-20 rounded-lg border border-[var(--line)] bg-[#EAF3E5] flex flex-col items-center justify-center gap-0.5 px-1">
+            <i class="fas fa-file-excel text-[#3F7D3F] text-[20px]"></i>
+            <span class="text-[10px] font-bold text-[#8B8477] truncate w-full text-center">${img.name}</span>
+          </a>
+          <button type="button" onclick="removeNoticePendingImage('${img.id}')" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[var(--rust)] text-white text-[11px] flex items-center justify-center"><i class="fas fa-times"></i></button>
+        `;
       } else {
         cell.innerHTML = `
           <img src="${img.dataUrl}" class="w-full h-20 object-cover rounded-lg border border-[var(--line)]">
@@ -1248,26 +1343,29 @@
     const text = document.getElementById('notice-input').value.trim();
     if (!text) return showToast('공지 내용을 입력하세요');
     const links = getNoticeLinksFromForm();
+    const tags = getNoticeTagsFromForm();
     if (!checkImagesPayloadOk(pendingNoticeImages)) return;
     if (editingNoticeKey) {
       const key = editingNoticeKey;
-      fbDatabase.ref('notices/' + key).update({ text, links, link: null, images: pendingNoticeImages }).then(() => {
+      fbDatabase.ref('notices/' + key).update({ text, links, link: null, tags, images: pendingNoticeImages }).then(() => {
         showToast('공지 수정 완료');
         editingNoticeKey = null;
         pendingNoticeImages = [];
         document.getElementById('notice-input').value = '';
         clearNoticeLinkRows();
+        clearNoticeTagRows();
         document.getElementById('notice-submit-btn').innerHTML = '<i class="fas fa-plus mr-1"></i> 공지 등록';
         renderNoticeImagePreview();
         refreshNoticesFromServer();
       }).catch((err) => showToast('수정 실패: ' + (err && err.message ? err.message : err), true));
     } else {
-      const record = { text, links, images: pendingNoticeImages, author: getCurrentAuthor(), ts: Date.now() };
+      const record = { text, links, tags, images: pendingNoticeImages, author: getCurrentAuthor(), ts: Date.now() };
       fbDatabase.ref('notices').push(record).then(() => {
         showToast('공지 등록 완료');
         pendingNoticeImages = [];
         document.getElementById('notice-input').value = '';
         clearNoticeLinkRows();
+        clearNoticeTagRows();
         renderNoticeImagePreview();
         refreshNoticesFromServer();
       }).catch((err) => showToast('등록 실패: ' + (err && err.message ? err.message : err), true));

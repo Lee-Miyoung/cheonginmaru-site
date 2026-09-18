@@ -38,7 +38,7 @@
   }
   .wrap{max-width:700px; margin:0 auto; padding:0 0 84px;}
 
-  /* ═══ 긴급 공지 ═══ */
+  /* ═══ 새로운 소식 ═══ */
   .fn-title-row{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; flex-wrap:wrap;}
   .fn-title-actions{display:flex; align-items:center; gap:6px; margin-left:auto; flex-wrap:wrap;}
   .print-bell{
@@ -60,6 +60,8 @@
     min-width:16px; height:16px; border-radius:100px; display:inline-flex;
     align-items:center; justify-content:center; padding:0 4px;
   }
+  .urgent-bell .ub-caret{font-size:9px; transition:transform .2s;}
+  .urgent-bell.collapsed .ub-caret{transform:rotate(180deg);}
   @keyframes bellPulse{
     0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.28);}
     50%{box-shadow:0 0 0 5px rgba(220,38,38,0);}
@@ -413,18 +415,19 @@
   }
   .retry-btn:active{transform:scale(.95);}
   .help-link{
-    text-align:center; margin:26px 20px 0; padding:13px 16px;
-    font-size:11.5px; font-weight:700; color:#9a8f79;
-    border-top:1px dashed var(--line); cursor:pointer; line-height:1.6;
+    text-align:center; margin:28px 20px 0; padding:16px 18px;
+    font-size:14px; font-weight:900; color:var(--navy);
+    background:#fff; border:2px solid var(--navy); border-radius:100px;
+    cursor:pointer; line-height:1.5; box-shadow:var(--shadow-s);
   }
-  .help-link:active{color:var(--accent);}
+  .help-link:active{transform:scale(.97); background:var(--navy); color:var(--gold);}
   .top-help-link{
-    text-align:center; margin:16px 20px 14px; padding:9px 14px;
-    font-size:11px; font-weight:800; color:var(--accent);
-    background:var(--accent-soft); border:1px solid rgba(160,90,18,.25); border-radius:100px;
-    cursor:pointer; line-height:1.5;
+    text-align:center; margin:16px 20px 14px; padding:14px 18px;
+    font-size:14px; font-weight:900; color:var(--accent);
+    background:var(--accent-soft); border:1.5px solid rgba(160,90,18,.35); border-radius:100px;
+    cursor:pointer; line-height:1.5; box-shadow:var(--shadow-s);
   }
-  .top-help-link:active{transform:scale(.97);}
+  .top-help-link:active{transform:scale(.96);}
   .header-notice{
     margin-top:14px; padding:12px 14px;
     font-size:13px; color:#dbe3f0; font-weight:700; line-height:1.75; text-align:center;
@@ -656,7 +659,7 @@
           🖨️ 인쇄(모델포함)
         </button>
         <button type="button" class="urgent-bell" id="urgentBell" onclick="toggleUrgentPanel()">
-          <span class="ub-icon">🔔</span> 긴급 공지 <span class="ub-badge" id="ubBadge">1</span>
+          <span class="ub-icon">📰</span> 새로운 소식 <span class="ub-badge" id="ubBadge">1</span> <span class="ub-caret" id="ubCaret">▲</span>
         </button>
       </div>
     </div>
@@ -709,8 +712,8 @@
    더 받아와서 버전이 다르면 자동으로 새로고침한다.
    ★ 배포할 때마다 이 숫자만 하나씩 올려주면 됨 ★
    ============================================================ */
-const BUILD_VERSION = 'b21';
-(function autoUpdateCheck(){
+const BUILD_VERSION = 'b22';
+function autoUpdateCheck(){
   try {
     const bustUrl = location.pathname + (location.search ? location.search + '&' : '?') + '_fresh=' + Date.now();
     fetch(bustUrl, { cache: 'no-store' })
@@ -727,7 +730,29 @@ const BUILD_VERSION = 'b21';
       })
       .catch(()=>{});
   } catch(e){}
-})();
+}
+autoUpdateCheck(); // 페이지가 처음 열릴 때 1회 확인
+
+/* ============================================================
+   홈 화면 아이콘으로 다시 돌아왔을 때 최신 정보 자동 재확인
+   ── iOS/안드로이드 홈 화면 아이콘은 새로 여는 게 아니라, 배경에
+   멈춰있던 예전 화면을 그대로 다시 보여주는 경우가 많다(재실행 안 됨).
+   그래서 화면이 다시 보일 때마다(다른 앱 갔다 돌아옴, 탭 전환 등)
+   ① 코드 자체가 최신인지, ② 단가 데이터가 최신인지를 스스로 다시 확인한다.
+   ============================================================ */
+let lastResumeCheckAt = Date.now();
+function handlePageResume(){
+  const now = Date.now();
+  if (now - lastResumeCheckAt < 5000) return; // 너무 잦은 확인 방지
+  lastResumeCheckAt = now;
+  autoUpdateCheck();
+  refreshDataSilently();
+}
+document.addEventListener('visibilitychange', function(){
+  if (document.visibilityState === 'visible') handlePageResume();
+});
+window.addEventListener('pageshow', function(){ handlePageResume(); });
+window.addEventListener('focus', function(){ handlePageResume(); });
 
 /* ============================================================
    Firebase 초기화
@@ -770,9 +795,6 @@ function openInExternalBrowser(){
    ============================================================ */
 const FEED_URL = 'https://script.google.com/macros/s/AKfycbzyafI_d2PZiE_AYS4Y5f9uBQjK5ULCxX21hk2Z5BMDcbktNT9NnF8mUb_HhA8hJqy9Fw/exec';
 const CACHE_KEY = 'cm_price_cache_v6';
-// 보안 수정: 페이지 접속 시 URL의 ?t=토큰 값을 읽어서, 데이터 요청할 때마다 같이 실어 보낸다.
-// (Apps Script 쪽에서 이 토큰을 검사해야 실제로 의미가 있음 — Apps Script 코드도 같이 수정 필요)
-const PAGE_TOKEN = new URLSearchParams(window.location.search).get('t') || '';
 
 let RAW_DATA = [];
 let NOTICES = { info: [], urgentList: [] };
@@ -816,7 +838,7 @@ function fetchWithRetry(url, attemptsLeft){
 }
 
 // 백그라운드에서 최신 데이터 가져오기
-dataFetchPromise = fetchWithRetry(FEED_URL + '?t=' + encodeURIComponent(PAGE_TOKEN))
+dataFetchPromise = fetchWithRetry(FEED_URL)
   .then(json => {
     RAW_DATA = json.prices || [];
     NOTICES = json.notices || { info: [], urgentList: [] };
@@ -825,6 +847,27 @@ dataFetchPromise = fetchWithRetry(FEED_URL + '?t=' + encodeURIComponent(PAGE_TOK
     try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: json, ts: Date.now() })); } catch(e){}
     return json;
   });
+
+// 화면이 다시 보일 때(홈화면 아이콘에서 복귀 등) 화면을 비우지 않고
+// 조용히 최신 데이터만 다시 받아와서 갱신한다 (사용자가 보고 있던 화면이
+// "불러오는 중..."으로 순간 사라지지 않도록 retryLoad()와는 다르게 동작)
+function refreshDataSilently(){
+  fetchWithRetry(FEED_URL)
+    .then(json => {
+      RAW_DATA = json.prices || [];
+      NOTICES = json.notices || { info: [], urgentList: [] };
+      CATALOGS = json.catalogs || {};
+      PROCESSED_PATTERNS = groupData(RAW_DATA);
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: json, ts: Date.now() })); } catch(e){}
+      const gate = document.getElementById('gate');
+      if (gate && gate.classList.contains('hidden')) {
+        renderBrandFilter(PROCESSED_PATTERNS);
+        renderList();
+        renderNotices();
+      }
+    })
+    .catch(()=>{});
+}
 
 /* ============================================================
    접근 게이트 (동시 접속 지연 없는 비동기 권한 승인)
@@ -1112,7 +1155,7 @@ function onSearchInput(){
 function retryLoad(){
   const root = document.getElementById('listRoot');
   root.innerHTML = '<div class="empty">다시 불러오는 중입니다...</div>';
-  dataFetchPromise = fetchWithRetry(FEED_URL + '?t=' + encodeURIComponent(PAGE_TOKEN))
+  dataFetchPromise = fetchWithRetry(FEED_URL)
     .then(json => {
       RAW_DATA = json.prices || [];
       NOTICES = json.notices || { info: [], urgentList: [] };
@@ -1159,10 +1202,22 @@ function renderNoticeText(text){
   return t;
 }
 
-let urgentPanelOpen = false;
+// "새로운 소식"은 기본적으로 펼쳐진 상태로 보여준다.
+// 사용자가 한 번이라도 직접 열고 닫으면(urgentPanelUserSet) 그 뒤로는
+// 데이터가 새로고침돼도 사용자가 정한 상태(펼침/접힘)를 그대로 존중한다.
+let urgentPanelOpen = true;
+let urgentPanelUserSet = false;
+function setUrgentPanelState(open){
+  urgentPanelOpen = open;
+  document.getElementById('urgentPanel').classList.toggle('open', open);
+  const bell = document.getElementById('urgentBell');
+  if (bell) bell.classList.toggle('collapsed', !open);
+  const caret = document.getElementById('ubCaret');
+  if (caret) caret.textContent = open ? '▲' : '▼';
+}
 function toggleUrgentPanel(){
-  urgentPanelOpen = !urgentPanelOpen;
-  document.getElementById('urgentPanel').classList.toggle('open', urgentPanelOpen);
+  urgentPanelUserSet = true;
+  setUrgentPanelState(!urgentPanelOpen);
 }
 
 function renderNotices(){
@@ -1174,10 +1229,11 @@ function renderNotices(){
   if (list.length > 0) {
     bell.style.display = 'inline-flex';
     badge.innerText = list.length;
-    panelInner.innerHTML = list.map(t => `<div class="up-item">🚨 ${renderNoticeText(t)}</div>`).join('');
+    panelInner.innerHTML = list.map(t => `<div class="up-item">🆕 ${renderNoticeText(t)}</div>`).join('');
+    // 사용자가 아직 직접 접거나 펼친 적이 없다면 기본값(펼침)을 유지한다
+    setUrgentPanelState(urgentPanelUserSet ? urgentPanelOpen : true);
   } else {
     bell.style.display = 'none';
-    urgentPanelOpen = false;
     document.getElementById('urgentPanel').classList.remove('open');
   }
 

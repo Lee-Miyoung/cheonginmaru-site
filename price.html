@@ -38,7 +38,7 @@
   }
   .wrap{max-width:700px; margin:0 auto; padding:0 0 84px;}
 
-  /* ═══ 긴급 공지 ═══ */
+  /* ═══ 새로운 소식 ═══ */
   .fn-title-row{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; flex-wrap:wrap;}
   .fn-title-actions{display:flex; align-items:center; gap:6px; margin-left:auto; flex-wrap:wrap;}
   .print-bell{
@@ -48,33 +48,28 @@
   }
   .print-bell:active{transform:scale(.95);}
   .urgent-bell{
-    display:none; align-items:center; gap:5px; border:1px solid rgba(220,38,38,.35);
-    background:rgba(220,38,38,.08); color:#b91c1c; font-size:11.5px; font-weight:900;
+    display:none; align-items:center; gap:5px; border:1px solid rgba(232,171,60,.5);
+    background:var(--gold-soft); color:#7a5410; font-size:11.5px; font-weight:900;
     padding:5px 11px; border-radius:100px; cursor:pointer; user-select:none;
-    animation:bellPulse 1.8s ease-in-out infinite;
   }
   .urgent-bell:active{transform:scale(.95);}
   .urgent-bell .ub-icon{font-size:13px;}
   .urgent-bell .ub-badge{
-    background:#dc2626; color:#fff; font-size:10px; font-weight:900;
+    background:var(--accent); color:#fff; font-size:10px; font-weight:900;
     min-width:16px; height:16px; border-radius:100px; display:inline-flex;
     align-items:center; justify-content:center; padding:0 4px;
   }
-  @keyframes bellPulse{
-    0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.28);}
-    50%{box-shadow:0 0 0 5px rgba(220,38,38,0);}
-  }
   .urgent-panel{
-    max-height:0; overflow:hidden; transition:max-height .22s ease;
+    max-height:0; overflow:hidden; transition:max-height .25s ease;
     margin-bottom:0;
   }
-  .urgent-panel.open{max-height:400px; margin-bottom:12px;}
+  .urgent-panel.open{max-height:900px; margin-bottom:12px;}
   .urgent-panel-inner{
-    background:#fef2f2; border:1px solid #fecaca; border-left:4px solid #dc2626;
+    background:#fffdf7; border:1px solid #eedcb8; border-left:4px solid var(--gold);
     border-radius:var(--r-s); padding:12px 14px; font-size:12.5px; font-weight:700;
-    color:#991b1b; line-height:1.75;
+    color:#5b4a28; line-height:1.75;
   }
-  .urgent-panel-inner b{color:#7f1d1d; font-weight:900;}
+  .urgent-panel-inner b{color:var(--wood); font-weight:900;}
   .urgent-panel-inner .up-item{margin-bottom:6px;}
   .urgent-panel-inner .up-item:last-child{margin-bottom:0;}
 
@@ -419,12 +414,16 @@
   }
   .help-link:active{color:var(--accent);}
   .top-help-link{
-    text-align:center; margin:16px 20px 14px; padding:9px 14px;
-    font-size:11px; font-weight:800; color:var(--accent);
-    background:var(--accent-soft); border:1px solid rgba(160,90,18,.25); border-radius:100px;
-    cursor:pointer; line-height:1.5;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    text-align:center; margin:16px 20px 14px; padding:16px 18px;
+    font-size:15px; font-weight:900; color:#fff;
+    background:linear-gradient(100deg, var(--navy) 0%, var(--navy-3) 100%);
+    border:1px solid rgba(232,171,60,.4); border-radius:var(--r-m);
+    cursor:pointer; line-height:1.4;
+    box-shadow:var(--shadow-m);
   }
   .top-help-link:active{transform:scale(.97);}
+  .top-help-link .th-icon{font-size:19px;}
   .header-notice{
     margin-top:14px; padding:12px 14px;
     font-size:13px; color:#dbe3f0; font-weight:700; line-height:1.75; text-align:center;
@@ -642,7 +641,7 @@
   </header>
 
   <div class="top-help-link" onclick="retryLoad()">
-    ⟳ 데이터가 안 보이거나 이상하면 여기를 눌러 다시 불러오세요
+    <span class="th-icon">🔄</span> 최신 단가 새로고침 (바탕화면 아이콘으로 여셨다면 꼭 눌러주세요)
   </div>
 
   <div class="footnote">
@@ -656,7 +655,7 @@
           🖨️ 인쇄(모델포함)
         </button>
         <button type="button" class="urgent-bell" id="urgentBell" onclick="toggleUrgentPanel()">
-          <span class="ub-icon">🔔</span> 긴급 공지 <span class="ub-badge" id="ubBadge">1</span>
+          <span class="ub-icon">🆕</span> 새로운 소식 <span class="ub-badge" id="ubBadge">1</span>
         </button>
       </div>
     </div>
@@ -709,8 +708,8 @@
    더 받아와서 버전이 다르면 자동으로 새로고침한다.
    ★ 배포할 때마다 이 숫자만 하나씩 올려주면 됨 ★
    ============================================================ */
-const BUILD_VERSION = 'b21';
-(function autoUpdateCheck(){
+const BUILD_VERSION = 'b22';
+function autoUpdateCheck(){
   try {
     const bustUrl = location.pathname + (location.search ? location.search + '&' : '?') + '_fresh=' + Date.now();
     fetch(bustUrl, { cache: 'no-store' })
@@ -727,7 +726,8 @@ const BUILD_VERSION = 'b21';
       })
       .catch(()=>{});
   } catch(e){}
-})();
+}
+autoUpdateCheck();
 
 /* ============================================================
    Firebase 초기화
@@ -1124,6 +1124,25 @@ function retryLoad(){
   loadData();
 }
 
+// 화면이 다시 보일 때(백그라운드→포그라운드, 홈 화면 아이콘 복귀 등) 목록을 지우지 않고
+// 조용히 최신 데이터로만 갈아끼우는 버전. 사용자가 누르는 새로고침(retryLoad)과 달리
+// "다시 불러오는 중입니다" 화면으로 깜빡이지 않는다.
+function silentRefresh(){
+  dataFetchPromise = fetchWithRetry(FEED_URL + '?t=' + encodeURIComponent(PAGE_TOKEN))
+    .then(json => {
+      RAW_DATA = json.prices || [];
+      NOTICES = json.notices || { info: [], urgentList: [] };
+      CATALOGS = json.catalogs || {};
+      PROCESSED_PATTERNS = groupData(RAW_DATA);
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: json, ts: Date.now() })); } catch(e){}
+      renderBrandFilter(PROCESSED_PATTERNS);
+      renderList();
+      renderNotices();
+      return json;
+    })
+    .catch(()=>{});
+}
+
 async function loadData(){
   const root = document.getElementById('listRoot');
   if (PROCESSED_PATTERNS.length) {
@@ -1159,7 +1178,8 @@ function renderNoticeText(text){
   return t;
 }
 
-let urgentPanelOpen = false;
+let urgentPanelOpen = true;        // "새로운 소식"은 기본적으로 펼쳐서 보여줌
+let urgentPanelAutoOpened = false; // 페이지 로드당 한 번만 자동으로 펼치고, 이후엔 사용자가 접고 펴는 걸 그대로 존중함
 function toggleUrgentPanel(){
   urgentPanelOpen = !urgentPanelOpen;
   document.getElementById('urgentPanel').classList.toggle('open', urgentPanelOpen);
@@ -1174,10 +1194,13 @@ function renderNotices(){
   if (list.length > 0) {
     bell.style.display = 'inline-flex';
     badge.innerText = list.length;
-    panelInner.innerHTML = list.map(t => `<div class="up-item">🚨 ${renderNoticeText(t)}</div>`).join('');
+    panelInner.innerHTML = list.map(t => `<div class="up-item">🆕 ${renderNoticeText(t)}</div>`).join('');
+    if (!urgentPanelAutoOpened) {
+      urgentPanelAutoOpened = true;
+      document.getElementById('urgentPanel').classList.toggle('open', urgentPanelOpen);
+    }
   } else {
     bell.style.display = 'none';
-    urgentPanelOpen = false;
     document.getElementById('urgentPanel').classList.remove('open');
   }
 
@@ -1665,6 +1688,27 @@ async function printDetailed(){
 window.addEventListener('scroll', () => {
   document.getElementById('topBtn').classList.toggle('show', window.scrollY > 600);
 }, {passive:true});
+
+/* ============================================================
+   바탕화면 아이콘 / 백그라운드 복귀 시 최신 데이터 자동 새로고침
+   — 홈 화면에 추가해서 쓰는 경우, 아이폰·안드로이드 모두 앱을 완전히
+   종료했다 다시 여는 게 아니라 "멈춰있던 화면을 그대로 다시 보여주는"
+   경우가 많아서, JS가 다시 실행되지 않고 예전 데이터가 그대로 남아있게
+   된다. 화면이 다시 보일 때마다 데이터와 페이지 버전을 다시 확인해서
+   이 문제를 해결한다.
+   ============================================================ */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    autoUpdateCheck();
+    silentRefresh();
+  }
+});
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted) {
+    // 뒤로가기/캐시(bfcache)에서 복원된 화면은 통째로 새로 불러온다
+    location.reload();
+  }
+});
 </script>
 </body>
 </html>

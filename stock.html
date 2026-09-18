@@ -1160,7 +1160,7 @@
         pdfsHtml = `<div class="flex flex-wrap gap-1.5 mt-2">${pdfItems.map(p => `<a href="${p.dataUrl}" target="_blank" class="inline-flex items-center gap-1.5 text-[13px] font-black text-[#3A342C] bg-[#F3F0EA] border border-[var(--line)] px-3 py-1.5 rounded-lg"><i class="fas fa-file-pdf text-[var(--rust)]"></i>${p.name}</a>`).join('')}</div>`;
       }
       if (fileItems.length) {
-        filesHtml = `<div class="flex flex-wrap gap-1.5 mt-2">${fileItems.map(f => `<a href="${f.dataUrl}" download="${f.name}" class="inline-flex items-center gap-1.5 text-[13px] font-black text-[#3A342C] bg-[#EAF3E5] border border-[var(--line)] px-3 py-1.5 rounded-lg"><i class="fas fa-file-excel text-[#3F7D3F]"></i>${f.name}</a>`).join('')}</div>`;
+        filesHtml = `<div class="flex flex-wrap gap-1.5 mt-2">${fileItems.map(f => `<a href="javascript:void(0)" data-notice-file-download data-notice-file-key="${n.key}" data-notice-file-id="${f.id}" class="inline-flex items-center gap-1.5 text-[13px] font-black text-[#3A342C] bg-[#EAF3E5] border border-[var(--line)] px-3 py-1.5 rounded-lg"><i class="fas fa-file-excel text-[#3F7D3F]"></i>${f.name}<i class="fas fa-download text-[11px] ml-1 opacity-60"></i></a>`).join('')}</div>`;
       }
       const links = n.links || (n.link ? [{ title: '바로가기', url: n.link }] : []); // 예전 단일 링크 방식도 계속 표시됨
       const linkHtml = links.length
@@ -1225,6 +1225,50 @@
       reader.readAsDataURL(file);
     });
   }
+
+  // 엑셀/CSV 같은 파일은 <a download> 속성이 data: 주소에서는 휴대폰 브라우저(특히 아이폰 사파리)에서
+  // 제대로 안 먹는 경우가 많아서, 실제로 Blob 파일로 바꿔서 다운로드를 직접 실행시켜줌
+  function downloadDataUrl(dataUrl, filename) {
+    try {
+      const parts = dataUrl.split(',');
+      const mimeMatch = parts[0].match(/:(.*?);/);
+      const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+      const bstr = atob(parts[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+      const blob = new Blob([u8arr], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || 'file';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+    } catch (e) {
+      // 그래도 안 되면 최소한 새 탭에서라도 열어봄
+      window.open(dataUrl, '_blank');
+    }
+  }
+
+  // 엑셀/CSV 첨부 칩 클릭 시 다운로드 실행 (등록된 공지 목록 + 등록 전 미리보기 둘 다 이걸로 처리)
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-notice-file-download]');
+    if (!btn) return;
+    e.preventDefault();
+    const key = btn.dataset.noticeFileKey;
+    const id = btn.dataset.noticeFileId;
+    let img = null;
+    if (key === '__pending__') {
+      img = pendingNoticeImages.find(i => i.id === id);
+    } else {
+      const n = notices[key];
+      img = n && (n.images || []).find(i => i.id === id);
+    }
+    if (img) downloadDataUrl(img.dataUrl, img.name);
+    else showToast('파일을 찾을 수 없어요', true);
+  });
 
   // 엑셀/CSV 파일 판별: MIME 타입이 브라우저마다 다르게 잡히는 경우가 많아서 확장자로도 같이 확인
   function isSpreadsheetFile(file) {
@@ -1310,7 +1354,7 @@
         `;
       } else if (img.type === 'file') {
         cell.innerHTML = `
-          <a href="${img.dataUrl}" download="${img.name}" class="w-full h-20 rounded-lg border border-[var(--line)] bg-[#EAF3E5] flex flex-col items-center justify-center gap-0.5 px-1">
+          <a href="javascript:void(0)" data-notice-file-download data-notice-file-key="__pending__" data-notice-file-id="${img.id}" class="w-full h-20 rounded-lg border border-[var(--line)] bg-[#EAF3E5] flex flex-col items-center justify-center gap-0.5 px-1">
             <i class="fas fa-file-excel text-[#3F7D3F] text-[20px]"></i>
             <span class="text-[10px] font-bold text-[#8B8477] truncate w-full text-center">${img.name}</span>
           </a>

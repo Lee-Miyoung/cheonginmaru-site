@@ -186,7 +186,7 @@
     box-shadow:var(--shadow-s);
   }
   .print-note{
-    margin:0 0 10px; padding:9px 12px; background:#eef4fb;
+    margin:12px 0 0; padding:9px 12px; background:#eef4fb;
     border:1px solid #c9dbf0; border-radius:9px;
     font-size:11.5px; font-weight:700; color:#2c517d; line-height:1.6;
   }
@@ -702,11 +702,11 @@
         </button>
       </div>
     </div>
-    <div id="printNote" class="print-note" style="display:none">💡 인쇄는 모바일보다 컴퓨터에서 저장 후 출력하시는 게 더 안정적으로 나옵니다. 모바일에서는 레이아웃이 다르게 나올 수 있어요.</div>
     <div class="urgent-panel" id="urgentPanel">
       <div class="urgent-panel-inner" id="urgentPanelInner"></div>
     </div>
     <div id="infoList"></div>
+    <div id="printNote" class="print-note" style="display:none">💡 인쇄는 모바일보다 컴퓨터에서 저장 후 출력하시는 게 더 안정적으로 나옵니다. 모바일에서는 레이아웃이 다르게 나올 수 있어요.</div>
     <div class="fn-highlight">🔔 단가 변경 시 이 페이지가 자동으로 최신화됩니다 — 이 링크를 즐겨찾기 해두세요.</div>
   </div>
 
@@ -752,7 +752,7 @@
    더 받아와서 버전이 다르면 자동으로 새로고침한다.
    ★ 배포할 때마다 이 숫자만 하나씩 올려주면 됨 ★
    ============================================================ */
-const BUILD_VERSION = 'b26';
+const BUILD_VERSION = 'b28';
 function autoUpdateCheck(){
   try {
     const bustUrl = location.pathname + (location.search ? location.search + '&' : '?') + '_fresh=' + Date.now();
@@ -1159,7 +1159,11 @@ function onSearchInput(){
 function retryLoad(){
   const root = document.getElementById('listRoot');
   root.innerHTML = '<div class="empty">다시 불러오는 중입니다...</div>';
-  dataFetchPromise = fetchWithRetry(FEED_URL + '?t=' + encodeURIComponent(PAGE_TOKEN))
+  // 사용자가 직접 누르는 새로고침은 &nocache=1을 붙여서, Apps Script 서버 쪽
+  // 3분짜리 캐시(CacheService)까지 완전히 건너뛰고 시트에서 바로 최신값을 읽어온다.
+  // (그냥 URL에 _ts 값만 바꿔서는 브라우저 캐시만 건너뛸 뿐, Apps Script 자체
+  // 캐시는 그대로 남아있어서 "새로고침해도 옛날 값이 나온다"는 문제의 원인이었음)
+  dataFetchPromise = fetchWithRetry(FEED_URL + '?t=' + encodeURIComponent(PAGE_TOKEN) + '&nocache=1')
     .then(json => {
       RAW_DATA = json.prices || [];
       NOTICES = json.notices || { info: [], urgentList: [] };
@@ -1175,7 +1179,9 @@ function retryLoad(){
 // 조용히 최신 데이터로만 갈아끼우는 버전. 사용자가 누르는 새로고침(retryLoad)과 달리
 // "다시 불러오는 중입니다" 화면으로 깜빡이지 않는다.
 function silentRefresh(){
-  dataFetchPromise = fetchWithRetry(FEED_URL + '?t=' + encodeURIComponent(PAGE_TOKEN))
+  // 홈 화면 아이콘 복귀 등 "다시 화면이 보일 때" 자동으로 도는 새로고침도
+  // 서버 캐시(최대 3분)를 건너뛰고 진짜 최신값을 받아오도록 nocache=1을 함께 보낸다.
+  dataFetchPromise = fetchWithRetry(FEED_URL + '?t=' + encodeURIComponent(PAGE_TOKEN) + '&nocache=1')
     .then(json => {
       RAW_DATA = json.prices || [];
       NOTICES = json.notices || { info: [], urgentList: [] };

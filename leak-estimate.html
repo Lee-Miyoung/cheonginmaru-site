@@ -8,8 +8,8 @@
 
   :root{
     --page-bg:#e9ebef; --paper:#ffffff; --ink:#1a1d23; --ink-soft:#4b515c; --ink-faint:#889099;
-    --brand:#1f3864; --brand-2:#2f5496; --accent-bg:#eef2fb; --line:#d7dbe3;
-    --highlight:#fff7d6; --highlight-border:#e8d78a;
+    --brand:#17345f; --brand-2:#315b91; --accent-bg:#f2f5f9; --line:#d9dee7;
+    --wood:#b89164; --wood-soft:#f5f0e9; --highlight:#fbf6e8; --highlight-border:#e4d6ad;
     --warn-bg:#fdf1f1; --warn-border:#e8b8b8; --warn-ink:#8a2f2f;
     --edit-hover: rgba(47,84,150,.07); --edit-focus: rgba(47,84,150,.14);
     --shadow: 0 10px 30px rgba(20,24,33,.12);
@@ -59,36 +59,90 @@
   }
   .error-banner.show{ display:block; }
 
-  .sheet{ max-width:820px; margin:0 auto 28px; background:var(--paper); color:#1a1d23; box-shadow:var(--shadow); border-radius:10px; padding:52px 48px 44px; }
+  .sheet{ max-width:820px; margin:0 auto 28px; background:var(--paper); color:#1a1d23; box-shadow:0 10px 28px rgba(23,52,95,.10); border-radius:8px; padding:46px 46px 38px; }
 
-  .brand-row{ display:flex; justify-content:space-between; align-items:flex-end; border-bottom:3px solid var(--brand); padding-bottom:14px; margin-bottom:22px; }
+  .brand-row{ position:relative; display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--brand); padding-bottom:12px; margin-bottom:18px; }
+  .brand-row:after{ content:''; position:absolute; left:0; bottom:-2px; width:78px; height:2px; background:var(--wood); }
   .brand-logo-row{ display:flex; align-items:center; gap:12px; }
-  .brand-logo-img{ height:38px; width:auto; max-width:150px; object-fit:contain; display:block; }
-  .brand-name{ font-size:15px; font-weight:900; color:var(--brand); letter-spacing:.5px; }
-  .brand-tag{ font-size:11px; color:#889099; margin-top:2px; }
-  .doc-tag{ font-size:11px; color:#889099; text-align:right; line-height:1.65; }
+  .brand-logo-img{ height:40px; width:auto; max-width:160px; object-fit:contain; display:block; }
+  .brand-name{ font-size:15px; font-weight:900; color:var(--brand); letter-spacing:-.1px; }
+  .brand-tag{ font-size:10.5px; color:#7c8490; margin-top:3px; letter-spacing:-.1px; }
+  .brand-specialty{ font-size:9.8px; color:var(--wood); font-weight:700; margin-top:3px; letter-spacing:.1px; }
+  .doc-tag{ font-size:10.5px; color:#727b87; text-align:right; line-height:1.7; }
+  .doc-tag [data-k$='est-no']{ color:var(--brand); font-weight:700; letter-spacing:.15px; }
 
-  .doc-title{ text-align:center; font-size:26px; font-weight:900; color:var(--brand); margin:6px 0 2px; }
-  .doc-sub{ text-align:center; font-size:12px; color:#889099; margin-bottom:22px; }
+  .doc-title{ text-align:center; font-size:26px; font-weight:900; color:var(--brand); margin:4px 0 2px; letter-spacing:-1px; }
+  .doc-sub{ text-align:center; font-size:11px; color:#8a919b; margin-bottom:17px; letter-spacing:-.1px; }
   .doc-sub b{ color:#889099; }
 
   table.infogrid{ width:100%; border-collapse:collapse; margin-bottom:22px; font-size:12.5px; }
-  table.infogrid td{ border:1px solid var(--line); padding:9px 12px; vertical-align:middle; }
-  table.infogrid td.lbl{ background:var(--accent-bg); font-weight:700; color:var(--brand-2); width:110px; white-space:nowrap; text-align:center; vertical-align:middle; letter-spacing:.2px; }
-  td.fillme{ background:var(--highlight); }
+  table.infogrid td{ border:1px solid var(--line); padding:9px 11px; vertical-align:middle; line-height:1.45; }
+  table.infogrid td.lbl{ background:#f0f3f7; font-weight:700; color:var(--brand); width:96px; white-space:nowrap; text-align:center; vertical-align:middle; letter-spacing:-.1px; }
+  td.fillme{ background:var(--highlight); box-shadow:inset 3px 0 0 #dfc989; }
   .recipient-wrap, .ref-wrap{ display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; }
   .schedule-wrap{ display:grid; grid-template-columns:repeat(3,max-content); align-items:center; gap:8px 14px; }
   .recipient-wrap{ min-height:34px; }
   .recipient-honorific, .schedule-item{ white-space:nowrap; }
   .schedule-wrap .doc-date{ min-width:126px; }
-  .trade-footer-box{ margin-top:14px; padding:12px 14px; border:1px solid var(--line); border-radius:8px; background:#f8fafc; }
+  .trade-footer-box{ margin-top:14px; padding:10px 12px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); border-radius:0; background:#fff; }
   .trade-footer-box .row{ font-size:12.5px; color:var(--ink-soft); }
   .trade-footer-box .row + .row{ margin-top:6px; }
   .trade-footer-box b{ color:var(--brand); }
+  .recipient-type-select{
+    font-family:inherit; font-size:11.5px; font-weight:700; color:var(--brand);
+    border:1px solid #c9d2df; border-radius:4px; padding:7px 26px 7px 9px; background:#f7f9fc; min-width:86px;
+  }
+  .trade-sheet{ padding:42px 42px 34px; }
+  .trade-sheet .brand-row{ margin-bottom:18px; }
+  .trade-sheet .doc-title{ font-size:26px !important; letter-spacing:-1px; margin-top:7px; }
+  .trade-sheet .doc-sub{ font-size:10.8px; margin-bottom:15px; }
+  .trade-sheet table.infogrid{ font-size:12.5px; margin-bottom:13px; }
+  .trade-sheet table.infogrid td{ padding:8px 10px; }
+  .trade-sheet table.infogrid td.lbl{ width:92px; font-size:11.8px; }
+  .trade-sheet .client-picker-trigger{ font-size:13px; min-height:34px; padding:7px 10px; }
+  .trade-sheet .doc-input-inline{ font-size:13px; padding:6px 8px; }
+  .trade-sheet input[type="tel"].doc-input-inline{ width:132px; }
+  .trade-sheet .schedule-item{ display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--ink-soft); }
+  .trade-sheet table.items{ font-size:11.2px; }
+  .trade-sheet table.items th{ padding:8px 5px; font-size:10.8px; }
+  .trade-sheet table.items td{ padding:7px 5px; line-height:1.4; }
+  .trade-sheet .notes{ margin-top:12px; padding:11px 14px; }
+  .trade-sheet .notes .h{ margin-bottom:6px; }
+  .trade-sheet .notes li{ font-size:10.8px; line-height:1.55; margin-bottom:2px; }
+  .trade-sheet .trade-footer-box{ margin-top:10px; }
+
+  .estimate-browser{
+    max-width:820px; margin:0 auto 12px; background:#fbfcfe; border:1px solid #d4dbe5; border-radius:8px;
+    box-shadow:0 5px 16px rgba(23,52,95,.06); padding:12px 14px;
+  }
+  .estimate-browser-head{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .estimate-browser-title{ font-size:12.5px; font-weight:900; color:var(--brand); margin-right:6px; padding-left:8px; border-left:3px solid var(--wood); }
+  .estimate-browser input, .estimate-browser select{
+    font-family:inherit; font-size:12.5px; border:1px solid var(--line); border-radius:7px; background:#fff; padding:8px 10px;
+  }
+  .estimate-browser input{ flex:1; min-width:260px; }
+  .estimate-browser select{ min-width:92px; }
+  .estimate-browser-results{ margin-top:10px; max-height:280px; overflow:auto; }
+  .estimate-browser-empty{ font-size:12px; color:var(--ink-faint); padding:10px 4px; text-align:center; }
+  .estimate-group{ border-top:1px solid #e9ecf2; padding:9px 0 3px; }
+  .estimate-group:first-child{ border-top:none; padding-top:2px; }
+  .estimate-group-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:5px; }
+  .estimate-group-name{ font-size:12.5px; font-weight:800; color:var(--brand); }
+  .estimate-group-count{ font-size:10.5px; color:var(--ink-faint); }
+  .estimate-result-row{
+    width:100%; display:grid; grid-template-columns:92px 1fr 118px; gap:8px; align-items:center;
+    border:none; background:#f8fafc; padding:7px 9px; margin-bottom:5px; border-radius:6px; cursor:pointer; text-align:left; font-family:inherit;
+  }
+  .estimate-result-row:hover{ background:var(--accent-bg); }
+  .estimate-result-no{ font-size:10.5px; color:var(--ink-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .estimate-result-main{ min-width:0; }
+  .estimate-result-site{ font-size:11.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .estimate-result-sub{ font-size:10.5px; color:var(--ink-faint); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .estimate-result-amt{ font-size:11.5px; font-weight:800; color:var(--brand); text-align:right; white-space:nowrap; }
 
   table.items{ width:100%; border-collapse:collapse; font-size:12px; margin-bottom:4px; }
-  table.items th{ background:var(--brand-2); color:#fff; font-weight:700; padding:9px 6px; text-align:center; border:1px solid var(--brand-2); }
-  table.items td{ border:1px solid var(--line); padding:7px 6px; vertical-align:middle; }
+  table.items th{ background:var(--brand); color:#fff; font-weight:700; padding:9px 6px; text-align:center; border:1px solid var(--brand); letter-spacing:-.1px; }
+  table.items td{ border:1px solid #dfe3e9; padding:7px 6px; vertical-align:middle; line-height:1.4; }
   table.items td.sec{ background:var(--accent-bg); font-weight:700; text-align:center; color:var(--brand); }
   table.items td.num{ text-align:right; white-space:nowrap; }
   table.items td.center{ text-align:center; }
@@ -113,9 +167,16 @@
   .totals td.tlabel{ text-align:right; font-weight:700; background:var(--accent-bg); color:var(--brand-2);}
   .totals td.tval{ text-align:right; width:150px; font-variant-numeric: tabular-nums; }
   .totals tr.grand td{ background:var(--brand); color:#fff; font-weight:900; font-size:14px; }
+  .trade-totals{ table-layout:fixed; }
+  .trade-totals tr.grand td{ padding:9px 14px; }
+  .trade-totals td.tlabel{ width:14%; text-align:center; background:#102b50 !important; }
+  .trade-totals td.tval{ width:28.66%; text-align:center; border-left:1px solid rgba(255,255,255,.28); }
+  .trade-totals .sum-flex{ display:flex; align-items:center; justify-content:center; gap:10px; white-space:nowrap; }
+  .trade-totals .sum-key{ font-size:11px; opacity:.82; font-weight:500; }
+  .trade-totals .sum-num{ font-size:14.5px; font-weight:900; font-variant-numeric:tabular-nums; letter-spacing:-.1px; }
 
-  .notes{ margin-top:22px; background:var(--accent-bg); border:1px solid var(--line); border-radius:8px; padding:14px 18px; }
-  .notes .h{ font-weight:700; color:var(--brand); font-size:12.5px; margin-bottom:8px; }
+  .notes{ margin-top:18px; background:#f7f8fa; border:1px solid #dde2e8; border-radius:4px; padding:13px 15px; }
+  .notes .h{ font-weight:900; color:var(--brand); font-size:12px; margin-bottom:7px; padding-left:8px; border-left:3px solid var(--wood); }
   .notes ul{ margin:0; padding-left:18px; }
   .notes li{ font-size:11.5px; color:var(--ink-soft); line-height:1.65; }
 
@@ -259,6 +320,7 @@
 
   /* ---- 이미지 저장용 정리 스타일 ---- */
   .image-export .trade-search-bar,
+  .image-export .estimate-browser,
   .image-export #tradeSearchHint,
   .image-export #tradeSearchResults,
   .image-export .row-del,
@@ -285,7 +347,7 @@
   @media print{
     *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
     body{ background:#fff; padding:0; font-size:12px; }
-    .toolbar, .tabs, .meta-bar, .error-banner, #staffBadge{ display:none !important; }
+    .toolbar, .tabs, .meta-bar, .estimate-browser, .error-banner, #staffBadge{ display:none !important; }
     .sheet{ box-shadow:none; border-radius:0; margin:0 auto; padding:5mm 8mm 4mm; max-width:none; }
     .sheet.page-break{ page-break-before:always; }
     [contenteditable="true"]{ background:none!important; box-shadow:none!important; }
@@ -295,12 +357,14 @@
     .seal-stamp{ mix-blend-mode:normal; height:36px; }
 
     /* 편집용 UI 요소는 인쇄에서 완전히 제거 */
-    .accordion, .trade-search-bar, #tradeSearchHint, #tradeSearchResults, .row-del, .add-row-btn{ display:none !important; }
+    .accordion, .trade-search-bar, .estimate-browser, #tradeSearchHint, #tradeSearchResults, .row-del, .add-row-btn{ display:none !important; }
     .li-note{ font-size:9.5px; color:#6b7280; margin-top:1px; }
     .li-note:empty{ display:none !important; margin-top:0 !important; }
     .client-picker-trigger{ border:none !important; background:none !important; padding:0 !important; min-width:0 !important; font-size:11px !important; font-weight:400 !important; color:#1a1d23 !important; }
     .client-picker-trigger .arrow, .client-picker-trigger span:last-child{ display:none !important; }
     .client-picker-panel{ display:none !important; }
+    .recipient-type-select{ border:none !important; background:none !important; padding:0 2px !important; appearance:none !important; -webkit-appearance:none !important; font-size:10.5px !important; color:var(--brand) !important; }
+    .recipient-type-select{ border:none !important; background:none !important; padding:0 !important; appearance:none !important; -webkit-appearance:none !important; font-size:11px !important; }
 
     /* 여백은 압축하되, 읽기 편한 글자크기는 유지 */
     .brand-row{ padding-bottom:5px; margin-bottom:8px; }
@@ -318,6 +382,10 @@
     .totals{ font-size:11px; }
     .totals td{ padding:3px 9px; }
     .totals tr.grand td{ font-size:12px; }
+    .trade-totals tr.grand td{ padding:4px 8px; }
+    .trade-totals .sum-flex{ gap:6px; }
+    .trade-totals .sum-key{ font-size:10px; }
+    .trade-totals .sum-num{ font-size:12px; }
     .pyeong-toggle{ margin:3px 0 5px; padding:3px 7px; font-size:10px; }
     .pyeong-toggle input{ width:11px; height:11px; }
 
@@ -420,8 +488,8 @@
     <div class="grp"><label>담당 직원</label><input id="metaManagerTrade" placeholder="담당 직원명" size="8"></div>
     <div class="grp"><label>진행상태</label>
       <select id="metaStatusTrade">
-        <option value="작성중">작성중</option><option value="발송됨">거래처 발송됨</option>
-        <option value="확인됨">거래처 확인</option><option value="계약전환">계약 전환</option>
+        <option value="작성중">작성중</option><option value="발송됨">발송됨</option>
+        <option value="확인됨">확인됨</option><option value="계약전환">계약 전환</option>
         <option value="보류">보류</option><option value="취소">취소</option>
       </select>
     </div>
@@ -636,6 +704,14 @@
 <!-- ============ TAB 2 : 일반 견적 (소비자/거래처 공용, 1페이지) ================ -->
 <!-- ================================================================ -->
 <div id="tabTrade" style="display:none;">
+<div class="estimate-browser" id="tradeEstimateBrowser">
+  <div class="estimate-browser-head">
+    <span class="estimate-browser-title">견적 찾기</span>
+    <select id="tradeArchiveType" onchange="renderTradeArchive()"><option value="all">전체</option><option value="거래처">거래처</option><option value="소비자">소비자</option></select>
+    <input id="tradeArchiveSearch" placeholder="거래처/소비자명 · 전화번호 · 현장주소 · 견적번호 검색" oninput="renderTradeArchive()">
+  </div>
+  <div class="estimate-browser-results" id="tradeArchiveResults"><div class="estimate-browser-empty">저장된 견적을 불러오는 중입니다.</div></div>
+</div>
 <div class="sheet trade-sheet">
   <div class="brand-row">
     <div class="brand-logo-row">
@@ -643,19 +719,21 @@
       <div>
         <div class="brand-name">청인마루</div>
         <div class="brand-tag">인천 연수구 송도미래로 30, E동 1505호</div>
+        <div class="brand-specialty">마루·벽 시공 전문 · 공식 대리점</div>
       </div>
     </div>
     <div class="doc-tag">견적번호 <span contenteditable="true" data-k="tr-est-no">TR-2026-0929-01</span><br>발행일 <input type="date" class="doc-date" data-k="tr-date" value="2026-09-29"></div>
   </div>
 
   <div class="doc-title" style="font-size:22px;">견적서</div>
-  <div class="doc-sub">소비자 · 거래처 공용 / 아래와 같이 견적합니다.</div>
+  <div class="doc-sub">현장 조건과 선택 자재를 기준으로 산출한 견적입니다.</div>
 
   <table class="infogrid">
     <tr>
       <td class="lbl">수신</td>
       <td>
         <div class="recipient-wrap">
+          <select class="recipient-type-select" id="tradeRecipientType" data-k="tr-recipient-type" onchange="onTradeRecipientTypeChange()"><option value="거래처">거래처</option><option value="소비자">소비자</option></select>
           <div class="client-picker" id="clientPickerTrade">
             <button type="button" class="client-picker-trigger" onclick="toggleClientPicker('Trade')" style="min-width:190px;">
               <span id="clientPickerTradeLabel" class="ph">거래처명 선택</span><span>▾</span>
@@ -667,11 +745,11 @@
             </div>
           </div>
           <input type="hidden" data-k="tr-customer" id="trCustomerHidden" value="[거래처명]">
-          <span class="recipient-honorific">귀중</span>
+          <span class="recipient-honorific" id="tradeHonorific">귀중</span>
         </div>
       </td>
-      <td class="lbl">참고/연락처</td>
-      <td><div class="ref-wrap"><input type="text" class="doc-input-inline" data-k="tr-ref-name" placeholder="담당자명/성함" value=""><input type="tel" class="doc-input-inline tel-mobile" data-k="tr-ref-phone" placeholder="010-0000-0000" value="010-"></div></td>
+      <td class="lbl" id="tradeRefLabel">담당자/참고</td>
+      <td><div class="ref-wrap"><input type="text" class="doc-input-inline" id="tradeRefName" data-k="tr-ref-name" placeholder="담당자명" value=""><input type="tel" class="doc-input-inline tel-mobile" id="tradeRefPhone" data-k="tr-ref-phone" placeholder="010-0000-0000" value="010-"></div></td>
     </tr>
     <tr>
       <td class="lbl">현장</td>
@@ -709,12 +787,12 @@
     <tbody id="tradeItemsBody"></tbody>
   </table>
 
-  <table class="totals">
+  <table class="totals trade-totals">
     <tr class="grand">
-      <td class="tlabel" style="width:auto">합계</td>
-      <td class="tval">공급가 <span id="tradeSupplySum">0</span></td>
-      <td class="tval">세액 <span id="tradeVatSum">0</span></td>
-      <td class="tval">금액 <span id="tradeGrandSum">0</span></td>
+      <td class="tlabel">합계</td>
+      <td class="tval"><div class="sum-flex"><span class="sum-key">공급가</span><span class="sum-num" id="tradeSupplySum">0</span></div></td>
+      <td class="tval"><div class="sum-flex"><span class="sum-key">세액</span><span class="sum-num" id="tradeVatSum">0</span></div></td>
+      <td class="tval"><div class="sum-flex"><span class="sum-key">금액</span><span class="sum-num" id="tradeGrandSum">0</span></div></td>
     </tr>
   </table>
 
@@ -1219,6 +1297,9 @@ function applyTradeDocData(data){
     var k = el.getAttribute('data-k');
     if(Object.prototype.hasOwnProperty.call(data, k)) setFieldValue(el, data[k]);
   });
+  var typeEl = document.getElementById('tradeRecipientType');
+  if(typeEl && !data['tr-recipient-type']) typeEl.value = '거래처';
+  onTradeRecipientTypeChange(false);
   ensureEstimateNo('trade', false);
 }
 function tradeLocalKey(){ return 'wd-doc-v4-trade-' + (tradeEstimateId || 'draft'); }
@@ -1421,7 +1502,11 @@ function getTradeMeta(){
     estimateId: tradeEstimateId,
     estimateNo: docData['tr-est-no'] || '',
     customerName: (docData['tr-customer']||'').replace(/\[.*?\]/g,'').trim(),
+    recipientType: docData['tr-recipient-type'] || '거래처',
+    phone: docData['tr-ref-phone'] || '',
+    refName: docData['tr-ref-name'] || '',
     address: (docData['tr-site']||'').replace(/\[.*?\]/g,'').trim(),
+    issueDate: docData['tr-date'] || '',
     manager: document.getElementById('metaManagerTrade').value || '',
     status: document.getElementById('metaStatusTrade').value || '작성중',
     grandTotal: supplySum + vat,
@@ -1442,6 +1527,7 @@ function saveTrade(){
   db.ref('b2b_estimates/' + tradeEstimateId).set(payload).then(function(){
     setTradeStatus('✔ 저장됨 (' + nowStr() + ')', 'ok');
     saveTradeLocal();
+    loadTradeArchive();
   }).catch(function(err){
     console.error(err);
     setTradeStatus('⚠ 저장 실패', 'err');
@@ -1462,6 +1548,7 @@ function loadTradeFromFirebase(id){
         document.getElementById('metaManagerTrade').value = val.meta.manager || '';
         document.getElementById('metaStatusTrade').value = val.meta.status || '작성중';
       }
+      onTradeRecipientTypeChange(false);
       setTradeStatus('불러옴 · 마지막 수정: ' + (val.meta && val.meta.updatedAt ? new Date(val.meta.updatedAt).toLocaleString('ko-KR') : '-'), 'ok');
     }).catch(function(err){
       console.error(err);
@@ -1604,6 +1691,17 @@ async function saveAsImage(){
             inp.replaceWith(span);
           });
 
+          /* 소비자/거래처 구분 셀렉트도 문서 텍스트처럼 표시 */
+          target.querySelectorAll('.recipient-type-select').forEach(function(sel){
+            var span = clonedDoc.createElement('span');
+            span.className = 'capture-value';
+            span.style.fontWeight = '700';
+            span.style.color = '#17345f';
+            span.style.width = 'auto';
+            span.textContent = sel.options && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text : sel.value;
+            sel.replaceWith(span);
+          });
+
           /* 거래처 선택 버튼도 캡처 시에는 깔끔한 텍스트로 표시 */
           target.querySelectorAll('.client-picker-trigger').forEach(function(btn){
             var label = btn.querySelector('span:first-child');
@@ -1678,9 +1776,95 @@ function addImageSaveError(msg){
    중복 제거 후 한글 가나다순으로 정렬해 팝오버 목록에 채운다.
    목록을 따로 관리할 필요 없이, 쓸수록 자동으로 채워진다. */
 var knownClientsList = [];
+var knownTradeContacts = [];
+var tradeArchiveCache = [];
 
+function normalizeRecipientType(rec){
+  var d=(rec && rec.docData)||{}, m=(rec && rec.meta)||{};
+  return d['tr-recipient-type'] || m.recipientType || '거래처';
+}
+function tradeRecordFields(id, rec){
+  rec=rec||{}; var d=rec.docData||{}, m=rec.meta||{};
+  return {
+    id:id,
+    type:normalizeRecipientType(rec),
+    name:(d['tr-customer'] || m.customerName || '').replace(/\[.*?\]/g,'').trim(),
+    phone:(d['tr-ref-phone'] || m.phone || '').trim(),
+    refName:(d['tr-ref-name'] || m.refName || '').trim(),
+    site:(d['tr-site'] || m.address || '').replace(/\[.*?\]/g,'').trim(),
+    date:d['tr-date'] || m.issueDate || '',
+    estimateNo:d['tr-est-no'] || m.estimateNo || id,
+    amount:Number(m.grandTotal || 0),
+    updatedAt:Number(m.updatedAt || 0)
+  };
+}
+function onTradeRecipientTypeChange(saveIt){
+  var typeEl=document.getElementById('tradeRecipientType'); if(!typeEl) return;
+  var type=typeEl.value || '거래처';
+  var refLabel=document.getElementById('tradeRefLabel');
+  var refName=document.getElementById('tradeRefName');
+  var honor=document.getElementById('tradeHonorific');
+  var label=document.getElementById('clientPickerTradeLabel');
+  if(type==='소비자'){
+    if(refLabel) refLabel.textContent='연락처';
+    if(refName) refName.style.display='none';
+    if(honor) honor.textContent='님';
+    if(label && label.classList.contains('ph')) label.textContent='소비자명 선택';
+  }else{
+    if(refLabel) refLabel.textContent='담당자/참고';
+    if(refName){ refName.style.display='inline-block'; refName.placeholder='담당자명'; }
+    if(honor) honor.textContent='귀중';
+    if(label && label.classList.contains('ph')) label.textContent='거래처명 선택';
+  }
+  renderClientPickerList('Trade');
+  if(saveIt!==false) saveTradeLocal();
+}
+function loadTradeArchive(){
+  if(!db) return;
+  authReadyPromise.then(function(){ return db.ref('b2b_estimates').once('value'); }).then(function(snap){
+    var val=snap.val()||{};
+    tradeArchiveCache=Object.keys(val).map(function(id){ return tradeRecordFields(id,val[id]); }).sort(function(a,b){ return (b.updatedAt||0)-(a.updatedAt||0); });
+    knownTradeContacts=tradeArchiveCache.slice();
+    renderTradeArchive();
+    renderClientPickerList('Trade');
+  }).catch(function(err){
+    console.error('견적 목록 불러오기 실패',err);
+    var box=document.getElementById('tradeArchiveResults'); if(box) box.innerHTML='<div class="estimate-browser-empty">견적 목록을 불러오지 못했습니다.</div>';
+  });
+}
+function renderTradeArchive(){
+  var box=document.getElementById('tradeArchiveResults'); if(!box) return;
+  var q=(document.getElementById('tradeArchiveSearch')?.value||'').trim().toLowerCase();
+  var type=(document.getElementById('tradeArchiveType')?.value||'all');
+  var rows=tradeArchiveCache.filter(function(r){
+    if(type!=='all' && r.type!==type) return false;
+    if(!q) return true;
+    return [r.name,r.phone,r.refName,r.site,r.estimateNo,r.date].join(' ').toLowerCase().indexOf(q)>=0;
+  });
+  if(!rows.length){ box.innerHTML='<div class="estimate-browser-empty">검색 결과가 없습니다.</div>'; return; }
+  var groups={};
+  rows.forEach(function(r){ var key=(r.type||'거래처')+'|'+(r.name||'이름 미지정'); (groups[key]||(groups[key]=[])).push(r); });
+  var html='';
+  Object.keys(groups).sort(function(a,b){ return a.localeCompare(b,'ko'); }).forEach(function(key){
+    var arr=groups[key]; var name=(arr[0].type||'거래처')+' · '+(arr[0].name||'이름 미지정');
+    html+='<div class="estimate-group"><div class="estimate-group-head"><span class="estimate-group-name">'+esc(name)+'</span><span class="estimate-group-count">'+arr.length+'건</span></div>';
+    arr.forEach(function(r){
+      var sub=[r.date,r.phone,r.refName].filter(Boolean).join(' · ');
+      html+='<button type="button" class="estimate-result-row" onclick="openTradeEstimate(\''+escAttr(r.id).replace(/'/g,"\\'")+'\')">'+
+        '<span class="estimate-result-no">'+esc(r.estimateNo||r.id)+'</span>'+
+        '<span class="estimate-result-main"><div class="estimate-result-site">'+esc(r.site||'현장주소 없음')+'</div><div class="estimate-result-sub">'+esc(sub||'-')+'</div></span>'+
+        '<span class="estimate-result-amt">'+fmt(r.amount||0)+'원</span></button>';
+    });
+    html+='</div>';
+  });
+  box.innerHTML=html;
+}
+function openTradeEstimate(id){
+  var url=new URL(window.location.href); url.searchParams.set('tab','trade'); url.searchParams.set('id',id); window.location.href=url.toString();
+}
 function loadKnownClients(){
   if(!db) return;
+  knownTradeContacts = [];
   authReadyPromise.then(function(){
     return Promise.all([
       db.ref('leak_estimates').once('value').catch(function(){ return null; }),
@@ -1688,7 +1872,7 @@ function loadKnownClients(){
     ]);
   }).then(function(snaps){
     var set = {};
-    snaps.forEach(function(snap){
+    snaps.forEach(function(snap, snapIdx){
       if(!snap) return;
       var val = snap.val() || {};
       Object.keys(val).forEach(function(id){
@@ -1697,6 +1881,7 @@ function loadKnownClients(){
         var cn = (m.customerName || '').replace(/\[.*?\]/g,'').trim();
         if(cc) set[cc] = true;
         if(cn) set[cn] = true;
+        if(snapIdx===1) knownTradeContacts.push(tradeRecordFields(id,val[id]));
       });
     });
     knownClientsList = Object.keys(set).sort(function(a,b){ return a.localeCompare(b, 'ko'); });
@@ -1730,7 +1915,27 @@ function renderClientPickerList(which){
   var searchEl = document.getElementById('clientPickerSearch' + which);
   var listEl = document.getElementById('clientPickerList' + which);
   if(!searchEl || !listEl) return;
-  var q = searchEl.value.trim();
+  var q = searchEl.value.trim().toLowerCase();
+  if(which==='Trade'){
+    var type=(document.getElementById('tradeRecipientType')?.value||'거래처');
+    var seen={};
+    var filtered=knownTradeContacts.filter(function(r){
+      if(r.type!==type) return false;
+      var hay=[r.name,r.phone,r.refName,r.site,r.estimateNo].join(' ').toLowerCase();
+      return !q || hay.indexOf(q)>=0;
+    }).filter(function(r){
+      var key=[r.type,r.name,r.phone,r.site].join('|'); if(seen[key]) return false; seen[key]=1; return true;
+    }).slice(0,30);
+    if(!filtered.length){
+      listEl.innerHTML='<div class="cp-empty">저장된 '+type+'가 없거나 검색 결과가 없습니다.<br>이름을 입력한 뒤 Enter로 새로 등록하세요.</div>'; return;
+    }
+    window.__tradePickerMatches=filtered;
+    listEl.innerHTML=filtered.map(function(r,i){
+      var sub=[r.phone,r.refName,r.site].filter(Boolean).join(' · ');
+      return '<div class="cp-item" onclick="setTradeContactFromHistory('+i+')"><b>'+esc(r.name||'이름 미지정')+'</b><div style="font-size:11px;color:#889099;margin-top:2px;">'+esc(sub||'저장 정보 없음')+'</div></div>';
+    }).join('');
+    return;
+  }
   var filtered = knownClientsList.filter(function(name){ return matchesQuery(name, q); });
   if(filtered.length === 0){
     listEl.innerHTML = '<div class="cp-empty">' + (knownClientsList.length ? '일치하는 이름이 없습니다.' : '아직 저장된 거래처가 없습니다.') + ' 입력 후 Enter로 새로 추가하세요.</div>';
@@ -1739,6 +1944,16 @@ function renderClientPickerList(which){
   listEl.innerHTML = filtered.map(function(name){
     return '<div class="cp-item" onclick="setClientValue(\'' + which + '\',\'' + escAttr(name).replace(/'/g, "\\'") + '\')">' + esc(name) + '</div>';
   }).join('');
+}
+function setTradeContactFromHistory(i){
+  var r=(window.__tradePickerMatches||[])[i]; if(!r) return;
+  document.getElementById('trCustomerHidden').value=r.name||'';
+  var phone=document.getElementById('tradeRefPhone'); if(phone) phone.value=r.phone||'';
+  var ref=document.getElementById('tradeRefName'); if(ref) ref.value=r.refName||'';
+  var site=document.querySelector('#tabTrade [data-k="tr-site"]'); if(site && r.site) site.textContent=r.site;
+  syncClientPickerLabel('Trade');
+  document.getElementById('clientPickerPanelTrade').classList.remove('open');
+  saveTradeLocal();
 }
 function handleClientPickerKey(e, which){
   if(e.key === 'Enter'){
@@ -1770,7 +1985,8 @@ function syncClientPickerLabel(which){
     var val2 = document.getElementById('trCustomerHidden').value;
     var label2 = document.getElementById('clientPickerTradeLabel');
     var hasVal = val2 && val2 !== '[거래처명]';
-    label2.textContent = hasVal ? val2 : '거래처명 선택';
+    var type2=(document.getElementById('tradeRecipientType')?.value||'거래처');
+    label2.textContent = hasVal ? val2 : (type2==='소비자' ? '소비자명 선택' : '거래처명 선택');
     label2.classList.toggle('ph', !hasVal);
   }
 }
@@ -1824,6 +2040,8 @@ function startLeakEstimateApp(){
   syncClientPickerLabel('Leak');
   syncClientPickerLabel('Trade');
   loadKnownClients();
+  loadTradeArchive();
+  onTradeRecipientTypeChange(false);
 }
 </script>
 </body>

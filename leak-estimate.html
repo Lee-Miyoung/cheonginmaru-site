@@ -321,6 +321,9 @@
   .sheet-note{ font-size:11px; color:var(--ink-faint); margin-top:4px; }
   .neg{ color:#c0392b !important; }
 
+  /* PDF/인쇄에서 input 자체가 잘리는 브라우저 문제 방지용 텍스트 미러 */
+  .print-mirror{ display:none; }
+
   /* ---- 이미지 저장 오버레이 (아이폰/아이패드 대응) ---- */
   .img-save-overlay{
     position:fixed; inset:0; background:rgba(20,24,33,.78); z-index:9999;
@@ -373,7 +376,7 @@
     .schedule-item{ display:flex; align-items:center; gap:6px; }
   }
 
-  @page{ margin:6mm; }
+  @page{ size:A4 portrait; margin:4.5mm; }
   @media print{
     *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
     body{ background:#fff; padding:0; font-size:12px; }
@@ -455,6 +458,59 @@
     .cover-tag{ font-size:9px; padding:2px 9px; margin-bottom:3px; }
     .footdate{ margin:8px 0 5px; font-size:10.5px; }
     table.infogrid.sign{ margin-top:5px; }
+
+    /* 거래처/소비자 공용 견적서 PDF 전용 - 잘림/끊김 방지 */
+    #tabTrade .trade-sheet{ padding:4mm 4.5mm 3.5mm !important; }
+    #tabTrade table.items{
+      width:100% !important; table-layout:fixed !important; border-collapse:collapse !important;
+      border:1px solid #c8d1dc !important; border-radius:0 !important; overflow:visible !important;
+      font-size:9.8px !important;
+    }
+    #tabTrade table.items col:nth-child(1){ width:21% !important; }
+    #tabTrade table.items col:nth-child(2){ width:14% !important; }
+    #tabTrade table.items col:nth-child(3){ width:5% !important; }
+    #tabTrade table.items col:nth-child(4){ width:5% !important; }
+    #tabTrade table.items col:nth-child(5){ width:9% !important; }
+    #tabTrade table.items col:nth-child(6){ width:10% !important; }
+    #tabTrade table.items col:nth-child(7){ width:8% !important; }
+    #tabTrade table.items col:nth-child(8){ width:10% !important; }
+    #tabTrade table.items col:nth-child(9){ width:18% !important; }
+    #tabTrade table.items col:nth-child(10){ width:0 !important; visibility:collapse !important; }
+    #tabTrade table.items th, #tabTrade table.items td{
+      box-sizing:border-box !important; border:1px solid #d7dee7 !important; padding:5px 4px !important;
+      line-height:1.35 !important; vertical-align:middle !important; min-width:0 !important; max-width:none !important;
+      overflow:visible !important; text-overflow:clip !important;
+    }
+    #tabTrade table.items th{ font-size:9.6px !important; white-space:nowrap !important; }
+    #tabTrade table.items td:nth-child(1),
+    #tabTrade table.items td:nth-child(2),
+    #tabTrade table.items td:nth-child(9){
+      white-space:normal !important; word-break:keep-all !important; overflow-wrap:anywhere !important;
+    }
+    #tabTrade table.items td:nth-child(3),
+    #tabTrade table.items td:nth-child(4),
+    #tabTrade table.items td:nth-child(5),
+    #tabTrade table.items td:nth-child(6),
+    #tabTrade table.items td:nth-child(7),
+    #tabTrade table.items td:nth-child(8){
+      white-space:nowrap !important; font-size:9.5px !important;
+    }
+    #tabTrade table.items .ti-wrap{
+      width:100% !important; min-height:0 !important; padding:0 !important; line-height:1.35 !important;
+      white-space:normal !important; word-break:keep-all !important; overflow-wrap:anywhere !important;
+    }
+    #tabTrade table.items input.ti-input{ display:none !important; }
+    #tabTrade .print-mirror{
+      display:inline-block !important; max-width:100% !important; line-height:1.35 !important;
+      font:inherit !important; color:inherit !important; vertical-align:middle !important;
+    }
+    #tabTrade table.items .print-mirror{ width:100% !important; white-space:nowrap !important; }
+    #tabTrade table.items .print-mirror.center{ text-align:center !important; }
+    #tabTrade table.items .print-mirror.right{ text-align:right !important; font-variant-numeric:tabular-nums; }
+    #tabTrade input.doc-date, #tabTrade input.doc-input-inline, #tabTrade select.recipient-type-select{ display:none !important; }
+    #tabTrade .print-mirror.doc-date, #tabTrade .print-mirror.doc-input-inline{ width:auto !important; white-space:nowrap !important; }
+    #tabTrade .quote-summary{ break-inside:avoid !important; page-break-inside:avoid !important; }
+    #tabTrade .quote-summary .summary-value{ white-space:nowrap !important; font-variant-numeric:tabular-nums; }
   }
 
   #gate{ max-width:360px; margin:120px auto; background:#fff; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.12); padding:32px 28px; text-align:center; }
@@ -498,7 +554,7 @@
       <a class="btn ghost" href="leak-dashboard.html">📋 견적 목록으로</a>
       <button class="ghost" onclick="startNewEstimate()">＋ 새 견적</button>
       <button class="ghost" onclick="if(confirm('처음 예시 내용으로 되돌릴까요? 저장하지 않은 수정 내용이 사라집니다.')) resetActiveTab()">↺ 초기화</button>
-      <button class="primary" onclick="window.print()">🖨️ PDF로 저장 / 인쇄</button>
+      <button class="primary" onclick="printEstimate()">🖨️ PDF로 저장 / 인쇄</button>
       <button class="ghost" onclick="saveAsImage()">🖼️ 이미지로 저장</button>
     </div>
   </div>
@@ -1639,6 +1695,33 @@ function duplicateAsNew(){
   window.history.replaceState({}, '', url);
 }
 window.duplicateAsNew = duplicateAsNew;
+function syncPrintMirrors(){
+  var root = document.getElementById('tabTrade');
+  if(!root) return;
+  root.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), select').forEach(function(el){
+    if(el.closest && (el.closest('.trade-search-bar') || el.closest('.estimate-browser') || el.closest('.client-picker-panel'))) return;
+    var span = el.nextElementSibling;
+    if(!(span && span.classList && span.classList.contains('print-mirror'))){
+      span = document.createElement('span');
+      span.className = 'print-mirror';
+      el.insertAdjacentElement('afterend', span);
+    }
+    var val = el.tagName === 'SELECT' ? ((el.options && el.selectedIndex >= 0) ? el.options[el.selectedIndex].text : el.value) : el.value;
+    span.textContent = val || '';
+    span.className = 'print-mirror';
+    if(el.classList.contains('doc-date')) span.classList.add('doc-date');
+    if(el.classList.contains('doc-input-inline')) span.classList.add('doc-input-inline');
+    if(el.classList.contains('ti-small') || el.getAttribute('data-f') === 'unit' || el.getAttribute('data-f') === 'qty') span.classList.add('center');
+    if(el.classList.contains('price-comma') || el.getAttribute('data-f') === 'price') span.classList.add('right');
+  });
+}
+function printEstimate(){
+  syncPrintMirrors();
+  requestAnimationFrame(function(){ window.print(); });
+}
+window.printEstimate = printEstimate;
+window.addEventListener('beforeprint', syncPrintMirrors);
+
 function resetActiveTab(){
   if(currentTab==='leak'){ try{ localStorage.removeItem(leakLocalKey()); }catch(e){} }
   else{ try{ localStorage.removeItem(tradeLocalKey()); }catch(e){} }

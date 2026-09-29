@@ -66,16 +66,20 @@
   .brand-logo-img{ height:38px; width:auto; max-width:150px; object-fit:contain; display:block; }
   .brand-name{ font-size:15px; font-weight:900; color:var(--brand); letter-spacing:.5px; }
   .brand-tag{ font-size:11px; color:#889099; margin-top:2px; }
-  .doc-tag{ font-size:11px; color:#8890099; text-align:right; }
+  .doc-tag{ font-size:11px; color:#889099; text-align:right; line-height:1.65; }
 
   .doc-title{ text-align:center; font-size:26px; font-weight:900; color:var(--brand); margin:6px 0 2px; }
-  .doc-sub{ text-align:center; font-size:12px; color:#8890099; margin-bottom:22px; }
-  .doc-sub b{ color:#8890099; }
+  .doc-sub{ text-align:center; font-size:12px; color:#889099; margin-bottom:22px; }
+  .doc-sub b{ color:#889099; }
 
   table.infogrid{ width:100%; border-collapse:collapse; margin-bottom:22px; font-size:12.5px; }
-  table.infogrid td{ border:1px solid var(--line); padding:9px 12px; }
-  table.infogrid td.lbl{ background:var(--accent-bg); font-weight:700; color:var(--brand-2); width:110px; white-space:nowrap; }
+  table.infogrid td{ border:1px solid var(--line); padding:9px 12px; vertical-align:middle; }
+  table.infogrid td.lbl{ background:var(--accent-bg); font-weight:700; color:var(--brand-2); width:110px; white-space:nowrap; text-align:center; vertical-align:middle; letter-spacing:.2px; }
   td.fillme{ background:var(--highlight); }
+  .recipient-wrap, .ref-wrap, .schedule-wrap{ display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; }
+  .recipient-wrap{ min-height:34px; }
+  .recipient-honorific, .schedule-item{ white-space:nowrap; }
+  .schedule-wrap .doc-date{ min-width:118px; }
 
   table.items{ width:100%; border-collapse:collapse; font-size:12px; margin-bottom:4px; }
   table.items th{ background:var(--brand-2); color:#fff; font-weight:700; padding:9px 6px; text-align:center; border:1px solid var(--brand-2); }
@@ -428,7 +432,7 @@
         <div class="brand-tag">인천 연수구 송도미래로 30, E동 1505호</div>
       </div>
     </div>
-    <div class="doc-tag">견적번호 <span contenteditable="true" data-k="est-no">EST-2026-0831</span><br>발행일 <input type="date" class="doc-date" data-k="est-date" value="2026-08-31"></div>
+    <div class="doc-tag">견적번호 <span contenteditable="true" data-k="est-no">EST-2026-0929-01</span><br>발행일 <input type="date" class="doc-date" data-k="est-date" value="2026-09-29"></div>
   </div>
 
   <div class="doc-title">누수 피해 복구 공사 견적서</div>
@@ -514,7 +518,7 @@
         <div class="brand-tag">인천 연수구 송도미래로 30, E동 1505호</div>
       </div>
     </div>
-    <div class="doc-tag">작성일 <input type="date" class="doc-date" data-k="op-date-top" value="2026-08-31"></div>
+    <div class="doc-tag">작성일 <input type="date" class="doc-date" data-k="op-date-top" value="2026-09-29"></div>
   </div>
 
   <div style="text-align:center"><span class="cover-tag" contenteditable="true" data-k="op-cover-tag">보험사 손해사정 및 기타기관 제출용</span></div>
@@ -626,7 +630,7 @@
         <div class="brand-tag">인천 연수구 송도미래로 30, E동 1505호</div>
       </div>
     </div>
-    <div class="doc-tag">견적번호 <span contenteditable="true" data-k="tr-est-no">TR-2026-0831</span><br>발행일 <input type="date" class="doc-date" data-k="tr-date" value=""></div>
+    <div class="doc-tag">견적번호 <span contenteditable="true" data-k="tr-est-no">TR-2026-0929-01</span><br>발행일 <input type="date" class="doc-date" data-k="tr-date" value="2026-09-29"></div>
   </div>
 
   <div class="doc-title" style="font-size:22px;">거래처 견적서</div>
@@ -636,21 +640,23 @@
     <tr>
       <td class="lbl">수신</td>
       <td>
-        <div class="client-picker" id="clientPickerTrade">
-          <button type="button" class="client-picker-trigger" onclick="toggleClientPicker('Trade')" style="min-width:190px;">
-            <span id="clientPickerTradeLabel" class="ph">거래처명 선택</span><span>▾</span>
-          </button>
-          <div class="client-picker-panel" id="clientPickerPanelTrade">
-            <input type="text" class="cp-search" id="clientPickerSearchTrade" placeholder="검색 또는 새로 입력..." oninput="renderClientPickerList('Trade')" onkeydown="handleClientPickerKey(event,'Trade')">
-            <div class="client-picker-list" id="clientPickerListTrade"></div>
-            <div class="cp-direct-hint">목록에 없으면 입력 후 Enter — 직접 입력한 이름이 바로 사용됩니다.</div>
+        <div class="recipient-wrap">
+          <div class="client-picker" id="clientPickerTrade">
+            <button type="button" class="client-picker-trigger" onclick="toggleClientPicker('Trade')" style="min-width:190px;">
+              <span id="clientPickerTradeLabel" class="ph">거래처명 선택</span><span>▾</span>
+            </button>
+            <div class="client-picker-panel" id="clientPickerPanelTrade">
+              <input type="text" class="cp-search" id="clientPickerSearchTrade" placeholder="검색 또는 새로 입력..." oninput="renderClientPickerList('Trade')" onkeydown="handleClientPickerKey(event,'Trade')">
+              <div class="client-picker-list" id="clientPickerListTrade"></div>
+              <div class="cp-direct-hint">목록에 없으면 입력 후 Enter — 직접 입력한 이름이 바로 사용됩니다.</div>
+            </div>
           </div>
+          <input type="hidden" data-k="tr-customer" id="trCustomerHidden" value="[거래처명]">
+          <span class="recipient-honorific">귀중</span>
         </div>
-        <input type="hidden" data-k="tr-customer" id="trCustomerHidden" value="[거래처명]">
-        귀중
       </td>
       <td class="lbl">참고</td>
-      <td><input type="text" class="doc-input-inline" data-k="tr-ref-name" placeholder="담당자명" value=""> <input type="tel" class="doc-input-inline tel-mobile" data-k="tr-ref-phone" placeholder="010-0000-0000" value="010-"></td>
+      <td><div class="ref-wrap"><input type="text" class="doc-input-inline" data-k="tr-ref-name" placeholder="담당자명" value=""><input type="tel" class="doc-input-inline tel-mobile" data-k="tr-ref-phone" placeholder="010-0000-0000" value="010-"></div></td>
     </tr>
     <tr>
       <td class="lbl">현장</td>
@@ -658,7 +664,7 @@
     </tr>
     <tr>
       <td class="lbl">일정</td>
-      <td colspan="3">실측일 <input type="date" class="doc-date" data-k="tr-date-survey" value="">　철거일 <input type="date" class="doc-date" data-k="tr-date-demo" value="">　공사일 <input type="date" class="doc-date" data-k="tr-date-work" value=""></td>
+      <td colspan="3"><div class="schedule-wrap"><span class="schedule-item">실측일 <input type="date" class="doc-date" data-k="tr-date-survey" value=""></span><span class="schedule-item">철거일 <input type="date" class="doc-date" data-k="tr-date-demo" value=""></span><span class="schedule-item">공사일 <input type="date" class="doc-date" data-k="tr-date-work" value=""></span></div></td>
     </tr>
   </table>
 
@@ -700,7 +706,7 @@
     <div class="h">[특이사항]</div>
     <ul>
       <li class="rich-text" contenteditable="true" data-k="tr-note-1">상기 견적은 예상 소요량이며 실제 시공 시 소요된 수량으로 정산합니다. 현장 바닥 상태에 따라 <b>추가 시공비가 발생할 수 있습니다.</b></li>
-      <li class="rich-text" contenteditable="true" data-k="tr-note-2">시공일은 협의 후 진행합니다 (<b>보일러 가동 최소 5일 이상</b> · 충분한 습기 제거 후 시공하여야 하자를 예방할 수 있습니다).</li>
+      <li class="rich-text" contenteditable="true" data-k="tr-note-2">신설 단독주택 현장은 시공 전 <b>바닥 함수율 및 습기 상태를 충분히 확인</b>한 후 진행하며, <b>보일러(난방) 가동 후 최소 5일 이상</b> 건조 기간을 확보해야 합니다. 건조 상태가 미흡할 경우 공사 일정이 조정될 수 있습니다.</li>
       <li class="rich-text" contenteditable="true" data-k="tr-note-3">본 견적의 유효기간은 <b>발행일로부터 15일</b>이며, 자재 수급 상황에 따라 변경될 수 있습니다.</li>
       <li class="rich-text" contenteditable="true" data-k="tr-note-4"><b>계약금 30% / 잔금 70%</b> (준공 후 즉시 지급)을 원칙으로 하며, 별도 협의 시 조정 가능합니다.</li>
       <li class="rich-text" contenteditable="true" data-k="tr-note-5">자재 발주 완료 후 취소 시 <b>자재비 전액 및 위약금이 청구될 수 있습니다.</b></li>
@@ -1041,8 +1047,29 @@ function getLeakMeta(){
   };
 }
 function genId(prefix){ var d=new Date(); return prefix+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+Math.random().toString(36).slice(2,7).toUpperCase(); }
+function todayISOGlobal(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function isLegacyEstimateNo(value, prefix){ return new RegExp('^' + prefix + '-\\d{4}-\\d{4}$').test((value || '').trim()); }
+function isAutoEstimateNo(value, prefix){ return new RegExp('^' + prefix + '-\\d{4}-\\d{4}-\\d{2}$').test((value || '').trim()); }
+function genDisplayEstimateNo(prefix, dateStr, seq){
+  var src = (dateStr || todayISOGlobal()).split('-');
+  var y = src[0] || new Date().getFullYear();
+  var m = src[1] || pad(new Date().getMonth()+1);
+  var d = src[2] || pad(new Date().getDate());
+  var num = pad(seq || 1);
+  return prefix + '-' + y + '-' + m + d + '-' + num;
+}
+function ensureEstimateNo(which, force){
+  var isTrade = which === 'trade';
+  var prefix = isTrade ? 'TR' : 'EST';
+  var noEl = document.querySelector(isTrade ? '#tabTrade [data-k="tr-est-no"]' : '#tabLeak [data-k="est-no"]');
+  var dateEl = document.querySelector(isTrade ? '#tabTrade [data-k="tr-date"]' : '#tabLeak [data-k="est-date"]');
+  if(!noEl || !dateEl) return;
+  var current = (noEl.textContent || '').trim();
+  if(force || !current || isLegacyEstimateNo(current, prefix) || isAutoEstimateNo(current, prefix)) noEl.textContent = genDisplayEstimateNo(prefix, dateEl.value, 1);
+}
 
 function saveLeak(){
+  ensureEstimateNo('leak', false);
   if(!leakEstimateId){
     leakEstimateId = genId('EST');
     var url = new URL(window.location.href); url.searchParams.set('id', leakEstimateId); url.searchParams.set('tab','leak');
@@ -1362,7 +1389,7 @@ function getTradeMeta(){
   var vat = Math.round(supplySum*0.1);
   return {
     estimateId: tradeEstimateId,
-    estimateNo: tradeEstimateId || '',
+    estimateNo: docData['tr-est-no'] || '',
     customerName: (docData['tr-customer']||'').replace(/\[.*?\]/g,'').trim(),
     address: (docData['tr-site']||'').replace(/\[.*?\]/g,'').trim(),
     manager: document.getElementById('metaManagerTrade').value || '',
@@ -1373,6 +1400,7 @@ function getTradeMeta(){
   };
 }
 function saveTrade(){
+  ensureEstimateNo('trade', false);
   if(!tradeEstimateId){
     tradeEstimateId = genId('TR');
     var url = new URL(window.location.href); url.searchParams.set('id', tradeEstimateId); url.searchParams.set('tab','trade');
@@ -1441,14 +1469,11 @@ function duplicateAsNew(){
   if(!confirm('지금 내용을 그대로 복제해서 새 견적번호로 시작할까요?\n(품목·현장주소·날짜만 바꿔서 저장하면 됩니다)')) return;
   if(currentTab === 'leak'){
     leakEstimateId = null;
-    var newNo = genId('EST');
-    var noEl = document.querySelector('#tabLeak [data-k="est-no"]');
-    if(noEl) noEl.textContent = newNo;
+    ensureEstimateNo('leak', true);
     setLeakStatus('복제됨 · 아직 저장 전 (☁️ 견적 저장을 눌러주세요)', '');
   } else {
     tradeEstimateId = null;
-    var trNoEl = document.querySelector('#tabTrade [data-k="tr-est-no"]');
-    if(trNoEl) trNoEl.textContent = genId('TR');
+    ensureEstimateNo('trade', true);
     setTradeStatus('복제됨 · 아직 저장 전 (☁️ 견적 저장을 눌러주세요)', '');
   }
   var url = new URL(window.location.href);
@@ -1678,6 +1703,11 @@ function syncClientPickerLabel(which){
   }
 }
 
+document.addEventListener('change', function(e){
+  if(e.target && e.target.matches && e.target.matches('#tabLeak [data-k="est-date"]')) ensureEstimateNo('leak', false);
+  if(e.target && e.target.matches && e.target.matches('#tabTrade [data-k="tr-date"]')) ensureEstimateNo('trade', false);
+});
+
 /* ===================== 초기화 (게이트 통과 후에만 실행) ===================== */
 function startLeakEstimateApp(){
   var params = new URL(window.location.href).searchParams;
@@ -1685,7 +1715,6 @@ function startLeakEstimateApp(){
   var urlId = params.get('id');
   switchTab(urlTab);
 
-  function todayISO(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 
   if(urlTab === 'leak'){
     if(urlId){ leakEstimateId = urlId; loadLeakLocal(); loadLeakFromFirebase(urlId); }
@@ -1693,7 +1722,8 @@ function startLeakEstimateApp(){
       var hadLeakDraft = loadLeakLocal();
       if(!hadLeakDraft){
         var estDateEl = document.querySelector('#tabLeak [data-k="est-date"]');
-        if(estDateEl) estDateEl.value = todayISO();
+        if(estDateEl) estDateEl.value = todayISOGlobal();
+        ensureEstimateNo('leak', true);
       }
       setLeakStatus('새 견적 (아직 저장되지 않음)', '');
     }
@@ -1705,7 +1735,8 @@ function startLeakEstimateApp(){
       if(!hadTradeDraft){
         addTradeRow(); addTradeRow(); addTradeRow();
         var trDateEl = document.querySelector('#tabTrade [data-k="tr-date"]');
-        if(trDateEl) trDateEl.value = todayISO();
+        if(trDateEl) trDateEl.value = todayISOGlobal();
+        ensureEstimateNo('trade', true);
       }
       setTradeStatus('새 견적 (아직 저장되지 않음)', '');
     }

@@ -86,6 +86,70 @@
   @media(max-width:980px){ .stats{ grid-template-columns:repeat(3,1fr); } }
   @media(max-width:700px){ .stats{ grid-template-columns:repeat(2,1fr); } .trash-row{ grid-template-columns:1fr auto auto; } .trash-row .hideMobile{ display:none; } }
   .empty{ text-align:center; padding:60px 20px; color:var(--ink-faint); font-size:13px; }
+
+
+  /* ===== 업무 탭 ===== */
+  .work-tabs{ display:flex; gap:6px; margin:0 0 16px; padding:4px; width:max-content; background:#e4e8ee; border-radius:10px; }
+  .work-tab{ border:0; background:transparent; color:#687383; font-family:inherit; font-size:13px; font-weight:800; padding:9px 16px; border-radius:7px; cursor:pointer; }
+  .work-tab.active{ background:#fff; color:var(--brand); box-shadow:0 2px 7px rgba(20,24,33,.08); }
+  .work-view{ display:none; }
+  .work-view.active{ display:block; }
+
+  /* ===== 거래처 관리 ===== */
+  .client-toolbar{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+  .client-toolbar .desc{ color:var(--ink-faint); font-size:11.5px; }
+  .client-add-btn{ border:0; background:var(--brand); color:#fff; font-family:inherit; font-size:12.5px; font-weight:800; padding:10px 14px; border-radius:8px; cursor:pointer; }
+  .client-layout{ display:grid; grid-template-columns:390px minmax(0,1fr); gap:14px; align-items:start; }
+  .client-panel{ background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); overflow:hidden; }
+  .client-search{ padding:12px; border-bottom:1px solid var(--line); }
+  .client-search input{ width:100%; font-family:inherit; font-size:12.5px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; }
+  .client-list{ max-height:640px; overflow-y:auto; }
+  .client-item{ padding:13px 14px; border-bottom:1px solid #edf0f4; cursor:pointer; transition:.12s; }
+  .client-item:hover{ background:#f7f9fc; }
+  .client-item.active{ background:#eef3fa; box-shadow:inset 3px 0 0 var(--brand-2); }
+  .client-item .nm{ font-size:13.5px; font-weight:900; color:var(--brand); display:flex; justify-content:space-between; gap:8px; }
+  .client-item .meta{ margin-top:5px; font-size:11px; color:#7e8996; line-height:1.55; }
+  .client-count{ font-size:10px; color:#6f7a88; background:#f1f4f8; border-radius:12px; padding:2px 7px; white-space:nowrap; }
+  .client-detail{ background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); min-height:300px; }
+  .client-empty{ padding:56px 24px; text-align:center; color:var(--ink-faint); font-size:12.5px; }
+  .client-detail-head{ display:flex; justify-content:space-between; gap:14px; align-items:flex-start; padding:18px 20px; border-bottom:1px solid var(--line); }
+  .client-detail-name{ font-size:19px; font-weight:900; color:var(--brand); }
+  .client-detail-sub{ margin-top:4px; font-size:11.5px; color:var(--ink-faint); }
+  .client-detail-actions{ display:flex; gap:7px; flex-wrap:wrap; }
+  .client-action{ font-family:inherit; font-size:11.5px; font-weight:800; border:1px solid var(--line); border-radius:7px; padding:7px 10px; cursor:pointer; background:#fff; color:var(--brand); text-decoration:none; }
+  .client-action.primary{ background:var(--brand); color:#fff; border-color:var(--brand); }
+  .client-action.danger{ color:#9a3f3f; border-color:#e0c6c6; }
+  .client-info-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0; border-bottom:1px solid var(--line); }
+  .client-info{ padding:12px 18px; border-right:1px solid var(--line); border-bottom:1px solid #edf0f4; }
+  .client-info:nth-child(2n){ border-right:0; }
+  .client-info .k{ font-size:10px; font-weight:800; color:#8b95a1; margin-bottom:4px; }
+  .client-info .v{ font-size:12.5px; color:#2c3948; word-break:break-word; }
+  .client-est-head{ padding:14px 18px 8px; display:flex; justify-content:space-between; align-items:center; }
+  .client-est-head b{ font-size:13px; color:var(--brand); }
+  .client-est-head span{ font-size:10.5px; color:var(--ink-faint); }
+  .client-est-list{ padding:0 10px 12px; }
+  .client-est-row{ display:grid; grid-template-columns:110px 125px minmax(0,1fr) 105px 85px; gap:9px; align-items:center; border-top:1px solid #edf0f4; padding:10px 8px; font-size:11.5px; }
+  .client-est-row:first-child{ border-top:0; }
+  .client-est-row .eno{ color:#596678; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .client-est-row .edate{ color:#7e8996; white-space:nowrap; }
+  .client-est-row .esite{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .client-est-row .eamt{ text-align:right; font-weight:800; color:var(--brand); white-space:nowrap; }
+  .client-est-row a{ text-align:center; }
+  .client-form-overlay{ position:fixed; inset:0; z-index:9999; background:rgba(20,24,33,.5); display:flex; align-items:center; justify-content:center; padding:20px; }
+  .client-form-card{ width:min(620px,96vw); background:#fff; border-radius:14px; padding:22px; box-shadow:0 24px 70px rgba(0,0,0,.23); }
+  .client-form-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:15px; }
+  .client-form-title{ font-size:18px; font-weight:900; color:var(--brand); }
+  .client-form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .client-form-grid .wide{ grid-column:1/-1; }
+  .client-form-grid label{ display:block; font-size:10.5px; font-weight:800; color:#788391; margin-bottom:5px; }
+  .client-form-grid input{ width:100%; font-family:inherit; font-size:13px; padding:10px 11px; border:1px solid var(--line); border-radius:8px; }
+  .client-form-buttons{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
+  .client-form-buttons button{ font-family:inherit; font-size:12.5px; font-weight:800; padding:9px 14px; border-radius:8px; cursor:pointer; }
+  .client-form-buttons .cancel{ background:#fff; border:1px solid var(--line); color:#67717e; }
+  .client-form-buttons .save{ background:var(--brand); border:1px solid var(--brand); color:#fff; }
+  @media(max-width:900px){ .client-layout{ grid-template-columns:1fr; } .client-list{ max-height:340px; } }
+  @media(max-width:620px){ .client-info-grid,.client-form-grid{ grid-template-columns:1fr; } .client-info{ border-right:0; } .client-form-grid .wide{ grid-column:auto; } .client-est-row{ grid-template-columns:95px minmax(0,1fr) 80px; } .client-est-row .edate,.client-est-row .eamt{ display:none; } }
+
 </style>
 </head>
 <body>
@@ -116,6 +180,12 @@
     </div>
   </header>
 
+  <div class="work-tabs">
+    <button type="button" class="work-tab active" id="tabEstimatesBtn" onclick="switchWorkView('estimates')">견적 목록</button>
+    <button type="button" class="work-tab" id="tabClientsBtn" onclick="switchWorkView('clients')">거래처 관리 <span id="clientTabCount"></span></button>
+  </div>
+
+  <div id="viewEstimates" class="work-view active">
   <div class="stats">
     <div class="stat-card"><div class="lbl">전체 견적 건수</div><div class="val" id="statTotal">0</div></div>
     <div class="stat-card"><div class="lbl">누수복구</div><div class="val" id="statLeak">0</div></div>
@@ -132,7 +202,6 @@
       <option value="leak">🌊 누수복구</option>
       <option value="trade">📦 거래처용</option>
       <option value="consumer">👤 소비자용</option>
-      <option value="client">🏢 등록 거래처</option>
     </select>
     <select id="statusFilter">
       <option value="">전체 상태</option>
@@ -164,6 +233,24 @@
     <tbody id="listBody"></tbody>
   </table>
   <div class="empty" id="emptyMsg" style="display:none;">저장된 견적이 없습니다. 상단의 버튼으로 새 견적을 시작하세요.</div>
+  </div><!-- /viewEstimates -->
+
+  <div id="viewClients" class="work-view">
+    <div class="client-toolbar">
+      <div>
+        <div style="font-size:17px;font-weight:900;color:var(--brand);">거래처 관리</div>
+        <div class="desc">거래처를 등록해 두고 선택하면 해당 거래처의 견적 이력을 최신순으로 확인할 수 있습니다.</div>
+      </div>
+      <button type="button" class="client-add-btn" onclick="openClientForm()">＋ 거래처 추가</button>
+    </div>
+    <div class="client-layout">
+      <div class="client-panel">
+        <div class="client-search"><input id="clientSearchBox" placeholder="거래처명 · 사업자번호 · 담당자 · 전화번호 검색" oninput="renderClientList()"></div>
+        <div class="client-list" id="clientList"></div>
+      </div>
+      <div class="client-detail" id="clientDetail"><div class="client-empty">왼쪽에서 거래처를 선택하면 거래처 정보와 견적 이력이 표시됩니다.</div></div>
+    </div>
+  </div><!-- /viewClients -->
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -206,6 +293,8 @@ try{
 
 let allRows = [];
 let trashRows = [];
+let clientRows = [];
+let selectedClientId = null;
 
 /* ===== 게이트: 실제 직원 계정(이메일+비밀번호) 로그인 ===== */
 function checkGate(){
@@ -274,13 +363,15 @@ function startListening(){
         (row.deletedAt ? deleted : active).push(row);
       });
       var clientMap = tradeRows.__clients || {};
-      Object.keys(clientMap).forEach(function(id){
-        active.push(toClientRow(id, clientMap[id] || {}));
-      });
+      clientRows = Object.keys(clientMap).map(function(id){ return toClientRow(id, clientMap[id] || {}); })
+        .sort(function(a,b){ return String(a.customerName||'').localeCompare(String(b.customerName||''),'ko'); });
       allRows = active;
       trashRows = deleted.sort(function(a,b){ return (b.deletedAt||0)-(a.deletedAt||0); });
       render();
+      renderClientList();
+      if(selectedClientId) renderClientDetail(selectedClientId);
       updateTrashCount();
+      var ctc=document.getElementById('clientTabCount'); if(ctc) ctc.textContent='('+clientRows.length+')';
     }
 
     db.ref('leak_estimates').on('value', function(snap){
@@ -335,16 +426,19 @@ function toClientRow(id, rec){
     docType:'client',
     estimateNo:'거래처 등록',
     customerName:rec.name || '(미입력)',
+    businessNo:rec.businessNo || rec.bizNo || '',
     clientChannel:'',
     address:rec.address || '-',
     phone:rec.phone || '',
     issueDate:'',
     grandTotal:0,
     manager:rec.manager || '-',
+    memo:rec.memo || '',
     status:'등록',
     updatedAt:rec.updatedAt || rec.createdAt || 0,
+    createdAt:rec.createdAt || 0,
     deletedAt:0,
-    itemSearch:[rec.name,rec.manager,rec.phone,rec.address].filter(Boolean).join(' ')
+    itemSearch:[rec.name,rec.businessNo,rec.bizNo,rec.manager,rec.phone,rec.address,rec.memo].filter(Boolean).join(' ')
   };
 }
 
@@ -379,7 +473,7 @@ function render(){
     return 0;
   });
 
-  document.getElementById('resultCount').textContent = rows.length + '건 표시 중 (견적 ' + allRows.filter(function(r){return r.docType!=='client';}).length + '건 · 등록 거래처 ' + allRows.filter(function(r){return r.docType==='client';}).length + '곳)';
+  document.getElementById('resultCount').textContent = rows.length + '건 표시 중 (전체 ' + allRows.length + '건)';
 
   var tbody = document.getElementById('listBody');
   if(rows.length === 0){
@@ -392,18 +486,16 @@ function render(){
         ? ['작성중','발송됨','고객확인','계약전환','보류','취소']
         : ['작성중','발송됨','확인됨','계약전환','보류','취소'];
       var opts = statuses.map(function(s){ return '<option value="'+s+'"'+(s===r.status?' selected':'')+'>'+s+'</option>'; }).join('');
-      var typeLabel = r.docType === 'trade' ? '<span class="type-badge trade">📦 거래처용</span>' : (r.docType === 'consumer' ? '<span class="type-badge consumer">👤 소비자용</span>' : (r.docType === 'client' ? '<span class="type-badge client">🏢 등록 거래처</span>' : '<span class="type-badge leak">🌊 누수복구</span>'));
-      var statusCell = r.docType === 'client' ? '<span class="badge 확인됨">등록</span>' : '<select class="statusSelect" onchange="updateStatus(\''+r.id+'\',\''+r.sourceType+'\', this.value)">'+opts+'</select>';
-      var actionCell = r.docType === 'client'
-        ? '<div class="rowActions"><a class="openLink" href="leak-estimate.html?tab=trade&client='+encodeURIComponent(r.id)+'">견적작성 →</a></div>'
-        : '<div class="rowActions"><a class="openLink" href="leak-estimate.html?tab='+(r.sourceType==='trade'?'trade':'leak')+'&id='+encodeURIComponent(r.id)+'">열기 →</a><button class="deleteBtn" onclick="moveToTrash(\''+r.sourceType+'\',\''+r.id+'\')">삭제</button></div>';
+      var typeLabel = r.docType === 'trade' ? '<span class="type-badge trade">📦 거래처용</span>' : (r.docType === 'consumer' ? '<span class="type-badge consumer">👤 소비자용</span>' : '<span class="type-badge leak">🌊 누수복구</span>');
+      var statusCell = '<select class="statusSelect" onchange="updateStatus(\''+r.id+'\',\''+r.sourceType+'\', this.value)">'+opts+'</select>';
+      var actionCell = '<div class="rowActions"><a class="openLink" href="leak-estimate.html?tab='+(r.sourceType==='trade'?'trade':'leak')+'&id='+encodeURIComponent(r.id)+'">열기 →</a><button class="deleteBtn" onclick="moveToTrash(\''+r.sourceType+'\',\''+r.id+'\')">삭제</button></div>';
       return '<tr>' +
         '<td>'+typeLabel+'</td>' +
         '<td>'+esc(r.estimateNo)+'</td>' +
         '<td>'+esc(r.customerName)+(r.phone?(' <span style="color:#889099;font-size:11px;">'+esc(r.phone)+'</span>'):'')+'</td>' +
         '<td class="addr" title="'+esc(r.address)+'">'+esc(r.address)+'</td>' +
         '<td>'+esc(r.issueDate || '-')+'</td>' +
-        '<td class="num">'+(r.docType==='client' ? '-' : fmtWon(r.grandTotal))+'</td>' +
+        '<td class="num">'+fmtWon(r.grandTotal)+'</td>' +
         '<td>'+esc(r.manager)+'</td>' +
         '<td>'+statusCell+'</td>' +
         '<td>'+actionCell+'</td>' +
@@ -411,18 +503,107 @@ function render(){
     }).join('');
   }
 
-  document.getElementById('statTotal').textContent = allRows.filter(function(r){ return r.docType!=='client'; }).length;
+  document.getElementById('statTotal').textContent = allRows.length;
   document.getElementById('statLeak').textContent = allRows.filter(function(r){ return r.docType==='leak'; }).length;
   document.getElementById('statTrade').textContent = allRows.filter(function(r){ return r.docType==='trade'; }).length;
   document.getElementById('statConsumer').textContent = allRows.filter(function(r){ return r.docType==='consumer'; }).length;
   var now = new Date();
   var ym = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
-  var monthRows = allRows.filter(function(r){ return r.docType!=='client' && (r.issueDate||'').indexOf(ym) === 0; });
+  var monthRows = allRows.filter(function(r){ return (r.issueDate||'').indexOf(ym) === 0; });
   document.getElementById('statMonth').textContent = monthRows.length;
   var monthSum = monthRows.reduce(function(s,r){ return s + (r.grandTotal||0); }, 0);
   document.getElementById('statAmount').textContent = fmtWon(monthSum);
 }
 
+
+
+function switchWorkView(which){
+  var estimates=which!=='clients';
+  document.getElementById('viewEstimates').classList.toggle('active',estimates);
+  document.getElementById('viewClients').classList.toggle('active',!estimates);
+  document.getElementById('tabEstimatesBtn').classList.toggle('active',estimates);
+  document.getElementById('tabClientsBtn').classList.toggle('active',!estimates);
+  if(!estimates){ renderClientList(); if(selectedClientId) renderClientDetail(selectedClientId); }
+}
+window.switchWorkView=switchWorkView;
+
+function normalizeClientKey(s){ return String(s||'').replace(/\s+/g,'').toLowerCase(); }
+function estimatesForClient(client){
+  var name=normalizeClientKey(client.customerName), phone=String(client.phone||'').replace(/\D/g,'');
+  return allRows.filter(function(r){
+    if(r.docType!=='trade') return false;
+    var rn=normalizeClientKey(r.customerName), rp=String(r.phone||'').replace(/\D/g,'');
+    return (name && rn===name) || (phone.length>=7 && rp===phone);
+  }).sort(function(a,b){
+    var da=String(a.issueDate||''), dbb=String(b.issueDate||'');
+    if(da!==dbb) return dbb.localeCompare(da);
+    return (b.updatedAt||0)-(a.updatedAt||0);
+  });
+}
+function renderClientList(){
+  var box=document.getElementById('clientList'); if(!box) return;
+  var q=document.getElementById('clientSearchBox') ? document.getElementById('clientSearchBox').value.trim() : '';
+  var rows=clientRows.filter(function(c){ return !q || matchesQuery([c.customerName,c.businessNo,c.manager,c.phone,c.address,c.memo].join(' '),q); });
+  if(!rows.length){ box.innerHTML='<div class="client-empty">등록된 거래처가 없습니다.<br>상단의 <b>＋ 거래처 추가</b>로 등록하세요.</div>'; return; }
+  box.innerHTML=rows.map(function(c){
+    var cnt=estimatesForClient(c).length;
+    return '<div class="client-item '+(selectedClientId===c.id?'active':'')+'" onclick="selectClient(\''+esc(c.id).replace(/'/g,"\\'")+'\')">'+
+      '<div class="nm"><span>'+esc(c.customerName)+'</span><span class="client-count">견적 '+cnt+'건</span></div>'+
+      '<div class="meta">'+(c.manager&&c.manager!=='-'?'담당 '+esc(c.manager)+' · ':'')+(c.phone?esc(c.phone):'연락처 미등록')+(c.businessNo?'<br>사업자 '+esc(c.businessNo):'')+'</div>'+
+    '</div>';
+  }).join('');
+}
+function selectClient(id){ selectedClientId=id; renderClientList(); renderClientDetail(id); }
+window.selectClient=selectClient;
+function renderClientDetail(id){
+  var box=document.getElementById('clientDetail'); if(!box) return;
+  var c=clientRows.find(function(x){return x.id===id;});
+  if(!c){ box.innerHTML='<div class="client-empty">거래처를 선택해주세요.</div>'; return; }
+  var ests=estimatesForClient(c);
+  box.innerHTML='<div class="client-detail-head"><div><div class="client-detail-name">'+esc(c.customerName)+'</div><div class="client-detail-sub">등록 거래처 정보 · 견적 '+ests.length+'건</div></div><div class="client-detail-actions">'+
+    '<a class="client-action primary" href="leak-estimate.html?tab=trade&client='+encodeURIComponent(c.id)+'">＋ 이 거래처 견적 작성</a>'+
+    '<button class="client-action" onclick="openClientForm(\''+esc(c.id).replace(/'/g,"\\'")+'\')">수정</button>'+
+    '<button class="client-action danger" onclick="deleteClient(\''+esc(c.id).replace(/'/g,"\\'")+'\')">삭제</button></div></div>'+
+    '<div class="client-info-grid">'+
+      clientInfo('사업자번호',c.businessNo||'-')+clientInfo('담당자',c.manager||'-')+clientInfo('연락처',c.phone||'-')+clientInfo('주소/지역',c.address||'-')+
+    '</div><div class="client-est-head"><b>견적 이력</b><span>발행일 최신순</span></div><div class="client-est-list">'+renderClientEstimates(ests)+'</div>';
+}
+function clientInfo(k,v){ return '<div class="client-info"><div class="k">'+esc(k)+'</div><div class="v">'+esc(v)+'</div></div>'; }
+function renderClientEstimates(rows){
+  if(!rows.length) return '<div class="client-empty" style="padding:30px 15px;">이 거래처로 저장된 견적이 아직 없습니다.</div>';
+  return rows.map(function(r){
+    return '<div class="client-est-row"><span class="edate">'+esc(r.issueDate||'-')+'</span><span class="eno">'+esc(r.estimateNo)+'</span><span class="esite" title="'+esc(r.address)+'">'+esc(r.address||'-')+'</span><span class="eamt">'+fmtWon(r.grandTotal)+'</span><a class="openLink" href="leak-estimate.html?tab=trade&id='+encodeURIComponent(r.id)+'">열기 →</a></div>';
+  }).join('');
+}
+function openClientForm(id){
+  var existing=id?clientRows.find(function(x){return x.id===id;}):null;
+  var old=document.getElementById('clientFormOverlay'); if(old) old.remove();
+  var o=document.createElement('div'); o.id='clientFormOverlay'; o.className='client-form-overlay';
+  o.innerHTML='<div class="client-form-card"><div class="client-form-head"><div><div class="client-form-title">'+(existing?'거래처 수정':'거래처 추가')+'</div><div style="font-size:11px;color:#89939f;margin-top:4px;">등록해두면 견적 작성과 거래처별 이력 관리에 사용됩니다.</div></div><button class="trash-close" onclick="document.getElementById(\'clientFormOverlay\').remove()">×</button></div>'+
+    '<div class="client-form-grid">'+
+      formField('거래처명 *','cfName',existing?existing.customerName:'')+formField('사업자번호','cfBiz',existing?existing.businessNo:'')+
+      formField('담당자','cfManager',existing&&existing.manager!=='-'?existing.manager:'')+formField('연락처','cfPhone',existing?existing.phone:'')+
+      formField('주소/지역','cfAddress',existing&&existing.address!=='-'?existing.address:'','wide')+formField('메모','cfMemo',existing?existing.memo:'','wide')+
+    '</div><div class="client-form-buttons"><button class="cancel" onclick="document.getElementById(\'clientFormOverlay\').remove()">취소</button><button class="save" onclick="saveClientForm('+(existing?('\''+esc(existing.id).replace(/'/g,"\\'")+'\''):'null')+')">저장</button></div></div>';
+  o.addEventListener('click',function(e){ if(e.target===o) o.remove(); }); document.body.appendChild(o); setTimeout(function(){document.getElementById('cfName').focus();},30);
+}
+window.openClientForm=openClientForm;
+function formField(label,id,value,cls){ return '<div class="'+(cls||'')+'"><label for="'+id+'">'+esc(label)+'</label><input id="'+id+'" value="'+esc(value||'')+'"></div>'; }
+function saveClientForm(id){
+  var name=document.getElementById('cfName').value.trim(); if(!name){ alert('거래처명을 입력해주세요.'); return; }
+  var data={name:name,businessNo:document.getElementById('cfBiz').value.trim(),manager:document.getElementById('cfManager').value.trim(),phone:document.getElementById('cfPhone').value.trim(),address:document.getElementById('cfAddress').value.trim(),memo:document.getElementById('cfMemo').value.trim(),updatedAt:Date.now()};
+  var ref=id?db.ref('b2b_estimates/__clients/'+id):db.ref('b2b_estimates/__clients').push();
+  if(!id) data.createdAt=Date.now();
+  authReadyPromise.then(function(){return ref.update(data);}).then(function(){ selectedClientId=id||ref.key; var o=document.getElementById('clientFormOverlay'); if(o)o.remove(); });
+}
+window.saveClientForm=saveClientForm;
+function deleteClient(id){
+  var c=clientRows.find(function(x){return x.id===id;}); if(!c)return;
+  var cnt=estimatesForClient(c).length;
+  if(!confirm('['+c.customerName+'] 거래처 등록정보를 삭제할까요?\n\n기존 견적 '+cnt+'건은 삭제되지 않습니다.')) return;
+  authReadyPromise.then(function(){return db.ref('b2b_estimates/__clients/'+id).remove();}).then(function(){ selectedClientId=null; var b=document.getElementById('clientDetail'); if(b)b.innerHTML='<div class="client-empty">왼쪽에서 거래처를 선택해주세요.</div>'; });
+}
+window.deleteClient=deleteClient;
 
 function nodeFor(sourceType){ return sourceType === 'trade' ? 'b2b_estimates' : 'leak_estimates'; }
 function updateTrashCount(){

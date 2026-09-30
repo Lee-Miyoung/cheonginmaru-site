@@ -960,8 +960,8 @@
         <div class="recipient-wrap">
           <div class="recipient-type-wrap edit-only-ui" title="수신 대상을 선택하세요">
             <div class="recipient-type-segment" aria-label="수신 대상">
-              <button type="button" class="recipient-type-btn active" id="recipientTypeTradeBtn" onclick="setTradeRecipientType('거래처',{save:true})">거래처</button>
-              <button type="button" class="recipient-type-btn" id="recipientTypeConsumerBtn" onclick="setTradeRecipientType('소비자',{save:true})">소비자</button>
+              <button type="button" class="recipient-type-btn active" id="recipientTypeTradeBtn" onclick="forceTradeRecipientType('거래처')">거래처</button>
+              <button type="button" class="recipient-type-btn" id="recipientTypeConsumerBtn" onclick="forceTradeRecipientType('소비자')">소비자</button>
             </div>
           </div>
           <select class="recipient-type-select recipient-type-hidden" id="tradeRecipientType" data-k="tr-recipient-type" onchange="onTradeRecipientTypeChange()"><option value="거래처">거래처</option><option value="소비자">소비자</option></select>
@@ -1174,8 +1174,12 @@ document.addEventListener('input', function(e){
 
 /* 단가 입력칸(.price-comma): 숫자만 입력해도 1,000단위 콤마를 자동으로 붙여준다 */
 function formatCommaNumber(el){
-  var digits = el.value.replace(/[^0-9]/g, '');
-  el.value = digits ? Number(digits).toLocaleString('ko-KR') : '';
+  var raw = String(el.value || '');
+  var negative = raw.trim().charAt(0) === '-';
+  var digits = raw.replace(/[^0-9]/g, '');
+  if(!digits){ el.value = negative ? '-' : ''; return; }
+  var formatted = Number(digits).toLocaleString('ko-KR');
+  el.value = negative ? '-' + formatted : formatted;
 }
 document.addEventListener('input', function(e){
   if(e.target.classList && e.target.classList.contains('price-comma')){
@@ -1274,7 +1278,7 @@ function renderLeakItems(){
       html += '<td><div class="ti-wrap" contenteditable="true" data-field="spec" data-g="' + grp.key + '" data-idx="' + idx + '" data-placeholder="규격">' + esc(it.spec) + '</div></td>';
       html += '<td class="center"><input class="ti-input ti-small" data-field="unit" data-g="' + grp.key + '" data-idx="' + idx + '" value="' + escAttr(it.unit) + '"></td>';
       html += '<td class="center"><input type="text" inputmode="decimal" pattern="[0-9.]*" class="ti-input ti-small qty-input" data-field="qty" data-g="' + grp.key + '" data-idx="' + idx + '" value="' + it.qty + '"></td>';
-      html += '<td class="num"><input type="text" inputmode="numeric" class="ti-input ti-small price-comma" data-field="price" data-g="' + grp.key + '" data-idx="' + idx + '" value="' + fmt(it.price) + '"></td>';
+      html += '<td class="num"><input type="text" inputmode="decimal" class="ti-input ti-small price-comma" data-field="price" data-g="' + grp.key + '" data-idx="' + idx + '" value="' + fmt(it.price) + '"></td>';
       html += '<td class="num amt">' + fmt(amt) + '</td>';
       html += '<td class="center"><button type="button" class="row-del" onclick="removeLeakRow(' + grp.key + ',' + idx + ')">✕</button></td>';
       html += '</tr>';
@@ -1582,7 +1586,7 @@ function renderTradeItems(){
       '<td><div class="ti-wrap" contenteditable="true" data-f="spec" data-idx="'+idx+'" data-placeholder="규격">'+esc(it.spec)+'</div></td>' +
       '<td><input class="ti-input ti-small" data-f="unit" data-idx="'+idx+'" value="'+escAttr(it.unit)+'"></td>' +
       '<td><input type="text" inputmode="decimal" pattern="[0-9.]*" class="ti-input ti-small qty-input" data-f="qty" data-idx="'+idx+'" value="'+(it.qty||0)+'"></td>' +
-      '<td><input type="text" inputmode="numeric" class="ti-input ti-small price-comma" data-f="price" data-idx="'+idx+'" value="'+fmt(it.price||0)+'"></td>' +
+      '<td><input type="text" inputmode="'+((it.name||'').indexOf('특별할인')>=0?'text':'decimal')+'" class="ti-input ti-small price-comma" data-f="price" data-idx="'+idx+'" value="'+fmt(it.price||0)+'" '+((it.name||'').indexOf('특별할인')>=0?'placeholder="-100,000"':'')+'></td>' +
       '<td class="num'+negCls+'" data-calc="supply">'+fmt(supply)+'</td>' +
       '<td class="num'+negCls+'" data-calc="vat">'+fmt(vat)+'</td>' +
       '<td class="num amt'+negCls+'" data-calc="amt">'+fmt(amt)+'</td>' +
@@ -2136,6 +2140,53 @@ function leakRecordFields(id, rec){
 function archiveSearchKey(value){
   return String(value||'').toLowerCase().replace(/[\s\-().]/g,'');
 }
+function forceTradeRecipientType(type){
+  var next = (type === '소비자') ? '소비자' : '거래처';
+  var typeEl = document.getElementById('tradeRecipientType');
+  if(!typeEl) return false;
+  typeEl.value = next;
+
+  var tradeBtn = document.getElementById('recipientTypeTradeBtn');
+  var consumerBtn = document.getElementById('recipientTypeConsumerBtn');
+  if(tradeBtn) tradeBtn.classList.toggle('active', next === '거래처');
+  if(consumerBtn) consumerBtn.classList.toggle('active', next === '소비자');
+
+  var refLabel = document.getElementById('tradeRefLabel');
+  var refName = document.getElementById('tradeRefName');
+  var honor = document.getElementById('tradeHonorific');
+  var hidden = document.getElementById('trCustomerHidden');
+  var label = document.getElementById('clientPickerTradeLabel');
+
+  if(next === '소비자'){
+    if(refLabel) refLabel.textContent = '연락처';
+    if(refName) refName.style.display = 'none';
+    if(honor) honor.textContent = '님';
+  }else{
+    if(refLabel) refLabel.textContent = '담당자/참고';
+    if(refName){ refName.style.display = 'inline-block'; refName.placeholder = '담당자명'; }
+    if(honor) honor.textContent = '귀중';
+  }
+
+  if(label){
+    var hasName = hidden && hidden.value && hidden.value !== '[거래처명]';
+    if(!hasName){
+      label.textContent = next === '소비자' ? '소비자명 선택' : '거래처명 선택';
+      label.classList.add('ph');
+    }
+  }
+
+  var panel = document.getElementById('clientPickerPanelTrade');
+  if(panel) panel.classList.remove('open');
+  var search = document.getElementById('clientPickerSearchTrade');
+  if(search) search.value = '';
+
+  try{ if(typeof renderClientPickerList === 'function') renderClientPickerList('Trade'); }catch(e){ console.warn(e); }
+  try{ if(typeof saveTradeLocal === 'function') saveTradeLocal(); }catch(e){ console.warn(e); }
+  try{ if(typeof setTradeStatus === 'function') setTradeStatus((next==='소비자'?'소비자용':'거래처용')+'으로 변경됨 · 저장 버튼을 눌러 반영하세요',''); }catch(e){}
+  return true;
+}
+window.forceTradeRecipientType = forceTradeRecipientType;
+
 function setTradeRecipientType(type, opts){
   opts=opts||{};
   var typeEl=document.getElementById('tradeRecipientType');

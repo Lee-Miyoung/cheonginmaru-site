@@ -173,6 +173,13 @@
   .estimate-result-products{ min-width:0; font-size:10.7px; color:#586575; line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .estimate-result-products b{ color:#294d7a; font-weight:700; }
   .estimate-result-amt{ font-size:12.2px; font-weight:900; color:#17345f; text-align:right; white-space:nowrap; }
+  .estimate-result-wrap{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:7px; align-items:stretch; margin-bottom:6px; }
+  .estimate-result-wrap .estimate-result-row{ margin-bottom:0; }
+  .estimate-delete-btn{
+    min-width:54px; border:1px solid #e0c9c9; background:#fff; color:#a04747; border-radius:7px;
+    font-family:inherit; font-size:10.5px; font-weight:800; padding:0 9px; cursor:pointer;
+  }
+  .estimate-delete-btn:hover{ background:#fff4f4; border-color:#d8aaaa; color:#8d3030; }
 
   table.items{ width:100%; border-collapse:separate; border-spacing:0; font-size:12px; margin-bottom:0; border:1px solid #d9e0e8; border-radius:6px 6px 0 0; overflow:hidden; }
   table.items th{ background:#234b7e; color:#fff; font-weight:700; padding:9px 6px; text-align:center; border:0; border-right:1px solid rgba(255,255,255,.16); letter-spacing:-.15px; }
@@ -394,6 +401,8 @@
 
   @media (max-width:760px){
     .estimate-browser-head{ grid-template-columns:1fr; }
+    .estimate-result-wrap{ grid-template-columns:minmax(0,1fr) 48px; }
+    .estimate-delete-btn{ min-width:48px; padding:0 5px; }
     .client-manager-form{ grid-template-columns:1fr; }
     .client-reg-row{ grid-template-columns:1fr 1fr; }
     .estimate-result-row{ grid-template-columns:1fr; gap:4px; }
@@ -2126,11 +2135,13 @@ function renderTradeArchive(){
       var sub=[r.date,r.phone,r.refName].filter(Boolean).join(' · ');
       var products=(r.itemNames||[]).slice(0,3).join(' · ');
       if((r.itemNames||[]).length>3) products+=' 외 '+((r.itemNames||[]).length-3)+'건';
-      html+='<button type="button" class="estimate-result-row" onclick="openArchiveEstimate(\''+escAttr(r.source)+'\',\''+escAttr(r.id).replace(/'/g,"\\'")+'\')">'+
-        '<span class="estimate-result-no">'+esc(r.estimateNo||r.id)+'</span>'+
-        '<span class="estimate-result-main"><div class="estimate-result-site">'+esc(r.site||'현장주소 없음')+'</div><div class="estimate-result-sub">'+esc(sub||'-')+'</div></span>'+
-        '<span class="estimate-result-products"><b>품목</b> '+esc(products||'품목 없음')+'</span>'+
-        '<span class="estimate-result-amt">'+fmt(r.amount||0)+'원</span></button>';
+      html+='<div class="estimate-result-wrap">'+
+        '<button type="button" class="estimate-result-row" onclick="openArchiveEstimate(\''+escAttr(r.source)+'\',\''+escAttr(r.id).replace(/'/g,"\\'")+'\')">'+
+          '<span class="estimate-result-no">'+esc(r.estimateNo||r.id)+'</span>'+ 
+          '<span class="estimate-result-main"><div class="estimate-result-site">'+esc(r.site||'현장주소 없음')+'</div><div class="estimate-result-sub">'+esc(sub||'-')+'</div></span>'+ 
+          '<span class="estimate-result-products"><b>품목</b> '+esc(products||'품목 없음')+'</span>'+ 
+          '<span class="estimate-result-amt">'+fmt(r.amount||0)+'원</span></button>'+ 
+        '<button type="button" class="estimate-delete-btn" title="견적 삭제" onclick="deleteArchiveEstimate(\''+escAttr(r.source)+'\',\''+escAttr(r.id).replace(/'/g,"\\'")+'\')">삭제</button></div>';
     });
     html+='</div>';
   });
@@ -2140,6 +2151,22 @@ function openArchiveEstimate(source,id){
   var url=new URL(window.location.href); url.searchParams.set('tab',source==='leak'?'leak':'trade'); url.searchParams.set('id',id); window.location.href=url.toString();
 }
 function openTradeEstimate(id){ openArchiveEstimate('trade',id); }
+function deleteArchiveEstimate(source,id){
+  var rec=tradeArchiveCache.find(function(x){ return x.source===source && x.id===id; });
+  var label=rec ? ((rec.estimateNo||id) + (rec.name ? ' · ' + rec.name : '')) : id;
+  var kind=source==='leak' ? '누수복구 견적' : ((rec&&rec.type)||'견적');
+  if(!confirm(kind+' ['+label+']을 삭제할까요?\n\n삭제한 견적은 복구할 수 없습니다.')) return;
+  if(!db){ alert('저장 연결을 확인해주세요.'); return; }
+  var path=(source==='leak' ? 'leak_estimates/' : 'b2b_estimates/') + id;
+  authReadyPromise.then(function(){ return db.ref(path).remove(); }).then(function(){
+    try{ localStorage.removeItem((source==='leak' ? 'wd-doc-v4-leak-' : 'wd-doc-v4-trade-') + id); }catch(e){}
+    loadTradeArchive();
+  }).catch(function(err){
+    console.error(err);
+    alert('견적 삭제에 실패했습니다. 권한 또는 네트워크 상태를 확인해주세요.');
+  });
+}
+window.deleteArchiveEstimate=deleteArchiveEstimate;
 function loadKnownClients(){
   if(!db) return;
   knownTradeContacts = [];

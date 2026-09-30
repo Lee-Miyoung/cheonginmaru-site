@@ -126,7 +126,7 @@
     max-width:860px; margin:0 auto 14px; background:#fff; border:1px solid #d8dee7; border-radius:10px;
     box-shadow:0 8px 24px rgba(23,52,95,.07); padding:16px 18px 14px;
   }
-  .estimate-browser-head{ display:grid; grid-template-columns:auto 130px minmax(260px,1fr) auto; align-items:center; gap:10px; }
+  .estimate-browser-head{ display:grid; grid-template-columns:auto 130px minmax(260px,1fr) auto auto; align-items:center; gap:10px; }
   .estimate-browser-title-wrap{ min-width:150px; }
   .estimate-browser-title{ display:block; font-size:14px; font-weight:900; color:var(--brand); letter-spacing:-.3px; }
   .estimate-browser-caption{ display:block; margin-top:2px; font-size:10.5px; color:#8a929d; }
@@ -268,6 +268,70 @@
   .area-chip-grid label:has(input:checked){ background:var(--accent-bg); border-color:var(--brand-2); color:var(--brand); font-weight:700; }
 
   /* ---- 거래처 선택 아코디언 (팝오버) ---- */
+
+  .recipient-type-segment{
+    display:inline-flex; align-items:center; border:1px solid #cfd8e5; border-radius:9px; overflow:hidden;
+    background:#f7f9fc; flex-shrink:0;
+  }
+  .recipient-type-btn{
+    border:0; border-right:1px solid #d9e0e8; background:transparent; color:#687486;
+    font-family:inherit; font-size:12px; font-weight:800; padding:8px 12px; cursor:pointer; white-space:nowrap;
+  }
+  .recipient-type-btn:last-child{ border-right:0; }
+  .recipient-type-btn.active{ background:var(--brand); color:#fff; }
+  .recipient-type-hidden{ position:absolute !important; width:1px !important; height:1px !important; opacity:0 !important; pointer-events:none !important; }
+  .trade-sheet .recipient-wrap{ overflow:visible; align-items:center; }
+  .trade-sheet .client-picker{ min-width:220px; }
+  .trade-sheet .client-picker-trigger{ width:100%; min-width:220px !important; overflow:visible; }
+  .trade-sheet .client-picker-trigger span:first-child{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  .trade-sheet .client-picker-panel{
+    width:360px; max-width:min(86vw,420px); max-height:360px; overflow:visible;
+  }
+  .trade-sheet .client-picker-list{ max-height:260px; overflow-y:auto; }
+  .trade-sheet .client-picker-list .cp-item{ white-space:normal; line-height:1.45; word-break:keep-all; overflow-wrap:anywhere; }
+  .archive-trash-btn{
+    font-family:inherit; font-size:12px; font-weight:800; color:#7b4b4b; background:#fff;
+    border:1px solid #dfcaca; border-radius:8px; padding:9px 12px; cursor:pointer; white-space:nowrap;
+  }
+  .archive-trash-btn:hover{ background:#fff6f6; border-color:#cfaeae; }
+  .trash-overlay{
+    position:fixed; inset:0; z-index:10080; background:rgba(15,23,42,.54);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .trash-card{
+    width:min(860px,96vw); max-height:88vh; overflow:auto; background:#fff; border-radius:16px;
+    box-shadow:0 24px 70px rgba(15,23,42,.28); border:1px solid #e4e9ef; padding:22px;
+  }
+  .trash-head{ display:flex; justify-content:space-between; gap:14px; align-items:flex-start; margin-bottom:14px; }
+  .trash-title{ font-size:19px; font-weight:900; color:var(--brand); }
+  .trash-sub{ margin-top:4px; font-size:11.5px; color:#7b8490; }
+  .trash-close{ border:0; background:#f1f4f8; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:18px; }
+  .trash-row{
+    display:grid; grid-template-columns:105px 150px minmax(0,1fr) 110px auto auto;
+    gap:10px; align-items:center; border-top:1px solid #edf0f4; padding:11px 2px; font-size:11.5px;
+  }
+  .trash-row:first-child{ border-top:0; }
+  .trash-type{ font-weight:800; color:#315b91; }
+  .trash-no{ color:#6e7885; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .trash-main{ min-width:0; }
+  .trash-main b{ display:block; font-size:12.5px; color:#25364c; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .trash-main span{ display:block; color:#84909c; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .trash-date{ color:#7c8794; white-space:nowrap; }
+  .trash-restore, .trash-purge{
+    font-family:inherit; font-size:11px; font-weight:800; border-radius:7px; padding:6px 9px; cursor:pointer; white-space:nowrap;
+  }
+  .trash-restore{ color:#264f82; background:#f3f7fc; border:1px solid #c8d7e8; }
+  .trash-purge{ color:#8f3636; background:#fff; border:1px solid #dfcaca; }
+  @media(max-width:760px){
+    .trade-sheet .recipient-wrap{ display:grid; grid-template-columns:1fr; align-items:stretch; }
+    .recipient-type-segment{ width:max-content; }
+    .trade-sheet .client-picker{ width:100%; min-width:0; }
+    .trade-sheet .client-picker-trigger{ width:100%; min-width:0 !important; }
+    .trade-sheet .client-picker-panel{ width:min(92vw,360px); }
+    .trash-row{ grid-template-columns:1fr auto auto; }
+    .trash-type,.trash-no,.trash-date{ display:none; }
+  }
+
   .client-picker{ position:relative; display:inline-block; }
   .client-picker-trigger{
     font-family:inherit; font-size:16px; padding:10px 14px; border:1px solid var(--line); border-radius:7px;
@@ -885,6 +949,7 @@
     <select id="tradeArchiveType" onchange="renderTradeArchive()"><option value="all">전체 유형</option><option value="누수복구">누수복구</option><option value="거래처용">거래처용</option><option value="소비자용">소비자용</option></select>
     <input id="tradeArchiveSearch" placeholder="이름 · 휴대폰 일부 · 현장주소 · 제품명 · 견적번호 검색" oninput="renderTradeArchive()">
     <button type="button" class="archive-client-btn" onclick="openTradeClientManager()">＋ 거래처 관리</button>
+    <button type="button" class="archive-trash-btn" onclick="openEstimateTrash()">🗑 휴지통 <span id="trashCountBadge"></span></button>
   </div>
   <div class="estimate-browser-results" id="tradeArchiveResults"><div class="estimate-browser-empty">저장된 견적을 불러오는 중입니다.</div></div>
 </div>
@@ -909,7 +974,11 @@
       <td class="lbl">수신</td>
       <td>
         <div class="recipient-wrap">
-          <select class="recipient-type-select" id="tradeRecipientType" data-k="tr-recipient-type" onchange="onTradeRecipientTypeChange()"><option value="거래처">거래처</option><option value="소비자">소비자</option></select>
+          <div class="recipient-type-segment" aria-label="수신 유형">
+            <button type="button" class="recipient-type-btn active" id="recipientTypeTradeBtn" onclick="setTradeRecipientType('거래처')">거래처</button>
+            <button type="button" class="recipient-type-btn" id="recipientTypeConsumerBtn" onclick="setTradeRecipientType('소비자')">소비자</button>
+          </div>
+          <select class="recipient-type-select recipient-type-hidden" id="tradeRecipientType" data-k="tr-recipient-type" onchange="onTradeRecipientTypeChange()"><option value="거래처">거래처</option><option value="소비자">소비자</option></select>
           <div class="client-picker" id="clientPickerTrade">
             <button type="button" class="client-picker-trigger" onclick="toggleClientPicker('Trade')" style="min-width:190px;">
               <span id="clientPickerTradeLabel" class="ph">거래처명 선택</span><span>▾</span>
@@ -2038,6 +2107,7 @@ var knownClientsList = [];
 var knownTradeContacts = [];
 var registeredTradeClients = [];
 var tradeArchiveCache = [];
+var tradeTrashCache = [];
 
 function normalizeRecipientType(rec){
   var d=(rec && rec.docData)||{}, m=(rec && rec.meta)||{};
@@ -2074,9 +2144,21 @@ function leakRecordFields(id, rec){
 function archiveSearchKey(value){
   return String(value||'').toLowerCase().replace(/[\s\-().]/g,'');
 }
+function setTradeRecipientType(type){
+  var el=document.getElementById('tradeRecipientType');
+  if(!el) return;
+  el.value=(type==='소비자'?'소비자':'거래처');
+  onTradeRecipientTypeChange();
+}
+window.setTradeRecipientType=setTradeRecipientType;
+
 function onTradeRecipientTypeChange(saveIt){
   var typeEl=document.getElementById('tradeRecipientType'); if(!typeEl) return;
   var type=typeEl.value || '거래처';
+  var tradeBtn=document.getElementById('recipientTypeTradeBtn');
+  var consumerBtn=document.getElementById('recipientTypeConsumerBtn');
+  if(tradeBtn) tradeBtn.classList.toggle('active', type!=='소비자');
+  if(consumerBtn) consumerBtn.classList.toggle('active', type==='소비자');
   var refLabel=document.getElementById('tradeRefLabel');
   var refName=document.getElementById('tradeRefName');
   var honor=document.getElementById('tradeHonorific');
@@ -2102,12 +2184,24 @@ function loadTradeArchive(){
   }).then(function(snaps){
     var tradeVal=(snaps[0]&&snaps[0].val())||{};
     var leakVal=(snaps[1]&&snaps[1].val())||{};
-    var trades=Object.keys(tradeVal).filter(function(id){return id!=='__clients';}).map(function(id){ return tradeRecordFields(id,tradeVal[id]); });
-    var leaks=Object.keys(leakVal).map(function(id){ return leakRecordFields(id,leakVal[id]); });
-    tradeArchiveCache=trades.concat(leaks).sort(function(a,b){ return (b.updatedAt||0)-(a.updatedAt||0); });
-    knownTradeContacts=trades.slice();
+    var tradeIds=Object.keys(tradeVal).filter(function(id){return id!=='__clients';});
+    var activeTrades=[], deletedTrades=[];
+    tradeIds.forEach(function(id){
+      var rec=tradeVal[id]||{}, row=tradeRecordFields(id,rec);
+      row.deletedAt=Number((rec.meta&&rec.meta.deletedAt)||0);
+      (row.deletedAt ? deletedTrades : activeTrades).push(row);
+    });
+    var activeLeaks=[], deletedLeaks=[];
+    Object.keys(leakVal).forEach(function(id){
+      var rec=leakVal[id]||{}, row=leakRecordFields(id,rec);
+      row.deletedAt=Number((rec.meta&&rec.meta.deletedAt)||0);
+      (row.deletedAt ? deletedLeaks : activeLeaks).push(row);
+    });
+    tradeArchiveCache=activeTrades.concat(activeLeaks).sort(function(a,b){ return (b.updatedAt||0)-(a.updatedAt||0); });
+    tradeTrashCache=deletedTrades.concat(deletedLeaks).sort(function(a,b){ return (b.deletedAt||0)-(a.deletedAt||0); });
+    knownTradeContacts=activeTrades.slice();
     registeredTradeClients=Object.keys((tradeVal.__clients)||{}).map(function(id){ var x=tradeVal.__clients[id]||{}; x.registryId=id; return x; });
-    renderTradeArchive(); renderClientPickerList('Trade'); renderRegisteredTradeClients();
+    renderTradeArchive(); renderClientPickerList('Trade'); renderRegisteredTradeClients(); updateTrashCount();
   }).catch(function(err){
     console.error('견적 목록 불러오기 실패',err);
     var box=document.getElementById('tradeArchiveResults'); if(box) box.innerHTML='<div class="estimate-browser-empty">견적 목록을 불러오지 못했습니다.</div>';
@@ -2155,18 +2249,67 @@ function deleteArchiveEstimate(source,id){
   var rec=tradeArchiveCache.find(function(x){ return x.source===source && x.id===id; });
   var label=rec ? ((rec.estimateNo||id) + (rec.name ? ' · ' + rec.name : '')) : id;
   var kind=source==='leak' ? '누수복구 견적' : ((rec&&rec.type)||'견적');
-  if(!confirm(kind+' ['+label+']을 삭제할까요?\n\n삭제한 견적은 복구할 수 없습니다.')) return;
+  if(!confirm(kind+' ['+label+']을 휴지통으로 이동할까요?\n\n휴지통에서 다시 복구할 수 있습니다.')) return;
   if(!db){ alert('저장 연결을 확인해주세요.'); return; }
-  var path=(source==='leak' ? 'leak_estimates/' : 'b2b_estimates/') + id;
-  authReadyPromise.then(function(){ return db.ref(path).remove(); }).then(function(){
-    try{ localStorage.removeItem((source==='leak' ? 'wd-doc-v4-leak-' : 'wd-doc-v4-trade-') + id); }catch(e){}
+  var path=(source==='leak' ? 'leak_estimates/' : 'b2b_estimates/') + id + '/meta';
+  authReadyPromise.then(function(){
+    return db.ref(path).update({ deletedAt:Date.now(), deletedBy:'estimate-ui' });
+  }).then(function(){
     loadTradeArchive();
   }).catch(function(err){
     console.error(err);
-    alert('견적 삭제에 실패했습니다. 권한 또는 네트워크 상태를 확인해주세요.');
+    alert('견적을 휴지통으로 이동하지 못했습니다. 권한 또는 네트워크 상태를 확인해주세요.');
   });
 }
 window.deleteArchiveEstimate=deleteArchiveEstimate;
+
+function updateTrashCount(){
+  var el=document.getElementById('trashCountBadge');
+  if(el) el.textContent=tradeTrashCache.length ? '('+tradeTrashCache.length+')' : '';
+}
+function openEstimateTrash(){
+  var old=document.getElementById('estimateTrashOverlay'); if(old) old.remove();
+  var overlay=document.createElement('div');
+  overlay.id='estimateTrashOverlay'; overlay.className='trash-overlay';
+  overlay.innerHTML='<div class="trash-card"><div class="trash-head"><div><div class="trash-title">휴지통</div><div class="trash-sub">삭제한 견적은 여기에서 복구할 수 있습니다. 완전 삭제하면 복구할 수 없습니다.</div></div><button class="trash-close" onclick="document.getElementById(\'estimateTrashOverlay\').remove()">×</button></div><div id="estimateTrashList"></div></div>';
+  overlay.addEventListener('click',function(e){ if(e.target===overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  renderEstimateTrash();
+}
+function renderEstimateTrash(){
+  var box=document.getElementById('estimateTrashList'); if(!box) return;
+  if(!tradeTrashCache.length){ box.innerHTML='<div class="estimate-browser-empty">휴지통이 비어 있습니다.</div>'; return; }
+  box.innerHTML=tradeTrashCache.map(function(r){
+    var deleted=r.deletedAt ? new Date(r.deletedAt).toLocaleDateString('ko-KR') : '-';
+    return '<div class="trash-row">'+
+      '<span class="trash-type">'+esc(r.type||'견적')+'</span>'+
+      '<span class="trash-no">'+esc(r.estimateNo||r.id)+'</span>'+
+      '<span class="trash-main"><b>'+esc(r.name||'이름 미지정')+'</b><span>'+esc(r.site||'현장주소 없음')+'</span></span>'+
+      '<span class="trash-date">'+esc(deleted)+'</span>'+
+      '<button class="trash-restore" onclick="restoreArchiveEstimate(\''+escAttr(r.source)+'\',\''+escAttr(r.id).replace(/'/g,"\\'")+'\')">복구</button>'+
+      '<button class="trash-purge" onclick="purgeArchiveEstimate(\''+escAttr(r.source)+'\',\''+escAttr(r.id).replace(/'/g,"\\'")+'\')">완전삭제</button>'+
+    '</div>';
+  }).join('');
+}
+function restoreArchiveEstimate(source,id){
+  var path=(source==='leak' ? 'leak_estimates/' : 'b2b_estimates/') + id + '/meta';
+  authReadyPromise.then(function(){ return db.ref(path).update({deletedAt:null,deletedBy:null}); }).then(function(){
+    return loadTradeArchive();
+  }).then(function(){ renderEstimateTrash(); }).catch(function(e){ console.error(e); alert('복구에 실패했습니다.'); });
+}
+function purgeArchiveEstimate(source,id){
+  var rec=tradeTrashCache.find(function(x){return x.source===source&&x.id===id;});
+  var label=rec?((rec.estimateNo||id)+(rec.name?' · '+rec.name:'')):id;
+  if(!confirm('['+label+']을 완전히 삭제할까요?\n\n이 작업은 되돌릴 수 없습니다.')) return;
+  var path=(source==='leak' ? 'leak_estimates/' : 'b2b_estimates/') + id;
+  authReadyPromise.then(function(){ return db.ref(path).remove(); }).then(function(){
+    try{ localStorage.removeItem((source==='leak' ? 'wd-doc-v4-leak-' : 'wd-doc-v4-trade-') + id); }catch(e){}
+    return loadTradeArchive();
+  }).then(function(){ renderEstimateTrash(); }).catch(function(e){ console.error(e); alert('완전 삭제에 실패했습니다.'); });
+}
+window.openEstimateTrash=openEstimateTrash;
+window.restoreArchiveEstimate=restoreArchiveEstimate;
+window.purgeArchiveEstimate=purgeArchiveEstimate;
 function loadKnownClients(){
   if(!db) return;
   knownTradeContacts = [];

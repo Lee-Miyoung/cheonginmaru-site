@@ -19,6 +19,10 @@
 
   /* ---- 탭 ---- */
   .tabs{ max-width:860px; margin:0 auto 10px; display:flex; gap:8px; }
+  .top-nav{ max-width:860px; margin:0 auto 10px; display:flex; justify-content:flex-end; align-items:center; gap:8px; }
+  .top-nav a{ font-family:inherit; font-size:13px; font-weight:800; text-decoration:none; color:var(--brand); background:#fff; border:1px solid var(--line); border-radius:9px; padding:9px 13px; box-shadow:0 3px 10px rgba(20,24,33,.05); }
+  .top-nav a:hover{ background:var(--accent-bg); }
+
   .tab-btn{
     font-family:inherit; font-size:18px; font-weight:900; border:none; border-radius:10px 10px 0 0;
     padding:16px 26px; cursor:pointer; background:#dfe3ea; color:var(--ink-faint);
@@ -451,7 +455,7 @@
   @media print{
     *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
     body{ background:#fff; padding:0; font-size:12px; }
-    .toolbar, .tabs, .meta-bar, .estimate-browser, .error-banner, #staffBadge{ display:none !important; }
+    .toolbar, .tabs, .top-nav, .meta-bar, .estimate-browser, .error-banner, #staffBadge{ display:none !important; }
     .sheet{ box-shadow:none; border-radius:0; margin:0 auto; padding:5mm 8mm 4mm; max-width:none; }
     .sheet.page-break{ page-break-before:always; }
     .trade-sheet .brand-name{ font-size:14px; }
@@ -665,6 +669,10 @@
 
 <div id="mainWrap" style="display:none;">
 
+<div class="top-nav">
+  <a href="leak-dashboard.html">📋 견적 목록</a>
+</div>
+
 <div class="tabs">
   <button class="tab-btn active" data-tab="leak" onclick="switchTab('leak')">🌊 누수복구 견적</button>
   <button class="tab-btn" data-tab="trade" onclick="switchTab('trade')">📦 일반 견적</button>
@@ -672,13 +680,11 @@
 
 <div class="toolbar">
   <div class="toolbar-row">
-    <div class="hint">✏️ 문서의 어떤 글자든 탭해서 바로 수정하세요. 저장 버튼을 눌러야 전 직원이 공유된 목록에서 볼 수 있습니다.</div>
+    <div class="hint">✏️ 내용을 수정한 뒤 견적 저장을 누르면 공유 목록에 반영됩니다. 새 견적은 별도 버튼으로 시작하세요.</div>
     <div class="btns">
       <button class="primary" onclick="manualSave()">💾 견적 저장</button>
       <button class="ghost" onclick="saveAsNewEstimate()">📄 다른 이름으로 저장</button>
-      <a class="btn ghost" href="leak-dashboard.html">📋 견적 목록으로</a>
       <button class="ghost" onclick="startNewEstimate()">＋ 새 견적</button>
-      <button class="ghost" onclick="if(confirm('처음 예시 내용으로 되돌릴까요? 저장하지 않은 수정 내용이 사라집니다.')) resetActiveTab()">↺ 초기화</button>
       <button class="primary" onclick="printEstimate()">🖨️ PDF로 저장 / 인쇄</button>
       <button class="ghost" onclick="saveAsImage()">🖼️ 이미지로 저장</button>
     </div>

@@ -103,8 +103,7 @@
     font-family:inherit; font-size:11.5px; font-weight:700; color:var(--brand);
     border:1px solid #c9d2df; border-radius:4px; padding:7px 26px 7px 9px; background:#f7f9fc; min-width:86px;
   }
-  .recipient-type-wrap{ display:flex; align-items:center; gap:7px; flex-shrink:0; }
-  .recipient-type-caption{ font-size:10.5px; font-weight:800; color:#778292; white-space:nowrap; }
+  .recipient-type-wrap{ display:flex; align-items:center; flex-shrink:0; }
   .recipient-type-segment{display:inline-flex;border:1px solid #c9d2df;border-radius:8px;overflow:hidden;background:#f7f9fc;flex-shrink:0;}
   .recipient-type-btn{border:0;border-right:1px solid #d7dee8;background:#fff;color:#6d7886;font-family:inherit;font-size:11.5px;font-weight:800;padding:8px 12px;cursor:pointer;white-space:nowrap;}
   .recipient-type-btn:last-child{border-right:0;}
@@ -959,11 +958,10 @@
       <td class="lbl">수신</td>
       <td>
         <div class="recipient-wrap">
-          <div class="recipient-type-wrap edit-only-ui">
-            <span class="recipient-type-caption">수신유형</span>
-            <div class="recipient-type-segment" aria-label="수신 유형">
-              <button type="button" class="recipient-type-btn active" data-recipient-type="거래처" id="recipientTypeTradeBtn" onclick="chooseTradeRecipientType(event,'거래처')">거래처</button>
-              <button type="button" class="recipient-type-btn" data-recipient-type="소비자" id="recipientTypeConsumerBtn" onclick="chooseTradeRecipientType(event,'소비자')">소비자</button>
+          <div class="recipient-type-wrap edit-only-ui" title="수신 대상을 선택하세요">
+            <div class="recipient-type-segment" aria-label="수신 대상">
+              <button type="button" class="recipient-type-btn active" id="recipientTypeTradeBtn" onclick="setTradeRecipientType('거래처',{save:true})">거래처</button>
+              <button type="button" class="recipient-type-btn" id="recipientTypeConsumerBtn" onclick="setTradeRecipientType('소비자',{save:true})">소비자</button>
             </div>
           </div>
           <select class="recipient-type-select recipient-type-hidden" id="tradeRecipientType" data-k="tr-recipient-type" onchange="onTradeRecipientTypeChange()"><option value="거래처">거래처</option><option value="소비자">소비자</option></select>
@@ -2147,37 +2145,29 @@ function setTradeRecipientType(type, opts){
   var changed=prev!==next;
   typeEl.value=next;
 
-  /* 기존 견적을 거래처↔소비자로 변경할 때는 이름/연락처를 임의로 없애지 않는다.
-     새 이름을 선택하면 그때 해당 값이 바뀐다. */
-  if(changed && opts.clearRecipient===true){
-    var h=document.getElementById('trCustomerHidden'); if(h) h.value='';
-    var p=document.getElementById('tradeRefPhone'); if(p) p.value='';
-    var r=document.getElementById('tradeRefName'); if(r) r.value='';
+  /* 유형 전환 자체는 기존 견적 내용을 지우지 않는다. 새 수신인을 선택하면 이름/연락처가 교체된다. */
+  try{
+    onTradeRecipientTypeChange(false);
+    var panel=document.getElementById('clientPickerPanelTrade');
+    if(panel) panel.classList.remove('open');
+    var search=document.getElementById('clientPickerSearchTrade');
+    if(search) search.value='';
+    syncClientPickerLabel('Trade');
+    renderClientPickerList('Trade');
+    if(opts.save!==false){
+      saveTradeLocal();
+      if(typeof setTradeStatus==='function' && changed){
+        setTradeStatus((next==='소비자'?'소비자용':'거래처용')+'으로 변경됨 · 저장 버튼을 눌러 반영하세요', '');
+      }
+    }
+    return true;
+  }catch(err){
+    console.error('수신 유형 전환 오류',err);
+    if(typeof setTradeStatus==='function') setTradeStatus('수신 유형 전환 중 오류가 발생했습니다.', 'err');
+    return false;
   }
-
-  onTradeRecipientTypeChange(false);
-  syncClientPickerLabel('Trade');
-  renderClientPickerList('Trade');
-  if(opts.save!==false){
-    saveTradeLocal();
-    if(typeof setTradeStatus==='function') setTradeStatus('수신 유형 변경됨 · 저장 버튼을 눌러 반영하세요', '');
-  }
-  return true;
 }
 window.setTradeRecipientType=setTradeRecipientType;
-
-function chooseTradeRecipientType(ev,type){
-  if(ev){ ev.preventDefault(); ev.stopPropagation(); }
-  return setTradeRecipientType(type,{save:true,clearRecipient:false});
-}
-window.chooseTradeRecipientType=chooseTradeRecipientType;
-document.addEventListener('click',function(e){
-  var btn=e.target && e.target.closest ? e.target.closest('[data-recipient-type]') : null;
-  if(!btn || !btn.closest('#tabTrade')) return;
-  e.preventDefault();
-  var t=btn.getAttribute('data-recipient-type');
-  setTradeRecipientType(t,{save:true,clearRecipient:false});
-});
 
 function onTradeRecipientTypeChange(saveIt){
   var typeEl=document.getElementById('tradeRecipientType'); if(!typeEl) return;
@@ -2188,10 +2178,8 @@ function onTradeRecipientTypeChange(saveIt){
   var label=document.getElementById('clientPickerTradeLabel');
   var tradeBtn=document.getElementById('recipientTypeTradeBtn');
   var consumerBtn=document.getElementById('recipientTypeConsumerBtn');
-  var regBtn=document.getElementById('recipientRegisterBtn');
   if(tradeBtn) tradeBtn.classList.toggle('active',type==='거래처');
   if(consumerBtn) consumerBtn.classList.toggle('active',type==='소비자');
-  if(regBtn) regBtn.style.display=(type==='거래처'?'inline-block':'none');
   if(type==='소비자'){
     if(refLabel) refLabel.textContent='연락처';
     if(refName) refName.style.display='none';

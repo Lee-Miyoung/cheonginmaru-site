@@ -133,6 +133,14 @@
   .trade-sheet .client-picker-list{max-height:300px;overflow-y:auto;}
   .trade-sheet .client-picker-list .cp-item{white-space:normal;word-break:keep-all;overflow-wrap:anywhere;line-height:1.4;padding:11px 10px;}
   .trade-sheet .client-picker-list .cp-item b{display:block;color:#233e63;font-size:13px;margin-bottom:2px;}
+  /* 거래처 검색 팝오버는 표 영역 밖으로 자연스럽게 펼쳐지도록 */
+  .trade-sheet table.infogrid{overflow:visible!important;}
+  .trade-sheet table.infogrid tr:first-child td:nth-child(2){position:relative;z-index:40;overflow:visible!important;}
+  .trade-sheet .client-picker{z-index:120;}
+  .trade-sheet .client-picker-panel{z-index:9999!important;max-height:min(52vh,430px);overflow:hidden;box-shadow:0 18px 42px rgba(31,56,100,.18),0 4px 12px rgba(31,56,100,.08);border-color:#d6deea;}
+  .trade-sheet .client-picker-list{max-height:min(38vh,310px);overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:2px;}
+  .trade-sheet .client-picker-list .cp-item{position:relative;z-index:1;background:#fff;}
+  .trade-sheet .client-picker-list .cp-item:first-child{margin-top:2px;}
   .estimate-group{padding:0!important;margin:0 0 8px;border:1px solid #e1e6ed!important;border-radius:9px;overflow:hidden;background:#fff;}
   .estimate-group-head{margin:0!important;width:100%;border:0;background:#f8fafc;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;font-family:inherit;text-align:left;}
   .estimate-group-head:hover{background:#f2f6fb;}
@@ -1038,7 +1046,7 @@
               <span id="clientPickerTradeLabel" class="ph">거래처명 선택</span><span>▾</span>
             </button>
             <div class="client-picker-panel" id="clientPickerPanelTrade">
-              <input type="text" class="cp-search" id="clientPickerSearchTrade" placeholder="검색 또는 새로 입력..." oninput="renderClientPickerList('Trade')" onkeydown="handleClientPickerKey(event,'Trade')">
+              <input type="text" class="cp-search" id="clientPickerSearchTrade" placeholder="거래처명 한 글자부터 검색..." oninput="renderClientPickerList('Trade')" onkeydown="handleClientPickerKey(event,'Trade')">
               <div class="client-picker-list" id="clientPickerListTrade"></div>
               <div class="cp-direct-hint">목록에 없으면 입력 후 Enter — 직접 입력한 이름이 바로 사용됩니다.</div>
             </div>
@@ -1623,6 +1631,39 @@ function syncAreaChipsFromText(){
 var tradeEstimateId = null;
 var tradeItems = [];
 var tradePriceCache = null;
+var CONSUMER_UNIT_MARKUP = 10000;
+
+function currentTradeRecipientType(){
+  var el = document.getElementById('tradeRecipientType');
+  return (el && el.value === '소비자') ? '소비자' : '거래처';
+}
+function priceForRecipient(basePrice, recipientType){
+  var base = num(basePrice);
+  return base + ((recipientType === '소비자') ? CONSUMER_UNIT_MARKUP : 0);
+}
+function findSheetBasePriceForItem(it){
+  if(!it) return null;
+  if(it.baseTradePrice !== undefined && it.baseTradePrice !== null && it.baseTradePrice !== '') return num(it.baseTradePrice);
+  if(!tradePriceCache || !tradePriceCache.length) return null;
+  var name = String(it.name||'').trim();
+  var spec = String(it.spec||'').trim();
+  var hit = tradePriceCache.find(function(p){ return String(p.name||'').trim()===name && String(p.spec||'').trim()===spec; });
+  return hit ? num(hit.tradePrice != null ? hit.tradePrice : hit.price) : null;
+}
+function syncTradeItemPricesForRecipient(recipientType){
+  var changed = false;
+  tradeItems.forEach(function(it){
+    if(!it || (it.name||'').indexOf('특별할인')>=0) return;
+    var base = findSheetBasePriceForItem(it);
+    if(base === null) return;
+    it.source = 'sheet';
+    it.baseTradePrice = base;
+    var nextPrice = priceForRecipient(base, recipientType);
+    if(num(it.price) !== nextPrice){ it.price = nextPrice; changed = true; }
+  });
+  if(changed) renderTradeItems();
+  return changed;
+}
 
 function collectTradeDocData(){
   var data = {};
@@ -1655,7 +1696,7 @@ function loadTradeLocal(){
 }
 
 function addTradeRow(prefill){
-  tradeItems.push(Object.assign({ name:'', spec:'', unit:'', qty:1, price:0, note:'' }, prefill || {}));
+  tradeItems.push(Object.assign({ name:'', spec:'', unit:'', qty:1, price:0, note:'', source:'manual', baseTradePrice:null }, prefill || {}));
   renderTradeItems();
   saveTradeLocal();
 }
@@ -1711,6 +1752,10 @@ document.addEventListener('input', function(e){
     var idx = +e.target.getAttribute('data-idx'), f = e.target.getAttribute('data-f'), val = e.target.value;
     if(!tradeItems[idx]) return;
     tradeItems[idx][f] = (f==='qty'||f==='price') ? num(val) : val;
+    if(f==='price' && tradeItems[idx].source==='sheet'){
+      var entered = num(val);
+      tradeItems[idx].baseTradePrice = entered - (currentTradeRecipientType()==='소비자' ? CONSUMER_UNIT_MARKUP : 0);
+    }
     updateTradeRowCalc(idx);
     saveTradeLocal();
   } else if(e.target.classList && e.target.classList.contains('ti-wrap')){
@@ -1741,7 +1786,8 @@ function normalizeSheetRow(row){
   var factorTxt = fmtFactor(row.factor != null ? row.factor : row['factor']);
   var displayName = [brand, name, model].filter(Boolean).join(' ');
   var note = factorTxt ? ('1BOX = ' + factorTxt + '㎡') : '';
-  return { name: displayName, spec: spec, unit: '', price: num(firmPriceRaw), note: note };
+  var tradePrice = num(firmPriceRaw);
+  return { name: displayName, spec: spec, unit: '', price: tradePrice, tradePrice: tradePrice, source:'sheet', note: note };
 }
 
 /* 아주 단순한 CSV 파서 (따옴표로 감싼 셀의 콤마도 처리) */
@@ -1819,15 +1865,22 @@ async function searchTradePrice(){
     return;
   }
   var matches = result.rows.filter(function(p){ return matchesQuery(p.name+' '+(p.spec||''), q); }).slice(0,8);
-  hint.textContent = matches.length + '건 검색됨 (전체 ' + result.rows.length + '개 품목 중)';
+  var recipientType = currentTradeRecipientType();
+  hint.textContent = matches.length + '건 검색됨 (표시 단가는 거래처용 · 소비자 선택 시 품목당 +10,000원 자동 적용)';
   window.__tradeMatches = matches;
   resultsWrap.innerHTML = matches.map(function(p,i){
-    return '<button type="button" class="trade-suggest" onclick="pickTradePrice('+i+')">'+esc(p.name)+' · '+esc(p.spec||'')+' · '+fmt(p.price||0)+'원</button>';
+    var base = num(p.tradePrice != null ? p.tradePrice : p.price);
+    var applied = priceForRecipient(base, recipientType);
+    var priceText = recipientType==='소비자'
+      ? ('거래처 '+fmt(base)+'원 → 소비자 '+fmt(applied)+'원')
+      : (fmt(base)+'원');
+    return '<button type="button" class="trade-suggest" onclick="pickTradePrice('+i+')">'+esc(p.name)+' · '+esc(p.spec||'')+' · '+priceText+'</button>';
   }).join('');
 }
 function pickTradePrice(i){
   var p = window.__tradeMatches[i];
-  addTradeRow({ name:p.name, spec:p.spec||'', unit:p.unit||'', qty:1, price:p.price||0, note:p.note||'' });
+  var base = num(p.tradePrice != null ? p.tradePrice : p.price);
+  addTradeRow({ name:p.name, spec:p.spec||'', unit:p.unit||'', qty:1, price:priceForRecipient(base, currentTradeRecipientType()), baseTradePrice:base, source:'sheet', note:p.note||'' });
   document.getElementById('tradeSearchResults').innerHTML = '';
   document.getElementById('tradeSearchInput').value = '';
 }
@@ -2270,7 +2323,9 @@ function forceTradeRecipientType(type){
   var next = (type === '소비자') ? '소비자' : '거래처';
   var typeEl = document.getElementById('tradeRecipientType');
   if(!typeEl) return false;
+  var prev = typeEl.value || '거래처';
   typeEl.value = next;
+  if(prev !== next) syncTradeItemPricesForRecipient(next);
 
   var tradeBtn = document.getElementById('recipientTypeTradeBtn');
   var consumerBtn = document.getElementById('recipientTypeConsumerBtn');
@@ -2321,6 +2376,7 @@ function setTradeRecipientType(type, opts){
   var prev=typeEl.value || '거래처';
   var changed=prev!==next;
   typeEl.value=next;
+  if(changed) syncTradeItemPricesForRecipient(next);
 
   /* 유형 전환 자체는 기존 견적 내용을 지우지 않는다. 새 수신인을 선택하면 이름/연락처가 교체된다. */
   try{
@@ -2604,15 +2660,18 @@ function renderClientPickerList(which){
     var type=(document.getElementById('tradeRecipientType')?.value||'거래처');
     var seen={};
     var qKey=archiveSearchKey(q);
-    var pickerContacts=knownTradeContacts.slice();
+    var pickerContacts=[];
+    /* 등록 거래처를 먼저 보여주고, 이어서 과거 견적의 거래처를 합칩니다. */
     if(type==='거래처'){ registeredTradeClients.forEach(function(c){ pickerContacts.push({type:'거래처용',recipientTypeRaw:'거래처',name:c.name||'',phone:c.phone||'',refName:c.manager||'',site:c.address||'',estimateNo:'',itemSearch:[c.businessNo,c.ceo,c.email,c.memo].filter(Boolean).join(' '),registered:true,registryId:c.registryId}); }); }
+    knownTradeContacts.forEach(function(r){ pickerContacts.push(r); });
     var filtered=pickerContacts.filter(function(r){
       if((r.recipientTypeRaw|| (r.type==='소비자용'?'소비자':'거래처'))!==type) return false;
       var hay=[r.name,r.phone,r.refName,r.site,r.estimateNo,r.itemSearch].join(' ');
-      return !qKey || archiveSearchKey(hay).indexOf(qKey)>=0;
+      /* 한 글자부터 즉시 검색. 한글 초성 검색도 허용합니다. */
+      return !q || matchesQuery(hay,q) || (!qKey ? true : archiveSearchKey(hay).indexOf(qKey)>=0);
     }).filter(function(r){
       var key=[r.type,r.name,r.phone,r.site].join('|'); if(seen[key]) return false; seen[key]=1; return true;
-    }).slice(0,30);
+    }).slice(0,40);
     if(!filtered.length){
       listEl.innerHTML='<div class="cp-empty">저장된 '+type+'가 없거나 검색 결과가 없습니다.<br>이름을 입력한 뒤 Enter로 새로 등록하세요.</div>'; return;
     }

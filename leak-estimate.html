@@ -674,8 +674,8 @@
   <div class="toolbar-row">
     <div class="hint">✏️ 문서의 어떤 글자든 탭해서 바로 수정하세요. 저장 버튼을 눌러야 전 직원이 공유된 목록에서 볼 수 있습니다.</div>
     <div class="btns">
-      <button class="primary" onclick="manualSave()">☁️ 견적 저장</button>
-      <button class="ghost" onclick="duplicateAsNew()">📑 복제해서 새 견적</button>
+      <button class="primary" onclick="manualSave()">💾 견적 저장</button>
+      <button class="ghost" onclick="saveAsNewEstimate()">📄 다른 이름으로 저장</button>
       <a class="btn ghost" href="leak-dashboard.html">📋 견적 목록으로</a>
       <button class="ghost" onclick="startNewEstimate()">＋ 새 견적</button>
       <button class="ghost" onclick="if(confirm('처음 예시 내용으로 되돌릴까요? 저장하지 않은 수정 내용이 사라집니다.')) resetActiveTab()">↺ 초기화</button>
@@ -1335,12 +1335,12 @@ function recalcAll(){
   return num(document.getElementById('grandTotal').textContent);
 }
 function getFieldValue(el){
-  if(el.tagName === 'INPUT') return el.value;
+  if(el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') return el.value;
   if(el.classList && el.classList.contains('rich-text')) return el.innerHTML;
   return el.textContent;
 }
 function setFieldValue(el, v){
-  if(el.tagName === 'INPUT'){ el.value = v; }
+  if(el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA'){ el.value = v; }
   else if(el.classList && el.classList.contains('rich-text')){ el.innerHTML = v; }
   else { el.textContent = v; }
 }
@@ -1821,6 +1821,44 @@ function manualSave(){
     if(currentTab==='leak') saveLeak(); else saveTrade();
   });
 }
+function saveAsNewEstimate(){
+  clearError();
+  if(!firebaseReady || !db){
+    showError('Firebase 설정이 필요합니다. 다른 이름으로 저장하려면 서버 연결이 필요합니다.');
+    return;
+  }
+  var label = currentTab==='leak' ? '누수복구 견적' : '일반 견적';
+  if(!confirm('현재 '+label+' 내용을 새 견적으로 저장할까요?\n기존 견적은 그대로 유지됩니다.')) return;
+
+  authReadyPromise.then(function(){
+    if(currentTab==='leak'){
+      var oldId = leakEstimateId;
+      leakEstimateId = genId('EST');
+      ensureEstimateNo('leak', true);
+      var meta = getLeakMeta(); meta.estimateId = leakEstimateId;
+      var payload = { meta:meta, docData:collectLeakDocData(), items:leakGroups };
+      return db.ref('leak_estimates/'+leakEstimateId).set(payload).then(function(){
+        var url=new URL(window.location.href); url.searchParams.set('id',leakEstimateId); url.searchParams.set('tab','leak'); window.history.replaceState({},'',url);
+        saveLeakLocal(); setLeakStatus('✔ 다른 이름으로 저장됨 ('+nowStr()+')','ok');
+      }).catch(function(err){ leakEstimateId=oldId; throw err; });
+    }else{
+      var oldTradeId = tradeEstimateId;
+      tradeEstimateId = genId('TR');
+      ensureEstimateNo('trade', true);
+      var meta2 = getTradeMeta(); meta2.estimateId = tradeEstimateId;
+      var payload2 = { meta:meta2, docData:collectTradeDocData(), items:tradeItems };
+      return db.ref('b2b_estimates/'+tradeEstimateId).set(payload2).then(function(){
+        var url2=new URL(window.location.href); url2.searchParams.set('id',tradeEstimateId); url2.searchParams.set('tab','trade'); window.history.replaceState({},'',url2);
+        saveTradeLocal(); setTradeStatus('✔ 다른 이름으로 저장됨 ('+nowStr()+')','ok'); loadTradeArchive();
+      }).catch(function(err){ tradeEstimateId=oldTradeId; throw err; });
+    }
+  }).catch(function(err){
+    console.error(err);
+    showError('다른 이름으로 저장 실패: '+(err&&err.message?err.message:'권한/네트워크 오류'));
+  });
+}
+window.saveAsNewEstimate=saveAsNewEstimate;
+
 function startNewEstimate(){
   if(!confirm('새 견적을 시작할까요? 저장하지 않은 내용은 사라집니다.')) return;
   try{ if(currentTab==='trade') localStorage.removeItem('wd-doc-v4-trade-draft'); else localStorage.removeItem('wd-doc-v4-leak-draft'); }catch(e){}

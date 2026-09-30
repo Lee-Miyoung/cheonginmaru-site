@@ -126,7 +126,7 @@
     max-width:860px; margin:0 auto 14px; background:#fff; border:1px solid #d8dee7; border-radius:10px;
     box-shadow:0 8px 24px rgba(23,52,95,.07); padding:16px 18px 14px;
   }
-  .estimate-browser-head{ display:grid; grid-template-columns:auto 110px 1fr; align-items:center; gap:10px; }
+  .estimate-browser-head{ display:grid; grid-template-columns:auto 130px minmax(260px,1fr) auto; align-items:center; gap:10px; }
   .estimate-browser-title-wrap{ min-width:150px; }
   .estimate-browser-title{ display:block; font-size:14px; font-weight:900; color:var(--brand); letter-spacing:-.3px; }
   .estimate-browser-caption{ display:block; margin-top:2px; font-size:10.5px; color:#8a929d; }
@@ -135,6 +135,23 @@
   }
   .estimate-browser input:focus, .estimate-browser select:focus{ outline:none; border-color:#5678a3; box-shadow:0 0 0 3px rgba(49,91,145,.10); }
   .estimate-browser input{ min-width:0; }
+  .archive-client-btn{ font-family:inherit; font-size:12px; font-weight:800; color:#fff; background:var(--brand); border:0; border-radius:8px; padding:9px 13px; cursor:pointer; white-space:nowrap; }
+  .archive-client-btn:hover{ background:#294c80; }
+  .client-manager-overlay{ position:fixed; inset:0; z-index:10060; background:rgba(15,23,42,.52); display:flex; align-items:center; justify-content:center; padding:20px; }
+  .client-manager-card{ width:min(720px,96vw); max-height:88vh; overflow:auto; background:#fff; border-radius:16px; box-shadow:0 24px 70px rgba(15,23,42,.24); border:1px solid #e4e9ef; padding:22px; }
+  .client-manager-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px; }
+  .client-manager-title{ font-size:18px; font-weight:900; color:var(--brand); }
+  .client-manager-sub{ margin-top:3px; font-size:11.5px; color:#7b8490; }
+  .client-manager-close{ border:0; background:#f1f4f8; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:18px; }
+  .client-manager-form{ display:grid; grid-template-columns:1.2fr 1fr 1fr 1.5fr; gap:8px; margin-bottom:12px; }
+  .client-manager-form input{ width:100%; font-family:inherit; font-size:12px; padding:9px 10px; border:1px solid var(--line); border-radius:8px; }
+  .client-manager-form button{ grid-column:1/-1; justify-self:end; font-family:inherit; font-weight:800; font-size:12px; color:#fff; background:var(--brand-2); border:0; border-radius:8px; padding:9px 15px; cursor:pointer; }
+  .client-reg-list{ border-top:1px solid #edf0f4; }
+  .client-reg-row{ display:grid; grid-template-columns:1.1fr .8fr 1fr 1.6fr auto; gap:8px; align-items:center; padding:10px 4px; border-bottom:1px solid #edf0f4; font-size:11.5px; }
+  .client-reg-row b{ color:#203f68; font-size:12.5px; }
+  .client-reg-row .muted{ color:#7d8793; }
+  .client-reg-row button{ border:1px solid #d7dee7; background:#fff; border-radius:7px; padding:5px 8px; cursor:pointer; font-family:inherit; font-size:10.5px; }
+
   .estimate-browser-results{ margin-top:12px; max-height:340px; overflow:auto; padding-right:2px; }
   .estimate-browser-empty{ font-size:12px; color:var(--ink-faint); padding:16px 4px 10px; text-align:center; }
   .estimate-group{ border-top:1px solid #edf0f4; padding:11px 0 4px; }
@@ -377,6 +394,8 @@
 
   @media (max-width:760px){
     .estimate-browser-head{ grid-template-columns:1fr; }
+    .client-manager-form{ grid-template-columns:1fr; }
+    .client-reg-row{ grid-template-columns:1fr 1fr; }
     .estimate-result-row{ grid-template-columns:1fr; gap:4px; }
     .estimate-result-amt{ text-align:left; }
     .trade-footer-box{ grid-template-columns:1fr; }
@@ -854,8 +873,9 @@
 <div class="estimate-browser" id="tradeEstimateBrowser">
   <div class="estimate-browser-head">
     <div class="estimate-browser-title-wrap"><span class="estimate-browser-title">견적 보관함</span><span class="estimate-browser-caption">저장된 견적을 빠르게 찾아 다시 열 수 있습니다.</span></div>
-    <select id="tradeArchiveType" onchange="renderTradeArchive()"><option value="all">전체</option><option value="거래처">거래처</option><option value="소비자">소비자</option></select>
+    <select id="tradeArchiveType" onchange="renderTradeArchive()"><option value="all">전체 유형</option><option value="누수복구">누수복구</option><option value="거래처용">거래처용</option><option value="소비자용">소비자용</option></select>
     <input id="tradeArchiveSearch" placeholder="이름 · 휴대폰 일부 · 현장주소 · 제품명 · 견적번호 검색" oninput="renderTradeArchive()">
+    <button type="button" class="archive-client-btn" onclick="openTradeClientManager()">＋ 거래처 관리</button>
   </div>
   <div class="estimate-browser-results" id="tradeArchiveResults"><div class="estimate-browser-empty">저장된 견적을 불러오는 중입니다.</div></div>
 </div>
@@ -2007,6 +2027,7 @@ function addImageSaveError(msg){
    목록을 따로 관리할 필요 없이, 쓸수록 자동으로 채워진다. */
 var knownClientsList = [];
 var knownTradeContacts = [];
+var registeredTradeClients = [];
 var tradeArchiveCache = [];
 
 function normalizeRecipientType(rec){
@@ -2016,22 +2037,30 @@ function normalizeRecipientType(rec){
 function tradeRecordFields(id, rec){
   rec=rec||{}; var d=rec.docData||{}, m=rec.meta||{};
   var items=Array.isArray(rec.items) ? rec.items : [];
+  var rawType=normalizeRecipientType(rec);
   var itemNames=items.map(function(it){ return (it && it.name || '').trim(); }).filter(Boolean);
   var itemSearch=items.map(function(it){ return [it&&it.name,it&&it.spec,it&&it.note].filter(Boolean).join(' '); }).join(' ');
   return {
-    id:id,
-    type:normalizeRecipientType(rec),
+    id:id, source:'trade', recipientTypeRaw:rawType, type:(rawType==='소비자'?'소비자용':'거래처용'),
     name:(d['tr-customer'] || m.customerName || '').replace(/\[.*?\]/g,'').trim(),
     phone:(d['tr-ref-phone'] || m.phone || '').trim(),
     refName:(d['tr-ref-name'] || m.refName || '').trim(),
     site:(d['tr-site'] || m.address || '').replace(/\[.*?\]/g,'').trim(),
-    date:d['tr-date'] || m.issueDate || '',
-    estimateNo:d['tr-est-no'] || m.estimateNo || id,
-    amount:Number(m.grandTotal || 0),
-    itemNames:itemNames,
-    itemSearch:itemSearch,
-    updatedAt:Number(m.updatedAt || 0)
+    date:d['tr-date'] || m.issueDate || '', estimateNo:d['tr-est-no'] || m.estimateNo || id,
+    amount:Number(m.grandTotal || 0), itemNames:itemNames, itemSearch:itemSearch, updatedAt:Number(m.updatedAt || 0)
   };
+}
+function leakRecordFields(id, rec){
+  rec=rec||{}; var d=rec.docData||{}, m=rec.meta||{};
+  var groups=Array.isArray(rec.items)?rec.items:[];
+  var flat=[]; groups.forEach(function(g){ (g&&Array.isArray(g.items)?g.items:[]).forEach(function(it){ flat.push(it); }); });
+  var itemNames=flat.map(function(it){ return (it&&it.item||it&&it.name||'').trim(); }).filter(Boolean);
+  var itemSearch=flat.map(function(it){ return [it&&it.item,it&&it.name,it&&it.spec,it&&it.note].filter(Boolean).join(' '); }).join(' ');
+  return { id:id, source:'leak', recipientTypeRaw:'누수복구', type:'누수복구',
+    name:(d['est-customer']||m.customerName||'').replace(/\[.*?\]/g,'').replace(/귀하$/,'').trim(),
+    phone:(d['est-phone']||m.phone||'').trim(), refName:(m.clientChannel||'').trim(),
+    site:(d['est-address']||m.address||'').replace(/\[.*?\]/g,'').trim(), date:d['est-date']||m.issueDate||'',
+    estimateNo:d['est-no']||m.estimateNo||id, amount:Number(m.grandTotal||0), itemNames:itemNames, itemSearch:itemSearch, updatedAt:Number(m.updatedAt||0) };
 }
 function archiveSearchKey(value){
   return String(value||'').toLowerCase().replace(/[\s\-().]/g,'');
@@ -2059,12 +2088,17 @@ function onTradeRecipientTypeChange(saveIt){
 }
 function loadTradeArchive(){
   if(!db) return;
-  authReadyPromise.then(function(){ return db.ref('b2b_estimates').once('value'); }).then(function(snap){
-    var val=snap.val()||{};
-    tradeArchiveCache=Object.keys(val).map(function(id){ return tradeRecordFields(id,val[id]); }).sort(function(a,b){ return (b.updatedAt||0)-(a.updatedAt||0); });
-    knownTradeContacts=tradeArchiveCache.slice();
-    renderTradeArchive();
-    renderClientPickerList('Trade');
+  authReadyPromise.then(function(){
+    return Promise.all([db.ref('b2b_estimates').once('value'), db.ref('leak_estimates').once('value').catch(function(){return null;})]);
+  }).then(function(snaps){
+    var tradeVal=(snaps[0]&&snaps[0].val())||{};
+    var leakVal=(snaps[1]&&snaps[1].val())||{};
+    var trades=Object.keys(tradeVal).filter(function(id){return id!=='__clients';}).map(function(id){ return tradeRecordFields(id,tradeVal[id]); });
+    var leaks=Object.keys(leakVal).map(function(id){ return leakRecordFields(id,leakVal[id]); });
+    tradeArchiveCache=trades.concat(leaks).sort(function(a,b){ return (b.updatedAt||0)-(a.updatedAt||0); });
+    knownTradeContacts=trades.slice();
+    registeredTradeClients=Object.keys((tradeVal.__clients)||{}).map(function(id){ var x=tradeVal.__clients[id]||{}; x.registryId=id; return x; });
+    renderTradeArchive(); renderClientPickerList('Trade'); renderRegisteredTradeClients();
   }).catch(function(err){
     console.error('견적 목록 불러오기 실패',err);
     var box=document.getElementById('tradeArchiveResults'); if(box) box.innerHTML='<div class="estimate-browser-empty">견적 목록을 불러오지 못했습니다.</div>';
@@ -2083,16 +2117,16 @@ function renderTradeArchive(){
   });
   if(!rows.length){ box.innerHTML='<div class="estimate-browser-empty">검색 결과가 없습니다.</div>'; return; }
   var groups={};
-  rows.forEach(function(r){ var key=(r.type||'거래처')+'|'+(r.name||'이름 미지정'); (groups[key]||(groups[key]=[])).push(r); });
+  rows.forEach(function(r){ var key=(r.type||'거래처용')+'|'+(r.name||'이름 미지정'); (groups[key]||(groups[key]=[])).push(r); });
   var html='';
   Object.keys(groups).sort(function(a,b){ return a.localeCompare(b,'ko'); }).forEach(function(key){
-    var arr=groups[key]; var typeName=(arr[0].type||'거래처'); var personName=(arr[0].name||'이름 미지정');
+    var arr=groups[key]; var typeName=(arr[0].type||'거래처용'); var personName=(arr[0].name||'이름 미지정');
     html+='<div class="estimate-group"><div class="estimate-group-head"><span class="estimate-group-name"><span class="type-badge">'+esc(typeName)+'</span>'+esc(personName)+'</span><span class="estimate-group-count">'+arr.length+'건</span></div>';
     arr.forEach(function(r){
       var sub=[r.date,r.phone,r.refName].filter(Boolean).join(' · ');
       var products=(r.itemNames||[]).slice(0,3).join(' · ');
       if((r.itemNames||[]).length>3) products+=' 외 '+((r.itemNames||[]).length-3)+'건';
-      html+='<button type="button" class="estimate-result-row" onclick="openTradeEstimate(\''+escAttr(r.id).replace(/'/g,"\\'")+'\')">'+
+      html+='<button type="button" class="estimate-result-row" onclick="openArchiveEstimate(\''+escAttr(r.source)+'\',\''+escAttr(r.id).replace(/'/g,"\\'")+'\')">'+
         '<span class="estimate-result-no">'+esc(r.estimateNo||r.id)+'</span>'+
         '<span class="estimate-result-main"><div class="estimate-result-site">'+esc(r.site||'현장주소 없음')+'</div><div class="estimate-result-sub">'+esc(sub||'-')+'</div></span>'+
         '<span class="estimate-result-products"><b>품목</b> '+esc(products||'품목 없음')+'</span>'+
@@ -2102,9 +2136,10 @@ function renderTradeArchive(){
   });
   box.innerHTML=html;
 }
-function openTradeEstimate(id){
-  var url=new URL(window.location.href); url.searchParams.set('tab','trade'); url.searchParams.set('id',id); window.location.href=url.toString();
+function openArchiveEstimate(source,id){
+  var url=new URL(window.location.href); url.searchParams.set('tab',source==='leak'?'leak':'trade'); url.searchParams.set('id',id); window.location.href=url.toString();
 }
+function openTradeEstimate(id){ openArchiveEstimate('trade',id); }
 function loadKnownClients(){
   if(!db) return;
   knownTradeContacts = [];
@@ -2119,6 +2154,7 @@ function loadKnownClients(){
       if(!snap) return;
       var val = snap.val() || {};
       Object.keys(val).forEach(function(id){
+        if(id==='__clients') return;
         var m = (val[id] && val[id].meta) || {};
         var cc = (m.clientChannel || '').trim();
         var cn = (m.customerName || '').replace(/\[.*?\]/g,'').trim();
@@ -2132,6 +2168,28 @@ function loadKnownClients(){
     renderClientPickerList('Trade');
   }).catch(function(err){ console.error('거래처 목록 불러오기 실패', err); });
 }
+
+function openTradeClientManager(){
+  var old=document.getElementById('tradeClientManager'); if(old) old.remove();
+  var el=document.createElement('div'); el.id='tradeClientManager'; el.className='client-manager-overlay';
+  el.innerHTML='<div class="client-manager-card"><div class="client-manager-head"><div><div class="client-manager-title">거래처 관리</div><div class="client-manager-sub">자주 쓰는 거래처를 미리 등록하면 견적 작성 시 바로 선택할 수 있습니다.</div></div><button class="client-manager-close" onclick="document.getElementById(\'tradeClientManager\').remove()">×</button></div>'+
+  '<div class="client-manager-form"><input id="regClientName" placeholder="거래처명 *"><input id="regClientManager" placeholder="담당자"><input id="regClientPhone" placeholder="연락처"><input id="regClientAddress" placeholder="주소/지역"><button onclick="saveRegisteredTradeClient()">거래처 등록</button></div><div class="client-reg-list" id="registeredTradeClientList"></div></div>';
+  el.addEventListener('click',function(e){if(e.target===el)el.remove();}); document.body.appendChild(el); renderRegisteredTradeClients();
+}
+function saveRegisteredTradeClient(){
+  var name=(document.getElementById('regClientName')?.value||'').trim(); if(!name){alert('거래처명을 입력해주세요.');return;}
+  var obj={name:name,manager:(document.getElementById('regClientManager')?.value||'').trim(),phone:(document.getElementById('regClientPhone')?.value||'').trim(),address:(document.getElementById('regClientAddress')?.value||'').trim(),updatedAt:Date.now()};
+  if(!db){alert('저장 연결을 확인해주세요.');return;}
+  authReadyPromise.then(function(){ var ref=db.ref('b2b_estimates/__clients').push(); return ref.set(obj); }).then(function(){
+    ['regClientName','regClientManager','regClientPhone','regClientAddress'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';}); loadTradeArchive();
+  }).catch(function(err){console.error(err);alert('거래처 등록에 실패했습니다.');});
+}
+function renderRegisteredTradeClients(){
+  var box=document.getElementById('registeredTradeClientList'); if(!box)return;
+  if(!registeredTradeClients.length){box.innerHTML='<div class="estimate-browser-empty">등록된 거래처가 없습니다.</div>';return;}
+  box.innerHTML=registeredTradeClients.slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'','ko');}).map(function(c){return '<div class="client-reg-row"><b>'+esc(c.name||'')+'</b><span class="muted">'+esc(c.manager||'-')+'</span><span>'+esc(c.phone||'-')+'</span><span class="muted">'+esc(c.address||'-')+'</span><button onclick="deleteRegisteredTradeClient(\''+escAttr(c.registryId)+'\')">삭제</button></div>';}).join('');
+}
+function deleteRegisteredTradeClient(id){ if(!confirm('이 거래처 등록정보를 삭제할까요?\n기존 견적서는 삭제되지 않습니다.'))return; authReadyPromise.then(function(){return db.ref('b2b_estimates/__clients/'+id).remove();}).then(loadTradeArchive).catch(function(e){console.error(e);alert('삭제에 실패했습니다.');}); }
 
 function toggleClientPicker(which){
   var panel = document.getElementById('clientPickerPanel' + which);
@@ -2163,8 +2221,10 @@ function renderClientPickerList(which){
     var type=(document.getElementById('tradeRecipientType')?.value||'거래처');
     var seen={};
     var qKey=archiveSearchKey(q);
-    var filtered=knownTradeContacts.filter(function(r){
-      if(r.type!==type) return false;
+    var pickerContacts=knownTradeContacts.slice();
+    if(type==='거래처'){ registeredTradeClients.forEach(function(c){ pickerContacts.push({type:'거래처용',recipientTypeRaw:'거래처',name:c.name||'',phone:c.phone||'',refName:c.manager||'',site:c.address||'',estimateNo:'',itemSearch:'',registered:true,registryId:c.registryId}); }); }
+    var filtered=pickerContacts.filter(function(r){
+      if((r.recipientTypeRaw|| (r.type==='소비자용'?'소비자':'거래처'))!==type) return false;
       var hay=[r.name,r.phone,r.refName,r.site,r.estimateNo,r.itemSearch].join(' ');
       return !qKey || archiveSearchKey(hay).indexOf(qKey)>=0;
     }).filter(function(r){

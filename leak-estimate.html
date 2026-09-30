@@ -103,6 +103,8 @@
     font-family:inherit; font-size:11.5px; font-weight:700; color:var(--brand);
     border:1px solid #c9d2df; border-radius:4px; padding:7px 26px 7px 9px; background:#f7f9fc; min-width:86px;
   }
+  .recipient-type-wrap{ display:flex; align-items:center; gap:7px; flex-shrink:0; }
+  .recipient-type-caption{ font-size:10.5px; font-weight:800; color:#778292; white-space:nowrap; }
   .recipient-type-segment{display:inline-flex;border:1px solid #c9d2df;border-radius:8px;overflow:hidden;background:#f7f9fc;flex-shrink:0;}
   .recipient-type-btn{border:0;border-right:1px solid #d7dee8;background:#fff;color:#6d7886;font-family:inherit;font-size:11.5px;font-weight:800;padding:8px 12px;cursor:pointer;white-space:nowrap;}
   .recipient-type-btn:last-child{border-right:0;}
@@ -436,6 +438,16 @@
     .schedule-item{ display:flex; align-items:center; gap:6px; }
   }
 
+  /* ===== 고객 전달용 출력 정리 ===== */
+  .image-export .recipient-type-segment,
+  .image-export .recipient-register-btn{ display:none !important; }
+  .image-export .client-picker-trigger .ph{ display:none !important; }
+  .image-export .recipient-wrap{ gap:5px !important; min-height:0 !important; }
+  .image-export .client-picker{ min-width:0 !important; }
+  .image-export .client-picker-trigger{ width:auto !important; max-width:none !important; min-width:0 !important; }
+  .image-export .ref-wrap{ display:flex !important; flex-wrap:nowrap !important; align-items:center !important; gap:8px !important; }
+  .image-export .supplier-strip{ grid-template-columns:auto 1fr auto 1fr auto 1.5fr !important; }
+
   @page{ size:A4 portrait; margin:4.5mm; }
   @media print{
     *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
@@ -459,13 +471,24 @@
     .seal-stamp{ mix-blend-mode:normal; height:36px; }
 
     /* 편집용 UI 요소는 인쇄에서 완전히 제거 */
-    .accordion, .trade-search-bar, .estimate-browser, #tradeSearchHint, #tradeSearchResults, .row-del, .add-row-btn{ display:none !important; }
+    .accordion, .trade-search-bar, .estimate-browser, #tradeSearchHint, #tradeSearchResults, .row-del, .add-row-btn, .recipient-type-segment, .recipient-register-btn{ display:none !important; }
     #tabTrade table.items col:last-child, #tabTrade table.items th:last-child, #tabTrade table.items td:last-child{ display:none !important; }
     .li-note{ font-size:9.5px; color:#6b7280; margin-top:1px; }
     .li-note:empty{ display:none !important; margin-top:0 !important; }
     .client-picker-trigger{ border:none !important; background:none !important; padding:0 !important; min-width:0 !important; font-size:11px !important; font-weight:400 !important; color:#1a1d23 !important; }
     .client-picker-trigger .arrow, .client-picker-trigger span:last-child{ display:none !important; }
     .client-picker-panel{ display:none !important; }
+    /* 고객에게 보내는 출력물에는 편집 UI를 노출하지 않음 */
+    #tabTrade .recipient-type-segment,
+    #tabTrade .recipient-register-btn{ display:none !important; }
+    #tabTrade .client-picker-trigger .ph{ display:none !important; }
+    #tabTrade .recipient-wrap{ gap:4px !important; min-height:0 !important; flex-wrap:nowrap !important; }
+    #tabTrade .client-picker{ min-width:0 !important; flex:1 1 auto !important; }
+    #tabTrade .client-picker-trigger{ width:auto !important; max-width:none !important; min-width:0 !important; font-weight:600 !important; }
+    #tabTrade .recipient-honorific{ flex:0 0 auto !important; }
+    #tabTrade .ref-wrap{ display:flex !important; flex-wrap:nowrap !important; align-items:center !important; gap:6px !important; width:100% !important; }
+    #tabTrade .ref-wrap .print-mirror{ min-width:0 !important; max-width:100% !important; white-space:nowrap !important; }
+
     .recipient-type-select{ border:none !important; background:none !important; padding:0 2px !important; appearance:none !important; -webkit-appearance:none !important; font-size:10.5px !important; color:var(--brand) !important; }
     .recipient-type-select{ border:none !important; background:none !important; padding:0 !important; appearance:none !important; -webkit-appearance:none !important; font-size:11px !important; }
 
@@ -524,10 +547,16 @@
 
     /* 거래처/소비자 공용 견적서 PDF 전용 - 잘림/끊김 방지 */
     #tabTrade .trade-sheet{ padding:3.2mm 4mm 2.5mm !important; }
+    #tabTrade .trade-footer-box{ margin-top:7px !important; }
+    #tabTrade .notes + .trade-footer-box{ break-before:avoid !important; page-break-before:avoid !important; }
     #tabTrade .brand-row{ margin-bottom:5px !important; padding-bottom:4px !important; }
     #tabTrade .doc-title{ margin:3px 0 1px !important; font-size:20px !important; }
     #tabTrade .doc-sub{ margin-bottom:7px !important; font-size:9.8px !important; }
-    #tabTrade table.infogrid{ margin-bottom:5px !important; }
+    #tabTrade table.infogrid{ margin-bottom:5px !important; table-layout:fixed !important; width:100% !important; }
+    #tabTrade table.infogrid td{ overflow:visible !important; }
+    #tabTrade table.infogrid td.lbl{ width:12.5% !important; padding:4px 5px !important; white-space:nowrap !important; }
+    #tabTrade table.infogrid tr:first-child td:nth-child(2){ width:39% !important; }
+    #tabTrade table.infogrid tr:first-child td:nth-child(4){ width:36% !important; }
     #tabTrade .notes{ margin-top:5px !important; padding:5px 8px !important; }
     #tabTrade .notes li{ font-size:9.5px !important; line-height:1.38 !important; margin-bottom:0 !important; }
     #tabTrade .notes .h{ margin-bottom:3px !important; }
@@ -906,7 +935,6 @@
     <div class="estimate-browser-title-wrap"><span class="estimate-browser-title">견적 보관함</span><span class="estimate-browser-caption">저장된 견적을 빠르게 찾아 다시 열 수 있습니다.</span></div>
     <select id="tradeArchiveType" onchange="renderTradeArchive()"><option value="all">전체 유형</option><option value="누수복구">누수복구</option><option value="거래처용">거래처용</option><option value="소비자용">소비자용</option></select>
     <input id="tradeArchiveSearch" placeholder="이름 · 휴대폰 일부 · 현장주소 · 제품명 · 견적번호 검색" oninput="renderTradeArchive()">
-    <button type="button" class="archive-client-btn" onclick="openTradeClientManager()">＋ 거래처 등록/관리</button>
   </div>
   <div class="estimate-browser-results" id="tradeArchiveResults"><div class="estimate-browser-empty">저장된 견적을 불러오는 중입니다.</div></div>
 </div>
@@ -931,9 +959,12 @@
       <td class="lbl">수신</td>
       <td>
         <div class="recipient-wrap">
-          <div class="recipient-type-segment" aria-label="수신 유형">
-            <button type="button" class="recipient-type-btn active" id="recipientTypeTradeBtn" onclick="setTradeRecipientType('거래처')">거래처</button>
-            <button type="button" class="recipient-type-btn" id="recipientTypeConsumerBtn" onclick="setTradeRecipientType('소비자')">소비자</button>
+          <div class="recipient-type-wrap edit-only-ui">
+            <span class="recipient-type-caption">수신유형</span>
+            <div class="recipient-type-segment" aria-label="수신 유형">
+              <button type="button" class="recipient-type-btn active" data-recipient-type="거래처" id="recipientTypeTradeBtn" onclick="chooseTradeRecipientType(event,'거래처')">거래처</button>
+              <button type="button" class="recipient-type-btn" data-recipient-type="소비자" id="recipientTypeConsumerBtn" onclick="chooseTradeRecipientType(event,'소비자')">소비자</button>
+            </div>
           </div>
           <select class="recipient-type-select recipient-type-hidden" id="tradeRecipientType" data-k="tr-recipient-type" onchange="onTradeRecipientTypeChange()"><option value="거래처">거래처</option><option value="소비자">소비자</option></select>
           <div class="client-picker" id="clientPickerTrade">
@@ -946,7 +977,6 @@
               <div class="cp-direct-hint">목록에 없으면 입력 후 Enter — 직접 입력한 이름이 바로 사용됩니다.</div>
             </div>
           </div>
-          <button type="button" class="recipient-register-btn" id="recipientRegisterBtn" onclick="openTradeClientManager()">＋ 거래처 등록</button>
           <input type="hidden" data-k="tr-customer" id="trCustomerHidden" value="[거래처명]">
           <span class="recipient-honorific" id="tradeHonorific">귀중</span>
         </div>
@@ -1517,6 +1547,7 @@ function applyTradeDocData(data){
   var typeEl = document.getElementById('tradeRecipientType');
   if(typeEl && !data['tr-recipient-type']) typeEl.value = '거래처';
   onTradeRecipientTypeChange(false);
+  syncClientPickerLabel('Trade');
   ensureEstimateNo('trade', false);
 }
 function tradeLocalKey(){ return 'wd-doc-v4-trade-' + (tradeEstimateId || 'draft'); }
@@ -1962,7 +1993,7 @@ async function saveAsImage(){
           target.classList.add('image-export');
 
           /* 화면 편집용 요소는 이미지에 포함하지 않음 */
-          target.querySelectorAll('.trade-search-bar, #tradeSearchHint, #tradeSearchResults, .row-del, .add-row-btn, .accordion').forEach(function(el){
+          target.querySelectorAll('.trade-search-bar, #tradeSearchHint, #tradeSearchResults, .row-del, .add-row-btn, .accordion, .recipient-type-segment, .recipient-register-btn').forEach(function(el){
             el.style.display = 'none';
           });
 
@@ -1996,12 +2027,14 @@ async function saveAsImage(){
             var label = btn.querySelector('span:first-child');
             var span = clonedDoc.createElement('span');
             span.className = 'capture-value';
-            span.textContent = label ? label.textContent.trim() : btn.textContent.replace('▾','').trim();
+            var txt = label ? label.textContent.trim() : btn.textContent.replace('▾','').trim();
+            if(label && label.classList.contains('ph')) txt = '';
+            span.textContent = txt;
             btn.replaceWith(span);
           });
         }
       });
-      canvas = trimCanvasWhite(canvas, 18);
+      canvas = trimCanvasWhite(canvas, 8);
       var dataUrl = canvas.toDataURL('image/png');
       var filename = (names[i] || ('견적서_' + (i+1))) + '.png';
       addImageToSaveOverlay(dataUrl, filename);
@@ -2105,20 +2138,46 @@ function leakRecordFields(id, rec){
 function archiveSearchKey(value){
   return String(value||'').toLowerCase().replace(/[\s\-().]/g,'');
 }
-function setTradeRecipientType(type){
-  var typeEl=document.getElementById('tradeRecipientType'); if(!typeEl) return;
+function setTradeRecipientType(type, opts){
+  opts=opts||{};
+  var typeEl=document.getElementById('tradeRecipientType');
+  if(!typeEl) return false;
   var next=(type==='소비자'?'소비자':'거래처');
-  var changed=typeEl.value!==next;
+  var prev=typeEl.value || '거래처';
+  var changed=prev!==next;
   typeEl.value=next;
-  if(changed){
+
+  /* 기존 견적을 거래처↔소비자로 변경할 때는 이름/연락처를 임의로 없애지 않는다.
+     새 이름을 선택하면 그때 해당 값이 바뀐다. */
+  if(changed && opts.clearRecipient===true){
     var h=document.getElementById('trCustomerHidden'); if(h) h.value='';
     var p=document.getElementById('tradeRefPhone'); if(p) p.value='';
     var r=document.getElementById('tradeRefName'); if(r) r.value='';
-    syncClientPickerLabel('Trade');
   }
-  onTradeRecipientTypeChange();
+
+  onTradeRecipientTypeChange(false);
+  syncClientPickerLabel('Trade');
+  renderClientPickerList('Trade');
+  if(opts.save!==false){
+    saveTradeLocal();
+    if(typeof setTradeStatus==='function') setTradeStatus('수신 유형 변경됨 · 저장 버튼을 눌러 반영하세요', '');
+  }
+  return true;
 }
 window.setTradeRecipientType=setTradeRecipientType;
+
+function chooseTradeRecipientType(ev,type){
+  if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+  return setTradeRecipientType(type,{save:true,clearRecipient:false});
+}
+window.chooseTradeRecipientType=chooseTradeRecipientType;
+document.addEventListener('click',function(e){
+  var btn=e.target && e.target.closest ? e.target.closest('[data-recipient-type]') : null;
+  if(!btn || !btn.closest('#tabTrade')) return;
+  e.preventDefault();
+  var t=btn.getAttribute('data-recipient-type');
+  setTradeRecipientType(t,{save:true,clearRecipient:false});
+});
 
 function onTradeRecipientTypeChange(saveIt){
   var typeEl=document.getElementById('tradeRecipientType'); if(!typeEl) return;
@@ -2137,12 +2196,12 @@ function onTradeRecipientTypeChange(saveIt){
     if(refLabel) refLabel.textContent='연락처';
     if(refName) refName.style.display='none';
     if(honor) honor.textContent='님';
-    if(label && label.classList.contains('ph')) label.textContent='소비자명 선택';
+    if(label && (!document.getElementById('trCustomerHidden').value || document.getElementById('trCustomerHidden').value==='[거래처명]')){ label.textContent='소비자명 선택'; label.classList.add('ph'); }
   }else{
     if(refLabel) refLabel.textContent='담당자/참고';
     if(refName){ refName.style.display='inline-block'; refName.placeholder='담당자명'; }
     if(honor) honor.textContent='귀중';
-    if(label && label.classList.contains('ph')) label.textContent='거래처명 선택';
+    if(label && (!document.getElementById('trCustomerHidden').value || document.getElementById('trCustomerHidden').value==='[거래처명]')){ label.textContent='거래처명 선택'; label.classList.add('ph'); }
   }
   renderClientPickerList('Trade');
   if(saveIt!==false) saveTradeLocal();

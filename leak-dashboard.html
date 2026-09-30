@@ -175,7 +175,7 @@
     </div>
     <div class="btns">
       <button type="button" class="trashBtn" onclick="openTrash()">🗑 휴지통 <span id="trashCount"></span></button>
-      <a class="new-btn alt" href="leak-estimate.html?tab=trade">＋ 일반 견적</a>
+      <a class="new-btn alt" href="leak-estimate.html?tab=trade&new=1">＋ 일반 견적</a>
       <a class="new-btn" href="leak-estimate.html?tab=leak">＋ 누수복구 견적</a>
     </div>
   </header>
@@ -561,7 +561,7 @@ function renderClientDetail(id){
   if(!c){ box.innerHTML='<div class="client-empty">거래처를 선택해주세요.</div>'; return; }
   var ests=estimatesForClient(c);
   box.innerHTML='<div class="client-detail-head"><div><div class="client-detail-name">'+esc(c.customerName)+'</div><div class="client-detail-sub">등록 거래처 정보 · 견적 '+ests.length+'건</div></div><div class="client-detail-actions">'+
-    '<a class="client-action primary" href="leak-estimate.html?tab=trade&client='+encodeURIComponent(c.id)+'">＋ 이 거래처 견적 작성</a>'+
+    '<a class="client-action primary" href="leak-estimate.html?tab=trade&new=1&client='+encodeURIComponent(c.id)+'">＋ 이 거래처 견적 작성</a>'+
     '<button class="client-action" onclick="openClientForm(\''+esc(c.id).replace(/'/g,"\\'")+'\')">수정</button>'+
     '<button class="client-action danger" onclick="deleteClient(\''+esc(c.id).replace(/'/g,"\\'")+'\')">삭제</button></div></div>'+
     '<div class="client-info-grid">'+

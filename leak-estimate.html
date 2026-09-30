@@ -2670,7 +2670,13 @@ function renderClientPickerList(which){
       /* 한 글자부터 즉시 검색. 한글 초성 검색도 허용합니다. */
       return !q || matchesQuery(hay,q) || (!qKey ? true : archiveSearchKey(hay).indexOf(qKey)>=0);
     }).filter(function(r){
-      var key=[r.type,r.name,r.phone,r.site].join('|'); if(seen[key]) return false; seen[key]=1; return true;
+      /* 같은 거래처명이 여러 견적에 있어도 검색 목록에는 한 번만 표시합니다.
+         등록 거래처가 먼저 들어오므로 같은 이름이면 등록 거래처 정보가 우선됩니다. */
+      var nameKey=archiveSearchKey((r.name||'').trim());
+      var key=nameKey ? (type+'|'+nameKey) : (type+'|'+archiveSearchKey(r.phone||'')+'|'+archiveSearchKey(r.site||''));
+      if(seen[key]) return false;
+      seen[key]=1;
+      return true;
     }).slice(0,40);
     if(!filtered.length){
       listEl.innerHTML='<div class="cp-empty">저장된 '+type+'가 없거나 검색 결과가 없습니다.<br>이름을 입력한 뒤 Enter로 새로 등록하세요.</div>'; return;

@@ -326,6 +326,7 @@
   table.items .ti-wrap:focus{ background:var(--edit-focus); }
   table.items .ti-wrap:empty:before{ content:attr(data-placeholder); color:#aab0b9; }
   table.items .ti-small{ text-align:center; }
+  table.items .qty-input{ min-width:42px; font-variant-numeric:tabular-nums; }
   .row-del{ border:none; background:none; color:#c0392b; cursor:pointer; font-size:13px; font-weight:700; }
   .sheet-note{ font-size:11px; color:var(--ink-faint); margin-top:4px; }
   .neg{ color:#c0392b !important; }
@@ -1050,6 +1051,17 @@ document.addEventListener('input', function(e){
   }
 });
 
+/* 수량/평수 입력칸: 모바일에서 type=number가 한 자리처럼 동작하는 문제를 피하고, 두 자리 이상/소수 입력 허용 */
+function normalizeQtyInput(el){
+  var v = String(el.value || '').replace(/[^0-9.]/g, '');
+  var firstDot = v.indexOf('.');
+  if(firstDot !== -1) v = v.slice(0, firstDot + 1) + v.slice(firstDot + 1).replace(/\./g, '');
+  el.value = v;
+}
+document.addEventListener('input', function(e){
+  if(e.target.classList && e.target.classList.contains('qty-input')) normalizeQtyInput(e.target);
+});
+
 /* 단가 입력칸(.price-comma): 숫자만 입력해도 1,000단위 콤마를 자동으로 붙여준다 */
 function formatCommaNumber(el){
   var digits = el.value.replace(/[^0-9]/g, '');
@@ -1151,7 +1163,7 @@ function renderLeakItems(){
               '<div class="li-note" contenteditable="true" data-field="note" data-g="' + grp.key + '" data-idx="' + idx + '" data-placeholder="비고 (선택)">' + esc(it.note) + '</div></td>';
       html += '<td><div class="ti-wrap" contenteditable="true" data-field="spec" data-g="' + grp.key + '" data-idx="' + idx + '" data-placeholder="규격">' + esc(it.spec) + '</div></td>';
       html += '<td class="center"><input class="ti-input ti-small" data-field="unit" data-g="' + grp.key + '" data-idx="' + idx + '" value="' + escAttr(it.unit) + '"></td>';
-      html += '<td class="center"><input type="number" class="ti-input ti-small" data-field="qty" data-g="' + grp.key + '" data-idx="' + idx + '" value="' + it.qty + '"></td>';
+      html += '<td class="center"><input type="text" inputmode="decimal" pattern="[0-9.]*" class="ti-input ti-small qty-input" data-field="qty" data-g="' + grp.key + '" data-idx="' + idx + '" value="' + it.qty + '"></td>';
       html += '<td class="num"><input type="text" inputmode="numeric" class="ti-input ti-small price-comma" data-field="price" data-g="' + grp.key + '" data-idx="' + idx + '" value="' + fmt(it.price) + '"></td>';
       html += '<td class="num amt">' + fmt(amt) + '</td>';
       html += '<td class="center"><button type="button" class="row-del" onclick="removeLeakRow(' + grp.key + ',' + idx + ')">✕</button></td>';
@@ -1458,7 +1470,7 @@ function renderTradeItems(){
       '<td><div class="ti-wrap" contenteditable="true" data-f="name" data-idx="'+idx+'" data-placeholder="품명">'+esc(it.name)+'</div></td>' +
       '<td><div class="ti-wrap" contenteditable="true" data-f="spec" data-idx="'+idx+'" data-placeholder="규격">'+esc(it.spec)+'</div></td>' +
       '<td><input class="ti-input ti-small" data-f="unit" data-idx="'+idx+'" value="'+escAttr(it.unit)+'"></td>' +
-      '<td><input type="number" class="ti-input ti-small" data-f="qty" data-idx="'+idx+'" value="'+(it.qty||0)+'"></td>' +
+      '<td><input type="text" inputmode="decimal" pattern="[0-9.]*" class="ti-input ti-small qty-input" data-f="qty" data-idx="'+idx+'" value="'+(it.qty||0)+'"></td>' +
       '<td><input type="text" inputmode="numeric" class="ti-input ti-small price-comma" data-f="price" data-idx="'+idx+'" value="'+fmt(it.price||0)+'"></td>' +
       '<td class="num'+negCls+'" data-calc="supply">'+fmt(supply)+'</td>' +
       '<td class="num'+negCls+'" data-calc="vat">'+fmt(vat)+'</td>' +

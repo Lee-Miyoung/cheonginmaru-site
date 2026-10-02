@@ -1191,6 +1191,51 @@
 
 
 
+/* ===== FINAL PRINT PALETTE — neutral paper / restrained navy =====
+   인쇄물 전체가 푸르게 보이지 않도록 옅은 블루 배경을 중성 회백/웜그레이로 치환한다.
+   네이비는 제목·표 헤더·최종금액처럼 중요한 곳에만 사용한다. */
+@media print{
+  html,body{ background:#fff !important; color:#20242a !important; }
+  #tabTrade .trade-sheet{ background:#fff !important; color:#20242a !important; }
+
+  #tabTrade .doc-tag{ background:#faf9f7 !important; border-color:#dedbd5 !important; color:#555b63 !important; }
+  #tabTrade table.infogrid{ border-color:#d9d7d2 !important; }
+  #tabTrade table.infogrid td{ border-color:#e3e0da !important; background:#fff !important; color:#262b31 !important; }
+  #tabTrade table.infogrid td.lbl{ background:#f5f4f1 !important; color:#3d4857 !important; }
+  #tabTrade td.fillme{ background:#fbf6e9 !important; box-shadow:inset 2.5px 0 0 #cfae74 !important; }
+
+  #tabTrade .supplier-strip{ background:#fff !important; border-color:#ddd9d2 !important; }
+  #tabTrade .supplier-strip .k{ background:#f5f4f1 !important; color:#4c5561 !important; }
+  #tabTrade .supplier-strip .v{ background:#fff !important; color:#333940 !important; }
+  #tabTrade .supplier-strip .web-v{ color:#315b91 !important; }
+
+  #tabTrade table.items{ border-color:#cfd2d5 !important; }
+  #tabTrade table.items th{ background:#1f3d63 !important; color:#fff !important; border-color:#46607e !important; }
+  #tabTrade table.items td{ background:#fff !important; color:#252a30 !important; border-color:#dedede !important; }
+  #tabTrade table.items tbody tr:nth-child(even) td{ background:#fbfbfa !important; }
+
+  #tabTrade .quote-summary{ background:#fff !important; border-color:#d8d6d0 !important; }
+  #tabTrade .quote-summary .summary-item{ background:#faf9f7 !important; border-color:#dedbd5 !important; }
+  #tabTrade .quote-summary .summary-label{ color:#6b6e73 !important; }
+  #tabTrade .quote-summary .summary-value{ color:#202a36 !important; }
+  #tabTrade .quote-summary .summary-item.grand{ background:#1f3d63 !important; }
+  #tabTrade .quote-summary .summary-item.grand .summary-label{ color:#e3e8ee !important; }
+  #tabTrade .quote-summary .summary-item.grand .summary-value{ color:#fff !important; }
+
+  #tabTrade .notes{ background:#fbfaf7 !important; border-color:#ddd9d2 !important; }
+  #tabTrade .notes .h{ color:#263c58 !important; border-left-color:#b89164 !important; }
+  #tabTrade .notes li, #tabTrade .contract-clause{ color:#34383d !important; }
+  #tabTrade .contract-clause{ background:#fffdf8 !important; border-color:#e5d9c3 !important; }
+
+  #tabTrade .trade-footer-box{ background:#faf9f7 !important; border-color:#ddd9d2 !important; }
+  #tabTrade .trade-footer-box .row{ color:#40464d !important; }
+
+  body.print-with-seal #tabTrade .stamp-business-box{ background:#fff !important; border-color:#cfd1d3 !important; }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-ribbon{ background:#f1f0ed !important; color:#3a4552 !important; }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-k{ background:#f6f5f2 !important; color:#39424d !important; border-color:#dedbd5 !important; }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-v{ background:#fff !important; color:#272d34 !important; border-color:#dedbd5 !important; }
+}
+
 /* ===== 로컬 직인(도장) + 출력용 사업자 확인정보 ===== */
 .seal-control-row{
   max-width:860px; width:100%; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -1235,8 +1280,8 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
 .stamp-business-box .sb-k{background:#f7f8fa;color:#34445a;font-weight:800;border-right:1px solid #d8dfe8;white-space:nowrap;}
 .stamp-business-box .sb-v{color:#222d3b;}
 .stamp-business-box .sb-wide{grid-column:2 / 5;}
-.stamp-business-box .sb-name{position:relative;padding-right:70px;min-height:40px;font-weight:900;color:#17345f;}
-.stamp-business-box .sb-name .seal-stamp{position:absolute;right:7px;top:50%;transform:translateY(-50%);height:46px!important;max-width:60px;}
+.stamp-business-box .sb-name{position:relative;padding-right:84px;min-height:46px;font-weight:900;color:#17345f;}
+.stamp-business-box .sb-name .seal-stamp{position:absolute;right:7px;top:50%;transform:translateY(-50%);height:58px!important;max-width:76px;}
 .stamp-business-box .sb-last{border-bottom:0!important;}
 .stamp-business-box .sb-content > :nth-last-child(-n+2){border-bottom:0;}
 
@@ -1258,8 +1303,8 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
   body.print-with-seal #tabTrade .stamp-business-box .sb-content{grid-template-columns:104px 1fr 58px 1fr!important;}
   body.print-with-seal #tabTrade .stamp-business-box .sb-k,
   body.print-with-seal #tabTrade .stamp-business-box .sb-v{font-size:9.6px!important;min-height:27px!important;padding:4px 6px!important;}
-  body.print-with-seal #tabTrade .stamp-business-box .sb-name{padding-right:58px!important;min-height:35px!important;}
-  body.print-with-seal #tabTrade .stamp-business-box .sb-name .seal-stamp{height:41px!important;max-width:52px!important;}
+  body.print-with-seal #tabTrade .stamp-business-box .sb-name{padding-right:72px!important;min-height:42px!important;}
+  body.print-with-seal #tabTrade .stamp-business-box .sb-name .seal-stamp{height:51px!important;max-width:66px!important;}
   #tabTrade .contract-clause{margin:0 0 7px!important;padding:7px 9px 7px 10px!important;font-size:10.7px!important;line-height:1.48!important;border-left-width:3px!important;}
 }
 
@@ -1267,6 +1312,95 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
 .image-export.with-seal .stamp-business-box .sb-k,
 .image-export.with-seal .stamp-business-box .sb-v{font-size:10.4px!important;}
 .image-export .contract-clause{margin-bottom:10px!important;padding:9px 11px!important;font-size:11.2px!important;line-height:1.55!important;}
+
+
+
+/* ===== ONE-PAGE PDF GUARD 2026-10-02 =====
+   일반 견적서는 A4 1장 안에서 끝나도록 마지막 단계에서만 압축한다.
+   화면/이미지 저장 디자인은 건드리지 않는다. */
+@media print{
+  @page{ size:A4 portrait; margin:4.5mm !important; }
+
+  #tabTrade .trade-sheet{
+    zoom:.94 !important;
+    width:106.383% !important;
+    max-width:none !important;
+    padding:3.2mm 4mm 2.4mm !important;
+    margin:0 !important;
+  }
+  #tabTrade .trade-sheet.print-dense{
+    zoom:.90 !important;
+    width:111.112% !important;
+  }
+  #tabTrade .trade-sheet.print-ultra-dense{
+    zoom:.84 !important;
+    width:119.048% !important;
+  }
+
+  #tabTrade .brand-row{ margin-bottom:5px !important; padding-bottom:5px !important; }
+  #tabTrade .doc-title{ margin:3px 0 1px !important; font-size:21px !important; }
+  #tabTrade .doc-sub{ margin-bottom:6px !important; font-size:9.9px !important; }
+  #tabTrade table.infogrid{ margin-bottom:5px !important; font-size:10.2px !important; }
+  #tabTrade table.infogrid td{ padding:4px 5px !important; line-height:1.34 !important; }
+  #tabTrade .supplier-strip{ margin-bottom:5px !important; }
+  #tabTrade .supplier-strip .k{ padding:3px 5px !important; font-size:8.9px !important; }
+  #tabTrade .supplier-strip .v{ padding:3px 5px !important; font-size:9.2px !important; }
+
+  #tabTrade table.items{ font-size:9.8px !important; }
+  #tabTrade table.items th{ padding:4px 3px !important; font-size:9.3px !important; }
+  #tabTrade table.items td{ padding:4px 4px !important; line-height:1.28 !important; }
+  #tabTrade #tradeItemsBody tr.print-empty-row{ display:none !important; }
+
+  #tabTrade .quote-summary .summary-item{ min-height:10.5mm !important; padding:1.6mm 2.6mm !important; gap:.5mm !important; }
+  #tabTrade .quote-summary .summary-label{ font-size:8.9px !important; }
+  #tabTrade .quote-summary .summary-value{ font-size:11.8px !important; }
+  #tabTrade .quote-summary .summary-item.grand .summary-value{ font-size:14px !important; }
+
+  #tabTrade .notes{
+    margin-top:2.8mm !important;
+    padding:2.3mm 3mm 2.5mm !important;
+    border-radius:2mm !important;
+  }
+  #tabTrade .notes .h{ font-size:11px !important; margin-bottom:1.4mm !important; padding-left:2mm !important; }
+  #tabTrade .contract-clause{
+    margin:0 0 1.4mm !important;
+    padding:1.5mm 2mm !important;
+    font-size:9.8px !important;
+    line-height:1.38 !important;
+  }
+  #tabTrade .notes ul{ padding-left:4.2mm !important; }
+  #tabTrade .notes li{
+    font-size:9.8px !important;
+    line-height:1.38 !important;
+    margin-bottom:.25mm !important;
+  }
+
+  body.print-with-seal #tabTrade .stamp-business-box{
+    margin-top:2.2mm !important;
+    grid-template-columns:30px 1fr !important;
+  }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-content{ grid-template-columns:94px 1fr 52px 1fr !important; }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-k,
+  body.print-with-seal #tabTrade .stamp-business-box .sb-v{
+    min-height:22px !important;
+    padding:2.5px 5px !important;
+    font-size:8.8px !important;
+    line-height:1.2 !important;
+  }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-name{ min-height:35px !important; padding-right:68px !important; }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-name .seal-stamp{ height:47px !important; max-width:62px !important; }
+
+  #tabTrade .trade-sheet.print-short{ padding-bottom:12mm !important; }
+  #tabTrade .trade-sheet.print-short .trade-footer-box{
+    position:fixed !important;
+    left:9mm !important;
+    right:9mm !important;
+    bottom:5.5mm !important;
+    margin:0 !important;
+    padding:1.7mm 2.4mm !important;
+  }
+  #tabTrade .trade-footer-box .row{ font-size:9.3px !important; line-height:1.3 !important; }
+}
 
 </style>
 </head>
@@ -1660,7 +1794,7 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
 
   <div class="notes">
     <div class="h">특이사항</div>
-    <div class="contract-clause rich-text" contenteditable="true" data-k="tr-contract-clause"><b>가격 및 공사 범위에 변동이 없고 양 당사자가 동의하는 경우, 본 견적서를 계약서로 갈음할 수 있습니다.</b> 시공 및 하자보증 기간은 시공일로부터 1년이며, 소비자 과실로 인한 하자 보수는 실비가 발생합니다.</div>
+    <div class="contract-clause rich-text" contenteditable="true" data-k="tr-contract-clause"><b>가격 및 공사 범위에 변동이 없고 양 당사자가 동의하는 경우, 본 견적서를 계약서로 갈음할 수 있습니다.</b></div>
     <ul>
       <li class="rich-text" contenteditable="true" data-k="tr-note-1">상기 견적은 예상 소요량이며 실제 시공 시 소요된 수량으로 정산합니다. 현장 바닥 상태에 따라 <b>추가 시공비가 발생할 수 있습니다.</b></li>
       <li class="rich-text" contenteditable="true" data-k="tr-note-2">시공일은 협의 후 진행합니다. <b>신설 단독주택의 경우</b> <b>보일러(난방) 가동 후 최소 5일 이상</b> 건조 기간을 확보한 뒤 시공해야 하며, 바닥 함수율 및 습기 상태에 따라 공사 일정이 조정될 수 있습니다.</li>
@@ -2977,18 +3111,27 @@ function prepareTradePrintLayout(){
   var sheet = document.querySelector('#tabTrade .trade-sheet');
   if(!sheet) return;
   var rows = Array.from(document.querySelectorAll('#tradeItemsBody tr'));
-  var meaningful = rows.filter(function(row){
+  var meaningful = 0;
+  rows.forEach(function(row){
     var first = row.querySelector('td:first-child');
-    if(!first) return false;
-    var inp = first.querySelector('input,textarea');
-    var value = inp ? inp.value : first.textContent;
-    return String(value || '').trim() !== '';
-  }).length;
+    var value = '';
+    if(first){
+      var inp = first.querySelector('input,textarea');
+      value = inp ? inp.value : first.textContent;
+    }
+    var isEmpty = String(value || '').trim() === '';
+    row.classList.toggle('print-empty-row', isEmpty);
+    if(!isEmpty) meaningful++;
+  });
+  var sealOn = (typeof shouldIncludeSeal === 'function') ? shouldIncludeSeal() : false;
   sheet.classList.toggle('print-short', meaningful <= 7);
+  sheet.classList.toggle('print-dense', sealOn || meaningful >= 6);
+  sheet.classList.toggle('print-ultra-dense', meaningful >= 10);
 }
 function cleanupTradePrintLayout(){
   var sheet = document.querySelector('#tabTrade .trade-sheet');
-  if(sheet) sheet.classList.remove('print-short');
+  if(sheet) sheet.classList.remove('print-short','print-dense','print-ultra-dense');
+  document.querySelectorAll('#tradeItemsBody tr.print-empty-row').forEach(function(row){ row.classList.remove('print-empty-row'); });
 }
 function printEstimate(){
   if(!validateSealBeforeExport()) return;

@@ -1737,6 +1737,77 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
   }
 }
 
+
+
+/* ===== 2026-10-02 export seal + recipient hide final fix ===== */
+.image-export .recipient-type-segment,
+.image-export .recipient-type-select,
+.image-export .recipient-type-hidden,
+.image-export .recipient-register-btn,
+.image-export .recipient-type-select + .capture-value{
+  display:none !important;
+}
+.image-export .recipient-wrap{ gap:0 !important; }
+
+.image-export.with-seal .stamp-business-box{
+  overflow:visible !important;
+  margin-top:14px !important;
+  position:relative !important;
+}
+.image-export.with-seal .stamp-business-box .sb-content{
+  overflow:visible !important;
+}
+.image-export.with-seal .stamp-business-box .sb-name{
+  overflow:visible !important;
+  min-height:37px !important;
+  padding:7px 8px 7px 8px !important;
+}
+.image-export.with-seal .stamp-business-box .sb-name .seal-stamp{
+  position:relative !important;
+  left:auto !important;
+  top:auto !important;
+  transform:none !important;
+  vertical-align:middle !important;
+  margin:-10px 0 -8px 4px !important;
+  height:66px !important;
+  max-width:66px !important;
+}
+
+@media print{
+  #tabTrade .recipient-type-segment,
+  #tabTrade .recipient-type-select,
+  #tabTrade .recipient-type-hidden,
+  #tabTrade .recipient-register-btn{
+    display:none !important;
+  }
+  #tabTrade .recipient-wrap{ gap:0 !important; }
+
+  body.print-with-seal #tabTrade .stamp-business-box{
+    overflow:visible !important;
+    margin-top:8px !important;
+    position:relative !important;
+  }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-content{
+    overflow:visible !important;
+  }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-name{
+    overflow:visible !important;
+    min-height:26px !important;
+    padding:4px 5px !important;
+    white-space:nowrap !important;
+  }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-name .seal-stamp{
+    position:relative !important;
+    left:auto !important;
+    top:auto !important;
+    transform:none !important;
+    vertical-align:middle !important;
+    margin:-8px 0 -6px 3px !important;
+    height:46px !important;
+    max-width:46px !important;
+  }
+}
+
 </style>
 </head>
 <body>

@@ -1319,18 +1319,18 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
    일반 견적서는 A4 1장 안에서 끝나도록 마지막 단계에서만 압축한다.
    화면/이미지 저장 디자인은 건드리지 않는다. */
 @media print{
-  @page{ size:A4 portrait; margin:4.5mm !important; }
+  @page{ size:A4 portrait; margin:4mm !important; }
 
   #tabTrade .trade-sheet{
-    zoom:.94 !important;
-    width:106.383% !important;
+    zoom:.96 !important;
+    width:104.167% !important;
     max-width:none !important;
     padding:3.2mm 4mm 2.4mm !important;
     margin:0 !important;
   }
   #tabTrade .trade-sheet.print-dense{
-    zoom:.90 !important;
-    width:111.112% !important;
+    zoom:.915 !important;
+    width:109.290% !important;
   }
   #tabTrade .trade-sheet.print-ultra-dense{
     zoom:.84 !important;
@@ -1357,22 +1357,22 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
   #tabTrade .quote-summary .summary-item.grand .summary-value{ font-size:14px !important; }
 
   #tabTrade .notes{
-    margin-top:2.8mm !important;
-    padding:2.3mm 3mm 2.5mm !important;
+    margin-top:3.6mm !important;
+    padding:2.8mm 3.2mm 3mm !important;
     border-radius:2mm !important;
   }
   #tabTrade .notes .h{ font-size:11px !important; margin-bottom:1.4mm !important; padding-left:2mm !important; }
   #tabTrade .contract-clause{
     margin:0 0 1.4mm !important;
     padding:1.5mm 2mm !important;
-    font-size:9.8px !important;
-    line-height:1.38 !important;
+    font-size:9.9px !important;
+    line-height:1.50 !important;
   }
   #tabTrade .notes ul{ padding-left:4.2mm !important; }
   #tabTrade .notes li{
-    font-size:9.8px !important;
-    line-height:1.38 !important;
-    margin-bottom:.25mm !important;
+    font-size:9.9px !important;
+    line-height:1.54 !important;
+    margin-bottom:.45mm !important;
   }
 
   body.print-with-seal #tabTrade .stamp-business-box{
@@ -1390,12 +1390,12 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
   body.print-with-seal #tabTrade .stamp-business-box .sb-name{ min-height:35px !important; padding-right:68px !important; }
   body.print-with-seal #tabTrade .stamp-business-box .sb-name .seal-stamp{ height:47px !important; max-width:62px !important; }
 
-  #tabTrade .trade-sheet.print-short{ padding-bottom:12mm !important; }
+  #tabTrade .trade-sheet.print-short{ padding-bottom:9.5mm !important; }
   #tabTrade .trade-sheet.print-short .trade-footer-box{
     position:fixed !important;
     left:9mm !important;
     right:9mm !important;
-    bottom:5.5mm !important;
+    bottom:2.4mm !important;
     margin:0 !important;
     padding:1.7mm 2.4mm !important;
   }
@@ -1981,6 +1981,7 @@ document.addEventListener('input', function(e){
 });
 /* 대표 직인(도장) — 로컬 브라우저에만 저장. Firebase/GitHub 업로드 없음 */
 var LOCAL_SEAL_KEY = 'cheonginmaru-local-seal-v1';
+var LOCAL_SEAL_INCLUDE_KEY = 'cheonginmaru-local-seal-include-v1';
 function getLocalSealData(){
   try{ return localStorage.getItem(LOCAL_SEAL_KEY) || ''; }catch(e){ return ''; }
 }
@@ -1993,6 +1994,13 @@ function applyLocalSeal(){
   });
   var status = document.getElementById('sealLocalStatus');
   var del = document.getElementById('sealDeleteBtn');
+  var cb = document.getElementById('includeSealToggle');
+  if(cb){
+    var savedInclude = null;
+    try{ savedInclude = localStorage.getItem(LOCAL_SEAL_INCLUDE_KEY); }catch(e){}
+    /* 도장을 한 번 등록한 기기는 별도 해제 전까지 PDF/이미지에 포함을 기본값으로 유지 */
+    cb.checked = !!data && (savedInclude === null ? true : savedInclude !== '0');
+  }
   if(status){
     status.textContent = data ? '도장 등록됨 · 이 기기에만 저장' : '이 기기에 등록된 도장 없음';
     status.className = data ? 'ok' : 'empty';
@@ -2006,9 +2014,12 @@ function pickSealFile(){
 function onSealIncludeChange(cb){
   if(cb && cb.checked && !hasLocalSeal()){
     cb.checked = false;
+    try{ localStorage.setItem(LOCAL_SEAL_INCLUDE_KEY, '0'); }catch(e){}
     alert('먼저 도장 이미지를 이 기기에 등록해주세요. 등록된 도장은 서버로 전송되지 않습니다.');
     pickSealFile();
+    return;
   }
+  if(cb){ try{ localStorage.setItem(LOCAL_SEAL_INCLUDE_KEY, cb.checked ? '1' : '0'); }catch(e){} }
 }
 function handleSealFile(event){
   var file = event && event.target && event.target.files ? event.target.files[0] : null;
@@ -2036,6 +2047,7 @@ function handleSealFile(event){
         ctx.drawImage(img,0,0,c.width,c.height);
         var data = c.toDataURL('image/png');
         localStorage.setItem(LOCAL_SEAL_KEY, data);
+        localStorage.setItem(LOCAL_SEAL_INCLUDE_KEY, '1');
         applyLocalSeal();
         var cb = document.getElementById('includeSealToggle');
         if(cb) cb.checked = true;
@@ -2053,7 +2065,7 @@ function handleSealFile(event){
 function removeLocalSeal(){
   if(!hasLocalSeal()) return;
   if(!confirm('이 기기에 저장된 도장 이미지를 삭제할까요?\n견적 데이터나 Firebase에는 영향이 없습니다.')) return;
-  try{ localStorage.removeItem(LOCAL_SEAL_KEY); }catch(e){}
+  try{ localStorage.removeItem(LOCAL_SEAL_KEY); localStorage.removeItem(LOCAL_SEAL_INCLUDE_KEY); }catch(e){}
   var cb = document.getElementById('includeSealToggle');
   if(cb) cb.checked = false;
   applyLocalSeal();
@@ -3125,7 +3137,7 @@ function prepareTradePrintLayout(){
   });
   var sealOn = (typeof shouldIncludeSeal === 'function') ? shouldIncludeSeal() : false;
   sheet.classList.toggle('print-short', meaningful <= 7);
-  sheet.classList.toggle('print-dense', sealOn || meaningful >= 6);
+  sheet.classList.toggle('print-dense', meaningful >= 7 || (sealOn && meaningful >= 6));
   sheet.classList.toggle('print-ultra-dense', meaningful >= 10);
 }
 function cleanupTradePrintLayout(){
@@ -3133,15 +3145,33 @@ function cleanupTradePrintLayout(){
   if(sheet) sheet.classList.remove('print-short','print-dense','print-ultra-dense');
   document.querySelectorAll('#tradeItemsBody tr.print-empty-row').forEach(function(row){ row.classList.remove('print-empty-row'); });
 }
-function printEstimate(){
+async function waitForSealImages(){
+  if(!shouldIncludeSeal()) return;
+  applyLocalSeal();
+  var imgs = Array.from(document.querySelectorAll('img.seal-stamp[data-local-seal="1"]'));
+  await Promise.all(imgs.map(function(img){
+    if(img.complete && img.naturalWidth > 0) return Promise.resolve();
+    if(typeof img.decode === 'function') return img.decode().catch(function(){});
+    return new Promise(function(resolve){
+      var done=function(){ resolve(); };
+      img.addEventListener('load', done, {once:true});
+      img.addEventListener('error', done, {once:true});
+      setTimeout(done, 700);
+    });
+  }));
+}
+async function printEstimate(){
   if(!validateSealBeforeExport()) return;
+  applyLocalSeal();
   syncPrintMirrors();
   prepareTradePrintLayout();
   document.body.classList.toggle('print-with-seal', shouldIncludeSeal());
-  requestAnimationFrame(function(){ window.print(); });
+  await waitForSealImages();
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ window.print(); }); });
 }
 window.printEstimate = printEstimate;
 window.addEventListener('beforeprint', function(){
+  applyLocalSeal();
   syncPrintMirrors(); prepareTradePrintLayout();
   document.body.classList.toggle('print-with-seal', shouldIncludeSeal());
 });

@@ -2119,6 +2119,101 @@ table.items .ti-wrap[data-field="spec"]:empty::before{
   }
 }
 
+
+/* ===== 모바일/아이패드 일정 겹침 최종 해결 =====
+   터치 기기에서도 실측일/철거일/공사일은 가로 3칸 유지.
+   각 칸 안에서 제목을 위, 날짜를 아래 배치하고 부모 칸에서 완전히 클리핑해
+   iOS date input의 고정 최소폭이 옆 칸을 침범하지 않게 함.
+*/
+@media (hover:none) and (pointer:coarse){
+  #tabTrade .schedule-wrap{
+    display:grid !important;
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:4px !important;
+    width:100% !important;
+    min-width:0 !important;
+    overflow:hidden !important;
+  }
+  #tabTrade .schedule-item{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    gap:3px !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    overflow:hidden !important;
+    clip-path:inset(0) !important;
+    box-sizing:border-box !important;
+  }
+  #tabTrade .schedule-item b{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    margin:0 !important;
+    text-align:center !important;
+    white-space:nowrap !important;
+    font-size:10px !important;
+    line-height:1.1 !important;
+  }
+  #tabTrade .schedule-wrap input[type="date"].doc-date{
+    display:block !important;
+    box-sizing:border-box !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    height:31px !important;
+    margin:0 !important;
+    padding:3px 1px !important;
+    font-size:10px !important;
+    line-height:1 !important;
+    letter-spacing:-.25px !important;
+    overflow:hidden !important;
+    text-align:center !important;
+    -webkit-appearance:none !important;
+    appearance:none !important;
+  }
+  #tabTrade .schedule-wrap input[type="date"].doc-date::-webkit-date-and-time-value{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    padding:0 !important;
+    margin:0 !important;
+    text-align:center !important;
+  }
+  #tabTrade .schedule-wrap input[type="date"].doc-date::-webkit-calendar-picker-indicator{
+    width:11px !important;
+    height:11px !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+}
+#tabTrade .trade-sheet.image-export .schedule-wrap{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:8px !important;
+}
+#tabTrade .trade-sheet.image-export .schedule-item{
+  display:grid !important;
+  grid-template-columns:auto minmax(0,1fr) !important;
+  gap:5px !important;
+  overflow:visible !important;
+  clip-path:none !important;
+}
+@media print{
+  #tabTrade .schedule-wrap{
+    display:grid !important;
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:5px !important;
+  }
+  #tabTrade .schedule-item{
+    display:grid !important;
+    grid-template-columns:auto minmax(0,1fr) !important;
+    gap:4px !important;
+    overflow:visible !important;
+    clip-path:none !important;
+  }
+}
 </style>
 </head>
 <body>

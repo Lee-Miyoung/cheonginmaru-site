@@ -3019,11 +3019,11 @@ function startLeakEstimateApp(){
     if(urlId){ leakEstimateId = urlId; loadLeakLocal(); loadLeakFromFirebase(urlId); }
     else{
       var hadLeakDraft = loadLeakLocal();
-      if(!hadLeakDraft){
-        var estDateEl = document.querySelector('#tabLeak [data-k="est-date"]');
-        if(estDateEl) estDateEl.value = todayISOGlobal();
-        ensureEstimateNo('leak', true);
-      }
+      var estDateEl = document.querySelector('#tabLeak [data-k="est-date"]');
+      /* 저장된 기존 견적(id)이 아닌 새/임시 견적은 항상 오늘 발행일로 시작한다.
+         오래된 localStorage 초안에 남아 있던 날짜가 새 견적에 따라오는 문제 방지. */
+      if(estDateEl && estDateEl.value !== todayISOGlobal()) estDateEl.value = todayISOGlobal();
+      ensureEstimateNo('leak', true);
       setLeakStatus('새 견적 (아직 저장되지 않음)', '');
     }
     recalcAll();
@@ -3035,10 +3035,11 @@ function startLeakEstimateApp(){
       if(!hadTradeDraft){
         tradeItems = [makeEmptyTradeRow(), makeEmptyTradeRow(), makeEmptyTradeRow()];
         renderTradeItems();
-        var trDateEl = document.querySelector('#tabTrade [data-k="tr-date"]');
-        if(trDateEl) trDateEl.value = todayISOGlobal();
-        ensureEstimateNo('trade', true);
       }
+      var trDateEl = document.querySelector('#tabTrade [data-k="tr-date"]');
+      /* 기존 저장견적(id)이 아닌 새/임시 견적은 오래된 초안 날짜를 재사용하지 않고 오늘 날짜로 보정. */
+      if(trDateEl && trDateEl.value !== todayISOGlobal()) trDateEl.value = todayISOGlobal();
+      ensureEstimateNo('trade', true);
       setTradeStatus('새 견적 (아직 저장되지 않음)', '');
     }
   }

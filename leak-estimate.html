@@ -3476,14 +3476,12 @@ async function saveAsImage(){
             inp.replaceWith(span);
           });
 
-          /* 소비자/거래처 구분 셀렉트도 문서 텍스트처럼 표시 */
+          /* 이미지 저장 시 수신의 거래처/소비자 표시는 숨김 */
           target.querySelectorAll('.recipient-type-select').forEach(function(sel){
             var span = clonedDoc.createElement('span');
             span.className = 'capture-value';
-            span.style.fontWeight = '700';
-            span.style.color = '#17345f';
-            span.style.width = 'auto';
-            span.textContent = sel.options && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text : sel.value;
+            span.style.display = 'none';
+            span.textContent = '';
             sel.replaceWith(span);
           });
 

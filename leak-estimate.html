@@ -1886,6 +1886,75 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
 }
 .image-export.with-seal .stamp-business-box .sb-content{ grid-template-columns:96px minmax(0,1fr) 58px minmax(0,1fr) !important; }
 
+
+
+/* ===== 2026-10-02 PRINT EDGE + BREATHING SPACE FIX ===== */
+/* 작성 화면에서도 고객정보와 품목표 사이에 숨 쉴 공간을 둔다. */
+#tabTrade table.infogrid{ margin-bottom:14px !important; }
+#tabTrade table.items{ margin-top:4px !important; }
+
+.image-export table.infogrid{ margin-bottom:18px !important; }
+.image-export table.items{ margin-top:0 !important; }
+
+@media print{
+  @page{ size:A4 portrait; margin:5mm !important; }
+
+  /* 우측 잘림 원인이었던 확대 width를 없애고, 내용만 축소한다. */
+  #tabTrade .trade-sheet,
+  #tabTrade .trade-sheet.print-short{
+    zoom:.80 !important;
+    width:100% !important;
+    max-width:100% !important;
+    padding:3mm 3.5mm 2.4mm !important;
+    margin:0 auto !important;
+    box-sizing:border-box !important;
+    overflow:visible !important;
+  }
+  #tabTrade .trade-sheet.print-dense{
+    zoom:.76 !important;
+    width:100% !important;
+    max-width:100% !important;
+  }
+  #tabTrade .trade-sheet.print-ultra-dense{
+    zoom:.70 !important;
+    width:100% !important;
+    max-width:100% !important;
+  }
+
+  /* 고객정보 아래에 의도적인 여백을 둔다. */
+  #tabTrade table.infogrid{ margin-bottom:12px !important; }
+  #tabTrade table.items{ margin-top:0 !important; }
+
+  /* 모든 큰 블록은 인쇄 가능 폭을 넘지 않게 고정 */
+  #tabTrade .brand-row,
+  #tabTrade table.infogrid,
+  #tabTrade table.items,
+  #tabTrade .quote-summary,
+  #tabTrade .notes,
+  #tabTrade .stamp-business-box,
+  #tabTrade .trade-footer-box{
+    width:100% !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  #tabTrade table.infogrid,
+  #tabTrade table.items{ table-layout:fixed !important; }
+  #tabTrade table.infogrid td,
+  #tabTrade table.items th,
+  #tabTrade table.items td{
+    min-width:0 !important;
+    max-width:100% !important;
+    overflow-wrap:anywhere !important;
+  }
+
+  /* 하단 공급자 정보까지 1페이지 안에 들어오도록 높이만 소폭 절약 */
+  #tabTrade .notes{ margin-top:8px !important; padding:8px 10px 9px !important; }
+  #tabTrade .notes li{ font-size:10px !important; line-height:1.46 !important; margin-bottom:1px !important; }
+  body.print-with-seal #tabTrade .stamp-business-box{ margin-top:7px !important; }
+  #tabTrade .trade-footer-box{ margin-top:6px !important; }
+}
+
 </style>
 </head>
 <body>

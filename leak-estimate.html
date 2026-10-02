@@ -272,10 +272,10 @@
   .quote-summary .summary-item{ min-height:66px; padding:11px 16px; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:5px; border-right:1px solid #d9e0e8; }
   .quote-summary .summary-item:last-child{ border-right:0; }
   .quote-summary .summary-label{ font-size:11px; font-weight:800; color:#778290; white-space:nowrap; letter-spacing:-.1px; }
-  .quote-summary .summary-value{ font-size:20px; font-weight:900; color:#23364e; letter-spacing:-.45px; white-space:nowrap; font-variant-numeric:tabular-nums; line-height:1.05; }
+  .quote-summary .summary-value{ font-size:18px; font-weight:900; color:#23364e; letter-spacing:-.45px; white-space:nowrap; font-variant-numeric:tabular-nums; line-height:1.05; }
   .quote-summary .summary-item.grand{ background:linear-gradient(180deg,#244c80 0%, #17345f 100%); }
   .quote-summary .summary-item.grand .summary-label{ color:#d8e3f0; }
-  .quote-summary .summary-item.grand .summary-value{ color:#fff; font-size:24px; }
+  .quote-summary .summary-item.grand .summary-value{ color:#fff; font-size:21px; }
 
   .notes{ margin-top:16px; background:linear-gradient(180deg,#fbfcfe 0%,#f6f8fb 100%); border:1px solid #d8e0ea; border-radius:10px; padding:16px 18px 17px; box-shadow:inset 0 1px 0 rgba(255,255,255,.62); }
   .notes .h{ font-weight:900; color:var(--brand); font-size:13.2px; margin-bottom:10px; padding-left:11px; border-left:4px solid var(--wood); letter-spacing:-.15px; }
@@ -569,8 +569,8 @@
     .trade-totals .sum-num{ font-size:12px; }
     .quote-summary .summary-item{ min-height:54px; padding:8px 10px; align-items:flex-start; justify-content:center; gap:4px; }
     .quote-summary .summary-label{ font-size:10.2px; }
-    .quote-summary .summary-value{ font-size:14.5px; line-height:1.05; }
-    .quote-summary .summary-item.grand .summary-value{ font-size:18px; }
+    .quote-summary .summary-value{ font-size:13.2px; line-height:1.05; }
+    .quote-summary .summary-item.grand .summary-value{ font-size:16px; }
     .pyeong-toggle{ margin:3px 0 5px; padding:3px 7px; font-size:10px; }
     .pyeong-toggle input{ width:11px; height:11px; }
 
@@ -779,6 +779,300 @@
 @keyframes priceAlertBlink{from{background:#fff4f4;box-shadow:0 0 0 rgba(180,35,24,0)}to{background:#ffe4e4;box-shadow:0 0 0 4px rgba(180,35,24,.10)}}
 @media print{.recipient-price-alert,.edit-only-note{display:none!important;}}
 .image-export .recipient-price-alert,.image-export .edit-only-note{display:none!important;}
+
+
+
+  /* ===== 2026-10 출력 디자인 리뉴얼: PDF / 이미지 공통 =====
+     원칙: 정보 위계는 선명하게, 색은 네이비+웜베이지 2축으로 제한,
+     표는 가볍게, 합계와 특이사항은 충분히 읽히게. */
+  .trade-sheet.image-export{
+    width:860px !important;
+    max-width:860px !important;
+    padding:42px 44px 34px !important;
+    border:1px solid #dfe5ec !important;
+    border-radius:12px !important;
+    box-shadow:none !important;
+    background:#fff !important;
+  }
+  .image-export .brand-row{
+    align-items:center !important;
+    margin-bottom:18px !important;
+    padding-bottom:12px !important;
+    border-bottom:1.5px solid #17345f !important;
+  }
+  .image-export .brand-row:after{ width:82px !important; height:2.5px !important; bottom:-2px !important; }
+  .image-export .brand-logo-img{ height:42px !important; }
+  .image-export .brand-name{ font-size:16px !important; }
+  .image-export .brand-tag{ font-size:10.8px !important; }
+  .image-export .brand-specialty{ font-size:10px !important; }
+  .image-export .doc-tag{
+    min-width:190px !important;
+    padding:8px 11px !important;
+    border:1px solid #e1e6ed !important;
+    border-radius:9px !important;
+    background:#f8fafc !important;
+    line-height:1.75 !important;
+    font-size:10.8px !important;
+  }
+  .image-export .doc-title{ font-size:28px !important; margin:10px 0 3px !important; letter-spacing:-1px !important; }
+  .image-export .doc-sub{ font-size:11.5px !important; margin-bottom:19px !important; color:#7b8490 !important; }
+  .image-export table.infogrid{
+    border:1px solid #dbe2ea !important;
+    border-radius:9px !important;
+    margin-bottom:12px !important;
+    font-size:12.4px !important;
+  }
+  .image-export table.infogrid td{ padding:9px 11px !important; border-color:#e3e8ee !important; }
+  .image-export table.infogrid td.lbl{
+    background:#f4f7fa !important;
+    color:#214774 !important;
+    font-size:11.8px !important;
+    font-weight:800 !important;
+  }
+  .image-export td.fillme{ background:#fbf7ee !important; box-shadow:inset 3px 0 0 #d6b77f !important; }
+  .image-export .supplier-strip{
+    margin-bottom:13px !important;
+    border-color:#dde4ec !important;
+    border-radius:8px !important;
+    background:#fbfcfe !important;
+  }
+  .image-export .supplier-strip .k{ background:#f3f6f9 !important; color:#315b91 !important; font-size:10.7px !important; padding:7px 9px !important; }
+  .image-export .supplier-strip .v{ font-size:11px !important; padding:7px 9px !important; }
+  .image-export table.items{
+    border:1px solid #ced8e4 !important;
+    border-radius:8px !important;
+    overflow:hidden !important;
+    font-size:11.5px !important;
+  }
+  .image-export table.items th{
+    background:#244f82 !important;
+    color:#fff !important;
+    font-size:10.8px !important;
+    padding:8px 5px !important;
+    border-color:#466b98 !important;
+    letter-spacing:-.1px !important;
+  }
+  .image-export table.items td{
+    padding:8px 6px !important;
+    border-color:#e0e6ed !important;
+    color:#24303e !important;
+    background:#fff !important;
+  }
+  .image-export table.items tbody tr:nth-child(even) td{ background:#fbfcfe !important; }
+  .image-export .quote-summary{
+    display:grid !important;
+    grid-template-columns:1fr 1fr 1.28fr !important;
+    border:1px solid #d6dee8 !important;
+    border-top:0 !important;
+    border-radius:0 0 9px 9px !important;
+    background:#f8fafc !important;
+  }
+  .image-export .quote-summary .summary-item{
+    min-height:60px !important;
+    padding:10px 14px !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:flex-start !important;
+    justify-content:center !important;
+    gap:4px !important;
+    border-right:1px solid #dce3eb !important;
+    border-bottom:0 !important;
+  }
+  .image-export .quote-summary .summary-label{ font-size:10.5px !important; color:#74808e !important; font-weight:800 !important; }
+  .image-export .quote-summary .summary-value{ font-size:16px !important; color:#22364e !important; font-weight:900 !important; }
+  .image-export .quote-summary .summary-item.grand{ background:#17345f !important; }
+  .image-export .quote-summary .summary-item.grand .summary-label{ color:#d6e0ed !important; }
+  .image-export .quote-summary .summary-item.grand .summary-value{ color:#fff !important; font-size:19px !important; }
+  .image-export .notes{
+    margin-top:14px !important;
+    padding:15px 17px 16px !important;
+    border:1px solid #dce3eb !important;
+    border-radius:10px !important;
+    background:linear-gradient(180deg,#fbfcfe 0%,#f7f9fc 100%) !important;
+  }
+  .image-export .notes .h{
+    font-size:13px !important;
+    margin-bottom:9px !important;
+    border-left:4px solid #b89164 !important;
+    padding-left:10px !important;
+    color:#17345f !important;
+  }
+  .image-export .notes li{
+    font-size:11.6px !important;
+    line-height:1.66 !important;
+    margin-bottom:2px !important;
+    color:#424b57 !important;
+  }
+  .image-export .trade-footer-box{
+    grid-template-columns:1.18fr .82fr !important;
+    margin-top:12px !important;
+    padding:10px 13px !important;
+    border-radius:9px !important;
+    border-color:#dce3eb !important;
+    background:#fbfcfe !important;
+  }
+  .image-export .trade-footer-box .row{ font-size:11.6px !important; color:#4b5664 !important; }
+  .image-export .trade-footer-box .row:last-child{ text-align:right !important; }
+
+  @media print{
+    @page{ size:A4 portrait; margin:6mm !important; }
+    #tabTrade .trade-sheet{
+      padding:5mm 6mm 4mm !important;
+      border:0 !important;
+      box-shadow:none !important;
+      background:#fff !important;
+    }
+    #tabTrade .brand-row{
+      align-items:center !important;
+      margin-bottom:7px !important;
+      padding-bottom:5px !important;
+      border-bottom:1.2px solid #17345f !important;
+    }
+    #tabTrade .brand-row:after{ width:28mm !important; height:1.6px !important; bottom:-1.5px !important; }
+    #tabTrade .brand-logo-img{ height:10.5mm !important; max-width:38mm !important; }
+    #tabTrade .brand-name{ font-size:14.5px !important; }
+    #tabTrade .brand-tag{ font-size:9.8px !important; }
+    #tabTrade .brand-specialty{ font-size:9.2px !important; }
+    #tabTrade .doc-tag{
+      min-width:44mm !important;
+      padding:2.1mm 2.8mm !important;
+      border:1px solid #e0e6ed !important;
+      border-radius:2.2mm !important;
+      background:#f8fafc !important;
+      font-size:9.8px !important;
+      line-height:1.65 !important;
+    }
+    #tabTrade .doc-title{ font-size:23px !important; margin:5px 0 1px !important; letter-spacing:-.8px !important; }
+    #tabTrade .doc-sub{ font-size:10.4px !important; margin-bottom:7px !important; color:#7c8590 !important; }
+
+    #tabTrade table.infogrid{
+      margin-bottom:6px !important;
+      border:1px solid #d9e1e9 !important;
+      border-radius:2.2mm !important;
+      font-size:10.9px !important;
+    }
+    #tabTrade table.infogrid td{ padding:5px 6px !important; border-color:#e1e7ed !important; line-height:1.42 !important; }
+    #tabTrade table.infogrid td.lbl{
+      padding:5px 5px !important;
+      background:#f4f7fa !important;
+      color:#234a78 !important;
+      font-size:10.3px !important;
+      font-weight:800 !important;
+    }
+    #tabTrade td.fillme{ background:#fbf7ee !important; box-shadow:inset 2.5px 0 0 #d7b97f !important; }
+
+    #tabTrade .supplier-strip{
+      margin-bottom:6px !important;
+      border-color:#dce3eb !important;
+      border-radius:1.8mm !important;
+      background:#fbfcfe !important;
+    }
+    #tabTrade .supplier-strip .k{ background:#f3f6f9 !important; color:#315b91 !important; font-size:9.1px !important; padding:4px 5px !important; }
+    #tabTrade .supplier-strip .v{ font-size:9.4px !important; padding:4px 5px !important; }
+
+    #tabTrade table.items{
+      border:1px solid #ccd7e3 !important;
+      font-size:10.2px !important;
+      border-collapse:collapse !important;
+    }
+    #tabTrade table.items th{
+      background:#244f82 !important;
+      color:#fff !important;
+      font-size:9.8px !important;
+      padding:5px 4px !important;
+      border-color:#4b6f9a !important;
+      font-weight:800 !important;
+    }
+    #tabTrade table.items td{
+      padding:5px 4px !important;
+      border-color:#dde4ec !important;
+      line-height:1.38 !important;
+      color:#25313e !important;
+      background:#fff !important;
+    }
+    #tabTrade table.items tbody tr:nth-child(even) td{ background:#fbfcfe !important; }
+
+    /* 모바일 화면에서 인쇄해도 합계가 세로로 무너지지 않도록 강제 */
+    #tabTrade .quote-summary{
+      display:grid !important;
+      grid-template-columns:1fr 1fr 1.28fr !important;
+      border:1px solid #d5dee8 !important;
+      border-top:0 !important;
+      border-radius:0 0 2.2mm 2.2mm !important;
+      background:#f8fafc !important;
+      overflow:hidden !important;
+    }
+    #tabTrade .quote-summary .summary-item{
+      min-height:13.5mm !important;
+      padding:2mm 3mm !important;
+      display:flex !important;
+      flex-direction:column !important;
+      align-items:flex-start !important;
+      justify-content:center !important;
+      gap:1mm !important;
+      border-right:1px solid #dce3eb !important;
+      border-bottom:0 !important;
+      background:#f8fafc !important;
+    }
+    #tabTrade .quote-summary .summary-item:last-child{ border-right:0 !important; }
+    #tabTrade .quote-summary .summary-label{ font-size:9.5px !important; color:#75808d !important; font-weight:800 !important; }
+    #tabTrade .quote-summary .summary-value{ font-size:13px !important; color:#23374f !important; font-weight:900 !important; line-height:1 !important; }
+    #tabTrade .quote-summary .summary-item.grand{ background:#17345f !important; }
+    #tabTrade .quote-summary .summary-item.grand .summary-label{ color:#d8e2ee !important; }
+    #tabTrade .quote-summary .summary-item.grand .summary-value{ color:#fff !important; font-size:16px !important; }
+
+    #tabTrade .notes{
+      margin-top:7px !important;
+      padding:8px 10px 9px !important;
+      border:1px solid #dce3eb !important;
+      border-radius:2.3mm !important;
+      background:#f8fafc !important;
+    }
+    #tabTrade .notes .h{
+      font-size:11.8px !important;
+      margin-bottom:5px !important;
+      padding-left:7px !important;
+      border-left:3px solid #b89164 !important;
+      color:#17345f !important;
+    }
+    #tabTrade .notes ul{ padding-left:15px !important; }
+    #tabTrade .notes li{
+      font-size:10.5px !important;
+      line-height:1.52 !important;
+      margin-bottom:1.5px !important;
+      color:#414a56 !important;
+    }
+
+    /* 모바일 규칙의 1열 footer를 인쇄에서는 반드시 2열로 */
+    #tabTrade .trade-footer-box{
+      display:grid !important;
+      grid-template-columns:1.18fr .82fr !important;
+      margin-top:7px !important;
+      padding:6px 8px !important;
+      border:1px solid #dce3eb !important;
+      border-radius:2mm !important;
+      background:#fbfcfe !important;
+    }
+    #tabTrade .trade-footer-box .row{ font-size:9.8px !important; color:#4b5664 !important; line-height:1.4 !important; }
+    #tabTrade .trade-footer-box .row:last-child{ text-align:right !important; }
+
+    /* 짧은 견적은 특이사항 패널이 남는 공간을 자연스럽게 채우고 하단 정보를 바닥에 정렬 */
+    #tabTrade .trade-sheet.print-short{
+      padding-bottom:20mm !important;
+    }
+    #tabTrade .trade-sheet.print-short .notes{
+      min-height:50mm !important;
+    }
+    #tabTrade .trade-sheet.print-short .trade-footer-box{
+      position:fixed !important;
+      left:12mm !important;
+      right:12mm !important;
+      bottom:7mm !important;
+      margin:0 !important;
+      z-index:4 !important;
+      background:#fbfcfe !important;
+    }
+  }
 
 </style>
 </head>
@@ -1158,7 +1452,7 @@
   </div>
 
   <div class="notes">
-    <div class="h">[특이사항]</div>
+    <div class="h">특이사항</div>
     <ul>
       <li class="rich-text" contenteditable="true" data-k="tr-note-1">상기 견적은 예상 소요량이며 실제 시공 시 소요된 수량으로 정산합니다. 현장 바닥 상태에 따라 <b>추가 시공비가 발생할 수 있습니다.</b></li>
       <li class="rich-text" contenteditable="true" data-k="tr-note-2">시공일은 협의 후 진행합니다. <b>신설 단독주택의 경우</b> <b>보일러(난방) 가동 후 최소 5일 이상</b> 건조 기간을 확보한 뒤 시공해야 하며, 바닥 함수율 및 습기 상태에 따라 공사 일정이 조정될 수 있습니다.</li>
@@ -2367,12 +2661,31 @@ function syncPrintMirrors(){
     if(el.classList.contains('price-comma') || el.getAttribute('data-f') === 'price') span.classList.add('right');
   });
 }
+function prepareTradePrintLayout(){
+  var sheet = document.querySelector('#tabTrade .trade-sheet');
+  if(!sheet) return;
+  var rows = Array.from(document.querySelectorAll('#tradeItemsBody tr'));
+  var meaningful = rows.filter(function(row){
+    var first = row.querySelector('td:first-child');
+    if(!first) return false;
+    var inp = first.querySelector('input,textarea');
+    var value = inp ? inp.value : first.textContent;
+    return String(value || '').trim() !== '';
+  }).length;
+  sheet.classList.toggle('print-short', meaningful <= 7);
+}
+function cleanupTradePrintLayout(){
+  var sheet = document.querySelector('#tabTrade .trade-sheet');
+  if(sheet) sheet.classList.remove('print-short');
+}
 function printEstimate(){
   syncPrintMirrors();
+  prepareTradePrintLayout();
   requestAnimationFrame(function(){ window.print(); });
 }
 window.printEstimate = printEstimate;
-window.addEventListener('beforeprint', syncPrintMirrors);
+window.addEventListener('beforeprint', function(){ syncPrintMirrors(); prepareTradePrintLayout(); });
+window.addEventListener('afterprint', cleanupTradePrintLayout);
 
 function resetActiveTab(){
   if(currentTab==='leak'){ try{ localStorage.removeItem(leakLocalKey()); }catch(e){} }

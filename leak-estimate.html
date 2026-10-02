@@ -738,6 +738,12 @@
 .save-review-actions{display:flex;justify-content:flex-end;gap:8px}.save-review-actions button{border:0;border-radius:11px;padding:10px 17px;font-weight:800;font-size:13px;cursor:pointer}.save-review-cancel{background:#eef1f5;color:#536174}.save-review-ok{background:#234f86;color:#fff;box-shadow:0 5px 14px rgba(35,79,134,.2)}
 @media(max-width:600px){.save-review-overlay{align-items:flex-end;padding:10px}.save-review-card{border-radius:20px 20px 14px 14px;max-height:78vh;padding:18px}.save-review-actions button{flex:1}}
 
+
+/* 현장주소 입력칸: 안내문구는 클릭 시 사라지고 빈칸 전체를 클릭 가능 */
+#tabTrade [data-k="tr-site"]{display:block;min-height:24px;line-height:24px;width:100%;color:#24364b;}
+#tabTrade [data-k="tr-site"].site-placeholder{color:#9aa6b2;}
+#tabTrade td:has([data-k="tr-site"]){cursor:text;}
+
 </style>
 </head>
 <body>
@@ -1710,22 +1716,44 @@ function loadTradeLocal(){
     var parsed = JSON.parse(raw);
     applyTradeDocData(parsed.docData || {});
     tradeItems = parsed.items || [];
+    ensureMinTradeRows();
     renderTradeItems();
     return true;
   }catch(e){ return false; }
 }
 
+function makeEmptyTradeRow(){
+  return { name:'', spec:'', unit:'', qty:1, price:0, note:'', source:'manual', baseTradePrice:null };
+}
+function isTradeRowBlank(it){
+  if(!it) return true;
+  return !String(it.name||'').trim() && !String(it.spec||'').trim() && !String(it.unit||'').trim() &&
+         !String(it.note||'').trim() && num(it.price||0)===0 && (it.qty===undefined || it.qty===null || num(it.qty)===1);
+}
+function ensureMinTradeRows(){
+  while(tradeItems.length < 3) tradeItems.push(makeEmptyTradeRow());
+}
 function addTradeRow(prefill){
-  tradeItems.push(Object.assign({ name:'', spec:'', unit:'', qty:1, price:0, note:'', source:'manual', baseTradePrice:null }, prefill || {}));
+  var row = Object.assign(makeEmptyTradeRow(), prefill || {});
+  var hasPrefill = !!(prefill && Object.keys(prefill).length);
+  if(hasPrefill){
+    var blankIdx = tradeItems.findIndex(isTradeRowBlank);
+    if(blankIdx >= 0) tradeItems[blankIdx] = row;
+    else tradeItems.push(row);
+  }else{
+    tradeItems.push(row);
+  }
+  ensureMinTradeRows();
   renderTradeItems();
   saveTradeLocal();
 }
 function addTradeDiscountRow(){
   addTradeRow({ name:'특별할인', spec:'', unit:'식', qty:1, price:0, note:'단가를 마이너스로 입력하세요' });
 }
-function removeTradeRow(idx){ tradeItems.splice(idx,1); renderTradeItems(); saveTradeLocal(); }
+function removeTradeRow(idx){ tradeItems.splice(idx,1); ensureMinTradeRows(); renderTradeItems(); saveTradeLocal(); }
 
 function renderTradeItems(){
+  ensureMinTradeRows();
   var body = document.getElementById('tradeItemsBody');
   body.innerHTML = tradeItems.map(function(it, idx){
     var supply = (it.qty||0)*(it.price||0), vat = Math.round(supply*0.1), amt = supply+vat;
@@ -2065,6 +2093,7 @@ function loadTradeFromFirebase(id){
       if(!val){ setTradeStatus('해당 견적을 찾을 수 없음', 'err'); return; }
       if(val.docData) applyTradeDocData(val.docData);
       tradeItems = val.items || [];
+      ensureMinTradeRows();
       renderTradeItems();
       syncClientPickerLabel('Trade');
       if(val.meta){
@@ -2886,6 +2915,40 @@ document.addEventListener('input', function(e){
   if(e.target && e.target.matches && e.target.matches('#tabTrade [data-k=\"tr-date\"]')) ensureEstimateNo('trade', false);
 });
 
+
+/* 현장주소 플레이스홀더 UX */
+function initTradeSitePlaceholder(){
+  var el=document.querySelector('#tabTrade [data-k="tr-site"]');
+  if(!el) return;
+  var ph='[현장 주소]';
+  var t=(el.textContent||'').trim();
+  if(!t){ el.textContent=ph; t=ph; }
+  el.classList.toggle('site-placeholder', t===ph);
+}
+document.addEventListener('focusin', function(e){
+  var el=e.target && e.target.closest ? e.target.closest('#tabTrade [data-k="tr-site"]') : null;
+  if(!el) return;
+  if((el.textContent||'').trim()==='[현장 주소]'){
+    el.textContent='';
+    el.classList.remove('site-placeholder');
+  }
+});
+document.addEventListener('focusout', function(e){
+  var el=e.target && e.target.closest ? e.target.closest('#tabTrade [data-k="tr-site"]') : null;
+  if(!el) return;
+  if(!(el.textContent||'').trim()){
+    el.textContent='[현장 주소]';
+    el.classList.add('site-placeholder');
+  }
+  try{ saveTradeLocal(); }catch(_e){}
+});
+document.addEventListener('click', function(e){
+  var td=e.target && e.target.closest ? e.target.closest('#tabTrade td') : null;
+  if(!td) return;
+  var el=td.querySelector && td.querySelector('[data-k="tr-site"]');
+  if(el && e.target!==el){ el.focus(); }
+});
+
 /* ===================== 초기화 (게이트 통과 후에만 실행) ===================== */
 function startLeakEstimateApp(){
   var params = new URL(window.location.href).searchParams;
@@ -2914,7 +2977,8 @@ function startLeakEstimateApp(){
       var hadTradeDraft = forceNew ? false : loadTradeLocal();
       if(forceNew){ try{ localStorage.removeItem('wd-doc-v4-trade-draft'); }catch(e){} }
       if(!hadTradeDraft){
-        addTradeRow(); addTradeRow(); addTradeRow();
+        tradeItems = [makeEmptyTradeRow(), makeEmptyTradeRow(), makeEmptyTradeRow()];
+        renderTradeItems();
         var trDateEl = document.querySelector('#tabTrade [data-k="tr-date"]');
         if(trDateEl) trDateEl.value = todayISOGlobal();
         ensureEstimateNo('trade', true);
@@ -2932,6 +2996,7 @@ function startLeakEstimateApp(){
   loadTradeArchive().then(function(){ if(urlTab==='trade' && urlClient && !urlId) applyRegisteredTradeClientById(urlClient); });
   onTradeRecipientTypeChange(false);
   applyDefaultManager(false);
+  initTradeSitePlaceholder();
 }
 </script>
 </body>

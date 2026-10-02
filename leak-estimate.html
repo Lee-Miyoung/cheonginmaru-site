@@ -384,7 +384,7 @@
   .trade-search-bar input{ flex:1; min-width:180px; padding:9px 12px; font-size:12.5px; border:1px solid var(--line); border-radius:8px; font-family:inherit; }
   .trade-search-bar button{ font-family:inherit; font-size:12.5px; font-weight:700; padding:9px 14px; border-radius:8px; border:none; cursor:pointer; background:var(--brand-2); color:#fff; }
   .trade-search-bar button.alt{ background:#fff; color:var(--brand-2); border:1px solid var(--line); }
-  #tradeSearchResults{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  #tradeSearchResults{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; max-height:280px; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-right:2px; }
   .trade-suggest{ font-family:inherit; font-size:11.5px; padding:6px 10px; border-radius:20px; border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--ink-soft); }
   .trade-suggest:hover{ background:var(--accent-bg); }
   table.items .ti-input{ width:100%; border:none; background:transparent; font-family:inherit; font-size:12px; padding:2px; box-sizing:border-box; }
@@ -398,7 +398,19 @@
   table.items .ti-small{ text-align:center; }
   table.items .qty-input{ min-width:42px; font-variant-numeric:tabular-nums; }
   .row-del{ border:none; background:none; color:#c0392b; cursor:pointer; font-size:13px; font-weight:700; }
-  .sheet-note{ font-size:11px; color:var(--ink-faint); margin-top:4px; }
+  /* 자재 검색 결과 안내: 거래처/소비자 단가 규칙을 한눈에 보이게 강조 */
+.sheet-note{ font-size:11px; color:var(--ink-faint); margin-top:4px; }
+#tradeSearchHint{
+  display:inline-flex; align-items:center; gap:7px;
+  margin:7px 0 8px; padding:7px 11px;
+  border:1px solid #ead9bd; border-left:4px solid #b88447;
+  border-radius:9px; background:#fff8ed; color:#6d4f2e;
+  font-size:11.5px; font-weight:700; line-height:1.45;
+  letter-spacing:-.1px;
+}
+#tradeSearchHint:empty{display:none;}
+#tradeSearchHint.searching{background:#f4f7fb;border-color:#d7e0eb;border-left-color:#2f5496;color:#38506e;}
+#tradeSearchHint.error{background:#fff3f2;border-color:#f0d1cd;border-left-color:#bf4b3f;color:#8c3a32;}
   .neg{ color:#c0392b !important; }
 
   /* PDF/인쇄에서 input 자체가 잘리는 브라우저 문제 방지용 텍스트 미러 */
@@ -1525,17 +1537,57 @@ function ensureEstimateNo(which, force){
   if(force || !current || isLegacyEstimateNo(current, prefix) || isAutoEstimateNo(current, prefix)) noEl.textContent = genDisplayEstimateNo(prefix, dateEl.value, 1);
 }
 
+/* 새 견적 저장 시 같은 날짜의 견적번호를 조회해 다음 순번을 부여한다.
+   화면의 임시번호는 -01일 수 있지만 Firebase에 처음 저장될 때 -02, -03...으로 확정된다. */
+function allocateNextEstimateNo(which){
+  var isTrade = which === 'trade';
+  var prefix = isTrade ? 'TR' : 'EST';
+  var path = isTrade ? 'b2b_estimates' : 'leak_estimates';
+  var noEl = document.querySelector(isTrade ? '#tabTrade [data-k="tr-est-no"]' : '#tabLeak [data-k="est-no"]');
+  var dateEl = document.querySelector(isTrade ? '#tabTrade [data-k="tr-date"]' : '#tabLeak [data-k="est-date"]');
+  if(!noEl || !dateEl || !db) return Promise.resolve('');
+  var dateStr = dateEl.value || todayISOGlobal();
+  var parts = dateStr.split('-');
+  var ymd = (parts[0]||'') + (parts[1]||'') + (parts[2]||'');
+  var re = new RegExp('^' + prefix + '-(\\d{4})-(\\d{4})-(\\d{2})$');
+  return db.ref(path).once('value').then(function(snap){
+    var maxSeq = 0;
+    var val = snap.val() || {};
+    Object.keys(val).forEach(function(id){
+      if(id === '__clients') return;
+      var rec = val[id] || {};
+      var meta = rec.meta || {}, doc = rec.docData || {};
+      var no = String(meta.estimateNo || doc[isTrade ? 'tr-est-no' : 'est-no'] || '').trim();
+      var issue = String(meta.issueDate || doc[isTrade ? 'tr-date' : 'est-date'] || '').trim();
+      if(issue !== dateStr) return;
+      var m = no.match(re);
+      if(m && (m[1] + m[2]) === ymd){
+        var n = parseInt(m[3],10) || 0;
+        if(n > maxSeq) maxSeq = n;
+      }
+    });
+    var nextNo = genDisplayEstimateNo(prefix, dateStr, maxSeq + 1);
+    noEl.textContent = nextNo;
+    return nextNo;
+  });
+}
+
 function saveLeak(){
   ensureEstimateNo('leak', false);
-  if(!leakEstimateId){
-    leakEstimateId = genId('EST');
-    var url = new URL(window.location.href); url.searchParams.set('id', leakEstimateId); url.searchParams.set('tab','leak');
-    window.history.replaceState({}, '', url);
-  }
-  var meta = getLeakMeta(); meta.estimateId = leakEstimateId;
-  var payload = { meta: meta, docData: collectLeakDocData(), items: leakGroups };
-  setLeakStatus('저장 중...', '');
-  db.ref('leak_estimates/' + leakEstimateId).set(payload).then(function(){
+  var wasNew = !leakEstimateId;
+  var prepareNo = wasNew ? allocateNextEstimateNo('leak') : Promise.resolve();
+  setLeakStatus(wasNew ? '견적번호 확인 중...' : '저장 중...', '');
+  prepareNo.then(function(){
+    if(!leakEstimateId){
+      leakEstimateId = genId('EST');
+      var url = new URL(window.location.href); url.searchParams.set('id', leakEstimateId); url.searchParams.set('tab','leak');
+      window.history.replaceState({}, '', url);
+    }
+    var meta = getLeakMeta(); meta.estimateId = leakEstimateId;
+    var payload = { meta: meta, docData: collectLeakDocData(), items: leakGroups };
+    setLeakStatus('저장 중...', '');
+    return db.ref('leak_estimates/' + leakEstimateId).set(payload);
+  }).then(function(){
     setLeakStatus('✔ 저장됨 (' + nowStr() + ')', 'ok');
     saveLeakLocal();
   }).catch(function(err){
@@ -1903,18 +1955,18 @@ async function searchTradePrice(){
   var hint = document.getElementById('tradeSearchHint');
   var resultsWrap = document.getElementById('tradeSearchResults');
   if(!TRADE_PRICE_SHEET_URL){
-    hint.textContent = '⚠ 업체용 단가 구글시트 연동 URL이 아직 설정되지 않았습니다. "＋ 직접 입력으로 행 추가"를 사용하세요.';
+    hint.className='sheet-note error'; hint.textContent = '⚠ 업체용 단가 구글시트 연동 URL이 아직 설정되지 않았습니다. "＋ 직접 입력으로 행 추가"를 사용하세요.';
     return;
   }
-  hint.textContent = '검색 중...';
+  hint.className='sheet-note searching'; hint.textContent = '검색 중...';
   var result = await ensureTradePriceList();
   if(!result.rows){
-    hint.textContent = '⚠ 단가 목록을 불러오지 못했습니다 — ' + result.error;
+    hint.className='sheet-note error'; hint.textContent = '⚠ 단가 목록을 불러오지 못했습니다 — ' + result.error;
     return;
   }
-  var matches = result.rows.filter(function(p){ return matchesQuery(p.name+' '+(p.spec||''), q); }).slice(0,8);
+  var matches = result.rows.filter(function(p){ return matchesQuery(p.name+' '+(p.spec||''), q); });
   var recipientType = currentTradeRecipientType();
-  hint.textContent = matches.length + '건 검색됨 (표시 단가는 거래처용 · 소비자 선택 시 품목당 +10,000원 자동 적용)';
+  hint.className='sheet-note'; hint.innerHTML = '<span style="color:#1f3864;font-weight:800">'+matches.length+'건 검색됨</span><span style="color:#9a6b36">· 표시 단가는 거래처용 · 소비자 선택 시 <b style="color:#b35a24">품목당 +10,000원</b> 자동 적용</span>';
   window.__tradeMatches = matches;
   resultsWrap.innerHTML = matches.map(function(p,i){
     var base = num(p.tradePrice != null ? p.tradePrice : p.price);
@@ -2036,42 +2088,40 @@ function getTradeMeta(){
 function saveTrade(){
   ensureEstimateNo('trade', false);
   var wasNew = !tradeEstimateId;
-  if(!tradeEstimateId){
-    tradeEstimateId = genId('TR');
-    var url = new URL(window.location.href); url.searchParams.set('id', tradeEstimateId); url.searchParams.set('tab','trade');
-    window.history.replaceState({}, '', url);
-  }
-  var meta = getTradeMeta(); meta.estimateId = tradeEstimateId;
-  var payload = { meta: meta, docData: collectTradeDocData(), items: tradeItems };
-  var ref=db.ref('b2b_estimates/' + tradeEstimateId);
-  setTradeStatus('변경사항 확인 중...', '');
-  ref.once('value').then(function(snap){
-    var oldPayload=snap.val();
-    var changes=buildTradeChangeSummary(oldPayload,payload);
-    return showSaveReview(changes, wasNew || !oldPayload ? '새 견적 저장' : '변경사항 확인').then(function(ok){
-      if(!ok){ setTradeStatus('저장 취소됨',''); return null; }
-      var plainChanges = changes.map(function(x){ return String(x).replace(/<[^>]+>/g,''); }).slice(0,20);
-      var savedAt = Date.now();
-      payload.meta.lastChanges = plainChanges;
-      payload.meta.updatedAt = savedAt;
+  var prepareNo = wasNew ? allocateNextEstimateNo('trade') : Promise.resolve();
+  setTradeStatus(wasNew ? '견적번호 확인 중...' : '변경사항 확인 중...', '');
+  prepareNo.then(function(){
+    if(!tradeEstimateId){
+      tradeEstimateId = genId('TR');
+      var url = new URL(window.location.href); url.searchParams.set('id', tradeEstimateId); url.searchParams.set('tab','trade');
+      window.history.replaceState({}, '', url);
+    }
+    var meta = getTradeMeta(); meta.estimateId = tradeEstimateId;
+    var payload = { meta: meta, docData: collectTradeDocData(), items: tradeItems };
+    var ref=db.ref('b2b_estimates/' + tradeEstimateId);
+    return ref.once('value').then(function(snap){
+      var oldPayload=snap.val();
+      var changes=buildTradeChangeSummary(oldPayload,payload);
+      return showSaveReview(changes, wasNew || !oldPayload ? '새 견적 저장' : '변경사항 확인').then(function(ok){
+        if(!ok){ setTradeStatus('저장 취소됨',''); return null; }
+        var plainChanges = changes.map(function(x){ return String(x).replace(/<[^>]+>/g,''); }).slice(0,20);
+        var savedAt = Date.now();
+        payload.meta.lastChanges = plainChanges;
+        payload.meta.updatedAt = savedAt;
 
-      /* 변경이력은 견적이 존재하는 동안 계속 보관한다. 완전삭제 전까지 유지. */
-      var oldHistory = oldPayload && oldPayload.meta && oldPayload.meta.changeHistory;
-      var history = {};
-      if(oldHistory && typeof oldHistory === 'object'){
-        Object.keys(oldHistory).forEach(function(k){ history[k] = oldHistory[k]; });
-      }
-      var histKey = String(savedAt) + '_' + Math.random().toString(36).slice(2,7);
-      history[histKey] = {
-        at: savedAt,
-        manager: payload.meta.manager || '',
-        changes: plainChanges
-      };
-      payload.meta.changeHistory = history;
+        var oldHistory = oldPayload && oldPayload.meta && oldPayload.meta.changeHistory;
+        var history = {};
+        if(oldHistory && typeof oldHistory === 'object'){
+          Object.keys(oldHistory).forEach(function(k){ history[k] = oldHistory[k]; });
+        }
+        var histKey = String(savedAt) + '_' + Math.random().toString(36).slice(2,7);
+        history[histKey] = { at:savedAt, manager:payload.meta.manager || '', changes:plainChanges };
+        payload.meta.changeHistory = history;
 
-      setTradeStatus('저장 중...', '');
-      return ref.set(payload).then(function(){
-        return autoRegisterTradeClientFromPayload(payload).catch(function(e){ console.warn('거래처 자동등록 실패',e); return {created:false,error:true}; });
+        setTradeStatus('저장 중...', '');
+        return ref.set(payload).then(function(){
+          return autoRegisterTradeClientFromPayload(payload).catch(function(e){ console.warn('거래처 자동등록 실패',e); return {created:false,error:true}; });
+        });
       });
     });
   }).then(function(reg){
@@ -2085,6 +2135,7 @@ function saveTrade(){
     showError('견적 저장 실패: ' + (err && err.message ? err.message : '권한/네트워크 오류') + ' — b2b_estimates 규칙이 Firebase에 등록되어 있는지 확인하세요.');
   });
 }
+
 function loadTradeFromFirebase(id){
   setTradeStatus('불러오는 중...', '');
   authReadyPromise.then(function(){ return db.ref('b2b_estimates/' + id).once('value'); })
@@ -2135,21 +2186,26 @@ function saveAsNewEstimate(){
   authReadyPromise.then(function(){
     if(currentTab==='leak'){
       var oldId = leakEstimateId;
-      leakEstimateId = genId('EST');
-      ensureEstimateNo('leak', true);
-      var meta = getLeakMeta(); meta.estimateId = leakEstimateId;
-      var payload = { meta:meta, docData:collectLeakDocData(), items:leakGroups };
-      return db.ref('leak_estimates/'+leakEstimateId).set(payload).then(function(){
+      leakEstimateId = null;
+      return allocateNextEstimateNo('leak').then(function(){
+        leakEstimateId = genId('EST');
+        var meta = getLeakMeta(); meta.estimateId = leakEstimateId;
+        var payload = { meta:meta, docData:collectLeakDocData(), items:leakGroups };
+        return db.ref('leak_estimates/'+leakEstimateId).set(payload);
+      }).then(function(){
         var url=new URL(window.location.href); url.searchParams.set('id',leakEstimateId); url.searchParams.set('tab','leak'); window.history.replaceState({},'',url);
         saveLeakLocal(); setLeakStatus('✔ 다른 이름으로 저장됨 ('+nowStr()+')','ok');
       }).catch(function(err){ leakEstimateId=oldId; throw err; });
     }else{
       var oldTradeId = tradeEstimateId;
-      tradeEstimateId = genId('TR');
-      ensureEstimateNo('trade', true);
-      var meta2 = getTradeMeta(); meta2.estimateId = tradeEstimateId;
-      var payload2 = { meta:meta2, docData:collectTradeDocData(), items:tradeItems };
-      return db.ref('b2b_estimates/'+tradeEstimateId).set(payload2).then(function(){
+      tradeEstimateId = null;
+      var payload2;
+      return allocateNextEstimateNo('trade').then(function(){
+        tradeEstimateId = genId('TR');
+        var meta2 = getTradeMeta(); meta2.estimateId = tradeEstimateId;
+        payload2 = { meta:meta2, docData:collectTradeDocData(), items:tradeItems };
+        return db.ref('b2b_estimates/'+tradeEstimateId).set(payload2);
+      }).then(function(){
         return autoRegisterTradeClientFromPayload(payload2).catch(function(e){console.warn('거래처 자동등록 실패',e);return {created:false};});
       }).then(function(reg){
         var url2=new URL(window.location.href); url2.searchParams.set('id',tradeEstimateId); url2.searchParams.set('tab','trade'); window.history.replaceState({},'',url2);

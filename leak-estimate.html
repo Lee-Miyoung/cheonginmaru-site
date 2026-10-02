@@ -83,6 +83,23 @@
   .brand-name{ font-size:16px; font-weight:900; color:var(--brand); letter-spacing:-.35px; }
   .brand-tag{ font-size:10.8px; color:#6f7884; margin-top:3px; letter-spacing:-.15px; }
   .brand-specialty{ font-size:10px; color:#9a744d; font-weight:700; margin-top:3px; letter-spacing:-.05px; }
+
+  .trade-brand-clean{ gap:14px; align-items:center; }
+  .trade-brand-clean .brand-logo-img{ flex-shrink:0; }
+  .trade-brand-clean .brand-specialty.solo{ 
+    margin-top:0; font-size:13px; font-weight:800; color:var(--brand); letter-spacing:-.12px; 
+    line-height:1.25; padding-top:1px;
+  }
+  @media(max-width:640px){
+    .trade-brand-clean{ gap:10px; }
+    .trade-brand-clean .brand-specialty.solo{ font-size:11.5px; line-height:1.22; }
+  }
+  .image-export .trade-brand-clean .brand-specialty.solo{ font-size:13px !important; color:#253a56 !important; }
+  @media print{
+    #tabTrade .trade-brand-clean{ gap:10px !important; align-items:center !important; }
+    #tabTrade .trade-brand-clean .brand-specialty.solo{ font-size:11px !important; margin-top:0 !important; color:#233a58 !important; line-height:1.2 !important; }
+  }
+
   .doc-tag{ font-size:10.8px; color:#68727e; text-align:right; line-height:1.75; }
   .doc-tag [data-k$='est-no']{ color:var(--brand); font-weight:700; letter-spacing:.15px; }
 
@@ -1955,6 +1972,63 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
   #tabTrade .trade-footer-box{ margin-top:6px !important; }
 }
 
+
+/* 규격 칸은 값이 없으면 '규격' 안내문구 없이 완전히 빈칸으로 표시 */
+table.items .ti-wrap[data-f="spec"]:empty::before,
+table.items .ti-wrap[data-field="spec"]:empty::before{
+  content:"" !important;
+}
+
+
+
+/* ===== iPad / mobile 일정칸 간섭 방지 ===== */
+@media (max-width: 1024px){
+  .trade-sheet .schedule-wrap{
+    display:grid !important;
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:6px !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+  .trade-sheet .schedule-item{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:4px !important;
+    min-width:0 !important;
+    width:100% !important;
+    overflow:hidden !important;
+    white-space:normal !important;
+    align-items:start !important;
+  }
+  .trade-sheet .schedule-item b{
+    display:block !important;
+    min-width:0 !important;
+    font-size:10.8px !important;
+    line-height:1.2 !important;
+    white-space:nowrap !important;
+  }
+  .trade-sheet .schedule-wrap input[type="date"].doc-date{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+    font-size:11.2px !important;
+    line-height:1.2 !important;
+    padding:6px 2px !important;
+    margin:0 !important;
+  }
+}
+
+@media (max-width: 430px){
+  .trade-sheet .schedule-wrap{ gap:4px !important; }
+  .trade-sheet .schedule-item b{ font-size:10px !important; }
+  .trade-sheet .schedule-wrap input[type="date"].doc-date{
+    font-size:10.2px !important;
+    padding:5px 1px !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2254,13 +2328,9 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
 <div id="tabTrade" style="display:none;">
 <div class="sheet trade-sheet">
   <div class="brand-row">
-    <div class="brand-logo-row">
+    <div class="brand-logo-row trade-brand-clean">
       <img src="images/logo.png" alt="청인마루" class="brand-logo-img" onerror="this.style.display='none'">
-      <div>
-        <div class="brand-name">청인마루</div>
-        <div class="brand-tag">인천 연수구 송도미래로 30, E동 1505호</div>
-        <div class="brand-specialty">마루·벽 시공 전문 · 공식 대리점</div>
-      </div>
+      <div class="brand-specialty solo">마루·벽 시공 전문 · 공식 대리점</div>
     </div>
     <div class="doc-tag">견적번호 <span contenteditable="true" data-k="tr-est-no">TR-2026-0929-01</span><br>발행일 <input type="date" class="doc-date" data-k="tr-date" value="2026-09-29"></div>
   </div>

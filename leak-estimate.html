@@ -2029,6 +2029,96 @@ table.items .ti-wrap[data-field="spec"]:empty::before{
   }
 }
 
+
+/* ===== iPad / iPhone 일정 3칸 최종 보정 ===== */
+@media (max-width:1024px){
+  .trade-sheet table.infogrid{
+    width:100% !important;
+    table-layout:fixed !important;
+  }
+  .trade-sheet table.infogrid td.lbl{
+    width:58px !important;
+    padding-left:4px !important;
+    padding-right:4px !important;
+    font-size:10.5px !important;
+  }
+  .trade-sheet table.infogrid tr:nth-child(3) td[colspan="3"]{
+    padding:6px 5px !important;
+    overflow:hidden !important;
+  }
+  .trade-sheet .schedule-wrap{
+    display:grid !important;
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:4px !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+  .trade-sheet .schedule-item{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:2px !important;
+    width:100% !important;
+    min-width:0 !important;
+    overflow:hidden !important;
+    white-space:normal !important;
+  }
+  .trade-sheet .schedule-item b{
+    text-align:center !important;
+    font-size:10px !important;
+    line-height:1.1 !important;
+    white-space:nowrap !important;
+  }
+  .trade-sheet .schedule-wrap input[type="date"].doc-date{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+    -webkit-appearance:none !important;
+    appearance:none !important;
+    font-size:10px !important;
+    line-height:1 !important;
+    height:30px !important;
+    padding:4px 1px !important;
+    margin:0 !important;
+    text-align:center !important;
+    border-radius:5px !important;
+  }
+  .trade-sheet .schedule-wrap input[type="date"].doc-date::-webkit-date-and-time-value{
+    min-width:0 !important;
+    padding:0 !important;
+    margin:0 !important;
+    text-align:center !important;
+  }
+  .trade-sheet .schedule-wrap input[type="date"].doc-date::-webkit-calendar-picker-indicator{
+    width:12px !important;
+    height:12px !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+}
+@media (max-width:480px){
+  .trade-sheet table.infogrid td.lbl{
+    width:48px !important;
+    font-size:9.8px !important;
+  }
+  .trade-sheet table.infogrid tr:nth-child(3) td[colspan="3"]{
+    padding:5px 3px !important;
+  }
+  .trade-sheet .schedule-wrap{ gap:3px !important; }
+  .trade-sheet .schedule-item b{ font-size:9.2px !important; }
+  .trade-sheet .schedule-wrap input[type="date"].doc-date{
+    font-size:9px !important;
+    height:28px !important;
+    padding:3px 0 !important;
+    letter-spacing:-.35px !important;
+  }
+  .trade-sheet .schedule-wrap input[type="date"].doc-date::-webkit-calendar-picker-indicator{
+    width:10px !important;
+    height:10px !important;
+  }
+}
+
 </style>
 </head>
 <body>

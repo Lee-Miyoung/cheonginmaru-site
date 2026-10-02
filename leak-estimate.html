@@ -398,6 +398,13 @@
   table.items .ti-small{ text-align:center; }
   table.items .qty-input{ min-width:42px; font-variant-numeric:tabular-nums; }
   .row-del{ border:none; background:none; color:#c0392b; cursor:pointer; font-size:13px; font-weight:700; }
+  .row-actions{ display:flex; align-items:center; justify-content:center; gap:2px; white-space:nowrap; }
+  .row-move{ width:22px; height:22px; padding:0; border:1px solid #d8e0eb; border-radius:6px; background:#fff; color:#315b93; cursor:pointer; font-size:11px; font-weight:800; line-height:20px; }
+  .row-move:hover{ background:#eef4fb; border-color:#b9cbe1; }
+  .row-move:disabled{ opacity:.25; cursor:default; background:#fff; }
+  .row-del{ width:22px; height:22px; padding:0; border-radius:6px; }
+  .row-del:hover{ background:#fff0ee; }
+
   /* 자재 검색 결과 안내: 거래처/소비자 단가 규칙을 한눈에 보이게 강조 */
 .sheet-note{ font-size:11px; color:var(--ink-faint); margin-top:4px; }
 #tradeSearchHint{
@@ -756,6 +763,18 @@
 #tabTrade [data-k="tr-site"].site-placeholder{color:#9aa6b2;}
 #tabTrade td:has([data-k="tr-site"]){cursor:text;}
 
+
+/* 수신유형 변경 알림: 편집 화면에서만 보이고 PDF/이미지에는 제외 */
+.recipient-price-alert{
+  display:none; margin:8px 0 0; padding:10px 14px; border:1px solid #f0b8b8;
+  border-radius:12px; background:#fff4f4; color:#b42318; font-size:12px; font-weight:800;
+  line-height:1.45; box-shadow:0 4px 14px rgba(180,35,24,.08);
+}
+.recipient-price-alert.show{display:block; animation:priceAlertBlink .78s ease-in-out 0s 4 alternate;}
+@keyframes priceAlertBlink{from{background:#fff4f4;box-shadow:0 0 0 rgba(180,35,24,0)}to{background:#ffe4e4;box-shadow:0 0 0 4px rgba(180,35,24,.10)}}
+@media print{.recipient-price-alert,.edit-only-note{display:none!important;}}
+.image-export .recipient-price-alert,.image-export .edit-only-note{display:none!important;}
+
 </style>
 </head>
 <body>
@@ -766,7 +785,7 @@
   <button onclick="firebase.auth().signOut()">로그아웃</button>
 </div>
 
-<div id="gate">
+<div id="gate" style="display:none;">
   <h1>🔒 청인마루 직원 전용</h1>
   <p>견적 작성 도구입니다. 직원 계정으로 로그인하세요.</p>
   <input type="email" id="gateEmail" placeholder="이메일">
@@ -1121,7 +1140,7 @@
     <colgroup>
       <col style="width:20%"><col style="width:14%"><col style="width:5%"><col style="width:5%">
       <col style="width:9%"><col style="width:10%"><col style="width:8%"><col style="width:10%">
-      <col style="width:15%"><col style="width:4%">
+      <col style="width:12%"><col style="width:7%">
     </colgroup>
     <tr><th>품명</th><th>규격</th><th>단위</th><th>수량</th><th>단가</th><th>공급가</th><th>세액</th><th>금액</th><th>비고</th><th></th></tr>
     <tbody id="tradeItemsBody"></tbody>
@@ -1700,6 +1719,23 @@ var tradeItems = [];
 var tradePriceCache = null;
 var CONSUMER_UNIT_MARKUP = 10000;
 
+function showRecipientPriceAlert(type, changed){
+  var el=document.getElementById('recipientPriceAlert');
+  if(!el) return;
+  if(type==='소비자'){
+    el.textContent='⚠ 소비자용으로 전환되었습니다. 자재 단가가 거래처용 기준에서 품목당 +10,000원으로 변경되었습니다. 견적 저장을 눌러 반영하세요.';
+  }else{
+    el.textContent='⚠ 거래처용으로 전환되었습니다. 소비자 가산금액이 제거되어 자재 단가가 거래처용 기준으로 변경되었습니다. 견적 저장을 눌러 반영하세요.';
+  }
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+}
+function clearRecipientPriceAlert(){
+  var el=document.getElementById('recipientPriceAlert');
+  if(el){ el.classList.remove('show'); el.textContent=''; }
+}
+
 function currentTradeRecipientType(){
   var el = document.getElementById('tradeRecipientType');
   return (el && el.value === '소비자') ? '소비자' : '거래처';
@@ -1803,6 +1839,16 @@ function addTradeDiscountRow(){
   addTradeRow({ name:'특별할인', spec:'', unit:'식', qty:1, price:0, note:'단가를 마이너스로 입력하세요' });
 }
 function removeTradeRow(idx){ tradeItems.splice(idx,1); ensureMinTradeRows(); renderTradeItems(); saveTradeLocal(); }
+function moveTradeRow(idx, dir){
+  var next = idx + dir;
+  if(idx < 0 || idx >= tradeItems.length || next < 0 || next >= tradeItems.length) return;
+  var tmp = tradeItems[idx];
+  tradeItems[idx] = tradeItems[next];
+  tradeItems[next] = tmp;
+  renderTradeItems();
+  saveTradeLocal();
+}
+
 
 function renderTradeItems(){
   ensureMinTradeRows();
@@ -1819,8 +1865,12 @@ function renderTradeItems(){
       '<td class="num'+negCls+'" data-calc="supply">'+fmt(supply)+'</td>' +
       '<td class="num'+negCls+'" data-calc="vat">'+fmt(vat)+'</td>' +
       '<td class="num amt'+negCls+'" data-calc="amt">'+fmt(amt)+'</td>' +
-      '<td><div class="ti-wrap" contenteditable="true" data-f="note" data-idx="'+idx+'" data-placeholder="비고">'+esc(it.note)+'</div></td>' +
-      '<td class="center"><button class="row-del" onclick="removeTradeRow('+idx+')">✕</button></td>' +
+      '<td><div class="ti-wrap'+(((it.name||'').indexOf('특별할인')>=0 && String(it.note||'').indexOf('마이너스로')>=0)?' edit-only-note':'')+'" contenteditable="true" data-f="note" data-idx="'+idx+'" data-placeholder="비고">'+esc(it.note)+'</div></td>' +
+      '<td class="center"><div class="row-actions">' +
+        '<button type="button" class="row-move" title="위로 이동" aria-label="위로 이동" onclick="moveTradeRow('+idx+',-1)" '+(idx===0?'disabled':'')+'>↑</button>' +
+        '<button type="button" class="row-move" title="아래로 이동" aria-label="아래로 이동" onclick="moveTradeRow('+idx+',1)" '+(idx===tradeItems.length-1?'disabled':'')+'>↓</button>' +
+        '<button type="button" class="row-del" title="행 삭제" aria-label="행 삭제" onclick="removeTradeRow('+idx+')">✕</button>' +
+      '</div></td>' +
     '</tr>';
   }).join('');
   recalcTradeTotals();
@@ -2127,6 +2177,7 @@ function saveTrade(){
   }).then(function(reg){
     if(reg===null || reg===undefined) return;
     setTradeStatus(reg.created ? '✔ 저장됨 · 신규 거래처 자동 등록 (' + nowStr() + ')' : '✔ 저장됨 (' + nowStr() + ')', 'ok');
+    clearRecipientPriceAlert();
     saveTradeLocal();
     loadTradeArchive();
   }).catch(function(err){
@@ -2209,7 +2260,7 @@ function saveAsNewEstimate(){
         return autoRegisterTradeClientFromPayload(payload2).catch(function(e){console.warn('거래처 자동등록 실패',e);return {created:false};});
       }).then(function(reg){
         var url2=new URL(window.location.href); url2.searchParams.set('id',tradeEstimateId); url2.searchParams.set('tab','trade'); window.history.replaceState({},'',url2);
-        saveTradeLocal(); setTradeStatus(reg&&reg.created?'✔ 다른 이름으로 저장됨 · 신규 거래처 자동 등록 ('+nowStr()+')':'✔ 다른 이름으로 저장됨 ('+nowStr()+')','ok'); loadTradeArchive();
+        saveTradeLocal(); clearRecipientPriceAlert(); setTradeStatus(reg&&reg.created?'✔ 다른 이름으로 저장됨 · 신규 거래처 자동 등록 ('+nowStr()+')':'✔ 다른 이름으로 저장됨 ('+nowStr()+')','ok'); loadTradeArchive();
       }).catch(function(err){ tradeEstimateId=oldTradeId; throw err; });
     }
   }).catch(function(err){
@@ -2393,7 +2444,7 @@ async function saveAsImage(){
           target.classList.add('image-export');
 
           /* 화면 편집용 요소는 이미지에 포함하지 않음 */
-          target.querySelectorAll('.trade-search-bar, #tradeSearchHint, #tradeSearchResults, .row-del, .add-row-btn, .accordion, .recipient-type-segment, .recipient-register-btn').forEach(function(el){
+          target.querySelectorAll('.trade-search-bar, #tradeSearchHint, #tradeSearchResults, .row-del, .row-move, .add-row-btn, .accordion, .recipient-type-segment, .recipient-register-btn, .recipient-price-alert, .edit-only-note').forEach(function(el){
             el.style.display = 'none';
           });
 
@@ -2595,7 +2646,10 @@ function setTradeRecipientType(type, opts){
   var prev=typeEl.value || '거래처';
   var changed=prev!==next;
   typeEl.value=next;
-  if(changed) syncTradeItemPricesForRecipient(next, prev);
+  if(changed){
+    var priceChanged = syncTradeItemPricesForRecipient(next, prev);
+    showRecipientPriceAlert(next, priceChanged);
+  }
 
   /* 유형 전환 자체는 기존 견적 내용을 지우지 않는다. 새 수신인을 선택하면 이름/연락처가 교체된다. */
   try{

@@ -87,6 +87,21 @@
   .rowActions{ display:flex; gap:6px; align-items:center; }
   button.deleteBtn{ font-family:inherit; font-size:12px; font-weight:700; color:#9a3f3f; background:#fff; border:1px solid #e0c6c6; border-radius:6px; padding:6px 9px; cursor:pointer; white-space:nowrap; }
   button.deleteBtn:hover{ background:#fff6f6; }
+  button.historyBtn{ font-family:inherit; font-size:11.5px; font-weight:800; color:#80612f; background:#fffaf0; border:1px solid #ead9b8; border-radius:6px; padding:6px 9px; cursor:pointer; white-space:nowrap; }
+  button.historyBtn:hover{ background:#fff5df; }
+  .history-overlay{ position:fixed; inset:0; z-index:10020; background:rgba(20,24,33,.50); display:flex; align-items:center; justify-content:center; padding:18px; }
+  .history-card{ width:min(650px,96vw); max-height:84vh; overflow:auto; background:#fff; border-radius:16px; box-shadow:0 24px 70px rgba(0,0,0,.24); padding:20px; }
+  .history-head{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; padding-bottom:12px; border-bottom:1px solid #e8ebef; }
+  .history-title{ font-size:18px; font-weight:900; color:var(--brand); }
+  .history-sub{ font-size:11.5px; color:#87909c; margin-top:4px; }
+  .history-close{ border:0; background:#eef1f5; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:18px; color:#56616f; }
+  .history-entry{ padding:13px 2px; border-bottom:1px solid #edf0f3; }
+  .history-entry:last-child{ border-bottom:0; }
+  .history-meta{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:6px; font-size:10.8px; color:#7c8794; }
+  .history-meta b{ color:#5e6b7a; }
+  .history-change{ font-size:12px; color:#2f3945; line-height:1.65; padding-left:11px; position:relative; }
+  .history-change:before{ content:'•'; position:absolute; left:0; color:#b28a51; }
+  .history-empty{ padding:28px 4px; text-align:center; color:#8b95a1; font-size:12.5px; }
   button.trashBtn{ font-family:inherit; font-size:12px; font-weight:800; color:#7b4b4b; background:#fff; border:1px solid #dfcaca; border-radius:8px; padding:10px 13px; cursor:pointer; }
   .trash-overlay{ position:fixed; inset:0; background:rgba(20,24,33,.55); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; }
   .trash-card{ width:min(900px,96vw); max-height:88vh; overflow:auto; background:#fff; border-radius:14px; box-shadow:0 24px 70px rgba(0,0,0,.25); padding:22px; }
@@ -454,6 +469,8 @@ function toRow(id, rec, type){
     status: meta.status || '작성중',
     updatedAt: meta.updatedAt || 0,
     deletedAt: meta.deletedAt || 0,
+    lastChanges: meta.lastChanges || [],
+    changeHistory: meta.changeHistory || {},
     itemSearch: itemSearch
   };
 }
@@ -522,6 +539,39 @@ function onPeriodFilterChange(){
 }
 window.onPeriodFilterChange=onPeriodFilterChange;
 
+function changeHistoryEntries(row){
+  var h=(row&&row.changeHistory)||{};
+  var entries=[];
+  if(Array.isArray(h)){
+    h.forEach(function(v){ if(v) entries.push(v); });
+  }else if(h && typeof h==='object'){
+    Object.keys(h).forEach(function(k){ if(h[k]) entries.push(h[k]); });
+  }
+  entries=entries.map(function(e){
+    return {at:Number(e.at||0),manager:e.manager||'',changes:Array.isArray(e.changes)?e.changes:[]};
+  }).sort(function(a,b){return b.at-a.at;});
+  if(!entries.length && row && Array.isArray(row.lastChanges) && row.lastChanges.length){
+    entries.push({at:Number(row.updatedAt||0),manager:row.manager||'',changes:row.lastChanges});
+  }
+  return entries;
+}
+function openChangeHistory(sourceType,id){
+  var row=allRows.find(function(r){return r.sourceType===sourceType && r.id===id;});
+  if(!row) return;
+  var entries=changeHistoryEntries(row);
+  var overlay=document.createElement('div'); overlay.className='history-overlay';
+  var body=entries.length?entries.map(function(e){
+    var dt=e.at?new Date(e.at).toLocaleString('ko-KR'):'날짜 정보 없음';
+    var changes=(e.changes||[]).map(function(c){return '<div class="history-change">'+esc(c)+'</div>';}).join('');
+    return '<div class="history-entry"><div class="history-meta"><b>'+esc(dt)+'</b>'+(e.manager?' · '+esc(e.manager):'')+'</div>'+changes+'</div>';
+  }).join(''):'<div class="history-empty">아직 저장된 변경 이력이 없습니다.</div>';
+  overlay.innerHTML='<div class="history-card"><div class="history-head"><div><div class="history-title">변경 이력</div><div class="history-sub">'+esc(row.estimateNo)+' · '+esc(row.customerName)+' · 완전삭제 전까지 보관됩니다.</div></div><button class="history-close" type="button">×</button></div>'+body+'</div>';
+  overlay.querySelector('.history-close').onclick=function(){overlay.remove();};
+  overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove();});
+  document.body.appendChild(overlay);
+}
+window.openChangeHistory=openChangeHistory;
+
 function render(){
   var q = document.getElementById('searchBox').value.trim();
   var typeF = document.getElementById('typeFilter').value;
@@ -564,7 +614,9 @@ function render(){
       var opts = statuses.map(function(s){ return '<option value="'+s+'"'+(s===r.status?' selected':'')+'>'+s+'</option>'; }).join('');
       var typeLabel = r.docType === 'trade' ? '<span class="type-badge trade">📦 거래처용</span>' : (r.docType === 'consumer' ? '<span class="type-badge consumer">👤 소비자용</span>' : '<span class="type-badge leak">🌊 누수복구</span>');
       var statusCell = '<select class="statusSelect" onchange="updateStatus(\''+r.id+'\',\''+r.sourceType+'\', this.value)">'+opts+'</select>';
-      var actionCell = '<div class="rowActions"><a class="openLink" href="leak-estimate.html?tab='+(r.sourceType==='trade'?'trade':'leak')+'&id='+encodeURIComponent(r.id)+'">열기 →</a><button class="deleteBtn" onclick="moveToTrash(\''+r.sourceType+'\',\''+r.id+'\')">삭제</button></div>';
+      var historyCount = changeHistoryEntries(r).length;
+      var historyBtn = historyCount ? '<button class="historyBtn" onclick="openChangeHistory(\''+r.sourceType+'\',\''+r.id+'\')">변경 '+historyCount+'</button>' : '';
+      var actionCell = '<div class="rowActions">'+historyBtn+'<a class="openLink" href="leak-estimate.html?tab='+(r.sourceType==='trade'?'trade':'leak')+'&id='+encodeURIComponent(r.id)+'">열기 →</a><button class="deleteBtn" onclick="moveToTrash(\''+r.sourceType+'\',\''+r.id+'\')">삭제</button></div>';
       return '<tr>' +
         '<td>'+typeLabel+'</td>' +
         '<td>'+esc(r.estimateNo)+'</td>' +

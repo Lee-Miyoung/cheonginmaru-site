@@ -1659,16 +1659,27 @@ function findSheetBasePriceForItem(it){
   var hit = tradePriceCache.find(function(p){ return String(p.name||'').trim()===name && String(p.spec||'').trim()===spec; });
   return hit ? num(hit.tradePrice != null ? hit.tradePrice : hit.price) : null;
 }
-function syncTradeItemPricesForRecipient(recipientType){
+function syncTradeItemPricesForRecipient(recipientType, previousType){
   var changed = false;
+  var prev = previousType === '소비자' ? '소비자' : '거래처';
+  var next = recipientType === '소비자' ? '소비자' : '거래처';
   tradeItems.forEach(function(it){
-    if(!it || (it.name||'').indexOf('특별할인')>=0) return;
+    if(!it) return;
+    var name = String(it.name||'').trim();
+    var current = num(it.price);
+    /* 특별할인/음수금액/완전히 빈 기본행은 소비자 가산 대상에서 제외 */
+    if(name.indexOf('특별할인')>=0 || current < 0) return;
+    if(!name && !String(it.spec||'').trim() && current===0) return;
+
     var base = findSheetBasePriceForItem(it);
-    if(base === null) return;
-    it.source = 'sheet';
-    it.baseTradePrice = base;
-    var nextPrice = priceForRecipient(base, recipientType);
-    if(num(it.price) !== nextPrice){ it.price = nextPrice; changed = true; }
+    if(base === null){
+      /* 예전 저장분에는 기준 거래처단가 정보가 없을 수 있으므로 현재 유형을 기준으로 복원 */
+      if(prev === '소비자') base = current - CONSUMER_UNIT_MARKUP;
+      else base = current;
+      it.baseTradePrice = base;
+    }
+    var nextPrice = priceForRecipient(base, next);
+    if(current !== nextPrice){ it.price = nextPrice; changed = true; }
   });
   if(changed) renderTradeItems();
   return changed;
@@ -2011,8 +2022,25 @@ function saveTrade(){
     var changes=buildTradeChangeSummary(oldPayload,payload);
     return showSaveReview(changes, wasNew || !oldPayload ? '새 견적 저장' : '변경사항 확인').then(function(ok){
       if(!ok){ setTradeStatus('저장 취소됨',''); return null; }
-      payload.meta.lastChanges = changes.map(function(x){ return String(x).replace(/<[^>]+>/g,''); }).slice(0,20);
-      payload.meta.updatedAt=Date.now();
+      var plainChanges = changes.map(function(x){ return String(x).replace(/<[^>]+>/g,''); }).slice(0,20);
+      var savedAt = Date.now();
+      payload.meta.lastChanges = plainChanges;
+      payload.meta.updatedAt = savedAt;
+
+      /* 변경이력은 견적이 존재하는 동안 계속 보관한다. 완전삭제 전까지 유지. */
+      var oldHistory = oldPayload && oldPayload.meta && oldPayload.meta.changeHistory;
+      var history = {};
+      if(oldHistory && typeof oldHistory === 'object'){
+        Object.keys(oldHistory).forEach(function(k){ history[k] = oldHistory[k]; });
+      }
+      var histKey = String(savedAt) + '_' + Math.random().toString(36).slice(2,7);
+      history[histKey] = {
+        at: savedAt,
+        manager: payload.meta.manager || '',
+        changes: plainChanges
+      };
+      payload.meta.changeHistory = history;
+
       setTradeStatus('저장 중...', '');
       return ref.set(payload).then(function(){
         return autoRegisterTradeClientFromPayload(payload).catch(function(e){ console.warn('거래처 자동등록 실패',e); return {created:false,error:true}; });
@@ -2431,7 +2459,7 @@ function forceTradeRecipientType(type){
   if(!typeEl) return false;
   var prev = typeEl.value || '거래처';
   typeEl.value = next;
-  if(prev !== next) syncTradeItemPricesForRecipient(next);
+  if(prev !== next) syncTradeItemPricesForRecipient(next, prev);
 
   var tradeBtn = document.getElementById('recipientTypeTradeBtn');
   var consumerBtn = document.getElementById('recipientTypeConsumerBtn');
@@ -2482,7 +2510,7 @@ function setTradeRecipientType(type, opts){
   var prev=typeEl.value || '거래처';
   var changed=prev!==next;
   typeEl.value=next;
-  if(changed) syncTradeItemPricesForRecipient(next);
+  if(changed) syncTradeItemPricesForRecipient(next, prev);
 
   /* 유형 전환 자체는 기존 견적 내용을 지우지 않는다. 새 수신인을 선택하면 이름/연락처가 교체된다. */
   try{

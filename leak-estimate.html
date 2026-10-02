@@ -1808,6 +1808,84 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
   }
 }
 
+
+
+/* ===== 2026-10-02 PDF one-page + recipient hide final ===== */
+@media print{
+  /* 수신 유형(거래처/소비자) 출력 방지 */
+  #tabTrade .recipient-type-wrap,
+  #tabTrade .recipient-type-segment,
+  #tabTrade .recipient-register-btn,
+  #tabTrade .recipient-type-select,
+  #tabTrade .recipient-type-select + .print-mirror,
+  #tabTrade .recipient-type-hidden + .print-mirror{ display:none !important; }
+
+  /* 이미지 저장본처럼 1페이지 중심으로 전체 압축 */
+  #tabTrade .trade-sheet,
+  #tabTrade .trade-sheet.print-short{
+    zoom:.86 !important;
+    width:116.3% !important;
+    padding:3mm 3.4mm 2.2mm !important;
+    margin:0 !important;
+  }
+  #tabTrade .trade-sheet.print-dense{
+    zoom:.80 !important;
+    width:125% !important;
+    padding:2.8mm 3.2mm 2mm !important;
+  }
+  #tabTrade .trade-sheet.print-ultra-dense{
+    zoom:.74 !important;
+    width:135.2% !important;
+    padding:2.6mm 3mm 1.8mm !important;
+  }
+
+  #tabTrade .brand-row{ margin-bottom:5px !important; padding-bottom:4px !important; }
+  #tabTrade .doc-title{ font-size:20px !important; margin:2px 0 1px !important; }
+  #tabTrade .doc-sub{ font-size:10px !important; margin-bottom:6px !important; }
+  #tabTrade table.infogrid{ margin-bottom:4px !important; }
+  #tabTrade table.infogrid td{ padding:4px 5px !important; font-size:10.2px !important; }
+  #tabTrade table.infogrid td.lbl{ font-size:10px !important; }
+  #tabTrade .schedule-wrap{ gap:4px 8px !important; }
+  #tabTrade .schedule-item{ font-size:10px !important; }
+  #tabTrade .schedule-item b{ font-size:10px !important; }
+  #tabTrade .supplier-strip{ margin-bottom:4px !important; }
+  #tabTrade .supplier-strip .k{ padding:3px 5px !important; font-size:9.2px !important; }
+  #tabTrade .supplier-strip .v{ padding:3px 5px !important; font-size:9.3px !important; }
+  #tabTrade table.items{ font-size:9.5px !important; }
+  #tabTrade table.items th{ font-size:9px !important; padding:4px 4px !important; }
+  #tabTrade table.items td{ font-size:9.4px !important; padding:4px 4px !important; line-height:1.26 !important; }
+  #tabTrade .quote-summary .summary-item{ min-height:11mm !important; padding:6px 8px !important; }
+  #tabTrade .quote-summary .summary-label{ font-size:9.6px !important; }
+  #tabTrade .quote-summary .summary-value{ font-size:14px !important; }
+  #tabTrade .quote-summary .summary-item.grand .summary-value{ font-size:16px !important; }
+  #tabTrade .contract-clause{ margin-top:6px !important; padding:6px 9px !important; font-size:10px !important; }
+  #tabTrade .notes{ margin-top:7px !important; padding:8px 10px !important; }
+  #tabTrade .notes .h{ font-size:11.5px !important; margin-bottom:5px !important; }
+  #tabTrade .notes li{ font-size:9.8px !important; line-height:1.42 !important; margin-bottom:1px !important; }
+  #tabTrade .trade-footer-box{ margin-top:6px !important; padding:7px 9px !important; }
+  #tabTrade .trade-footer-box .row{ font-size:9.8px !important; }
+
+  body.print-with-seal #tabTrade .stamp-business-box{ margin-top:6px !important; }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-content{ grid-template-columns:78px minmax(0,1fr) 52px minmax(0,1fr) !important; }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-k,
+  body.print-with-seal #tabTrade .stamp-business-box .sb-v{ min-height:21px !important; padding:3px 4px !important; font-size:8.8px !important; }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-name{ min-height:23px !important; padding:3px 4px !important; }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-name .seal-stamp{ height:42px !important; max-width:42px !important; margin:-6px 0 -5px 2px !important; }
+}
+
+
+/* ===== supplier contact consolidation ===== */
+.stamp-business-box .sb-content{ grid-template-columns:104px minmax(0,1fr) 64px minmax(0,1fr) !important; }
+.stamp-business-box .sb-k,.stamp-business-box .sb-v{ min-width:0; }
+.stamp-business-box .sb-v{ overflow-wrap:anywhere; }
+.stamp-business-box .sb-wide{ grid-column:2 / 5; }
+@media print{
+  body.print-with-seal #tabTrade .stamp-business-box .sb-content{ grid-template-columns:80px minmax(0,1fr) 48px minmax(0,1fr) !important; }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-k,
+  body.print-with-seal #tabTrade .stamp-business-box .sb-v{ font-size:8.8px !important; padding:3px 4px !important; min-height:20px !important; }
+}
+.image-export.with-seal .stamp-business-box .sb-content{ grid-template-columns:96px minmax(0,1fr) 58px minmax(0,1fr) !important; }
+
 </style>
 </head>
 <body>
@@ -2160,12 +2238,7 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
     </tr>
   </table>
 
-  <div class="supplier-strip" aria-label="청인마루 연락처">
-    <span class="k">TEL</span><span class="v" contenteditable="true" data-k="tr-sup-tel">032-210-6268</span>
-    <span class="k">FAX</span><span class="v" contenteditable="true" data-k="tr-sup-fax">0508-901-1074</span>
-    <span class="k web-k">WEB</span><span class="v web-v">cheonginmaru.com</span>
-  </div>
-  <!-- 기존 저장 데이터 호환용: 헤더에 주소가 이미 있어 문서에는 중복 표시하지 않습니다. -->
+  <!-- 연락처는 하단 공급자 정보에 통합합니다. -->
   <div class="supplier-hidden" aria-hidden="true">
     <span data-k="tr-sup-name">청인마루(399-23-00326) · 도소매/건자재</span>
     <span data-k="tr-sup-type">도소매</span><span data-k="tr-sup-item">건자재</span>
@@ -2220,6 +2293,9 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
       <div class="sb-k">상호</div><div class="sb-v sb-name">청인마루<img class="seal-stamp" alt="청인마루 직인"></div>
       <div class="sb-k">대표자</div><div class="sb-v">송원덕</div>
       <div class="sb-k">업태 / 종목</div><div class="sb-v">도소매 / 건자재</div>
+      <div class="sb-k">TEL</div><div class="sb-v" contenteditable="true" data-k="tr-sup-tel">032-210-6268</div>
+      <div class="sb-k">FAX</div><div class="sb-v" contenteditable="true" data-k="tr-sup-fax">0508-901-1074</div>
+      <div class="sb-k">WEB</div><div class="sb-v sb-wide">cheonginmaru.com</div>
       <div class="sb-k sb-last">주소</div><div class="sb-v sb-wide sb-last">인천 연수구 송도미래로 30, E동 1505호</div>
     </div>
   </div>
@@ -3520,6 +3596,7 @@ function syncPrintMirrors(){
     var val = el.tagName === 'SELECT' ? ((el.options && el.selectedIndex >= 0) ? el.options[el.selectedIndex].text : el.value) : el.value;
     span.textContent = val || '';
     span.className = 'print-mirror';
+    if(el.classList.contains('recipient-type-select')){ span.textContent = ''; span.style.display = 'none'; }
     if(el.classList.contains('doc-date')) span.classList.add('doc-date');
     if(el.classList.contains('doc-input-inline')) span.classList.add('doc-input-inline');
     if(el.classList.contains('ti-small') || el.getAttribute('data-f') === 'unit' || el.getAttribute('data-f') === 'qty') span.classList.add('center');

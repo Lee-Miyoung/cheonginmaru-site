@@ -729,6 +729,15 @@
   #gate button{ width:100%; padding:11px; font-size:14px; font-weight:700; background:#0b1424; color:#fff; border:none; border-radius:8px; cursor:pointer; }
   #gate .err{ color:#c0392b; font-size:12px; margin-top:8px; display:none; }
   #gate .hint2{ font-size:11px; color:#888; margin-top:14px; }
+
+/* 저장 전 변경사항 확인 모달 */
+.save-review-overlay{position:fixed;inset:0;z-index:10050;background:rgba(17,35,62,.38);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:18px}
+.save-review-card{width:min(520px,100%);max-height:min(76vh,680px);overflow:auto;background:#fff;border:1px solid #dfe6ef;border-radius:22px;box-shadow:0 24px 70px rgba(24,46,80,.22);padding:22px}
+.save-review-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}.save-review-icon{width:42px;height:42px;border-radius:14px;background:#eef4fb;display:flex;align-items:center;justify-content:center;font-size:21px;flex:0 0 42px}.save-review-title{font-size:18px;font-weight:800;color:#17375e;margin:1px 0 4px}.save-review-sub{font-size:12px;color:#7b8797;line-height:1.45}
+.save-review-list{margin:12px 0 18px;border:1px solid #e7ebf1;border-radius:15px;overflow:hidden;background:#fafbfd}.save-review-item{padding:11px 13px;border-bottom:1px solid #e8edf3;font-size:13px;line-height:1.5;color:#34445a}.save-review-item:last-child{border-bottom:0}.save-review-item b{color:#17375e}.save-review-empty{padding:16px;color:#7f8a99;font-size:13px;text-align:center}
+.save-review-actions{display:flex;justify-content:flex-end;gap:8px}.save-review-actions button{border:0;border-radius:11px;padding:10px 17px;font-weight:800;font-size:13px;cursor:pointer}.save-review-cancel{background:#eef1f5;color:#536174}.save-review-ok{background:#234f86;color:#fff;box-shadow:0 5px 14px rgba(35,79,134,.2)}
+@media(max-width:600px){.save-review-overlay{align-items:flex-end;padding:10px}.save-review-card{border-radius:20px 20px 14px 14px;max-height:78vh;padding:18px}.save-review-actions button{flex:1}}
+
 </style>
 </head>
 <body>
@@ -1885,6 +1894,86 @@ function pickTradePrice(i){
   document.getElementById('tradeSearchInput').value = '';
 }
 
+
+function _cleanCompare(v){
+  if(v===null || v===undefined) return '';
+  if(typeof v==='number') return v;
+  return String(v).replace(/\s+/g,' ').trim();
+}
+function _moneyMaybe(v){
+  var n=Number(v); return isFinite(n) ? fmt(n)+'원' : _cleanCompare(v);
+}
+function buildTradeChangeSummary(oldPayload,newPayload){
+  if(!oldPayload) return ['신규 견적으로 저장'];
+  var out=[];
+  var od=oldPayload.docData||{}, nd=newPayload.docData||{};
+  var fields=[
+    ['tr-recipient-type','수신 구분'],['tr-customer','고객명/거래처'],['tr-ref-name','담당자/참고'],['tr-ref-phone','연락처'],['tr-site','현장 주소'],
+    ['tr-date','발행일'],['tr-start','실측일'],['tr-remove','철거일'],['tr-work','공사일']
+  ];
+  fields.forEach(function(x){
+    var a=_cleanCompare(od[x[0]]), b=_cleanCompare(nd[x[0]]);
+    if(a!==b) out.push('<b>'+esc(x[1])+'</b> : '+esc(a||'없음')+' → '+esc(b||'없음'));
+  });
+  var om=oldPayload.meta||{}, nm=newPayload.meta||{};
+  [['manager','담당 직원'],['status','진행 상태']].forEach(function(x){
+    var a=_cleanCompare(om[x[0]]), b=_cleanCompare(nm[x[0]]);
+    if(a!==b) out.push('<b>'+esc(x[1])+'</b> : '+esc(a||'없음')+' → '+esc(b||'없음'));
+  });
+  var oi=Array.isArray(oldPayload.items)?oldPayload.items:[], ni=Array.isArray(newPayload.items)?newPayload.items:[];
+  if(oi.length!==ni.length) out.push('<b>품목 수</b> : '+oi.length+'개 → '+ni.length+'개');
+  var len=Math.min(oi.length,ni.length);
+  for(var i=0;i<len && out.length<14;i++){
+    var a=oi[i]||{}, b=ni[i]||{};
+    var label=esc(b.name||a.name||('품목 '+(i+1)));
+    if(_cleanCompare(a.name)!==_cleanCompare(b.name)) out.push('<b>'+label+'</b> 품명 변경');
+    if(Number(a.qty||0)!==Number(b.qty||0)) out.push('<b>'+label+'</b> 수량 : '+esc(a.qty||0)+' → '+esc(b.qty||0));
+    if(Number(a.price||0)!==Number(b.price||0)) out.push('<b>'+label+'</b> 단가 : '+esc(_moneyMaybe(a.price||0))+' → '+esc(_moneyMaybe(b.price||0)));
+    if(_cleanCompare(a.spec)!==_cleanCompare(b.spec)) out.push('<b>'+label+'</b> 규격 변경');
+    if(_cleanCompare(a.note)!==_cleanCompare(b.note)) out.push('<b>'+label+'</b> 비고 변경');
+  }
+  if(out.length>=14) out.push('그 밖의 변경사항이 더 있습니다.');
+  return out;
+}
+function showSaveReview(changes,title){
+  return new Promise(function(resolve){
+    var overlay=document.createElement('div'); overlay.className='save-review-overlay';
+    var list=(changes&&changes.length)?changes.map(function(x){return '<div class="save-review-item">'+x+'</div>';}).join(''):'<div class="save-review-empty">변경된 내용이 없습니다.</div>';
+    overlay.innerHTML='<div class="save-review-card" role="dialog" aria-modal="true">'+
+      '<div class="save-review-head"><div class="save-review-icon">✓</div><div><div class="save-review-title">'+esc(title||'변경사항 확인')+'</div><div class="save-review-sub">저장하기 전에 바뀐 내용을 확인해주세요.</div></div></div>'+
+      '<div class="save-review-list">'+list+'</div>'+
+      '<div class="save-review-actions"><button type="button" class="save-review-cancel">취소</button><button type="button" class="save-review-ok">이대로 저장</button></div></div>';
+    function done(v){ overlay.remove(); resolve(v); }
+    overlay.querySelector('.save-review-cancel').onclick=function(){done(false)};
+    overlay.querySelector('.save-review-ok').onclick=function(){done(true)};
+    overlay.addEventListener('click',function(e){if(e.target===overlay)done(false)});
+    document.body.appendChild(overlay);
+  });
+}
+function normalizeClientName(v){ return String(v||'').replace(/\s+/g,'').trim().toLowerCase(); }
+function autoRegisterTradeClientFromPayload(payload){
+  var meta=(payload&&payload.meta)||{}, doc=(payload&&payload.docData)||{};
+  if((meta.recipientType||doc['tr-recipient-type'])!=='거래처') return Promise.resolve({created:false});
+  var name=(meta.customerName||doc['tr-customer']||'').replace(/\[.*?\]/g,'').trim();
+  if(!name || name==='거래처명' || name==='예시') return Promise.resolve({created:false});
+  var target=normalizeClientName(name);
+  return db.ref('b2b_estimates/__clients').once('value').then(function(snap){
+    var val=snap.val()||{}, found=null;
+    Object.keys(val).some(function(id){ var c=val[id]||{}; if(normalizeClientName(c.name)===target){found={id:id,data:c};return true;} return false; });
+    if(found) return {created:false,id:found.id};
+    var ref=db.ref('b2b_estimates/__clients').push();
+    var obj={
+      name:name,
+      businessNo:'', ceo:'',
+      manager:meta.refName||doc['tr-ref-name']||'',
+      phone:meta.phone||doc['tr-ref-phone']||'',
+      email:'', address:'', memo:'',
+      source:'estimate-auto', createdAt:Date.now(), updatedAt:Date.now()
+    };
+    return ref.set(obj).then(function(){ return {created:true,id:ref.key,name:name}; });
+  });
+}
+
 function getTradeMeta(){
   var docData = collectTradeDocData();
   var supplySum=0; tradeItems.forEach(function(it){ supplySum += (it.qty||0)*(it.price||0); });
@@ -1907,6 +1996,7 @@ function getTradeMeta(){
 }
 function saveTrade(){
   ensureEstimateNo('trade', false);
+  var wasNew = !tradeEstimateId;
   if(!tradeEstimateId){
     tradeEstimateId = genId('TR');
     var url = new URL(window.location.href); url.searchParams.set('id', tradeEstimateId); url.searchParams.set('tab','trade');
@@ -1914,9 +2004,23 @@ function saveTrade(){
   }
   var meta = getTradeMeta(); meta.estimateId = tradeEstimateId;
   var payload = { meta: meta, docData: collectTradeDocData(), items: tradeItems };
-  setTradeStatus('저장 중...', '');
-  db.ref('b2b_estimates/' + tradeEstimateId).set(payload).then(function(){
-    setTradeStatus('✔ 저장됨 (' + nowStr() + ')', 'ok');
+  var ref=db.ref('b2b_estimates/' + tradeEstimateId);
+  setTradeStatus('변경사항 확인 중...', '');
+  ref.once('value').then(function(snap){
+    var oldPayload=snap.val();
+    var changes=buildTradeChangeSummary(oldPayload,payload);
+    return showSaveReview(changes, wasNew || !oldPayload ? '새 견적 저장' : '변경사항 확인').then(function(ok){
+      if(!ok){ setTradeStatus('저장 취소됨',''); return null; }
+      payload.meta.lastChanges = changes.map(function(x){ return String(x).replace(/<[^>]+>/g,''); }).slice(0,20);
+      payload.meta.updatedAt=Date.now();
+      setTradeStatus('저장 중...', '');
+      return ref.set(payload).then(function(){
+        return autoRegisterTradeClientFromPayload(payload).catch(function(e){ console.warn('거래처 자동등록 실패',e); return {created:false,error:true}; });
+      });
+    });
+  }).then(function(reg){
+    if(reg===null || reg===undefined) return;
+    setTradeStatus(reg.created ? '✔ 저장됨 · 신규 거래처 자동 등록 (' + nowStr() + ')' : '✔ 저장됨 (' + nowStr() + ')', 'ok');
     saveTradeLocal();
     loadTradeArchive();
   }).catch(function(err){
@@ -1989,8 +2093,10 @@ function saveAsNewEstimate(){
       var meta2 = getTradeMeta(); meta2.estimateId = tradeEstimateId;
       var payload2 = { meta:meta2, docData:collectTradeDocData(), items:tradeItems };
       return db.ref('b2b_estimates/'+tradeEstimateId).set(payload2).then(function(){
+        return autoRegisterTradeClientFromPayload(payload2).catch(function(e){console.warn('거래처 자동등록 실패',e);return {created:false};});
+      }).then(function(reg){
         var url2=new URL(window.location.href); url2.searchParams.set('id',tradeEstimateId); url2.searchParams.set('tab','trade'); window.history.replaceState({},'',url2);
-        saveTradeLocal(); setTradeStatus('✔ 다른 이름으로 저장됨 ('+nowStr()+')','ok'); loadTradeArchive();
+        saveTradeLocal(); setTradeStatus(reg&&reg.created?'✔ 다른 이름으로 저장됨 · 신규 거래처 자동 등록 ('+nowStr()+')':'✔ 다른 이름으로 저장됨 ('+nowStr()+')','ok'); loadTradeArchive();
       }).catch(function(err){ tradeEstimateId=oldTradeId; throw err; });
     }
   }).catch(function(err){

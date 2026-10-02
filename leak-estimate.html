@@ -2214,6 +2214,127 @@ table.items .ti-wrap[data-field="spec"]:empty::before{
     clip-path:none !important;
   }
 }
+
+
+/* ===== 일정 영역 리디자인: 3카드 + 공사기간 + 일정메모 ===== */
+#tabTrade .schedule-modern{
+  display:grid !important;
+  grid-template-columns:minmax(0,.88fr) minmax(0,.88fr) minmax(0,1.5fr) !important;
+  gap:8px !important;
+  width:100% !important;
+  min-width:0 !important;
+  align-items:stretch !important;
+}
+#tabTrade .schedule-modern .schedule-card{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:4px !important;
+  min-width:0 !important;
+  padding:7px 8px !important;
+  border:1px solid #dce3ec !important;
+  border-radius:8px !important;
+  background:#fbfcfe !important;
+  overflow:hidden !important;
+  box-sizing:border-box !important;
+}
+#tabTrade .schedule-modern .schedule-card b{
+  display:block !important;
+  font-size:10.2px !important;
+  line-height:1 !important;
+  color:#5c6b7d !important;
+  font-weight:850 !important;
+  text-align:left !important;
+  white-space:nowrap !important;
+}
+#tabTrade .schedule-modern .doc-date{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  height:29px !important;
+  box-sizing:border-box !important;
+  padding:3px 4px !important;
+  margin:0 !important;
+  font-size:10.6px !important;
+  line-height:1 !important;
+  border:0 !important;
+  border-radius:5px !important;
+  background:#fff !important;
+  color:#25364a !important;
+  text-align:center !important;
+  overflow:hidden !important;
+}
+#tabTrade .schedule-modern .work-date-range{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 12px minmax(0,1fr) !important;
+  gap:3px !important;
+  align-items:center !important;
+  min-width:0 !important;
+}
+#tabTrade .schedule-modern .range-mark{
+  text-align:center !important;
+  color:#8d98a7 !important;
+  font-weight:800 !important;
+  font-size:10px !important;
+}
+#tabTrade .schedule-memo-wrap{
+  display:grid !important;
+  grid-template-columns:auto minmax(0,1fr) !important;
+  align-items:center !important;
+  gap:8px !important;
+  margin-top:7px !important;
+  padding:6px 8px !important;
+  border:1px solid #e5dfd2 !important;
+  border-radius:8px !important;
+  background:#fcfaf5 !important;
+}
+#tabTrade .schedule-memo-label{
+  font-size:10px !important;
+  font-weight:850 !important;
+  color:#856a45 !important;
+  white-space:nowrap !important;
+}
+#tabTrade .schedule-memo-input{
+  width:100% !important;
+  min-width:0 !important;
+  border:0 !important;
+  outline:0 !important;
+  background:transparent !important;
+  color:#4d5866 !important;
+  font-family:inherit !important;
+  font-size:10.7px !important;
+  padding:2px 0 !important;
+}
+#tabTrade .schedule-memo-input::placeholder{ color:#a8a29a !important; }
+
+@media(max-width:760px){
+  #tabTrade .schedule-modern{ grid-template-columns:minmax(0,.82fr) minmax(0,.82fr) minmax(0,1.56fr) !important; gap:5px !important; }
+  #tabTrade .schedule-modern .schedule-card{ padding:6px 5px !important; border-radius:7px !important; }
+  #tabTrade .schedule-modern .schedule-card b{ font-size:9.4px !important; }
+  #tabTrade .schedule-modern .doc-date{ font-size:9.2px !important; height:27px !important; padding:2px 1px !important; letter-spacing:-.35px !important; }
+  #tabTrade .schedule-modern .work-date-range{ grid-template-columns:minmax(0,1fr) 8px minmax(0,1fr) !important; gap:1px !important; }
+  #tabTrade .schedule-modern .range-mark{ font-size:8.8px !important; }
+  #tabTrade .schedule-memo-wrap{ margin-top:5px !important; padding:5px 6px !important; gap:5px !important; }
+  #tabTrade .schedule-memo-label{ font-size:9.2px !important; }
+  #tabTrade .schedule-memo-input{ font-size:9.6px !important; }
+}
+
+/* 이미지/PDF에서도 동일한 카드형 일정 유지 */
+#tabTrade .trade-sheet.image-export .schedule-modern,
+@media print{ }
+@media print{
+  #tabTrade .schedule-modern{ grid-template-columns:minmax(0,.88fr) minmax(0,.88fr) minmax(0,1.5fr) !important; gap:5px !important; }
+  #tabTrade .schedule-modern .schedule-card{ padding:4px 5px !important; border-radius:5px !important; }
+  #tabTrade .schedule-modern .schedule-card b{ font-size:8.8px !important; }
+  #tabTrade .schedule-modern .doc-date{ height:auto !important; min-height:18px !important; font-size:8.9px !important; padding:2px 1px !important; }
+  #tabTrade .schedule-memo-wrap{ margin-top:4px !important; padding:4px 6px !important; border-radius:5px !important; }
+  #tabTrade .schedule-memo-label{ font-size:8.8px !important; }
+  #tabTrade .schedule-memo-input{ display:none !important; }
+  #tabTrade .schedule-memo-input + .print-mirror{ display:block !important; font-size:9px !important; min-width:0 !important; white-space:normal !important; }
+}
+#tabTrade .trade-sheet.image-export .schedule-modern{ grid-template-columns:minmax(0,.88fr) minmax(0,.88fr) minmax(0,1.5fr) !important; gap:6px !important; }
+#tabTrade .trade-sheet.image-export .schedule-modern .schedule-card{ padding:6px 7px !important; }
+#tabTrade .trade-sheet.image-export .schedule-memo-wrap{ margin-top:6px !important; }
+
 </style>
 </head>
 <body>
@@ -2558,7 +2679,17 @@ table.items .ti-wrap[data-field="spec"]:empty::before{
     </tr>
     <tr>
       <td class="lbl">일정</td>
-      <td colspan="3"><div class="schedule-wrap"><span class="schedule-item"><b>실측일</b><input type="date" class="doc-date" data-k="tr-date-survey" value=""></span><span class="schedule-item"><b>철거일</b><input type="date" class="doc-date" data-k="tr-date-demo" value=""></span><span class="schedule-item"><b>공사일</b><input type="date" class="doc-date" data-k="tr-date-work" value=""></span></div></td>
+      <td colspan="3">
+        <div class="schedule-wrap schedule-modern">
+          <span class="schedule-item schedule-card"><b>실측일</b><input type="date" class="doc-date" data-k="tr-date-survey" value=""></span>
+          <span class="schedule-item schedule-card"><b>철거일</b><input type="date" class="doc-date" data-k="tr-date-demo" value=""></span>
+          <span class="schedule-item schedule-card schedule-work-card">
+            <b>공사기간</b>
+            <span class="work-date-range"><input type="date" class="doc-date" data-k="tr-date-work" value=""><span class="range-mark">~</span><input type="date" class="doc-date" data-k="tr-date-work-end" value="" title="공사 종료일(선택)"></span>
+          </span>
+        </div>
+        <div class="schedule-memo-wrap"><span class="schedule-memo-label">메모</span><input type="text" class="schedule-memo-input" data-k="tr-schedule-memo" placeholder="예: 이틀 시공 / 입주 전 완료 / 엘리베이터 예약 필요"></div>
+      </td>
     </tr>
   </table>
 

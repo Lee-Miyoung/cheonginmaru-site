@@ -2369,7 +2369,7 @@ table.items .ti-wrap[data-field="spec"]:empty::before{
       <button class="primary" onclick="manualSave()">💾 견적 저장</button>
       <button class="ghost" onclick="saveAsNewEstimate()">📄 다른 이름으로 저장</button>
       <button class="ghost" onclick="startNewEstimate()">＋ 새 견적</button>
-      <button class="primary" onclick="printEstimate()">🖨️ PDF로 저장 / 인쇄</button>
+      <button class="primary" onclick="printEstimate()">📄 PDF로 저장</button>
       <button class="ghost" onclick="saveAsImage()">🖼️ 이미지로 저장</button>
     </div>
   </div>
@@ -2769,6 +2769,7 @@ table.items .ti-wrap[data-field="spec"]:empty::before{
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 function showError(msg){
   var el = document.getElementById('errorBanner');
@@ -4095,14 +4096,102 @@ async function waitForSealImages(){
     });
   }));
 }
-async function printEstimate(){
+async function captureSheetCanvasForPdf(sheet, sheetIndex){
+  if(typeof html2canvas === 'undefined') throw new Error('html2canvas not loaded');
+  return await html2canvas(sheet, {
+    scale: 2,
+    backgroundColor: '#ffffff',
+    useCORS: true,
+    onclone: function(clonedDoc){
+      var cloneWrap = clonedDoc.getElementById(currentTab === 'leak' ? 'tabLeak' : 'tabTrade');
+      if(!cloneWrap) return;
+      var cloneSheets = cloneWrap.querySelectorAll('.sheet');
+      var target = cloneSheets[sheetIndex];
+      if(!target) return;
+      target.classList.add('image-export');
+      if(shouldIncludeSeal()) target.classList.add('with-seal');
+
+      /* 이미지 저장과 완전히 같은 출력용 정리 */
+      target.querySelectorAll('.trade-search-bar, #tradeSearchHint, #tradeSearchResults, .row-del, .row-move, .add-row-btn, .accordion, .recipient-type-segment, .recipient-register-btn, .recipient-price-alert, .edit-only-note').forEach(function(el){
+        el.style.display = 'none';
+      });
+      target.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"])').forEach(function(inp){
+        var span = clonedDoc.createElement('span');
+        span.className = 'capture-value';
+        if(inp.classList.contains('doc-date')) span.classList.add('doc-date');
+        if(inp.classList.contains('doc-input-inline')) span.classList.add('doc-input-inline');
+        if(inp.classList.contains('ti-small')) span.classList.add('center');
+        if(inp.classList.contains('price-comma')) span.classList.add('right');
+        span.textContent = inp.value || '';
+        if(inp.style && inp.style.minWidth) span.style.minWidth = inp.style.minWidth;
+        inp.replaceWith(span);
+      });
+      target.querySelectorAll('.recipient-type-select').forEach(function(sel){
+        var span = clonedDoc.createElement('span');
+        span.className = 'capture-value';
+        span.style.display = 'none';
+        span.textContent = '';
+        sel.replaceWith(span);
+      });
+      target.querySelectorAll('.client-picker-trigger').forEach(function(btn){
+        var label = btn.querySelector('span:first-child');
+        var span = clonedDoc.createElement('span');
+        span.className = 'capture-value';
+        var txt = label ? label.textContent.trim() : btn.textContent.replace('▾','').trim();
+        if(label && label.classList.contains('ph')) txt = '';
+        span.textContent = txt;
+        btn.replaceWith(span);
+      });
+    }
+  });
+}
+
+async function savePdfLikeImage(){
   if(!validateSealBeforeExport()) return;
+  if(typeof html2canvas === 'undefined' || !window.jspdf || !window.jspdf.jsPDF){
+    alert('PDF 저장 기능을 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침해주세요.');
+    return;
+  }
   applyLocalSeal();
-  syncPrintMirrors();
-  prepareTradePrintLayout();
-  document.body.classList.toggle('print-with-seal', shouldIncludeSeal());
   await waitForSealImages();
-  requestAnimationFrame(function(){ requestAnimationFrame(function(){ window.print(); }); });
+  var wrap = document.getElementById(currentTab === 'leak' ? 'tabLeak' : 'tabTrade');
+  var sheets = Array.from(wrap.querySelectorAll('.sheet'));
+  if(!sheets.length){ alert('저장할 견적서가 없습니다.'); return; }
+
+  try{
+    var jsPDF = window.jspdf.jsPDF;
+    var pdf = new jsPDF({orientation:'portrait', unit:'mm', format:'a4', compress:true});
+    var pageW = 210, pageH = 297, margin = 6;
+    var usableW = pageW - margin*2, usableH = pageH - margin*2;
+
+    for(var i=0;i<sheets.length;i++){
+      if(i>0) pdf.addPage('a4','portrait');
+      var canvas = await captureSheetCanvasForPdf(sheets[i], i);
+      canvas = trimCanvasWhite(canvas, 8);
+      var imgData = canvas.toDataURL('image/jpeg', 0.94);
+      var ratio = canvas.width / canvas.height;
+      var drawW = usableW;
+      var drawH = drawW / ratio;
+      if(drawH > usableH){ drawH = usableH; drawW = drawH * ratio; }
+      var x = (pageW - drawW)/2;
+      var y = (pageH - drawH)/2;
+      pdf.addImage(imgData, 'JPEG', x, y, drawW, drawH, undefined, 'FAST');
+    }
+    var name = currentTab === 'leak' ? '누수복구_견적서.pdf' : '청인마루_견적서.pdf';
+    try{
+      pdf.save(name);
+    }catch(saveErr){
+      var url = pdf.output('bloburl');
+      window.open(url, '_blank');
+    }
+  }catch(err){
+    console.error('PDF 생성 실패', err);
+    alert('PDF 생성 중 오류가 발생했습니다: ' + (err && err.message ? err.message : err));
+  }
+}
+
+async function printEstimate(){
+  return savePdfLikeImage();
 }
 window.printEstimate = printEstimate;
 window.addEventListener('beforeprint', function(){

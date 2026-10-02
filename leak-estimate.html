@@ -3417,9 +3417,9 @@ function showRecipientPriceAlert(type, changed){
   var el=document.getElementById('recipientPriceAlert');
   if(!el) return;
   if(type==='소비자'){
-    el.textContent='⚠ 소비자용으로 전환되었습니다. 자재 단가가 거래처용 기준에서 품목당 +10,000원으로 변경되었습니다. 견적 저장을 눌러 반영하세요.';
+    el.textContent='⚠ 소비자용으로 전환되었습니다. 마루시트에서 불러온 자재 단가만 품목당 +10,000원으로 변경되었습니다. 견적 저장을 눌러 반영하세요.';
   }else{
-    el.textContent='⚠ 거래처용으로 전환되었습니다. 소비자 가산금액이 제거되어 자재 단가가 거래처용 기준으로 변경되었습니다. 견적 저장을 눌러 반영하세요.';
+    el.textContent='⚠ 거래처용으로 전환되었습니다. 마루시트에서 불러온 자재의 소비자 가산금액이 제거되었습니다. 견적 저장을 눌러 반영하세요.';
   }
   el.classList.remove('show');
   void el.offsetWidth;
@@ -3449,23 +3449,19 @@ function findSheetBasePriceForItem(it){
 }
 function syncTradeItemPricesForRecipient(recipientType, previousType){
   var changed = false;
-  var prev = previousType === '소비자' ? '소비자' : '거래처';
   var next = recipientType === '소비자' ? '소비자' : '거래처';
   tradeItems.forEach(function(it){
     if(!it) return;
+    /* 소비자 +10,000원은 '마루시트(구글시트)에서 불러온 자재'에만 적용한다.
+       직접 입력한 시공비/철거비/운반비/기타 비용은 그대로 유지한다. */
+    if(it.source !== 'sheet') return;
+
     var name = String(it.name||'').trim();
     var current = num(it.price);
-    /* 특별할인/음수금액/완전히 빈 기본행은 소비자 가산 대상에서 제외 */
     if(name.indexOf('특별할인')>=0 || current < 0) return;
-    if(!name && !String(it.spec||'').trim() && current===0) return;
 
     var base = findSheetBasePriceForItem(it);
-    if(base === null){
-      /* 예전 저장분에는 기준 거래처단가 정보가 없을 수 있으므로 현재 유형을 기준으로 복원 */
-      if(prev === '소비자') base = current - CONSUMER_UNIT_MARKUP;
-      else base = current;
-      it.baseTradePrice = base;
-    }
+    if(base === null) return;
     var nextPrice = priceForRecipient(base, next);
     if(current !== nextPrice){ it.price = nextPrice; changed = true; }
   });
@@ -3711,7 +3707,7 @@ async function searchTradePrice(){
   }
   var matches = result.rows.filter(function(p){ return matchesQuery(p.name+' '+(p.spec||''), q); });
   var recipientType = currentTradeRecipientType();
-  hint.className='sheet-note'; hint.innerHTML = '<span style="color:#1f3864;font-weight:800">'+matches.length+'건 검색됨</span><span style="color:#9a6b36">· 표시 단가는 거래처용 · 소비자 선택 시 <b style="color:#b35a24">품목당 +10,000원</b> 자동 적용</span>';
+  hint.className='sheet-note'; hint.innerHTML = '<span style="color:#1f3864;font-weight:800">'+matches.length+'건 검색됨</span><span style="color:#9a6b36">· 표시 단가는 거래처용 · 소비자 선택 시 <b style="color:#b35a24">마루시트 자재만 품목당 +10,000원</b> 자동 적용</span>';
   window.__tradeMatches = matches;
   resultsWrap.innerHTML = matches.map(function(p,i){
     var base = num(p.tradePrice != null ? p.tradePrice : p.price);

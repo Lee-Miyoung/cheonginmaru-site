@@ -1497,6 +1497,17 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
     #tabTrade .trade-sheet.print-ultra-dense{ zoom:.82 !important; width:121.952% !important; }
   }
 
+
+/* ===== Hide website address from exported PDF/image ===== */
+.image-export .supplier-strip .web-k,
+.image-export .supplier-strip .web-v{display:none!important;}
+.image-export .supplier-strip{grid-template-columns:auto 1fr auto 1fr!important;}
+@media print{
+  #tabTrade .supplier-strip .web-k,
+  #tabTrade .supplier-strip .web-v{display:none!important;}
+  #tabTrade .supplier-strip{grid-template-columns:auto 1fr auto 1fr!important;}
+}
+
 </style>
 </head>
 <body>
@@ -1852,7 +1863,7 @@ body.print-with-seal #tabTrade .stamp-business-box{display:grid!important;}
   <div class="supplier-strip" aria-label="청인마루 연락처">
     <span class="k">TEL</span><span class="v" contenteditable="true" data-k="tr-sup-tel">032-210-6268</span>
     <span class="k">FAX</span><span class="v" contenteditable="true" data-k="tr-sup-fax">0508-901-1074</span>
-    <span class="k">WEB</span><span class="v web-v">cheonginmaru.com</span>
+    <span class="k web-k">WEB</span><span class="v web-v">cheonginmaru.com</span>
   </div>
   <!-- 기존 저장 데이터 호환용: 헤더에 주소가 이미 있어 문서에는 중복 표시하지 않습니다. -->
   <div class="supplier-hidden" aria-hidden="true">
@@ -3233,8 +3244,8 @@ function prepareTradePrintLayout(){
   });
   var sealOn = (typeof shouldIncludeSeal === 'function') ? shouldIncludeSeal() : false;
   sheet.classList.toggle('print-short', meaningful <= 7);
-  sheet.classList.toggle('print-dense', meaningful >= 7 || (sealOn && meaningful >= 6));
-  sheet.classList.toggle('print-ultra-dense', meaningful >= 10);
+  sheet.classList.toggle('print-dense', meaningful >= 9 || (sealOn && meaningful >= 8));
+  sheet.classList.toggle('print-ultra-dense', meaningful >= 12);
 }
 function cleanupTradePrintLayout(){
   var sheet = document.querySelector('#tabTrade .trade-sheet');
@@ -4021,3 +4032,233 @@ function startLeakEstimateApp(){
 </script>
 </body>
 </html>
+
+
+/* ===== 2026-10-02 STAMP WIDTH HOTFIX ===== */
+.stamp-business-box{ overflow:visible !important; }
+.stamp-business-box .sb-content{ grid-template-columns:98px 1fr 50px 1fr !important; }
+.stamp-business-box .sb-k,.stamp-business-box .sb-v{ min-height:29px !important; padding:5px 7px !important; }
+.stamp-business-box .sb-name{
+  position:relative !important;
+  display:block !important;
+  min-height:38px !important;
+  padding:6px 40px 6px 7px !important;
+  font-weight:900 !important;
+  color:#17345f !important;
+}
+.stamp-business-box .sb-name .seal-stamp{
+  position:absolute !important;
+  right:4px !important;
+  top:-10px !important;
+  transform:none !important;
+  margin:0 !important;
+  height:68px !important;
+  max-width:68px !important;
+  width:auto !important;
+}
+.image-export.with-seal .stamp-business-box{ margin-top:10px !important; }
+.image-export.with-seal .stamp-business-box .sb-content{ grid-template-columns:98px 1fr 50px 1fr !important; }
+.image-export.with-seal .stamp-business-box .sb-name{
+  min-height:40px !important;
+  padding:7px 42px 7px 8px !important;
+}
+.image-export.with-seal .stamp-business-box .sb-name .seal-stamp{
+  right:5px !important;
+  top:-11px !important;
+  height:70px !important;
+  max-width:70px !important;
+}
+@media print{
+  body.print-with-seal #tabTrade .stamp-business-box{
+    overflow:visible !important;
+    margin-top:5px !important;
+  }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-content{
+    grid-template-columns:94px 1fr 46px 1fr !important;
+  }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-k,
+  body.print-with-seal #tabTrade .stamp-business-box .sb-v{
+    min-height:25px !important;
+    padding:3.6px 5px !important;
+    font-size:9.5px !important;
+    line-height:1.28 !important;
+  }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-name{
+    display:block !important;
+    min-height:31px !important;
+    padding:4px 33px 4px 5px !important;
+  }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-name .seal-stamp{
+    position:absolute !important;
+    right:3px !important;
+    top:-8px !important;
+    height:52px !important;
+    max-width:52px !important;
+    margin:0 !important;
+    transform:none !important;
+  }
+}
+
+
+/* ===== 2026-10-02 SCREEN-LIKE PORTRAIT PRINT =====
+   화면에서 보이는 견적서의 비율/색/간격을 그대로 축소해서 A4 세로 1장에 맞춘다. */
+@media print{
+  @page{ size:A4 portrait; margin:4mm !important; }
+  html,body{ margin:0 !important; padding:0 !important; background:#fff !important; }
+  #tabTrade{ margin:0 !important; padding:0 !important; }
+
+  #tabTrade .trade-sheet,
+  #tabTrade .trade-sheet.print-short,
+  #tabTrade .trade-sheet.print-dense,
+  #tabTrade .trade-sheet.print-ultra-dense{
+    width:860px !important;
+    max-width:860px !important;
+    min-width:860px !important;
+    margin:0 auto !important;
+    padding:30px 34px 24px !important;
+    border:1px solid #e3e7ed !important;
+    border-radius:10px !important;
+    box-shadow:none !important;
+    background:#fff !important;
+    color:#18202b !important;
+    transform:none !important;
+  }
+  #tabTrade .trade-sheet{ zoom:.86 !important; }
+  #tabTrade .trade-sheet.print-dense{ zoom:.80 !important; }
+  #tabTrade .trade-sheet.print-ultra-dense{ zoom:.74 !important; }
+
+  /* 화면 상단과 동일한 시각 위계 */
+  #tabTrade .brand-row{
+    margin-bottom:16px !important;
+    padding-bottom:10px !important;
+    border-bottom:2px solid #17345f !important;
+    align-items:flex-end !important;
+  }
+  #tabTrade .brand-row:after{ width:78px !important; height:2px !important; background:#b89164 !important; bottom:-2px !important; }
+  #tabTrade .brand-logo-img{ height:40px !important; max-width:160px !important; }
+  #tabTrade .brand-name{ font-size:16px !important; color:#17345f !important; }
+  #tabTrade .brand-tag{ font-size:10.8px !important; color:#6f7884 !important; }
+  #tabTrade .brand-specialty{ font-size:10px !important; color:#9a744d !important; }
+  #tabTrade .doc-tag{
+    min-width:0 !important;
+    padding:0 !important;
+    border:0 !important;
+    border-radius:0 !important;
+    background:transparent !important;
+    color:#68727e !important;
+    font-size:10.8px !important;
+    line-height:1.75 !important;
+  }
+  #tabTrade .doc-title{ font-size:29px !important; margin:8px 0 3px !important; color:#17345f !important; letter-spacing:-1.2px !important; }
+  #tabTrade .doc-sub{ font-size:11.2px !important; margin-bottom:18px !important; color:#7e8792 !important; }
+
+  /* 수신/현장/일정: 화면과 동일, 일정은 한 줄 */
+  #tabTrade table.infogrid{
+    margin-bottom:12px !important;
+    font-size:12.5px !important;
+    border:1px solid #d8dee7 !important;
+    border-radius:6px !important;
+    background:#fff !important;
+  }
+  #tabTrade table.infogrid td{ padding:8px 10px !important; line-height:1.45 !important; border-color:#dfe4eb !important; background:#fff !important; color:#1a1d23 !important; }
+  #tabTrade table.infogrid td.lbl{ width:92px !important; padding:8px 8px !important; font-size:11.8px !important; background:#f2f5f8 !important; color:#294d7a !important; }
+  #tabTrade td.fillme{ background:#fbf6e8 !important; box-shadow:inset 3px 0 0 #dfc989 !important; }
+  #tabTrade .schedule-wrap{ display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:8px 12px !important; width:100% !important; }
+  #tabTrade .schedule-item{ display:grid !important; grid-template-columns:auto minmax(0,1fr) !important; align-items:center !important; gap:5px !important; font-size:11.8px !important; color:#4b515c !important; }
+  #tabTrade .schedule-item b{ font-size:11.2px !important; }
+  #tabTrade .schedule-wrap .print-mirror.doc-date{ font-size:11.8px !important; width:auto !important; min-width:0 !important; }
+
+  /* 공급자 연락처 한 줄 */
+  #tabTrade .supplier-strip{
+    margin-bottom:12px !important;
+    border:1px solid #d7dee8 !important;
+    border-radius:9px !important;
+    background:#fff !important;
+  }
+  #tabTrade .supplier-strip .k{ padding:7px 8px !important; font-size:10.5px !important; background:#f3f6f9 !important; color:#17345f !important; }
+  #tabTrade .supplier-strip .v{ padding:7px 9px !important; font-size:10.9px !important; color:#354252 !important; background:#fff !important; }
+
+  /* 품목표: 화면과 거의 동일 */
+  #tabTrade table.items{
+    font-size:11.2px !important;
+    border:1px solid #d9e0e8 !important;
+    border-radius:6px 6px 0 0 !important;
+    overflow:hidden !important;
+  }
+  #tabTrade table.items th{ padding:8px 5px !important; font-size:10.7px !important; background:#234b7e !important; color:#fff !important; border-color:rgba(255,255,255,.16) !important; }
+  #tabTrade table.items td{ padding:7px 5px !important; line-height:1.42 !important; color:#25303d !important; background:#fff !important; border-color:#e2e6ec !important; }
+  #tabTrade table.items tbody tr:nth-child(even) td{ background:#fbfcfd !important; }
+  #tabTrade #tradeItemsBody tr.special-discount td{ background:#fff6f5 !important; }
+  #tabTrade #tradeItemsBody tr.special-discount .ti-wrap[data-f="name"],
+  #tabTrade #tradeItemsBody tr.special-discount .print-mirror,
+  #tabTrade #tradeItemsBody tr.special-discount [data-calc]{ color:#b43f36 !important; font-weight:900 !important; }
+
+  /* 합계도 화면의 3칸 구조 그대로 */
+  #tabTrade .quote-summary{
+    display:grid !important;
+    grid-template-columns:1fr 1fr 1.26fr !important;
+    margin:0 !important;
+    border:1px solid #d4dce6 !important;
+    border-top:0 !important;
+    border-radius:0 0 9px 9px !important;
+    overflow:hidden !important;
+    background:#f8fafc !important;
+  }
+  #tabTrade .quote-summary .summary-item{
+    min-height:58px !important;
+    padding:9px 13px !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:flex-start !important;
+    justify-content:center !important;
+    gap:4px !important;
+    background:#f8fafc !important;
+    border-right:1px solid #d9e0e8 !important;
+  }
+  #tabTrade .quote-summary .summary-label{ font-size:10.6px !important; color:#778290 !important; font-weight:800 !important; }
+  #tabTrade .quote-summary .summary-value{ font-size:17px !important; color:#23364e !important; font-weight:900 !important; }
+  #tabTrade .quote-summary .summary-item.grand{ background:#17345f !important; }
+  #tabTrade .quote-summary .summary-item.grand .summary-label{ color:#d8e3f0 !important; }
+  #tabTrade .quote-summary .summary-item.grand .summary-value{ color:#fff !important; font-size:20px !important; }
+
+  /* 특이사항: 화면처럼 숨 쉴 공간을 두고 읽기 쉽게 */
+  #tabTrade .contract-clause{ margin:12px 0 0 !important; padding:9px 12px !important; font-size:11.4px !important; line-height:1.58 !important; background:#fffaf3 !important; border-color:#e3d7c7 !important; }
+  #tabTrade .notes{
+    margin-top:14px !important;
+    padding:13px 15px 14px !important;
+    border:1px solid #d8e0ea !important;
+    border-radius:10px !important;
+    background:linear-gradient(180deg,#fbfcfe 0%,#f6f8fb 100%) !important;
+  }
+  #tabTrade .notes .h{ font-size:13px !important; margin-bottom:8px !important; padding-left:10px !important; border-left:4px solid #b89164 !important; color:#17345f !important; }
+  #tabTrade .notes ul{ padding-left:18px !important; }
+  #tabTrade .notes li{ font-size:11.3px !important; line-height:1.66 !important; margin-bottom:2px !important; color:#3f4753 !important; }
+
+  /* 화면과 동일하게 문서 흐름에 배치. fixed footer 때문에 생기던 어색한 공백 제거 */
+  #tabTrade .trade-sheet.print-short{ padding-bottom:24px !important; }
+  #tabTrade .trade-sheet.print-short .trade-footer-box,
+  #tabTrade .trade-footer-box{
+    position:static !important;
+    left:auto !important; right:auto !important; bottom:auto !important;
+    margin-top:10px !important;
+    padding:10px 13px !important;
+    display:grid !important;
+    grid-template-columns:1.18fr .82fr !important;
+    border:1px solid #d9e1ea !important;
+    border-radius:10px !important;
+    background:#fbfcfe !important;
+  }
+  #tabTrade .trade-footer-box .row{ font-size:11.3px !important; line-height:1.45 !important; color:#495362 !important; }
+
+  /* 사업자 정보/도장도 화면 비율을 유지하되 칸을 밀지 않게 위로 살짝 걸침 */
+  body.print-with-seal #tabTrade .stamp-business-box{
+    margin-top:10px !important;
+    overflow:visible !important;
+    border-radius:8px !important;
+  }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-content{ grid-template-columns:98px 1fr 50px 1fr !important; }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-k,
+  body.print-with-seal #tabTrade .stamp-business-box .sb-v{ min-height:29px !important; padding:5px 7px !important; font-size:10.4px !important; line-height:1.35 !important; }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-name{ display:block !important; min-height:38px !important; padding:6px 40px 6px 7px !important; }
+  body.print-with-seal #tabTrade .stamp-business-box .sb-name .seal-stamp{ position:absolute !important; right:4px !important; top:-10px !important; height:66px !important; max-width:66px !important; transform:none !important; margin:0 !important; }
+}

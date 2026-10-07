@@ -4933,6 +4933,11 @@ document.addEventListener('click', function(e){
 /* ===================== 초기화 (게이트 통과 후에만 실행) ===================== */
 function startLeakEstimateApp(){
   var params = new URL(window.location.href).searchParams;
+  /* 기본 주소로 들어오면 견적 작성화면이 아니라 견적 목록으로 바로 이동 */
+  if(!params.get('tab') && !params.get('id') && !params.get('client') && params.get('new') !== '1'){
+    window.location.replace('leak-dashboard.html');
+    return;
+  }
   var urlTab = params.get('tab') || 'leak';
   var urlId = params.get('id');
   var urlClient = params.get('client');

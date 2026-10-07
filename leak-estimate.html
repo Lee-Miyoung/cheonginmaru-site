@@ -2455,6 +2455,40 @@ table.items .ti-wrap[data-field="spec"]:empty::before{
   .contract-toolbar .ct-right button{width:100%;padding:8px 6px;font-size:11px}
 }
 
+
+/* ===== 계약서 대금박스: 계약금+입금일 한 줄 / 잔금 강조 ===== */
+.contract-payment-box .deposit-combo{
+  display:grid !important;
+  grid-template-columns:minmax(0,1.35fr) minmax(120px,.8fr) minmax(0,.95fr) minmax(120px,.8fr) !important;
+  align-items:center !important;
+}
+.contract-payment-box .deposit-combo > div{min-width:0}
+.contract-payment-box .deposit-combo .paydate-label{border-left:1px solid #e5eaf0}
+.contract-payment-box .deposit-combo .paydate-amount{color:#334155 !important}
+.contract-payment-box .balance-row{
+  grid-template-columns:1fr 190px !important;
+  background:#eef4fb !important;
+  border-top:1px solid #c9d7e8 !important;
+}
+.contract-payment-box .balance-row .label{
+  color:#17345f !important;
+  font-weight:950 !important;
+  font-size:13px !important;
+}
+.contract-payment-box .balance-row .amount{
+  color:#17345f !important;
+  font-size:16px !important;
+  font-weight:950 !important;
+}
+@media(max-width:700px){
+  .contract-payment-box .deposit-combo{
+    grid-template-columns:minmax(0,1.15fr) minmax(105px,.8fr) minmax(0,.9fr) minmax(105px,.8fr) !important;
+  }
+  .contract-payment-box .deposit-combo .label,
+  .contract-payment-box .deposit-combo .amount{font-size:11.5px !important;padding:9px 9px !important}
+  .contract-payment-box .balance-row{grid-template-columns:1fr 150px !important}
+}
+
 </style>
 </head>
 <body>
@@ -5104,7 +5138,7 @@ function contractSource(){
   var issue=d['tr-date']||new Date().toISOString().slice(0,10);
   var workStart=d['tr-date-work']||'', workEnd=d['tr-date-work-end']||'';
   var workText=workStart ? (contractDateKR(workStart)+(workEnd?' ~ '+contractDateKR(workEnd):'')) : '-';
-  return {d:d,name:name,phone:cleanContractText(d['tr-ref-phone'])||'-',site:cleanContractText(d['tr-site']).replace(/^\[|\]$/g,'')||'-',estNo:estNo,issue:issue,items:items,total:getTradeGrandTotalNumber(),workText:workText,survey:d['tr-date-survey']||'',demo:d['tr-date-demo']||''};
+  return {d:d,name:name,phone:cleanContractText(d['tr-ref-phone'])||'-',site:cleanContractText(d['tr-site']).replace(/^\[|\]$/g,'')||'-',estNo:estNo,issue:issue,items:items,total:getTradeGrandTotalNumber(),workText:workText,survey:d['tr-date-survey']||'',demo:d['tr-date-demo']||'',manager:cleanContractText(d['tr-manager'])||'',managerPhone:cleanContractText(d['tr-manager-phone'])||''};
 }
 function openContractEditor(){
   var s=contractSource(); if(!s) return;
@@ -5139,11 +5173,11 @@ function openContractEditor(){
       '<div class="contract-head"><div class="contract-title"><h1>공사 도급 계약서</h1><div class="en">Construction Agreement</div></div><div class="contract-brand"><img src="images/logo.png" alt="청인마루 로고" class="brand-logo"><div class="brand-copy"><div class="specialty">마루·벽 시공 전문 · 공식 대리점</div></div></div></div>'+
       '<p class="contract-intro">발주자 <b>'+esc(s.name)+'</b>와 수급자 <b>청인마루</b>는 아래 표시 공사에 관하여 다음과 같이 계약을 체결한다.</p>'+
       '<div class="contract-party-grid"><div class="contract-party"><h3>발주자</h3><div class="line"><span class="k">성명</span><span class="v">'+esc(s.name)+'</span></div><div class="line"><span class="k">연락처</span><span class="v">'+esc(s.phone)+'</span></div><div class="line"><span class="k">현장주소</span><span class="v">'+esc(s.site)+'</span></div></div>'+
-      '<div class="contract-party contract-supplier"><h3>수급자</h3><div class="line"><span class="k">상호</span><span class="v company-inline">청인마루 <img class="party-seal-inline'+(sealData?' on':'')+'" '+(sealData?'src="'+sealData+'"':'')+' alt="청인마루 직인"></span></div><div class="line"><span class="k">대표자</span><span class="v">송원덕</span></div><div class="line"><span class="k">사업자번호</span><span class="v">399-23-00326</span></div><div class="line"><span class="k">주소</span><span class="v">인천 연수구 송도미래로 30, E동 1505호</span></div><div class="line"><span class="k">연락처</span><span class="v">032-210-6268</span></div></div></div>'+
+      '<div class="contract-party contract-supplier"><h3>수급자</h3><div class="line"><span class="k">상호</span><span class="v company-inline">청인마루 <img class="party-seal-inline'+(sealData?' on':'')+'" '+(sealData?'src="'+sealData+'"':'')+' alt="청인마루 직인"></span></div><div class="line"><span class="k">대표자</span><span class="v">송원덕</span></div><div class="line"><span class="k">사업자번호</span><span class="v">399-23-00326</span></div><div class="line"><span class="k">주소</span><span class="v">인천 연수구 송도미래로 30, E동 1505호</span></div><div class="line"><span class="k">대표전화</span><span class="v">032-210-6268</span></div><div class="line"><span class="k">현장담당</span><span class="v">'+esc(s.manager||'-')+(s.managerPhone?' · '+esc(s.managerPhone):'')+'</span></div></div></div>'+
       '<div class="contract-section"><h2>제1조 (공사 개요)</h2><div class="contract-overview"><div class="contract-overview-row"><div class="k">공사/제품</div><div class="v">'+esc(s.items.name)+'</div></div><div class="contract-overview-row"><div class="k">규격</div><div class="v">'+esc(s.items.spec)+'</div></div></div></div>'+
       '<div class="contract-section" id="contractSurveySection"><h2 id="contractSurveyHeading">제2조 (현장 실측비용)</h2><p>현장 실측비용은 <b>50,000원</b>으로 하되, 실측 이후 본 계약이 체결될 경우 실측비용은 무료로 처리한다. 단, 실측 후 계약이 체결되지 않을 경우 실측비용 50,000원이 발주자에게 청구될 수 있다.</p></div>'+
       '<div class="contract-section"><h2 id="contractTotalHeading">제3조 (계약금액)</h2><p>본 공사의 총 계약금액은 <span class="contract-money" id="contractTotalText">'+contractMoney(contractTotal)+'</span> (부가가치세 포함)으로 한다.</p></div>'+
-      '<div class="contract-section"><h2 id="contractPaymentHeading">제4조 (대금 지급방법)</h2><p>발주자는 계약 체결과 동시에 계약금을 지급하고, 잔금은 공사 완료 후 협의된 기한 내에 수급자에게 지급한다. 계약금은 자재비 일부 확보 및 전문 시공기사 우선 배정을 위한 선지급금으로 한다.</p><div class="contract-payment-box"><div class="contract-pay-row deposit"><div class="label">계약금 (총액의 <b id="contractPctLabel">'+pct+'</b>%)</div><div class="amount" id="contractDepositAmount"></div></div><div class="contract-pay-row"><div class="label">계약금 입금일</div><div class="amount"><span id="contractPayDateText">'+esc(payDate?contractDateKR(payDate):'-')+'</span></div></div><div class="contract-pay-row"><div class="label">잔금 (공사완료 후)</div><div class="amount" id="contractBalanceAmount"></div></div></div><div class="contract-bank">입금계좌: 우리은행 1005-403-096419 (청인마루 송원덕)</div></div>'+
+      '<div class="contract-section"><h2 id="contractPaymentHeading">제4조 (대금 지급방법)</h2><p>발주자는 계약 체결과 동시에 계약금을 지급하고, 잔금은 공사 완료 후 협의된 기한 내에 수급자에게 지급한다. 계약금은 자재비 일부 확보 및 전문 시공기사 우선 배정을 위한 선지급금으로 한다.</p><div class="contract-payment-box"><div class="contract-pay-row deposit-combo"><div class="label">계약금 (총액의 <b id="contractPctLabel">'+pct+'</b>%)</div><div class="amount" id="contractDepositAmount"></div><div class="label paydate-label">계약금 입금일</div><div class="amount paydate-amount"><span id="contractPayDateText">'+esc(payDate?contractDateKR(payDate):'-')+'</span></div></div><div class="contract-pay-row balance-row"><div class="label">잔금 (공사완료 후)</div><div class="amount" id="contractBalanceAmount"></div></div></div><div class="contract-bank">입금계좌: 우리은행 1005-403-096419 (청인마루 송원덕)</div></div>'+
       '<div class="contract-section"><h2 id="contractPeriodHeading">제5조 (공사 기간)</h2><p>실측일: <b>'+esc(contractDateKR(s.survey))+'</b> / 철거일: <b>'+esc(contractDateKR(s.demo))+'</b> / 공사기간: <b>'+esc(s.workText)+'</b>. 현장 여건 및 자재 수급 상황에 따라 일정은 상호 협의하여 변경될 수 있다.</p></div>'+
       '<div class="contract-section"><h2 id="contractDefectHeading">제6조 (하자보수)</h2><p>수급자는 시공 완료일로부터 법령 및 당사자 간 합의에 따른 하자담보책임기간 동안 시공상의 하자에 대해 보수 책임을 진다. 다만 발주자의 고의·과실, 통상적인 사용 범위를 벗어난 손상, 재누수·침하 등 수급자의 귀책사유가 아닌 원인으로 발생한 하자는 제외한다.</p></div>'+
       '<div class="contract-section"><h2 id="contractSpecialHeading">제7조 (특약사항)</h2><ul><li>세금계산서 또는 현금영수증은 관련 법령과 당사자 협의에 따라 발급한다.</li><li>현장 실측 결과에 따라 최종 수량 및 금액은 조정될 수 있다.</li><li>사전에 고지되지 않은 현장 여건으로 추가 작업이 필요한 경우 별도 비용이 발생할 수 있다.</li><li>자재 발주 이후 취소 시 이미 발주·제작된 자재 비용 및 발생 비용이 청구될 수 있다.</li><li>본 계약서는 당사자 간 합의에 따라 효력이 발생한다.</li></ul><div class="contract-memo" id="contractMemoPreview">'+esc(memo)+'</div></div>'+

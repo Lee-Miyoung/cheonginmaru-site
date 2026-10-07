@@ -2373,6 +2373,88 @@ table.items .ti-wrap[data-field="spec"]:empty::before{
 .contract-sheet.capture-contract .contract-party .party-seal.on{display:block}
 @media(max-width:600px){.contract-total-input{width:112px}.contract-party.contract-supplier{padding-right:70px}.contract-party .party-seal{right:10px;top:16px;width:54px;height:54px}}
 
+/* ===== 계약서 디자인/편집 보강 ===== */
+.contract-toolbar .ct-left{gap:10px 12px}
+.contract-toolbar .ct-left label{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.contract-toolbar .ct-toggle{display:inline-flex;align-items:center;gap:6px;padding:0 2px}
+.contract-toolbar .ct-toggle input{accent-color:#17345f}
+.contract-money-input{width:126px;border:1px solid #cbd5e1;border-radius:8px;padding:7px 9px;text-align:right;font-weight:900;color:#3037d3;font-variant-numeric:tabular-nums}
+.contract-brand{display:flex;align-items:flex-start;gap:14px;text-align:left}
+.contract-brand .brand-logo{width:116px;height:auto;display:block;object-fit:contain}
+.contract-brand .brand-copy{padding-top:2px}
+.contract-brand .brand-copy .specialty{font-size:13px;font-weight:900;color:#17345f;letter-spacing:-.2px;line-height:1.35}
+.contract-party-grid{gap:20px}
+.contract-party{padding:18px 18px 16px}
+.contract-party h3{font-size:13px;color:#8ea1bb;margin:0 0 14px;font-weight:900}
+.contract-party .line{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:start;gap:6px;font-size:12.8px;line-height:1.72}
+.contract-party .k{min-width:0;color:#97a8bc;font-weight:800}
+.contract-party .v{font-weight:900;color:#334155;word-break:keep-all}
+.contract-party .v.company-inline{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.contract-party .party-seal-inline{display:none;width:56px;height:56px;object-fit:contain;vertical-align:middle;flex:0 0 auto}
+.contract-party .party-seal-inline.on{display:inline-block}
+.contract-overview-row .k{width:auto}
+.contract-overview-row .v{line-height:1.65}
+.contract-pay-row .amount{display:flex;justify-content:flex-end;align-items:center;gap:8px}
+.contract-pay-row .amount .manual{font-size:12px;color:#64748b;font-weight:700}
+.contract-payment-box .contract-note-line{padding:8px 14px 0;color:#64748b;font-size:11px}
+@media(max-width:860px){.contract-brand .brand-logo{width:104px}.contract-brand .brand-copy .specialty{font-size:12px}.contract-party .line{grid-template-columns:62px minmax(0,1fr)}.contract-money-input{width:108px}}
+
+
+
+/* ===== 계약서 최종 디자인 보정 2026-10-07 ===== */
+.contract-editor-shell{background:#edf1f5}
+.contract-toolbar{padding:14px 16px;background:rgba(255,255,255,.98);box-shadow:0 3px 14px rgba(15,23,42,.06)}
+.contract-toolbar .ct-left{flex:1 1 650px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px;align-items:end}
+.contract-toolbar .ct-left>label{display:flex!important;flex-direction:column;align-items:flex-start!important;gap:5px!important;min-width:0;padding:9px 10px;border:1px solid #e0e6ed;border-radius:11px;background:#f9fbfd}
+.contract-toolbar .ct-left>label.ct-toggle{flex-direction:row!important;align-items:center!important;justify-content:flex-start;padding:10px 11px;min-height:43px}
+.contract-toolbar .ct-left>label.ct-field:has(.contract-memo-input){grid-column:span 2}
+.contract-toolbar .ct-left input:not([type="checkbox"]),.contract-toolbar .ct-left textarea{width:100%;box-sizing:border-box;background:#fff}
+.contract-toolbar .contract-total-input,.contract-toolbar .contract-money-input,.contract-toolbar .contract-pct-input,.contract-toolbar .contract-date-input{height:34px}
+.contract-toolbar .contract-memo-input{width:100%;max-width:none;height:34px;min-height:34px}
+.contract-toolbar .contract-edit-note{grid-column:1/-1;padding:2px 2px 0;font-size:10.8px}
+.contract-toolbar .ct-right{flex:0 0 auto;margin-left:auto}
+.contract-toolbar .ct-right button{border-radius:10px;padding:9px 13px}
+.contract-sheet{padding:38px 40px 28px;border:1px solid #e5eaf0}
+.contract-head{align-items:center;padding-bottom:15px;margin-bottom:24px}
+.contract-title h1{font-size:27px;letter-spacing:-1.1px}
+.contract-brand{align-items:center;justify-content:flex-end;max-width:350px}
+.contract-brand .brand-logo{width:128px;max-height:48px}
+.contract-brand .brand-copy{border-left:1px solid #d9e1ea;padding-left:13px}
+.contract-brand .brand-copy .specialty{font-size:12.5px;line-height:1.45;white-space:nowrap}
+.contract-intro{margin-bottom:17px;color:#536176}
+.contract-party-grid{grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.contract-party{min-height:142px;border-color:#d6e0ea;border-radius:13px;background:linear-gradient(180deg,#fff 0%,#fcfdff 100%)}
+.contract-party h3{display:flex;align-items:center;gap:8px;margin-bottom:11px;color:#6f86a3;font-size:12.5px}
+.contract-party h3:after{content:"";height:1px;flex:1;background:#e6ebf1}
+.contract-party .line{grid-template-columns:68px minmax(0,1fr);column-gap:8px;line-height:1.68}
+.contract-party .k{font-size:11.8px;color:#9aabba}
+.contract-party .v{font-size:12.6px;line-height:1.55}
+.contract-party .v.company-inline{gap:5px;align-items:center}
+.contract-party .party-seal-inline{width:48px;height:48px;margin:-13px 0 -12px 2px}
+.contract-section{margin-top:18px}
+.contract-section h2{font-size:13.5px;margin-bottom:7px}
+.contract-section p,.contract-section li{font-size:11.9px;line-height:1.62}
+.contract-overview-row{grid-template-columns:112px 1fr}
+.contract-overview-row .k,.contract-overview-row .v{padding:9px 11px}
+.contract-payment-box{margin-top:7px}
+.contract-pay-row{grid-template-columns:1fr 190px}
+.contract-pay-row>div{padding:9px 13px}
+.contract-bank{margin-top:8px;padding:8px 11px}
+.contract-memo{margin-top:8px;padding:8px 10px;min-height:18px}
+.contract-foot{margin-top:20px}
+.contract-sheet.capture-contract{border:0!important}
+@media(max-width:900px){
+  .contract-toolbar .ct-left{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .contract-toolbar .ct-left>label.ct-field:has(.contract-memo-input){grid-column:1/-1}
+}
+@media(max-width:600px){
+  .contract-toolbar .ct-left{grid-template-columns:1fr 1fr}
+  .contract-toolbar .ct-left>label{padding:8px}
+  .contract-toolbar .ct-left>label.ct-field:has(.contract-memo-input),.contract-toolbar .contract-edit-note{grid-column:1/-1}
+  .contract-toolbar .ct-right{width:100%;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .contract-toolbar .ct-right button{width:100%;padding:8px 6px;font-size:11px}
+}
+
 </style>
 </head>
 <body>
@@ -2766,9 +2848,11 @@ table.items .ti-wrap[data-field="spec"]:empty::before{
   </div>
   <div class="contract-data-store" aria-hidden="true" style="display:none">
     <input type="hidden" data-k="tr-contract-deposit-pct" id="trContractDepositPct" value="30">
+    <input type="hidden" data-k="tr-contract-deposit-amount" id="trContractDepositAmountInputHidden" value="">
     <input type="hidden" data-k="tr-contract-total" id="trContractTotal" value="">
     <input type="hidden" data-k="tr-contract-memo" id="trContractMemo" value="">
     <input type="hidden" data-k="tr-contract-paydate" id="trContractPayDate" value="">
+    <input type="hidden" data-k="tr-contract-survey-clause" id="trContractSurveyClause" value="1">
     <input type="hidden" data-k="tr-contract-client-sign" id="trContractClientSign" value="">
   </div>
 
@@ -5027,66 +5111,107 @@ function openContractEditor(){
   var old=document.getElementById('contractOverlay'); if(old) old.remove();
   var pctEl=document.getElementById('trContractDepositPct');
   var totalEl=document.getElementById('trContractTotal');
+  var depositEl=document.getElementById('trContractDepositAmountInputHidden');
   var memoEl=document.getElementById('trContractMemo');
   var payDateEl=document.getElementById('trContractPayDate');
+  var surveyEl=document.getElementById('trContractSurveyClause');
   var pct=Math.max(0,Math.min(100,Number(pctEl&&pctEl.value)||30));
   var savedTotal=Number(totalEl&&totalEl.value)||0;
   var contractTotal=savedTotal>0?savedTotal:s.total;
+  var depositSaved=Number(depositEl&&depositEl.value)||0;
+  var depositAmount=depositSaved>0?depositSaved:contractRound1000(contractTotal*pct/100);
   var payDate=(payDateEl&&payDateEl.value)||'';
   var memo=(memoEl&&memoEl.value)||'';
+  var includeSurvey = !surveyEl || surveyEl.value !== '0';
   var sealData=(typeof getLocalSealData==='function'&&shouldIncludeSeal())?getLocalSealData():'';
   var overlay=document.createElement('div'); overlay.id='contractOverlay'; overlay.className='contract-overlay';
   overlay.innerHTML='<div class="contract-editor-shell">'+
     '<div class="contract-toolbar"><div class="ct-left">'+
-      '<label>계약금액 <input id="contractTotalInput" class="contract-total-input" inputmode="numeric" value="'+Number(contractTotal).toLocaleString('ko-KR')+'"> 원</label>'+
-      '<label>계약금 <input id="contractPctInput" class="contract-pct-input" type="number" min="0" max="100" step="1" value="'+pct+'"> %</label>'+
+      '<label>총 계약금액 <input id="contractTotalInput" class="contract-total-input" inputmode="numeric" value="'+Number(contractTotal).toLocaleString('ko-KR')+'"> 원</label>'+
+      '<label>계약금 <input id="contractPctInput" class="contract-pct-input" type="number" min="0" max="100" step="0.1" value="'+pct+'"> %</label>'+
+      '<label>계약금 <input id="contractDepositInput" class="contract-money-input" inputmode="numeric" value="'+Number(depositAmount).toLocaleString('ko-KR')+'"> 원</label>'+
       '<label class="ct-field">입금일 <input id="contractPayDateInput" class="contract-date-input" type="date" value="'+esc(payDate)+'"></label>'+
+      '<label class="ct-toggle"><input id="contractSurveyToggle" type="checkbox" '+(includeSurvey?'checked':'')+'> 실측비 조항 포함</label>'+
       '<label class="ct-field">공사 메모 <textarea id="contractMemoInput" class="contract-memo-input" placeholder="엘리베이터 예약, 이틀 시공 등">'+esc(memo)+'</textarea></label>'+
-      '<span class="contract-edit-note">계약금은 <strong>1,000원 단위 반올림</strong> · 잔금 자동 계산</span></div>'+ 
-    '<div class="ct-right"><button onclick="saveContractImage()">🖼 이미지 저장</button><button class="primary" onclick="saveContractPdf()">📄 PDF 저장</button><button onclick="closeContractEditor()">닫기</button></div></div>'+ 
+      '<span class="contract-edit-note">계약금은 <strong>1,000원 단위 반올림</strong> · 잔금 자동 계산</span></div>'+
+    '<div class="ct-right"><button onclick="saveContractImage()">🖼 이미지 저장</button><button class="primary" onclick="saveContractPdf()">📄 PDF 저장</button><button onclick="closeContractEditor()">닫기</button></div></div>'+
     '<div id="contractSheet" class="contract-sheet">'+
-      '<div class="contract-head"><div class="contract-title"><h1>공사 도급 계약서</h1><div class="en">Construction Agreement</div></div><div class="contract-brand"><div class="logo-text">청인마루</div><div class="tag">공간의 위로가 되다</div></div></div>'+ 
-      '<p class="contract-intro">발주자 <b>'+esc(s.name)+'</b>와 수급자 <b>청인마루</b>는 아래 표시 공사에 관하여 다음과 같이 계약을 체결한다.</p>'+ 
-      '<div class="contract-party-grid"><div class="contract-party"><h3>발주자</h3><div class="line"><span class="k">성명</span><span class="v">'+esc(s.name)+'</span></div><div class="line"><span class="k">연락처</span><span class="v">'+esc(s.phone)+'</span></div><div class="line"><span class="k">현장주소</span><span class="v">'+esc(s.site)+'</span></div></div>'+ 
-      '<div class="contract-party contract-supplier"><h3>수급자</h3><div class="line"><span class="k">상호</span><span class="v">청인마루</span></div><div class="line"><span class="k">대표자</span><span class="v">송원덕</span></div><div class="line"><span class="k">사업자번호</span><span class="v">399-23-00326</span></div><div class="line"><span class="k">주소</span><span class="v">인천 연수구 송도미래로 30, E동 1505호</span></div><div class="line"><span class="k">연락처</span><span class="v">032-210-6268</span></div><img class="party-seal'+(sealData?' on':'')+'" '+(sealData?'src="'+sealData+'"':'')+' alt="청인마루 직인"></div></div>'+ 
-      '<div class="contract-section"><h2>제1조 (공사 개요)</h2><div class="contract-overview"><div class="contract-overview-row"><div class="k">공사/제품</div><div class="v">'+esc(s.items.name)+'</div></div><div class="contract-overview-row"><div class="k">규격</div><div class="v">'+esc(s.items.spec)+'</div></div></div></div>'+ 
-      '<div class="contract-section"><h2>제2조 (현장 실측비용)</h2><p>현장 실측비용은 <b>50,000원</b>으로 하되, 실측 이후 본 계약이 체결될 경우 실측비용은 무료로 처리한다. 단, 실측 후 계약이 체결되지 않을 경우 실측비용 50,000원이 발주자에게 청구될 수 있다.</p></div>'+ 
-      '<div class="contract-section"><h2>제3조 (계약금액)</h2><p>본 공사의 총 계약금액은 <span class="contract-money" id="contractTotalText">'+contractMoney(contractTotal)+'</span> (부가가치세 포함)으로 한다.</p></div>'+ 
-      '<div class="contract-section"><h2>제4조 (대금 지급방법)</h2><p>발주자는 계약 체결과 동시에 계약금을 지급하고, 잔금은 공사 완료 후 협의된 기한 내에 수급자에게 지급한다. 계약금은 자재비 일부 확보 및 전문 시공기사 우선 배정을 위한 선지급금으로 한다.</p><div class="contract-payment-box"><div class="contract-pay-row deposit"><div class="label">계약금 (총액의 <b id="contractPctLabel">'+pct+'</b>%)</div><div class="amount" id="contractDepositAmount"></div></div><div class="contract-pay-row"><div class="label">계약금 입금일</div><div class="amount"><span id="contractPayDateText">'+esc(payDate?contractDateKR(payDate):'-')+'</span></div></div><div class="contract-pay-row"><div class="label">잔금 (공사완료 후)</div><div class="amount" id="contractBalanceAmount"></div></div></div><div class="contract-bank">입금계좌: 우리은행 1005-403-096419 (청인마루 송원덕)</div></div>'+ 
-      '<div class="contract-section"><h2>제5조 (공사 기간)</h2><p>실측일: <b>'+esc(contractDateKR(s.survey))+'</b> / 철거일: <b>'+esc(contractDateKR(s.demo))+'</b> / 공사기간: <b>'+esc(s.workText)+'</b>. 현장 여건 및 자재 수급 상황에 따라 일정은 상호 협의하여 변경될 수 있다.</p></div>'+ 
-      '<div class="contract-section"><h2>제6조 (하자보수)</h2><p>수급자는 시공 완료일로부터 법령 및 당사자 간 합의에 따른 하자담보책임기간 동안 시공상의 하자에 대해 보수 책임을 진다. 다만 발주자의 고의·과실, 통상적인 사용 범위를 벗어난 손상, 재누수·침하 등 수급자의 귀책사유가 아닌 원인으로 발생한 하자는 제외한다.</p></div>'+ 
-      '<div class="contract-section"><h2>제7조 (특약사항)</h2><ul><li>세금계산서 또는 현금영수증은 관련 법령과 당사자 협의에 따라 발급한다.</li><li>현장 실측 결과에 따라 최종 수량 및 금액은 조정될 수 있다.</li><li>사전에 고지되지 않은 현장 여건으로 추가 작업이 필요한 경우 별도 비용이 발생할 수 있다.</li><li>자재 발주 이후 취소 시 이미 발주·제작된 자재 비용 및 발생 비용이 청구될 수 있다.</li><li>본 계약서는 당사자 간 합의에 따라 효력이 발생한다.</li></ul><div class="contract-memo" id="contractMemoPreview">'+esc(memo)+'</div></div>'+ 
-      '<div class="contract-foot"><span>계약일자: <b>'+esc(contractDateKR(s.issue))+'</b></span><span>NO. <b>'+esc(s.estNo)+'</b></span></div>'+ 
+      '<div class="contract-head"><div class="contract-title"><h1>공사 도급 계약서</h1><div class="en">Construction Agreement</div></div><div class="contract-brand"><img src="images/logo.png" alt="청인마루 로고" class="brand-logo"><div class="brand-copy"><div class="specialty">마루·벽 시공 전문 · 공식 대리점</div></div></div></div>'+
+      '<p class="contract-intro">발주자 <b>'+esc(s.name)+'</b>와 수급자 <b>청인마루</b>는 아래 표시 공사에 관하여 다음과 같이 계약을 체결한다.</p>'+
+      '<div class="contract-party-grid"><div class="contract-party"><h3>발주자</h3><div class="line"><span class="k">성명</span><span class="v">'+esc(s.name)+'</span></div><div class="line"><span class="k">연락처</span><span class="v">'+esc(s.phone)+'</span></div><div class="line"><span class="k">현장주소</span><span class="v">'+esc(s.site)+'</span></div></div>'+
+      '<div class="contract-party contract-supplier"><h3>수급자</h3><div class="line"><span class="k">상호</span><span class="v company-inline">청인마루 <img class="party-seal-inline'+(sealData?' on':'')+'" '+(sealData?'src="'+sealData+'"':'')+' alt="청인마루 직인"></span></div><div class="line"><span class="k">대표자</span><span class="v">송원덕</span></div><div class="line"><span class="k">사업자번호</span><span class="v">399-23-00326</span></div><div class="line"><span class="k">주소</span><span class="v">인천 연수구 송도미래로 30, E동 1505호</span></div><div class="line"><span class="k">연락처</span><span class="v">032-210-6268</span></div></div></div>'+
+      '<div class="contract-section"><h2>제1조 (공사 개요)</h2><div class="contract-overview"><div class="contract-overview-row"><div class="k">공사/제품</div><div class="v">'+esc(s.items.name)+'</div></div><div class="contract-overview-row"><div class="k">규격</div><div class="v">'+esc(s.items.spec)+'</div></div></div></div>'+
+      '<div class="contract-section" id="contractSurveySection"><h2 id="contractSurveyHeading">제2조 (현장 실측비용)</h2><p>현장 실측비용은 <b>50,000원</b>으로 하되, 실측 이후 본 계약이 체결될 경우 실측비용은 무료로 처리한다. 단, 실측 후 계약이 체결되지 않을 경우 실측비용 50,000원이 발주자에게 청구될 수 있다.</p></div>'+
+      '<div class="contract-section"><h2 id="contractTotalHeading">제3조 (계약금액)</h2><p>본 공사의 총 계약금액은 <span class="contract-money" id="contractTotalText">'+contractMoney(contractTotal)+'</span> (부가가치세 포함)으로 한다.</p></div>'+
+      '<div class="contract-section"><h2 id="contractPaymentHeading">제4조 (대금 지급방법)</h2><p>발주자는 계약 체결과 동시에 계약금을 지급하고, 잔금은 공사 완료 후 협의된 기한 내에 수급자에게 지급한다. 계약금은 자재비 일부 확보 및 전문 시공기사 우선 배정을 위한 선지급금으로 한다.</p><div class="contract-payment-box"><div class="contract-pay-row deposit"><div class="label">계약금 (총액의 <b id="contractPctLabel">'+pct+'</b>%)</div><div class="amount" id="contractDepositAmount"></div></div><div class="contract-pay-row"><div class="label">계약금 입금일</div><div class="amount"><span id="contractPayDateText">'+esc(payDate?contractDateKR(payDate):'-')+'</span></div></div><div class="contract-pay-row"><div class="label">잔금 (공사완료 후)</div><div class="amount" id="contractBalanceAmount"></div></div></div><div class="contract-bank">입금계좌: 우리은행 1005-403-096419 (청인마루 송원덕)</div></div>'+
+      '<div class="contract-section"><h2 id="contractPeriodHeading">제5조 (공사 기간)</h2><p>실측일: <b>'+esc(contractDateKR(s.survey))+'</b> / 철거일: <b>'+esc(contractDateKR(s.demo))+'</b> / 공사기간: <b>'+esc(s.workText)+'</b>. 현장 여건 및 자재 수급 상황에 따라 일정은 상호 협의하여 변경될 수 있다.</p></div>'+
+      '<div class="contract-section"><h2 id="contractDefectHeading">제6조 (하자보수)</h2><p>수급자는 시공 완료일로부터 법령 및 당사자 간 합의에 따른 하자담보책임기간 동안 시공상의 하자에 대해 보수 책임을 진다. 다만 발주자의 고의·과실, 통상적인 사용 범위를 벗어난 손상, 재누수·침하 등 수급자의 귀책사유가 아닌 원인으로 발생한 하자는 제외한다.</p></div>'+
+      '<div class="contract-section"><h2 id="contractSpecialHeading">제7조 (특약사항)</h2><ul><li>세금계산서 또는 현금영수증은 관련 법령과 당사자 협의에 따라 발급한다.</li><li>현장 실측 결과에 따라 최종 수량 및 금액은 조정될 수 있다.</li><li>사전에 고지되지 않은 현장 여건으로 추가 작업이 필요한 경우 별도 비용이 발생할 수 있다.</li><li>자재 발주 이후 취소 시 이미 발주·제작된 자재 비용 및 발생 비용이 청구될 수 있다.</li><li>본 계약서는 당사자 간 합의에 따라 효력이 발생한다.</li></ul><div class="contract-memo" id="contractMemoPreview">'+esc(memo)+'</div></div>'+
+      '<div class="contract-foot"><span>계약일자: <b>'+esc(contractDateKR(s.issue))+'</b></span><span>NO. <b>'+esc(s.estNo)+'</b></span></div>'+
     '</div></div>';
   document.body.appendChild(overlay);
-  var pctInput=document.getElementById('contractPctInput'); if(pctInput)pctInput.addEventListener('input', updateContractAmounts);
+  var pctInput=document.getElementById('contractPctInput'); if(pctInput) pctInput.addEventListener('input', function(){ updateContractAmounts('pct'); });
   var totalInput=document.getElementById('contractTotalInput'); if(totalInput){
-    totalInput.addEventListener('input', function(){ this.value=this.value.replace(/[^0-9]/g,''); updateContractAmounts(); });
-    totalInput.addEventListener('blur', function(){ var n=Number(this.value.replace(/,/g,''))||0; this.value=n.toLocaleString('ko-KR'); });
+    totalInput.addEventListener('input', function(){ this.value=this.value.replace(/[^0-9]/g,''); updateContractAmounts('total'); });
+    totalInput.addEventListener('blur', function(){ var n=Number(this.value.replace(/,/g,''))||0; this.value=n.toLocaleString('ko-KR'); updateContractAmounts('total'); });
+  }
+  var depositInput=document.getElementById('contractDepositInput'); if(depositInput){
+    depositInput.addEventListener('input', function(){ this.value=this.value.replace(/[^0-9]/g,''); updateContractAmounts('deposit'); });
+    depositInput.addEventListener('blur', function(){ var n=contractRound1000(Number(this.value.replace(/,/g,''))||0); this.value=n.toLocaleString('ko-KR'); updateContractAmounts('deposit'); });
   }
   var payInput=document.getElementById('contractPayDateInput'); if(payInput)payInput.addEventListener('input',syncContractExtras);
   var memoInput=document.getElementById('contractMemoInput'); if(memoInput)memoInput.addEventListener('input',syncContractExtras);
-  updateContractAmounts(); syncContractExtras();
+  var surveyToggle=document.getElementById('contractSurveyToggle'); if(surveyToggle)surveyToggle.addEventListener('change',syncContractExtras);
+  updateContractAmounts('init'); syncContractExtras();
   overlay.addEventListener('click',function(e){if(e.target===overlay)closeContractEditor();});
 }
-function updateContractAmounts(){
-  var pctInput=document.getElementById('contractPctInput'), totalInput=document.getElementById('contractTotalInput');
-  if(!pctInput||!totalInput)return;
-  var pct=Math.max(0,Math.min(100,Number(pctInput.value)||0));
+function updateContractAmounts(source){
+  var pctInput=document.getElementById('contractPctInput'), totalInput=document.getElementById('contractTotalInput'), depositInput=document.getElementById('contractDepositInput');
+  if(!pctInput||!totalInput||!depositInput)return;
   var total=Math.max(0,Number(String(totalInput.value).replace(/,/g,''))||0);
-  var deposit=contractRound1000(total*pct/100), balance=Math.max(0,total-deposit);
+  var pct=Math.max(0,Math.min(100,Number(pctInput.value)||0));
+  var deposit=contractRound1000(Number(String(depositInput.value).replace(/,/g,''))||0);
+  if(source==='pct' || source==='total' || source==='init'){
+    deposit=contractRound1000(total*pct/100);
+    depositInput.value=deposit.toLocaleString('ko-KR');
+  }else if(source==='deposit'){
+    deposit=Math.min(total,deposit);
+    pct=total>0?Math.round((deposit/total*100)*10)/10:0;
+    pctInput.value=(Math.round(pct*10)/10).toString().replace(/\.0$/,'');
+  }
+  var balance=Math.max(0,total-deposit);
   var p=document.getElementById('contractPctLabel'),d=document.getElementById('contractDepositAmount'),b=document.getElementById('contractBalanceAmount'),tt=document.getElementById('contractTotalText');
-  if(p)p.textContent=pct; if(d)d.textContent=contractMoney(deposit); if(b)b.textContent=contractMoney(balance); if(tt)tt.textContent=contractMoney(total);
-  var pctHidden=document.getElementById('trContractDepositPct'), totalHidden=document.getElementById('trContractTotal');
-  if(pctHidden)pctHidden.value=pct; if(totalHidden)totalHidden.value=total||'';
+  if(p)p.textContent=(Math.round(pct*10)/10).toString().replace(/\.0$/,'');
+  if(d)d.textContent=contractMoney(deposit);
+  if(b)b.textContent=contractMoney(balance);
+  if(tt)tt.textContent=contractMoney(total);
+  var pctHidden=document.getElementById('trContractDepositPct'), totalHidden=document.getElementById('trContractTotal'), depositHidden=document.getElementById('trContractDepositAmountInputHidden');
+  if(pctHidden)pctHidden.value=pct;
+  if(totalHidden)totalHidden.value=total||'';
+  if(depositHidden)depositHidden.value=deposit||'';
   try{saveTradeLocal();}catch(e){}
 }
+function syncContractClauseNumbers(){
+  var survey=document.getElementById('contractSurveyToggle');
+  var include=!survey || survey.checked;
+  var set=function(id,txt){var el=document.getElementById(id);if(el)el.textContent=txt;};
+  set('contractSurveyHeading','제2조 (현장 실측비용)');
+  set('contractTotalHeading',(include?'제3조':'제2조')+' (계약금액)');
+  set('contractPaymentHeading',(include?'제4조':'제3조')+' (대금 지급방법)');
+  set('contractPeriodHeading',(include?'제5조':'제4조')+' (공사 기간)');
+  set('contractDefectHeading',(include?'제6조':'제5조')+' (하자보수)');
+  set('contractSpecialHeading',(include?'제7조':'제6조')+' (특약사항)');
+}
 function syncContractExtras(){
-  var pay=document.getElementById('contractPayDateInput'), memo=document.getElementById('contractMemoInput');
-  var payHidden=document.getElementById('trContractPayDate'), memoHidden=document.getElementById('trContractMemo');
-  if(payHidden&&pay)payHidden.value=pay.value||''; if(memoHidden&&memo)memoHidden.value=memo.value||'';
+  var pay=document.getElementById('contractPayDateInput'), memo=document.getElementById('contractMemoInput'), survey=document.getElementById('contractSurveyToggle');
+  var payHidden=document.getElementById('trContractPayDate'), memoHidden=document.getElementById('trContractMemo'), surveyHidden=document.getElementById('trContractSurveyClause');
+  if(payHidden&&pay)payHidden.value=pay.value||'';
+  if(memoHidden&&memo)memoHidden.value=memo.value||'';
+  if(surveyHidden&&survey)surveyHidden.value=survey.checked?'1':'0';
   var payText=document.getElementById('contractPayDateText'); if(payText&&pay)payText.textContent=pay.value?contractDateKR(pay.value):'-';
   var memoPreview=document.getElementById('contractMemoPreview'); if(memoPreview&&memo)memoPreview.textContent=memo.value||'';
+  var surveySection=document.getElementById('contractSurveySection'); if(surveySection&&survey)surveySection.style.display=survey.checked?'block':'none';
+  syncContractClauseNumbers();
   try{saveTradeLocal();}catch(e){}
 }
 function closeContractEditor(){var el=document.getElementById('contractOverlay');if(el)el.remove();}
@@ -5096,7 +5221,7 @@ async function captureContractCanvas(){
   try{return await html2canvas(sheet,{scale:2,backgroundColor:'#ffffff',useCORS:true});}finally{sheet.classList.remove('capture-contract');}
 }
 async function saveContractPdf(){
-  try{if(!window.jspdf||!window.jspdf.jsPDF)throw new Error('PDF 기능을 불러오지 못했습니다.');var c=await captureContractCanvas();var pdf=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});var w=198,h=w*c.height/c.width;if(h>285){h=285;w=h*c.width/c.height;}pdf.addImage(c.toDataURL('image/jpeg',.95),'JPEG',(210-w)/2,(297-h)/2,w,h,undefined,'FAST');pdf.save('청인마루_공사도급계약서.pdf');}catch(e){console.error(e);alert('계약서 PDF 저장 중 오류가 발생했습니다: '+e.message);}
+  try{if(!window.jspdf||!window.jspdf.jsPDF)throw new Error('PDF 기능을 불러오지 못했습니다.');var c=await captureContractCanvas();var pdf=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});var w=198,h=w*c.height/c.width;if(h>285){h=285;w=h*c.width/c.height;}pdf.addImage(c.toDataURL('image/png'),'PNG',(210-w)/2,(297-h)/2,w,h,undefined,'FAST');pdf.save('청인마루_공사도급계약서.pdf');}catch(e){console.error(e);alert('계약서 PDF 저장 중 오류가 발생했습니다: '+e.message);}
 }
 async function saveContractImage(){
   try{var c=await captureContractCanvas();var a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='청인마루_공사도급계약서.png';document.body.appendChild(a);a.click();a.remove();}catch(e){console.error(e);alert('계약서 이미지 저장 중 오류가 발생했습니다: '+e.message);}

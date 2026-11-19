@@ -45,6 +45,11 @@
   .backup-history{ align-items:baseline; }
   .backup-history summary{ cursor:pointer; font-size:14px; font-weight:700; color:var(--brand); }
   .backup-history [role="status"]{ color:var(--ink-soft); font-size:12px; }
+  .backup-history details > button{ margin-top:8px; }
+  #weeklyRestoreDialog{ max-width:calc(100% - 32px); color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:20px; }
+  #weeklyRestoreDialog::backdrop{ background:rgba(20,24,33,.4); }
+  #weeklyRestoreDialog form{ display:grid; gap:14px; }
+  #weeklyRestoreChoice{ max-width:100%; min-width:0; padding:8px; font:inherit; }
   .backup-files{ display:grid; gap:7px; max-height:200px; overflow:auto; margin-top:8px; font-size:13px; }
   .backup-files a{ color:var(--brand); overflow-wrap:anywhere; padding:4px 0; }
   .toolbar .btns{ display:flex; gap:7px; flex-wrap:wrap; align-items:center; }
@@ -2519,7 +2524,7 @@ table.items .ti-wrap[data-field="spec"]:empty::before{
 
 <div class="toolbar">
   <div class="toolbar-row">
-    <div class="hint">견적을 저장하면 공유 목록에 반영되고 JSON 백업 파일도 자동으로 생성됩니다.</div>
+    <div class="hint">견적을 저장할 때마다 이 기기에 백업합니다. 주간 백업 파일은 7일이 지난 뒤 처음 저장할 때 한 번만 다운로드합니다.</div>
     <div class="btns">
       <button class="primary" onclick="manualSave()">💾 견적 저장</button>
       <button class="ghost" onclick="saveAsNewEstimate()">📄 다른 이름으로 저장</button>
@@ -2536,10 +2541,19 @@ table.items .ti-wrap[data-field="spec"]:empty::before{
   <div class="toolbar-row backup-history">
     <details id="automaticBackupPanel" ontoggle="refreshEstimateBackupFiles()">
       <summary>이 기기의 자동 백업</summary>
+      <button type="button" class="ghost" onclick="downloadWeeklyEstimateBackup()">주간 백업 파일 받기</button>
       <div id="automaticBackupList" class="backup-files" aria-live="polite"></div>
     </details>
     <span id="automaticBackupStatus" role="status"></span>
   </div>
+
+  <dialog id="weeklyRestoreDialog" aria-labelledby="weeklyRestoreLabel">
+    <form method="dialog">
+      <label id="weeklyRestoreLabel" for="weeklyRestoreChoice">주간 백업에서 복원할 견적 선택</label>
+      <select id="weeklyRestoreChoice"></select>
+      <div class="btns"><button class="ghost" value="cancel">취소</button><button class="primary" value="open">선택한 견적 열기</button></div>
+    </form>
+  </dialog>
 
   <div class="seal-control-row" id="sealControlRow">
     <div class="seal-control-info">
@@ -4148,18 +4162,35 @@ function backupEstimate(){
 }
 
 /* 이 기기에는 견적별 최신 파일을 보관하고, 다운로드용 파일은 저장 시각으로 구분한다. */
-function accessEstimateBackupFiles(mode, operation){
+var estimateBackupWeek = 7 * 24 * 60 * 60 * 1000;
+function accessEstimateBackupFiles(mode, operation, includeSchedule){
   return new Promise(function(resolve, reject){
-    var open = indexedDB.open('cheonginmaru-estimate-backups', 1);
-    open.onupgradeneeded = function(){ open.result.createObjectStore('files', {keyPath:'id'}); };
+    var open = indexedDB.open('cheonginmaru-estimate-backups', 2);
+    var blocked = false;
+    open.onupgradeneeded = function(event){
+      var db = open.result;
+      if(!db.objectStoreNames.contains('files')) db.createObjectStore('files', {keyPath:'id'});
+      var schedule = db.createObjectStore('schedule');
+      if(event.oldVersion === 1){
+        // 이전 버전은 저장할 때마다 다운로드를 요청했다. 마지막 저장 시각부터 7일을 센다.
+        var cursor = open.transaction.objectStore('files').openCursor();
+        var last = 0;
+        cursor.onsuccess = function(){
+          var row = cursor.result;
+          if(row){ last = Math.max(last, Number(row.value.savedAt) || 0); row.continue(); }
+          else if(last) schedule.put(last + estimateBackupWeek, 'nextDownloadAt');
+        };
+      }
+    };
     open.onerror = function(){ reject(open.error); };
-    open.onblocked = function(){ reject(new Error('blocked')); };
+    open.onblocked = function(){ blocked = true; reject(new Error('blocked')); };
     open.onsuccess = function(){
       var connection = open.result;
+      if(blocked){ connection.close(); return; }
       connection.onversionchange = function(){ connection.close(); };
       try{
-        var tx = connection.transaction('files', mode);
-        var request = operation(tx.objectStore('files'));
+        var tx = connection.transaction(includeSchedule ? ['files','schedule'] : 'files', mode);
+        var request = operation(tx.objectStore('files'), includeSchedule ? tx.objectStore('schedule') : null);
         tx.oncomplete = function(){ connection.close(); resolve(request.result); };
         tx.onabort = function(){ connection.close(); reject(tx.error || new Error('aborted')); };
       }catch(error){ connection.close(); reject(error); }
@@ -4203,15 +4234,42 @@ async function saveEstimateWithBackup(ref, payload){
   if(!file){ status.textContent = '자동 백업 파일 생성에 실패했습니다. 견적 백업을 눌러 주세요.'; return; }
   file.id = meta.docType + '/' + meta.estimateId;
   file.customer = meta.customerName || '';
-  var requested = false;
-  try{ downloadEstimateBackup(file); requested = true; }
-  catch(error){ console.warn('자동 다운로드 요청 실패', error); }
+  var due = false;
   try{
-    await accessEstimateBackupFiles('readwrite', function(store){ return store.put(file); });
-    status.textContent = requested ? '이 기기에 자동 백업됨 · 파일 다운로드 요청됨' : '이 기기에 자동 백업됨 · 아래 목록에서 파일을 받을 수 있습니다.';
-    if(document.getElementById('automaticBackupPanel').open) refreshEstimateBackupFiles();
+    await accessEstimateBackupFiles('readwrite', function(files, schedule){
+      files.put(file);
+      var request = schedule.get('nextDownloadAt');
+      request.onsuccess = function(){
+        var now = Date.now();
+        due = Number.isFinite(request.result) && now >= request.result;
+        if(due || !Number.isFinite(request.result)) schedule.put(now + estimateBackupWeek, 'nextDownloadAt');
+      };
+      return request;
+    }, true);
   }catch(error){
-    status.textContent = requested ? '기기 내 백업 보관에 실패했습니다. 다운로드 목록에서 파일을 확인해 주세요.' : '자동 백업에 실패했습니다. 견적 백업을 눌러 주세요.';
+    status.textContent = '기기 내 백업에 실패했습니다. 견적 백업을 눌러 파일을 받아 주세요.';
+    return;
+  }
+  status.textContent = '이 기기에 자동 백업됨';
+  if(document.getElementById('automaticBackupPanel').open) refreshEstimateBackupFiles();
+  if(due) await downloadWeeklyEstimateBackup();
+}
+async function downloadWeeklyEstimateBackup(){
+  var status = document.getElementById('automaticBackupStatus');
+  try{
+    var files = await accessEstimateBackupFiles('readonly', function(store){ return store.getAll(); });
+    if(!files.length){ status.textContent = '이 기기에 백업된 견적이 없습니다.'; return; }
+    files.sort(function(a,b){ return b.savedAt - a.savedAt; });
+    var now = new Date();
+    var entries = await Promise.all(files.map(async function(file){ return JSON.parse(await file.blob.text()); }));
+    var archive = {format:'cheonginmaru-weekly-estimates', version:1, savedAt:now.toISOString(), estimates:entries};
+    downloadEstimateBackup({
+      filename:'청인마루_주간견적백업_' + todayISOGlobal() + '.json',
+      blob:new Blob([JSON.stringify(archive)], {type:'application/json;charset=utf-8'})
+    });
+    status.textContent = '주간 백업 ' + files.length + '건 · 파일 다운로드 요청됨';
+  }catch(error){
+    status.textContent = '주간 백업 다운로드를 시작하지 못했습니다. 이 기기의 자동 백업에서 다시 받을 수 있습니다.';
   }
 }
 function safeBackupNote(html){
@@ -4229,8 +4287,7 @@ function safeBackupNote(html){
   });
   return template.innerHTML;
 }
-function readEstimateBackup(text){
-  var file = JSON.parse(text);
+function readEstimateBackup(file){
   function requireValue(ok){ if(!ok) throw new Error('backup format'); }
   requireValue(file && file.format === 'cheonginmaru-estimate' && file.version === 1 && ['leak','trade'].includes(file.type));
   var data = file.estimate, trade = file.type === 'trade';
@@ -4280,12 +4337,43 @@ function readEstimateBackup(text){
   requireValue(trade || items.length);
   return {type:file.type, estimate:{docData:doc, items:items, meta:meta}};
 }
+function chooseWeeklyEstimate(archive){
+  if(archive.version !== 1 || !Array.isArray(archive.estimates) || !archive.estimates.length) throw new Error('weekly backup format');
+  var entries = archive.estimates;
+  if(entries.length === 1) return entries[0];
+  var dialog = document.getElementById('weeklyRestoreDialog');
+  var select = document.getElementById('weeklyRestoreChoice');
+  select.replaceChildren();
+  entries.forEach(function(entry, index){
+    var trade = entry.type === 'trade';
+    var doc = entry.estimate.docData;
+    var number = doc[trade ? 'tr-est-no' : 'est-no'];
+    var customer = doc[trade ? 'tr-customer' : 'est-customer'];
+    var address = doc[trade ? 'tr-site' : 'est-address'];
+    var label = [trade ? '일반' : '누수복구', customer, number, address].filter(Boolean).join(' · ');
+    select.add(new Option(label, String(index)));
+  });
+  dialog.returnValue = 'cancel';
+  dialog.showModal();
+  return new Promise(function(resolve){
+    dialog.addEventListener('close', function(){
+      resolve(dialog.returnValue === 'open' ? entries[Number(select.value)] : null);
+    }, {once:true});
+  });
+}
 async function importEstimateBackup(input){
   var file = input.files[0];
   input.value = '';
   if(!file) return;
   var backup;
-  try{ backup = readEstimateBackup(await file.text()); }
+  try{
+    var entry = JSON.parse(await file.text());
+    if(entry && entry.format === 'cheonginmaru-weekly-estimates'){
+      entry = await chooseWeeklyEstimate(entry);
+      if(!entry) return;
+    }
+    backup = readEstimateBackup(entry);
+  }
   catch(error){ alert('견적 백업 파일을 읽지 못했습니다. 청인마루에서 내려받은 JSON 파일을 선택해 주세요.'); return; }
   if(!confirm('현재 화면을 나가 백업한 견적을 새 초안으로 열까요?')) return;
   var type = backup.type, id = type + '-' + crypto.randomUUID();

@@ -42,6 +42,11 @@
     box-shadow:0 6px 20px rgba(23,52,95,.045);
   }
   .toolbar .hint{ flex:1 1 230px; font-size:12.5px; color:#7b8490; line-height:1.55; padding:1px 2px; }
+  .backup-history{ align-items:baseline; }
+  .backup-history summary{ cursor:pointer; font-size:14px; font-weight:700; color:var(--brand); }
+  .backup-history [role="status"]{ color:var(--ink-soft); font-size:12px; }
+  .backup-files{ display:grid; gap:7px; max-height:200px; overflow:auto; margin-top:8px; font-size:13px; }
+  .backup-files a{ color:var(--brand); overflow-wrap:anywhere; padding:4px 0; }
   .toolbar .btns{ display:flex; gap:7px; flex-wrap:wrap; align-items:center; }
   .toolbar .btns button, .toolbar .btns a.btn{ flex-shrink:0; }
   .toolbar button, .toolbar a.btn{
@@ -2514,7 +2519,7 @@ table.items .ti-wrap[data-field="spec"]:empty::before{
 
 <div class="toolbar">
   <div class="toolbar-row">
-    <div class="hint">✏️ 내용을 수정한 뒤 견적 저장을 누르면 공유 목록에 반영됩니다. 새 견적은 별도 버튼으로 시작하세요.</div>
+    <div class="hint">견적을 저장하면 공유 목록에 반영되고 JSON 백업 파일도 자동으로 생성됩니다.</div>
     <div class="btns">
       <button class="primary" onclick="manualSave()">💾 견적 저장</button>
       <button class="ghost" onclick="saveAsNewEstimate()">📄 다른 이름으로 저장</button>
@@ -2526,6 +2531,14 @@ table.items .ti-wrap[data-field="spec"]:empty::before{
       <input id="estimateBackupInput" type="file" accept=".json,application/json" hidden onchange="importEstimateBackup(this)">
       <button class="ghost contract-open-btn" onclick="openContractEditor()">📝 공사도급 계약서</button>
     </div>
+  </div>
+
+  <div class="toolbar-row backup-history">
+    <details id="automaticBackupPanel" ontoggle="refreshEstimateBackupFiles()">
+      <summary>이 기기의 자동 백업</summary>
+      <div id="automaticBackupList" class="backup-files" aria-live="polite"></div>
+    </details>
+    <span id="automaticBackupStatus" role="status"></span>
   </div>
 
   <div class="seal-control-row" id="sealControlRow">
@@ -3478,7 +3491,7 @@ function saveLeak(){
     var meta = getLeakMeta(); meta.estimateId = targetId;
     var payload = { meta: meta, docData: collectLeakDocData(), items: leakGroups };
     setLeakStatus('저장 중...', '');
-    return db.ref('leak_estimates/' + targetId).set(payload);
+    return saveEstimateWithBackup(db.ref('leak_estimates/' + targetId), payload);
   }).then(function(){
     if(wasNew) finishNewEstimate('leak', targetId);
     setLeakStatus('✔ 저장됨 (' + nowStr() + ')', 'ok');
@@ -4039,7 +4052,7 @@ function saveTrade(){
         payload.meta.changeHistory = history;
 
         setTradeStatus('저장 중...', '');
-        return ref.set(payload).then(function(){
+        return saveEstimateWithBackup(ref, payload).then(function(){
           if(wasNew) finishNewEstimate('trade', targetId);
           return autoRegisterTradeClientFromPayload(payload).catch(function(e){ console.warn('거래처 자동등록 실패',e); return {created:false,error:true}; });
         });
@@ -4108,19 +4121,98 @@ function restoredDraftId(type){
   var id = new URLSearchParams(location.search).get('draft') || '';
   return id.startsWith(type + '-') && /^(trade|leak)-[a-z0-9-]+$/i.test(id) ? id : '';
 }
-function backupEstimate(){
-  var type = currentTab;
-  var draft = estimateDraft(type);
+function makeEstimateBackupFile(type, draft, automatic){
+  var now = new Date();
   var no = draft.docData[type === 'trade' ? 'tr-est-no' : 'est-no'] || todayISOGlobal();
-  var data = {format:'cheonginmaru-estimate', version:1, type:type, savedAt:new Date().toISOString(), estimate:draft};
-  var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json;charset=utf-8'});
+  var safeNo = no.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_');
+  var stamp = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()) + '_' +
+    pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds()) + '_' + String(now.getMilliseconds()).padStart(3,'0');
+  var filename = '청인마루_' + (type === 'trade' ? '일반견적_' : '누수복구견적_') + safeNo +
+    (automatic ? '_' + stamp + '_자동백업' : '_백업') + '.json';
+  var data = {format:'cheonginmaru-estimate', version:1, type:type, savedAt:now.toISOString(), estimate:draft};
+  return {filename:filename, savedAt:now.getTime(), blob:new Blob([JSON.stringify(data, null, 2)], {type:'application/json;charset=utf-8'})};
+}
+function downloadEstimateBackup(file){
   var link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = '청인마루_' + (type === 'trade' ? '일반견적_' : '누수복구견적_') + no.replace(/[\\/:*?"<>|\u0000-\u001f]/g,'_') + '_백업.json';
+  link.href = URL.createObjectURL(file.blob);
+  link.download = file.filename;
   document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(function(){ URL.revokeObjectURL(link.href); }, 60000);
+  try{ link.click(); }
+  finally{
+    link.remove();
+    setTimeout(function(){ URL.revokeObjectURL(link.href); }, 60000);
+  }
+}
+function backupEstimate(){
+  downloadEstimateBackup(makeEstimateBackupFile(currentTab, estimateDraft(currentTab), false));
+}
+
+/* 이 기기에는 견적별 최신 파일을 보관하고, 다운로드용 파일은 저장 시각으로 구분한다. */
+function accessEstimateBackupFiles(mode, operation){
+  return new Promise(function(resolve, reject){
+    var open = indexedDB.open('cheonginmaru-estimate-backups', 1);
+    open.onupgradeneeded = function(){ open.result.createObjectStore('files', {keyPath:'id'}); };
+    open.onerror = function(){ reject(open.error); };
+    open.onblocked = function(){ reject(new Error('blocked')); };
+    open.onsuccess = function(){
+      var connection = open.result;
+      connection.onversionchange = function(){ connection.close(); };
+      try{
+        var tx = connection.transaction('files', mode);
+        var request = operation(tx.objectStore('files'));
+        tx.oncomplete = function(){ connection.close(); resolve(request.result); };
+        tx.onabort = function(){ connection.close(); reject(tx.error || new Error('aborted')); };
+      }catch(error){ connection.close(); reject(error); }
+    };
+  });
+}
+var backupListRevision = 0;
+async function refreshEstimateBackupFiles(){
+  var panel = document.getElementById('automaticBackupPanel');
+  var list = document.getElementById('automaticBackupList');
+  var revision = ++backupListRevision;
+  list.querySelectorAll('a').forEach(function(a){ URL.revokeObjectURL(a.href); });
+  list.replaceChildren();
+  if(!panel.open) return;
+  try{
+    var files = await accessEstimateBackupFiles('readonly', function(store){ return store.getAll(); });
+    if(revision !== backupListRevision) return;
+    files.sort(function(a,b){ return b.savedAt - a.savedAt; });
+    files.forEach(function(file){
+      var link = document.createElement('a');
+      link.href = URL.createObjectURL(file.blob);
+      link.download = file.filename;
+      link.textContent = (file.customer ? file.customer + ' · ' : '') + file.filename;
+      list.appendChild(link);
+    });
+    if(!files.length) list.textContent = '아직 이 기기에 자동 백업한 견적이 없습니다.';
+  }catch(error){
+    if(revision === backupListRevision) list.textContent = '이 브라우저에서 백업 목록을 열 수 없습니다. 다운로드한 파일을 확인해 주세요.';
+  }
+}
+async function saveEstimateWithBackup(ref, payload){
+  var meta = payload.meta;
+  var draftMeta = {manager:meta.manager, status:meta.status};
+  if(meta.docType === 'leak') draftMeta.clientChannel = meta.clientChannel;
+  var draft = {docData:payload.docData, items:payload.items, meta:draftMeta};
+  var file;
+  try{ file = makeEstimateBackupFile(meta.docType, draft, true); }
+  catch(error){ console.warn('자동 백업 파일 생성 실패',error); }
+  await ref.set(payload);
+  var status = document.getElementById('automaticBackupStatus');
+  if(!file){ status.textContent = '자동 백업 파일 생성에 실패했습니다. 견적 백업을 눌러 주세요.'; return; }
+  file.id = meta.docType + '/' + meta.estimateId;
+  file.customer = meta.customerName || '';
+  var requested = false;
+  try{ downloadEstimateBackup(file); requested = true; }
+  catch(error){ console.warn('자동 다운로드 요청 실패', error); }
+  try{
+    await accessEstimateBackupFiles('readwrite', function(store){ return store.put(file); });
+    status.textContent = requested ? '이 기기에 자동 백업됨 · 파일 다운로드 요청됨' : '이 기기에 자동 백업됨 · 아래 목록에서 파일을 받을 수 있습니다.';
+    if(document.getElementById('automaticBackupPanel').open) refreshEstimateBackupFiles();
+  }catch(error){
+    status.textContent = requested ? '기기 내 백업 보관에 실패했습니다. 다운로드 목록에서 파일을 확인해 주세요.' : '자동 백업에 실패했습니다. 견적 백업을 눌러 주세요.';
+  }
 }
 function safeBackupNote(html){
   var template = document.createElement('template');
@@ -4213,53 +4305,47 @@ function manualSave(){
     if(currentTab==='leak') saveLeakLocal(); else saveTradeLocal();
     return;
   }
-  if(currentTab==='leak') setLeakStatus('로그인 확인 중...',''); else setTradeStatus('로그인 확인 중...','');
+  var type = currentTab;
+  if(savingEstimates[type]) return;
+  if(type==='leak') setLeakStatus('로그인 확인 중...',''); else setTradeStatus('로그인 확인 중...','');
   authReadyPromise.then(function(){
-    if(currentTab==='leak') saveLeak(); else saveTrade();
+    if(type==='leak') saveLeak(); else saveTrade();
   });
 }
-function saveAsNewEstimate(){
+async function saveAsNewEstimate(){
+  var type = currentTab, leak = type === 'leak';
+  if(savingEstimates[type]) return;
   clearError();
   if(!firebaseReady || !db){
     showError('Firebase 설정이 필요합니다. 다른 이름으로 저장하려면 서버 연결이 필요합니다.');
     return;
   }
-  var label = currentTab==='leak' ? '누수복구 견적' : '일반 견적';
+  var label = leak ? '누수복구 견적' : '일반 견적';
   if(!confirm('현재 '+label+' 내용을 새 견적으로 저장할까요?\n기존 견적은 그대로 유지됩니다.')) return;
-
-  authReadyPromise.then(function(){
-    if(currentTab==='leak'){
-      var oldId = leakEstimateId;
-      leakEstimateId = null;
-      return allocateNextEstimateNo('leak').then(function(){
-        leakEstimateId = genId('EST');
-        var meta = getLeakMeta(); meta.estimateId = leakEstimateId;
-        var payload = { meta:meta, docData:collectLeakDocData(), items:leakGroups };
-        return db.ref('leak_estimates/'+leakEstimateId).set(payload);
-      }).then(function(){
-        finishNewEstimate('leak', leakEstimateId);
-        saveLeakLocal(); setLeakStatus('✔ 다른 이름으로 저장됨 ('+nowStr()+')','ok');
-      }).catch(function(err){ leakEstimateId=oldId; throw err; });
+  savingEstimates[type] = true;
+  try{
+    await authReadyPromise;
+    await allocateNextEstimateNo(type);
+    var id = genId(leak ? 'EST' : 'TR');
+    var meta = leak ? getLeakMeta() : getTradeMeta();
+    meta.estimateId = id;
+    var payload = {meta:meta, docData:leak ? collectLeakDocData() : collectTradeDocData(), items:leak ? leakGroups : tradeItems};
+    await saveEstimateWithBackup(db.ref((leak ? 'leak_estimates/' : 'b2b_estimates/') + id), payload);
+    finishNewEstimate(type, id);
+    if(leak){
+      saveLeakLocal();
+      setLeakStatus('✔ 다른 이름으로 저장됨 ('+nowStr()+')', 'ok');
     }else{
-      var oldTradeId = tradeEstimateId;
-      tradeEstimateId = null;
-      var payload2;
-      return allocateNextEstimateNo('trade').then(function(){
-        tradeEstimateId = genId('TR');
-        var meta2 = getTradeMeta(); meta2.estimateId = tradeEstimateId;
-        payload2 = { meta:meta2, docData:collectTradeDocData(), items:tradeItems };
-        return db.ref('b2b_estimates/'+tradeEstimateId).set(payload2);
-      }).then(function(){
-        return autoRegisterTradeClientFromPayload(payload2).catch(function(e){console.warn('거래처 자동등록 실패',e);return {created:false};});
-      }).then(function(reg){
-        finishNewEstimate('trade', tradeEstimateId);
-        saveTradeLocal(); clearRecipientPriceAlert(); setTradeStatus(reg&&reg.created?'✔ 다른 이름으로 저장됨 · 신규 거래처 자동 등록 ('+nowStr()+')':'✔ 다른 이름으로 저장됨 ('+nowStr()+')','ok'); loadTradeArchive();
-      }).catch(function(err){ tradeEstimateId=oldTradeId; throw err; });
+      var reg = await autoRegisterTradeClientFromPayload(payload).catch(function(e){ console.warn('거래처 자동등록 실패', e); return {created:false}; });
+      saveTradeLocal();
+      clearRecipientPriceAlert();
+      setTradeStatus(reg.created ? '✔ 다른 이름으로 저장됨 · 신규 거래처 자동 등록 ('+nowStr()+')' : '✔ 다른 이름으로 저장됨 ('+nowStr()+')', 'ok');
+      loadTradeArchive();
     }
-  }).catch(function(err){
+  }catch(err){
     console.error(err);
     showError('다른 이름으로 저장 실패: '+(err&&err.message?err.message:'권한/네트워크 오류'));
-  });
+  }finally{ savingEstimates[type] = false; }
 }
 window.saveAsNewEstimate=saveAsNewEstimate;
 

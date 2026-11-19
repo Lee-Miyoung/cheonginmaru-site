@@ -77,7 +77,6 @@
   .sheet{ max-width:860px; margin:0 auto 28px; background:var(--paper); color:#18202b; box-shadow:0 14px 36px rgba(23,52,95,.10); border:1px solid #e3e7ed; border-radius:10px; padding:46px 48px 40px; }
 
   .brand-row{ position:relative; display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--brand); padding-bottom:12px; margin-bottom:18px; }
-  .brand-row:after{ content:''; position:absolute; left:0; bottom:-2px; width:78px; height:2px; background:var(--wood); }
   .brand-logo-row{ display:flex; align-items:center; gap:12px; }
   .brand-logo-img{ height:40px; width:auto; max-width:160px; object-fit:contain; display:block; }
   .brand-name{ font-size:16px; font-weight:900; color:var(--brand); letter-spacing:-.35px; }
@@ -818,7 +817,6 @@
     padding-bottom:12px !important;
     border-bottom:1.5px solid #17345f !important;
   }
-  .image-export .brand-row:after{ width:82px !important; height:2.5px !important; bottom:-2px !important; }
   .image-export .brand-logo-img{ height:42px !important; }
   .image-export .brand-name{ font-size:16px !important; }
   .image-export .brand-tag{ font-size:10.8px !important; }
@@ -847,7 +845,7 @@
     font-size:11.8px !important;
     font-weight:800 !important;
   }
-  .image-export td.fillme{ background:#fbf7ee !important; box-shadow:inset 3px 0 0 #d6b77f !important; }
+  .image-export td.fillme{ background:#fff !important; box-shadow:none !important; }
   .image-export .supplier-strip{
     margin-bottom:13px !important;
     border-color:#dde4ec !important;
@@ -946,7 +944,6 @@
       padding-bottom:5px !important;
       border-bottom:1.2px solid #17345f !important;
     }
-    #tabTrade .brand-row:after{ width:28mm !important; height:1.6px !important; bottom:-1.5px !important; }
     #tabTrade .brand-logo-img{ height:10.5mm !important; max-width:38mm !important; }
     #tabTrade .brand-name{ font-size:14.5px !important; }
     #tabTrade .brand-tag{ font-size:9.8px !important; }
@@ -977,7 +974,6 @@
       font-size:10.3px !important;
       font-weight:800 !important;
     }
-    #tabTrade td.fillme{ background:#fbf7ee !important; box-shadow:inset 2.5px 0 0 #d7b97f !important; }
 
     #tabTrade .supplier-strip{
       margin-bottom:6px !important;
@@ -1219,7 +1215,7 @@
   #tabTrade table.infogrid{ border-color:#d9d7d2 !important; }
   #tabTrade table.infogrid td{ border-color:#e3e0da !important; background:#fff !important; color:#262b31 !important; }
   #tabTrade table.infogrid td.lbl{ background:#f5f4f1 !important; color:#3d4857 !important; }
-  #tabTrade td.fillme{ background:#fbf6e9 !important; box-shadow:inset 2.5px 0 0 #cfae74 !important; }
+  #tabTrade td.fillme, #tabLeak td.fillme{ background:#fff !important; box-shadow:none !important; }
 
   #tabTrade .supplier-strip{ background:#fff !important; border-color:#ddd9d2 !important; }
   #tabTrade .supplier-strip .k{ background:#f5f4f1 !important; color:#4c5561 !important; }
@@ -2525,6 +2521,9 @@ table.items .ti-wrap[data-field="spec"]:empty::before{
       <button class="ghost" onclick="startNewEstimate()">＋ 새 견적</button>
       <button class="primary" onclick="printEstimate()">📄 PDF로 저장</button>
       <button class="ghost" onclick="saveAsImage()">🖼️ 이미지로 저장</button>
+      <button type="button" class="ghost" onclick="backupEstimate()">견적 백업</button>
+      <button type="button" class="ghost" onclick="document.getElementById('estimateBackupInput').click()">백업 불러오기</button>
+      <input id="estimateBackupInput" type="file" accept=".json,application/json" hidden onchange="importEstimateBackup(this)">
       <button class="ghost contract-open-btn" onclick="openContractEditor()">📝 공사도급 계약서</button>
     </div>
   </div>
@@ -3362,13 +3361,14 @@ function applyLeakDocData(data){
   ensureEstimateNo('leak', false);
   recalcAll();
 }
-function leakLocalKey(){ return 'wd-doc-v4-leak-' + (leakEstimateId || 'draft'); }
-function saveLeakLocal(){ try{ localStorage.setItem(leakLocalKey(), JSON.stringify({ docData: collectLeakDocData(), items: leakGroups })); }catch(e){} }
+function leakLocalKey(){ return 'wd-doc-v4-leak-' + (leakEstimateId || restoredDraftId('leak') || 'draft'); }
+function saveLeakLocal(){ try{ localStorage.setItem(leakLocalKey(), JSON.stringify(estimateDraft('leak'))); }catch(e){} }
 function loadLeakLocal(){
   try{
     var raw = localStorage.getItem(leakLocalKey());
     if(!raw) return false;
     var parsed = JSON.parse(raw);
+    applyDraftMeta('leak', parsed.meta);
     var docData = parsed.docData || parsed; // 이전 형식과 호환
     leakGroups = parsed.items || defaultLeakGroups();
     applyLeakDocData(docData);
@@ -3412,7 +3412,8 @@ function ensureEstimateNo(which, force){
   var dateEl = document.querySelector(isTrade ? '#tabTrade [data-k="tr-date"]' : '#tabLeak [data-k="est-date"]');
   if(!noEl || !dateEl) return;
   var current = (noEl.textContent || '').trim();
-  if(force || !current || isLegacyEstimateNo(current, prefix) || isAutoEstimateNo(current, prefix)) noEl.textContent = genDisplayEstimateNo(prefix, dateEl.value, 1);
+  var first = genDisplayEstimateNo(prefix, dateEl.value, 1);
+  if(force || !current || isLegacyEstimateNo(current, prefix) || (isAutoEstimateNo(current, prefix) && current.slice(0,-2) !== first.slice(0,-2))) noEl.textContent = first;
 }
 
 /* 새 견적 저장 시 같은 날짜의 견적번호를 조회해 다음 순번을 부여한다.
@@ -3450,29 +3451,43 @@ function allocateNextEstimateNo(which){
   });
 }
 
+function finishNewEstimate(type, id){
+  if(type === 'trade') tradeEstimateId = id;
+  else leakEstimateId = id;
+  if(currentTab !== type) return;
+  var draft = restoredDraftId(type);
+  var url = new URL(location.href);
+  url.searchParams.set('id', id);
+  url.searchParams.set('tab', type);
+  url.searchParams.delete('draft');
+  history.replaceState({}, '', url);
+  if(draft){
+    try{ localStorage.removeItem('wd-doc-v4-' + type + '-' + draft); }catch(error){}
+  }
+}
+var savingEstimates = {leak:false, trade:false};
 function saveLeak(){
+  if(savingEstimates.leak) return;
+  savingEstimates.leak = true;
   ensureEstimateNo('leak', false);
   var wasNew = !leakEstimateId;
+  var targetId = leakEstimateId || genId('EST');
   var prepareNo = wasNew ? allocateNextEstimateNo('leak') : Promise.resolve();
   setLeakStatus(wasNew ? '견적번호 확인 중...' : '저장 중...', '');
   prepareNo.then(function(){
-    if(!leakEstimateId){
-      leakEstimateId = genId('EST');
-      var url = new URL(window.location.href); url.searchParams.set('id', leakEstimateId); url.searchParams.set('tab','leak');
-      window.history.replaceState({}, '', url);
-    }
-    var meta = getLeakMeta(); meta.estimateId = leakEstimateId;
+    var meta = getLeakMeta(); meta.estimateId = targetId;
     var payload = { meta: meta, docData: collectLeakDocData(), items: leakGroups };
     setLeakStatus('저장 중...', '');
-    return db.ref('leak_estimates/' + leakEstimateId).set(payload);
+    return db.ref('leak_estimates/' + targetId).set(payload);
   }).then(function(){
+    if(wasNew) finishNewEstimate('leak', targetId);
     setLeakStatus('✔ 저장됨 (' + nowStr() + ')', 'ok');
     saveLeakLocal();
   }).catch(function(err){
     console.error(err);
     setLeakStatus('⚠ 저장 실패', 'err');
     showError('누수 견적 저장 실패: ' + (err && err.message ? err.message : '권한/네트워크 오류') + ' — firebaseConfig의 databaseURL이 정확한지, leak_estimates 규칙이 등록됐는지 확인하세요.');
-  });
+  }).finally(function(){ savingEstimates.leak = false; });
 }
 function loadLeakFromFirebase(id){
   setLeakStatus('불러오는 중...', '');
@@ -3650,13 +3665,14 @@ function applyTradeDocData(data){
   syncClientPickerLabel('Trade');
   ensureEstimateNo('trade', false);
 }
-function tradeLocalKey(){ return 'wd-doc-v4-trade-' + (tradeEstimateId || 'draft'); }
-function saveTradeLocal(){ try{ localStorage.setItem(tradeLocalKey(), JSON.stringify({ docData: collectTradeDocData(), items: tradeItems })); }catch(e){} }
+function tradeLocalKey(){ return 'wd-doc-v4-trade-' + (tradeEstimateId || restoredDraftId('trade') || 'draft'); }
+function saveTradeLocal(){ try{ localStorage.setItem(tradeLocalKey(), JSON.stringify(estimateDraft('trade'))); }catch(e){} }
 function loadTradeLocal(){
   try{
     var raw = localStorage.getItem(tradeLocalKey());
     if(!raw) return false;
     var parsed = JSON.parse(raw);
+    applyDraftMeta('trade', parsed.meta);
     applyTradeDocData(parsed.docData || {});
     tradeItems = parsed.items || [];
     ensureMinTradeRows();
@@ -3992,19 +4008,17 @@ function getTradeMeta(){
   };
 }
 function saveTrade(){
+  if(savingEstimates.trade) return;
+  savingEstimates.trade = true;
   ensureEstimateNo('trade', false);
   var wasNew = !tradeEstimateId;
+  var targetId = tradeEstimateId || genId('TR');
   var prepareNo = wasNew ? allocateNextEstimateNo('trade') : Promise.resolve();
   setTradeStatus(wasNew ? '견적번호 확인 중...' : '변경사항 확인 중...', '');
   prepareNo.then(function(){
-    if(!tradeEstimateId){
-      tradeEstimateId = genId('TR');
-      var url = new URL(window.location.href); url.searchParams.set('id', tradeEstimateId); url.searchParams.set('tab','trade');
-      window.history.replaceState({}, '', url);
-    }
-    var meta = getTradeMeta(); meta.estimateId = tradeEstimateId;
+    var meta = getTradeMeta(); meta.estimateId = targetId;
     var payload = { meta: meta, docData: collectTradeDocData(), items: tradeItems };
-    var ref=db.ref('b2b_estimates/' + tradeEstimateId);
+    var ref=db.ref('b2b_estimates/' + targetId);
     return ref.once('value').then(function(snap){
       var oldPayload=snap.val();
       var changes=buildTradeChangeSummary(oldPayload,payload);
@@ -4026,6 +4040,7 @@ function saveTrade(){
 
         setTradeStatus('저장 중...', '');
         return ref.set(payload).then(function(){
+          if(wasNew) finishNewEstimate('trade', targetId);
           return autoRegisterTradeClientFromPayload(payload).catch(function(e){ console.warn('거래처 자동등록 실패',e); return {created:false,error:true}; });
         });
       });
@@ -4040,7 +4055,7 @@ function saveTrade(){
     console.error(err);
     setTradeStatus('⚠ 저장 실패', 'err');
     showError('견적 저장 실패: ' + (err && err.message ? err.message : '권한/네트워크 오류') + ' — b2b_estimates 규칙이 Firebase에 등록되어 있는지 확인하세요.');
-  });
+  }).finally(function(){ savingEstimates.trade = false; });
 }
 
 function loadTradeFromFirebase(id){
@@ -4067,6 +4082,128 @@ function loadTradeFromFirebase(id){
     });
 }
 function setTradeStatus(msg, cls){ var el=document.getElementById('saveStatusTrade'); el.textContent=msg; el.className='save-status'+(cls?(' '+cls):''); }
+
+/* 현재 견적 한 건을 파일로 보관하고 별도의 로컬 초안으로 연다. */
+function draftMeta(type){
+  var suffix = type === 'trade' ? 'Trade' : 'Leak';
+  var meta = {
+    manager: document.getElementById('metaManager' + suffix).value,
+    status: document.getElementById('metaStatus' + suffix).value
+  };
+  if(type === 'leak') meta.clientChannel = document.getElementById('metaClientLeak').value;
+  return meta;
+}
+function applyDraftMeta(type, meta){
+  if(!meta) return;
+  var suffix = type === 'trade' ? 'Trade' : 'Leak';
+  document.getElementById('metaManager' + suffix).value = meta.manager || '';
+  document.getElementById('metaStatus' + suffix).value = meta.status || '작성중';
+  if(type === 'leak') document.getElementById('metaClientLeak').value = meta.clientChannel || '';
+}
+function estimateDraft(type){
+  var trade = type === 'trade';
+  return {docData: trade ? collectTradeDocData() : collectLeakDocData(), items: trade ? tradeItems : leakGroups, meta: draftMeta(type)};
+}
+function restoredDraftId(type){
+  var id = new URLSearchParams(location.search).get('draft') || '';
+  return id.startsWith(type + '-') && /^(trade|leak)-[a-z0-9-]+$/i.test(id) ? id : '';
+}
+function backupEstimate(){
+  var type = currentTab;
+  var draft = estimateDraft(type);
+  var no = draft.docData[type === 'trade' ? 'tr-est-no' : 'est-no'] || todayISOGlobal();
+  var data = {format:'cheonginmaru-estimate', version:1, type:type, savedAt:new Date().toISOString(), estimate:draft};
+  var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json;charset=utf-8'});
+  var link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = '청인마루_' + (type === 'trade' ? '일반견적_' : '누수복구견적_') + no.replace(/[\\/:*?"<>|\u0000-\u001f]/g,'_') + '_백업.json';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(function(){ URL.revokeObjectURL(link.href); }, 60000);
+}
+function safeBackupNote(html){
+  var template = document.createElement('template');
+  template.innerHTML = html;
+  var allowed = new Set(['B','STRONG','I','EM','U','S','BR','DIV','P','SPAN','UL','OL','LI','SUB','SUP']);
+  Array.from(template.content.querySelectorAll('*')).reverse().forEach(function(el){
+    if(el.namespaceURI !== 'http://www.w3.org/1999/xhtml' || ['SCRIPT','STYLE','TEMPLATE'].includes(el.tagName)) el.remove();
+    else if(!allowed.has(el.tagName)) el.replaceWith(...el.childNodes);
+    else {
+      var formatting = ['color','background-color','font-weight','font-style','text-decoration-line','text-align','white-space'].map(function(prop){ return [prop, el.style.getPropertyValue(prop)]; });
+      Array.from(el.attributes).forEach(function(attr){ el.removeAttribute(attr.name); });
+      formatting.forEach(function(pair){ if(pair[1]) el.style.setProperty(pair[0], pair[1]); });
+    }
+  });
+  return template.innerHTML;
+}
+function readEstimateBackup(text){
+  var file = JSON.parse(text);
+  function requireValue(ok){ if(!ok) throw new Error('backup format'); }
+  requireValue(file && file.format === 'cheonginmaru-estimate' && file.version === 1 && ['leak','trade'].includes(file.type));
+  var data = file.estimate, trade = file.type === 'trade';
+  requireValue(data && data.docData && Array.isArray(data.items) && data.meta);
+  var root = document.getElementById(trade ? 'tabTrade' : 'tabLeak');
+  var doc = {};
+  root.querySelectorAll('[data-k]').forEach(function(el){
+    var key = el.dataset.k, value = data.docData[key];
+    requireValue(typeof value === 'string');
+    doc[key] = el.classList.contains('rich-text') ? safeBackupNote(value) : value;
+  });
+  if(!trade){
+    requireValue(['0','1'].includes(data.docData.__pyeong10));
+    doc.__pyeong10 = data.docData.__pyeong10;
+  }
+  var meta = {};
+  (trade ? ['manager','status'] : ['manager','status','clientChannel']).forEach(function(key){
+    requireValue(typeof data.meta[key] === 'string');
+    meta[key] = data.meta[key];
+  });
+  function number(value){
+    requireValue((typeof value === 'string' && value.trim() !== '' || typeof value === 'number') && Number.isFinite(Number(value)));
+    return Number(value);
+  }
+  function item(row){
+    requireValue(row && typeof row === 'object' && !Array.isArray(row));
+    requireValue((trade ? 'name' : 'item') in row || 'qty' in row || 'price' in row);
+    var result = {};
+    (trade ? ['name','spec','unit','note'] : ['item','spec','unit','note']).forEach(function(key){
+      requireValue(row[key] == null || typeof row[key] === 'string');
+      result[key] = row[key] || '';
+    });
+    result.qty = number(row.qty ?? 0);
+    result.price = number(row.price ?? 0);
+    if(trade){
+      result.source = row.source === 'sheet' ? 'sheet' : 'manual';
+      result.baseTradePrice = row.baseTradePrice == null || row.baseTradePrice === '' ? null : number(row.baseTradePrice);
+    }
+    return result;
+  }
+  var keys = new Set();
+  var items = trade ? data.items.map(item) : data.items.map(function(group){
+    requireValue(group && Number.isSafeInteger(group.key) && !keys.has(group.key) && typeof group.name === 'string' && Array.isArray(group.items) && group.items.length);
+    keys.add(group.key);
+    return {key:group.key, name:group.name, items:group.items.map(item)};
+  });
+  requireValue(trade || items.length);
+  return {type:file.type, estimate:{docData:doc, items:items, meta:meta}};
+}
+async function importEstimateBackup(input){
+  var file = input.files[0];
+  input.value = '';
+  if(!file) return;
+  var backup;
+  try{ backup = readEstimateBackup(await file.text()); }
+  catch(error){ alert('견적 백업 파일을 읽지 못했습니다. 청인마루에서 내려받은 JSON 파일을 선택해 주세요.'); return; }
+  if(!confirm('현재 화면을 나가 백업한 견적을 새 초안으로 열까요?')) return;
+  var type = backup.type, id = type + '-' + crypto.randomUUID();
+  try{ localStorage.setItem('wd-doc-v4-' + type + '-' + id, JSON.stringify(backup.estimate)); }
+  catch(error){ alert('이 기기에 복원할 저장 공간이 부족하거나 브라우저 저장이 차단되어 있습니다.'); return; }
+  var url = new URL(location.pathname, location.origin);
+  url.searchParams.set('tab', type);
+  url.searchParams.set('draft', id);
+  location.assign(url.href);
+}
 
 /* ===================== 공통: 저장/새견적/초기화 ===================== */
 function manualSave(){
@@ -4100,7 +4237,7 @@ function saveAsNewEstimate(){
         var payload = { meta:meta, docData:collectLeakDocData(), items:leakGroups };
         return db.ref('leak_estimates/'+leakEstimateId).set(payload);
       }).then(function(){
-        var url=new URL(window.location.href); url.searchParams.set('id',leakEstimateId); url.searchParams.set('tab','leak'); window.history.replaceState({},'',url);
+        finishNewEstimate('leak', leakEstimateId);
         saveLeakLocal(); setLeakStatus('✔ 다른 이름으로 저장됨 ('+nowStr()+')','ok');
       }).catch(function(err){ leakEstimateId=oldId; throw err; });
     }else{
@@ -4115,7 +4252,7 @@ function saveAsNewEstimate(){
       }).then(function(){
         return autoRegisterTradeClientFromPayload(payload2).catch(function(e){console.warn('거래처 자동등록 실패',e);return {created:false};});
       }).then(function(reg){
-        var url2=new URL(window.location.href); url2.searchParams.set('id',tradeEstimateId); url2.searchParams.set('tab','trade'); window.history.replaceState({},'',url2);
+        finishNewEstimate('trade', tradeEstimateId);
         saveTradeLocal(); clearRecipientPriceAlert(); setTradeStatus(reg&&reg.created?'✔ 다른 이름으로 저장됨 · 신규 거래처 자동 등록 ('+nowStr()+')':'✔ 다른 이름으로 저장됨 ('+nowStr()+')','ok'); loadTradeArchive();
       }).catch(function(err){ tradeEstimateId=oldTradeId; throw err; });
     }
@@ -4128,11 +4265,12 @@ window.saveAsNewEstimate=saveAsNewEstimate;
 
 function startNewEstimate(){
   if(!confirm('새 견적을 시작할까요? 저장하지 않은 내용은 사라집니다.')) return;
-  try{ if(currentTab==='trade') localStorage.removeItem('wd-doc-v4-trade-draft'); else localStorage.removeItem('wd-doc-v4-leak-draft'); }catch(e){}
+  try{ localStorage.removeItem('wd-doc-v4-' + currentTab + '-' + (restoredDraftId(currentTab) || 'draft')); }catch(e){}
   var url = new URL(window.location.href);
   url.searchParams.delete('id');
   url.searchParams.delete('client');
   url.searchParams.set('tab', currentTab);
+  url.searchParams.delete('draft');
   url.searchParams.set('new','1');
   window.location.href = url.toString();
 }
@@ -5073,7 +5211,12 @@ function startLeakEstimateApp(){
   switchTab(urlTab);
 
 
-  if(urlTab === 'leak'){
+  var restoring = !urlId && !!restoredDraftId(urlTab);
+  if(restoring){
+    var loaded = urlTab === 'trade' ? loadTradeLocal() : loadLeakLocal();
+    var status = urlTab === 'trade' ? setTradeStatus : setLeakStatus;
+    status(loaded ? '백업에서 복원됨 · 견적 저장을 누르면 새 견적으로 등록됩니다.' : '이 기기에서 초안을 찾지 못했습니다. 백업 파일을 다시 불러와 주세요.', loaded ? 'ok' : 'err');
+  }else if(urlTab === 'leak'){
     if(urlId){ leakEstimateId = urlId; loadLeakLocal(); loadLeakFromFirebase(urlId); }
     else{
       var hadLeakDraft = loadLeakLocal();

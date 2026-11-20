@@ -2254,7 +2254,7 @@
     const brand = String(value || '').trim();
     const compact = brand.replace(/\s+/g, '').replace(/（/g, '(').replace(/）/g, ')');
     if (['노바마루', '노바마루(켐마트코리아)', '노바마루(캔마트코리아)'].includes(compact)) {
-      return '노바마루(캔마트코리아)';
+      return '노바마루(켐마트코리아)';
     }
     return brand;
   }

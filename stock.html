@@ -747,6 +747,7 @@
 
   let masterData = {}; // { brand: { product: [model,...] } }
   let costDataMap = {}; // { "brand||name||model": {ex, inc} } - 매입단가(비밀 단가), VAT별도/포함
+  let rawStockMovements = {};
   let movements = {};  // { fbKey: {날짜,구분,brand,name,model,수량,단가,거래처,메모} }
   let stockSummary = [];
   let currentType = '입고';
@@ -814,8 +815,8 @@
     });
     // 실시간 리스너: 다른 기기에서 저장/삭제하면 여기도 즉시 자동 갱신됨
     fbDatabase.ref('stock_movements').on('value', snap => {
-      const rawMovements = snap.val() || {};
-      movements = Object.fromEntries(Object.entries(rawMovements).map(([key, record]) => [key, { ...record, brand: canonicalStockBrand(record.brand) }]));
+      rawStockMovements = snap.val() || {};
+      normalizeStockMovements();
       recalcStockSummary();
       renderStockList();
       onModelChange();
@@ -2248,15 +2249,32 @@
     });
   }
 
-  // 구글시트에서 거래처 표기가 바뀌어도 기존 입출고 이력을 같은 브랜드로 표시한다.
-  // Firebase 원본 기록은 수정하지 않는다.
+  // 시트의 현재 브랜드명이 유일한 표시 기준. Firebase 원본 이력은 변경하지 않는다.
+  let novaSheetBrand = '';
+  function isNovaBrand(value) {
+    return /^노바마루(?:\s*[（(]|$)/.test(String(value || '').trim());
+  }
   function canonicalStockBrand(value) {
     const brand = String(value || '').trim();
-    const compact = brand.replace(/\s+/g, '').replace(/（/g, '(').replace(/）/g, ')');
-    if (['노바마루', '노바마루(켐마트코리아)', '노바마루(캔마트코리아)'].includes(compact)) {
-      return '노바마루(켐마트코리아)';
-    }
-    return brand;
+    return novaSheetBrand && isNovaBrand(brand) ? novaSheetBrand : brand;
+  }
+  function normalizeStockMovements() {
+    movements = Object.fromEntries(Object.entries(rawStockMovements).map(([key, record]) =>
+      [key, { ...record, brand: canonicalStockBrand(record.brand) }]
+    ));
+  }
+  function refreshStockBrandFromSheet(jsonData) {
+    const counts = new Map();
+    jsonData.forEach(row => {
+      const name = String(row.brand || '').trim();
+      if (isNovaBrand(name)) counts.set(name, (counts.get(name) || 0) + 1);
+    });
+    // 시트에서 가장 많이 쓰는 실제 명칭을 사용 (과거 표기 행이 일부 남아 있어도 대응).
+    novaSheetBrand = [...counts].sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+    normalizeStockMovements();
+    recalcStockSummary();
+    renderStockList();
+    onModelChange();
   }
 
   const MASTER_CACHE_KEY = 'cm_stock_master_cache';
@@ -2264,6 +2282,7 @@
 
   function buildMasterDataFromJson(jsonData) {
     jsonData = fillMergedCells(jsonData);
+    refreshStockBrandFromSheet(jsonData);
     masterData = {};
     jsonData.forEach(item => {
       const brand = canonicalStockBrand(item.brand);

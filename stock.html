@@ -243,7 +243,8 @@
     </div>
     <div class="p-4 border-b bg-[#F1F5F1]">
       <p class="text-[14px] font-bold text-[var(--moss)]"><i class="fas fa-check-circle mr-1"></i>변동 있는 날만 자동 저장돼요. 파일이 폰에 쌓이지 않아요.</p>
-      <p class="text-[13px] text-[#8B8477] font-bold mt-1">30일 지난 백업은 자동 정리되어 용량 걱정 없어요.</p>
+      <p class="text-[13px] text-[#8B8477] font-bold mt-1">일별 백업은 최근 30일, 주간 백업은 최대 52주 보관합니다. 휴지통 기록도 포함돼요.</p>
+      <p class="text-[12px] text-[#8B8477] mt-1">자동 백업은 로그인해 재고 페이지를 열 때 실행됩니다. 외부 저장소의 별도 백업은 아니에요.</p>
       <p class="text-[13px] text-[#8B8477] font-bold mt-1">실수로 데이터가 지워져도 아래 날짜 중 하나로 되돌릴 수 있어요.</p>
     </div>
     <div class="p-4 overflow-y-auto flex-1 space-y-2" id="backup-list"></div>
@@ -802,8 +803,7 @@
     loadMasterCSV(false);
     loadCostData();
     setType('입고');
-    autoCloudBackup();
-    autoCleanupTrash();
+    autoCloudBackup().then(ok => { if (ok) autoCleanupTrash(); });
     loadAuthorPref();
     updateOfflineQueueBadge();
     updateReturnListQueueBadge();
@@ -1564,47 +1564,68 @@
     document.getElementById('return-alerts-modal').style.display = 'flex';
   }
 
-  // ===== ① 자동 백업 (파일 다운로드 없이, 매일 1회 클라우드에 스냅샷 저장) =====
+  // ===== 자동 백업: 로그인 시 일별 + 주별 보관, 삭제휴지통 포함 =====
+  const STOCK_BACKUP_PATHS = [
+    'stock_movements', 'stock_movements_trash',
+    'vendors', 'vendors_trash', 'vendor_logs', 'vendor_logs_trash'
+  ];
+  async function readStockBackupPayload() {
+    const snapshots = await Promise.all(STOCK_BACKUP_PATHS.map(path => fbDatabase.ref(path).once('value')));
+    const data = { ts: Date.now(), backupDate: new Date().toISOString(), version: 2 };
+    STOCK_BACKUP_PATHS.forEach((path, i) => { data[path] = snapshots[i].val() || {}; });
+    return data;
+  }
+  function stockBackupDataEqual(a, b) {
+    return STOCK_BACKUP_PATHS.every(path =>
+      JSON.stringify((a || {})[path] || {}) === JSON.stringify((b || {})[path] || {}));
+  }
+  function stockWeekKey(now = new Date()) {
+    // 월요일 기준 주차: 브라우저의 시차와 관계없이 고유한 UTC ISO week ID
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    const year = d.getUTCFullYear();
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return 'weekly-' + year + '-W' + String(week).padStart(2, '0');
+  }
   async function autoCloudBackup() {
     try {
-      const todayKey = new Date().toISOString().slice(0,10);
-      const backupRef = fbDatabase.ref('backups/' + todayKey);
-      const existing = await backupRef.once('value');
-      if (existing.exists()) return; // 오늘 이미 백업됨 - 중복 저장 안함
-
-      const [mv, vd, vl] = await Promise.all([
-        fbDatabase.ref('stock_movements').once('value'),
-        fbDatabase.ref('vendors').once('value'),
-        fbDatabase.ref('vendor_logs').once('value')
+      const now = new Date();
+      const todayKey = now.toISOString().slice(0, 10);
+      const weekKey = stockWeekKey(now);
+      const [dailySnap, weeklySnap] = await Promise.all([
+        fbDatabase.ref('backups/' + todayKey).once('value'),
+        fbDatabase.ref('backups/' + weekKey).once('value')
       ]);
-      const mvVal = mv.val() || {}, vdVal = vd.val() || {}, vlVal = vl.val() || {};
-
-      // 어제(가장 최근) 백업이랑 내용이 완전히 똑같으면 - 입고/출고가 없었던 날이면 - 새로 안 만들고 건너뜀
-      const recentSnap = await fbDatabase.ref('backups').orderByKey().limitToLast(1).once('value');
-      let unchanged = false;
-      recentSnap.forEach(child => {
-        const prev = child.val();
-        if (prev && JSON.stringify(prev.stock_movements||{}) === JSON.stringify(mvVal)
-                  && JSON.stringify(prev.vendors||{}) === JSON.stringify(vdVal)
-                  && JSON.stringify(prev.vendor_logs||{}) === JSON.stringify(vlVal)) {
-          unchanged = true;
+      if (dailySnap.exists() && weeklySnap.exists()) return true;
+      const payload = await readStockBackupPayload();
+      if (!dailySnap.exists()) {
+        const recentSnap = await fbDatabase.ref('backups').orderByKey().endAt(todayKey).limitToLast(1).once('value');
+        let unchanged = false;
+        recentSnap.forEach(child => { if (stockBackupDataEqual(child.val(), payload)) unchanged = true; });
+        if (!unchanged) await fbDatabase.ref('backups/' + todayKey).set(payload);
+      }
+      // 주 1회는 변동이 없어도 복구 기준점으로 보존
+      if (!weeklySnap.exists()) await fbDatabase.ref('backups/' + weekKey).set(payload);
+      // 최근 30일 일별 + 최근 52주 주별 백업만 정리. 복원 직전 안전백업은 영구보존.
+      const cutoffDay = new Date(now.getTime() - 30 * 86400000).toISOString().slice(0, 10);
+      const cutoffWeek = stockWeekKey(new Date(now.getTime() - 52 * 7 * 86400000));
+      const all = await fbDatabase.ref('backups').once('value');
+      const removals = [];
+      all.forEach(child => {
+        const key = child.key;
+        if ((/^\\d{4}-\\d{2}-\\d{2}$/.test(key) && key < cutoffDay)
+            || (/^weekly-\\d{4}-W\\d{2}$/.test(key) && key < cutoffWeek)) {
+          removals.push(fbDatabase.ref('backups/' + key).remove());
         }
       });
-      if (unchanged) return; // 변동 없음 - 백업 생략 (용량 절약)
-
-      await backupRef.set({ ts: Date.now(), stock_movements: mvVal, vendors: vdVal, vendor_logs: vlVal });
-
-      // 30일 지난 오래된 자동 백업은 정리 (restore-safety 임시 백업은 건드리지 않음)
-      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
-      const cutoffKey = cutoff.toISOString().slice(0,10);
-      const allSnap = await fbDatabase.ref('backups').once('value');
-      const deletions = [];
-      allSnap.forEach(child => {
-        const key = child.key;
-        if (/^\d{4}-\d{2}-\d{2}$/.test(key) && key < cutoffKey) deletions.push(fbDatabase.ref('backups/' + key).remove());
-      });
-      if (deletions.length) await Promise.all(deletions);
-    } catch(e) { console.error('자동 백업 실패', e); }
+      if (removals.length) await Promise.all(removals);
+      return true;
+    } catch(e) {
+      console.error('자동 백업 실패', e);
+      showToast('자동 백업 실패 — 휴지통 자동 정리를 중단했어요. 백업 관리를 확인하세요.', true);
+      return false;
+    }
   }
 
   // ===== 휴지통 30일 지난 항목 자동 완전삭제 (deletedAt 기준) =====
@@ -1645,7 +1666,7 @@
             <p class="text-[15px] font-black text-[#2B2622]">${date}</p>
             <p class="text-[13px] text-[#B8B2A3] font-bold">입출고 ${mvCount}건 스냅샷</p>
           </div>
-          <button class="text-[13px] font-black text-white bg-[var(--rust)] px-3 py-2 rounded-lg" onclick="restoreFromBackup('${date}')">이 날짜로 복구</button>
+          <div class="flex gap-1.5 shrink-0"><button class="text-[12px] font-black text-[var(--moss)] bg-[#E9F0EA] px-2 py-2 rounded-lg" onclick="downloadStoredBackup('${date}')">파일 저장</button><button class="text-[12px] font-black text-white bg-[var(--rust)] px-2 py-2 rounded-lg" onclick="restoreFromBackup('${date}')">복구</button></div>
         `;
         list.appendChild(row);
       });
@@ -1656,61 +1677,47 @@
     if (!confirm(`${dateKey} 시점 백업으로 복구할까요?\n\n지금 현재 데이터는 그 시점 상태로 덮어씌워집니다.\n(복구 직전 상태는 별도로 자동 백업되니 걱정 마세요)`)) return;
     if (!confirm('정말 진행할까요? 이 작업은 신중하게 확인 후 진행해주세요.')) return;
     try {
-      // 복구하기 직전 현재 상태도 안전하게 하나 더 남겨둠
-      const now = new Date();
-      const safetyKey = 'restore-safety-' + now.toISOString().replace(/[:.]/g,'-');
-      const [mvNow, vdNow, vlNow] = await Promise.all([
-        fbDatabase.ref('stock_movements').once('value'),
-        fbDatabase.ref('vendors').once('value'),
-        fbDatabase.ref('vendor_logs').once('value')
-      ]);
-      await fbDatabase.ref('backups/' + safetyKey).set({
-        ts: Date.now(),
-        stock_movements: mvNow.val() || {},
-        vendors: vdNow.val() || {},
-        vendor_logs: vlNow.val() || {}
-      });
-
+      // 선택한 백업 존재 확인 후, 현재 데이터를 완전하게 보존하고 복구한다.
       const snap = await fbDatabase.ref('backups/' + dateKey).once('value');
       const b = snap.val();
       if (!b) return showToast('해당 백업을 찾을 수 없습니다');
-      await Promise.all([
-        fbDatabase.ref('stock_movements').set(b.stock_movements || {}),
-        fbDatabase.ref('vendors').set(b.vendors || {}),
-        fbDatabase.ref('vendor_logs').set(b.vendor_logs || {})
-      ]);
+      const safetyKey = 'restore-safety-' + new Date().toISOString().replace(/[:.]/g, '-');
+      const current = await readStockBackupPayload();
+      await fbDatabase.ref('backups/' + safetyKey).set(current);
+      const paths = b.version >= 2 ? STOCK_BACKUP_PATHS
+        : ['stock_movements', 'vendors', 'vendor_logs']; // 구형 백업은 휴지통을 덮어쓰지 않음
+      await Promise.all(paths.map(path => fbDatabase.ref(path).set(b[path] || {})));
       showToast('복구 완료: ' + dateKey + ' 상태로 되돌렸습니다', true);
       closeModal('backup-modal');
     } catch(e) { showToast('복구 실패: ' + (e && e.message ? e.message : e), true); }
   }
 
+  function saveStockBackupJson(backup, fileName) {
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+  async function downloadStoredBackup(dateKey) {
+    try {
+      const snap = await fbDatabase.ref('backups/' + dateKey).once('value');
+      if (!snap.exists()) return showToast('백업을 찾을 수 없습니다', true);
+      saveStockBackupJson(snap.val(), '청인마루_재고백업_' + dateKey + '.json');
+      showToast('선택한 날짜의 백업 파일을 저장했습니다');
+    } catch(e) { showToast('백업 파일 다운로드 실패', true); }
+  }
   async function exportBackup() {
     showToast('백업 파일 생성 중...');
     try {
-      const [mv, mvTrash, vd, vdTrash, vl, vlTrash] = await Promise.all([
-        fbDatabase.ref('stock_movements').once('value'),
-        fbDatabase.ref('stock_movements_trash').once('value'),
-        fbDatabase.ref('vendors').once('value'),
-        fbDatabase.ref('vendors_trash').once('value'),
-        fbDatabase.ref('vendor_logs').once('value'),
-        fbDatabase.ref('vendor_logs_trash').once('value')
-      ]);
-      const backup = {
-        backupDate: new Date().toISOString(),
-        stock_movements: mv.val() || {},
-        stock_movements_trash: mvTrash.val() || {},
-        vendors: vd.val() || {},
-        vendors_trash: vdTrash.val() || {},
-        vendor_logs: vl.val() || {},
-        vendor_logs_trash: vlTrash.val() || {}
-      };
-      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `청인마루_재고백업_${new Date().toISOString().slice(0,10)}.json`;
-      a.click();
+      const backup = await readStockBackupPayload();
+      saveStockBackupJson(backup, '청인마루_재고백업_' + new Date().toISOString().slice(0,10) + '.json');
       showToast('파일로 다운로드 완료');
-    } catch(e) { showToast('백업 실패'); }
+    } catch(e) { showToast('백업 실패', true); }
   }
 
   // ===== 매입단가(비밀 단가) 불러오기 - 견적서 관리패널과 같은 데이터, 로그인(1306)한 직원은 바로 조회됨 =====

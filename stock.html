@@ -814,7 +814,8 @@
     });
     // 실시간 리스너: 다른 기기에서 저장/삭제하면 여기도 즉시 자동 갱신됨
     fbDatabase.ref('stock_movements').on('value', snap => {
-      movements = snap.val() || {};
+      const rawMovements = snap.val() || {};
+      movements = Object.fromEntries(Object.entries(rawMovements).map(([key, record]) => [key, { ...record, brand: canonicalStockBrand(record.brand) }]));
       recalcStockSummary();
       renderStockList();
       onModelChange();
@@ -1718,7 +1719,7 @@
     jsonData = fillMergedCells(jsonData);
     costDataMap = {};
     jsonData.forEach(item => {
-      const brand = String(item.brand || '').trim();
+      const brand = canonicalStockBrand(item.brand);
       const name = String(item.name || '').trim();
       const model = String(item.model || '').trim();
       const exVatKey = Object.keys(item).find(k => k.replace(/\s/g,'') === '원가(vat미포함)' || k.replace(/\s/g,'') === '원가(vat별도)');
@@ -2247,6 +2248,17 @@
     });
   }
 
+  // 구글시트에서 거래처 표기가 바뀌어도 기존 입출고 이력을 같은 브랜드로 표시한다.
+  // Firebase 원본 기록은 수정하지 않는다.
+  function canonicalStockBrand(value) {
+    const brand = String(value || '').trim();
+    const compact = brand.replace(/\s+/g, '').replace(/（/g, '(').replace(/）/g, ')');
+    if (['노바마루', '노바마루(켐마트코리아)', '노바마루(캔마트코리아)'].includes(compact)) {
+      return '노바마루(캔마트코리아)';
+    }
+    return brand;
+  }
+
   const MASTER_CACHE_KEY = 'cm_stock_master_cache';
   const MASTER_CACHE_TS_KEY = 'cm_stock_master_cache_ts';
 
@@ -2254,7 +2266,7 @@
     jsonData = fillMergedCells(jsonData);
     masterData = {};
     jsonData.forEach(item => {
-      const brand = String(item.brand || '').trim();
+      const brand = canonicalStockBrand(item.brand);
       const name = String(item.name || '').trim();
       const model = String(item.model || '').trim();
       const spec = String(item.spec || '').trim();

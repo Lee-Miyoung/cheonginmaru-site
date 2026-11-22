@@ -5435,6 +5435,11 @@ function startLeakEstimateApp(){
 <script>
 /* ===== 공사도급 계약서 ===== */
 function contractRound1000(n){ return Math.round((Number(n)||0)/1000)*1000; }
+function contractStoredNumber(el){
+  var value=el?el.value.trim().replace(/,/g,''):'';
+  var n=Number(value);
+  return value!==''&&Number.isFinite(n)&&n>=0?n:null;
+}
 function contractMoney(n){ return (Number(n)||0).toLocaleString('ko-KR')+'원'; }
 function cleanContractText(v){ return String(v||'').replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim(); }
 function getTradeGrandTotalNumber(){
@@ -5466,11 +5471,13 @@ function openContractEditor(){
   var memoEl=document.getElementById('trContractMemo');
   var payDateEl=document.getElementById('trContractPayDate');
   var surveyEl=document.getElementById('trContractSurveyClause');
-  var pct=Math.max(0,Math.min(100,Number(pctEl&&pctEl.value)||30));
+  var savedPct=contractStoredNumber(pctEl);
+  var pct=savedPct===null?30:Math.min(100,savedPct);
   var savedTotal=Number(totalEl&&totalEl.value)||0;
   var contractTotal=savedTotal>0?savedTotal:s.total;
-  var depositSaved=Number(depositEl&&depositEl.value)||0;
-  var depositAmount=depositSaved>0?depositSaved:contractRound1000(contractTotal*pct/100);
+  var depositSaved=contractStoredNumber(depositEl);
+  // 저장된 원 단위 금액(0원 포함)이 우선. 없을 때만 저장된 비율 또는 기본 30%를 적용한다.
+  var depositAmount=depositSaved===null?contractRound1000(contractTotal*pct/100):depositSaved;
   var payDate=(payDateEl&&payDateEl.value)||'';
   var memo=(memoEl&&memoEl.value)||'';
   var includeSurvey = !surveyEl || surveyEl.value !== '0';
@@ -5504,16 +5511,22 @@ function openContractEditor(){
   var pctInput=document.getElementById('contractPctInput'); if(pctInput) pctInput.addEventListener('input', function(){ updateContractAmounts('pct'); });
   var totalInput=document.getElementById('contractTotalInput'); if(totalInput){
     totalInput.addEventListener('input', function(){ this.value=this.value.replace(/[^0-9]/g,''); updateContractAmounts('total'); });
-    totalInput.addEventListener('blur', function(){ var n=Number(this.value.replace(/,/g,''))||0; this.value=n.toLocaleString('ko-KR'); updateContractAmounts('total'); });
+    totalInput.addEventListener('blur', function(){ var n=Number(this.value.replace(/,/g,''))||0; this.value=n.toLocaleString('ko-KR'); });
   }
   var depositInput=document.getElementById('contractDepositInput'); if(depositInput){
-    depositInput.addEventListener('input', function(){ this.value=this.value.replace(/[^0-9]/g,''); updateContractAmounts('deposit'); });
-    depositInput.addEventListener('blur', function(){ var n=contractRound1000(Number(this.value.replace(/,/g,''))||0); this.value=n.toLocaleString('ko-KR'); updateContractAmounts('deposit'); });
+    var depositEdited=false;
+    depositInput.addEventListener('input', function(){ depositEdited=true; this.value=this.value.replace(/[^0-9]/g,''); updateContractAmounts('deposit'); });
+    depositInput.addEventListener('blur', function(){
+      if(!depositEdited)return;
+      depositEdited=false;
+      var n=contractRound1000(Number(this.value.replace(/,/g,''))||0);
+      this.value=n.toLocaleString('ko-KR'); updateContractAmounts('deposit');
+    });
   }
   var payInput=document.getElementById('contractPayDateInput'); if(payInput)payInput.addEventListener('input',syncContractExtras);
   var memoInput=document.getElementById('contractMemoInput'); if(memoInput)memoInput.addEventListener('input',syncContractExtras);
   var surveyToggle=document.getElementById('contractSurveyToggle'); if(surveyToggle)surveyToggle.addEventListener('change',syncContractExtras);
-  updateContractAmounts('init'); syncContractExtras();
+  updateContractAmounts('init'); syncContractExtras('init');
   overlay.addEventListener('click',function(e){if(e.target===overlay)closeContractEditor();});
 }
 function updateContractAmounts(source){
@@ -5521,12 +5534,12 @@ function updateContractAmounts(source){
   if(!pctInput||!totalInput||!depositInput)return;
   var total=Math.max(0,Number(String(totalInput.value).replace(/,/g,''))||0);
   var pct=Math.max(0,Math.min(100,Number(pctInput.value)||0));
-  var deposit=contractRound1000(Number(String(depositInput.value).replace(/,/g,''))||0);
-  if(source==='pct' || source==='total' || source==='init'){
+  var deposit=Number(String(depositInput.value).replace(/,/g,''))||0;
+  if(source==='pct' || source==='total'){
     deposit=contractRound1000(total*pct/100);
     depositInput.value=deposit.toLocaleString('ko-KR');
   }else if(source==='deposit'){
-    deposit=Math.min(total,deposit);
+    deposit=Math.min(total,contractRound1000(deposit));
     pct=total>0?Math.round((deposit/total*100)*10)/10:0;
     pctInput.value=(Math.round(pct*10)/10).toString().replace(/\.0$/,'');
   }
@@ -5536,10 +5549,12 @@ function updateContractAmounts(source){
   if(d)d.textContent=contractMoney(deposit);
   if(b)b.textContent=contractMoney(balance);
   if(tt)tt.textContent=contractMoney(total);
+  // 미리보기만 열 때는 기존 초안을 변경하거나 자동 저장하지 않는다.
+  if(source==='init')return;
   var pctHidden=document.getElementById('trContractDepositPct'), totalHidden=document.getElementById('trContractTotal'), depositHidden=document.getElementById('trContractDepositAmountInputHidden');
   if(pctHidden)pctHidden.value=pct;
   if(totalHidden)totalHidden.value=total||'';
-  if(depositHidden)depositHidden.value=deposit||'';
+  if(depositHidden)depositHidden.value=String(deposit);
   try{saveTradeLocal();}catch(e){}
 }
 function syncContractClauseNumbers(){
@@ -5553,16 +5568,17 @@ function syncContractClauseNumbers(){
   set('contractDefectHeading',(include?'제6조':'제5조')+' (하자보수)');
   set('contractSpecialHeading',(include?'제7조':'제6조')+' (특약사항)');
 }
-function syncContractExtras(){
+function syncContractExtras(source){
   var pay=document.getElementById('contractPayDateInput'), memo=document.getElementById('contractMemoInput'), survey=document.getElementById('contractSurveyToggle');
-  var payHidden=document.getElementById('trContractPayDate'), memoHidden=document.getElementById('trContractMemo'), surveyHidden=document.getElementById('trContractSurveyClause');
-  if(payHidden&&pay)payHidden.value=pay.value||'';
-  if(memoHidden&&memo)memoHidden.value=memo.value||'';
-  if(surveyHidden&&survey)surveyHidden.value=survey.checked?'1':'0';
   var payText=document.getElementById('contractPayDateText'); if(payText&&pay)payText.textContent=pay.value?contractDateKR(pay.value):'-';
   var memoPreview=document.getElementById('contractMemoPreview'); if(memoPreview&&memo)memoPreview.textContent=memo.value||'';
   var surveySection=document.getElementById('contractSurveySection'); if(surveySection&&survey)surveySection.style.display=survey.checked?'block':'none';
   syncContractClauseNumbers();
+  if(source==='init')return;
+  var payHidden=document.getElementById('trContractPayDate'), memoHidden=document.getElementById('trContractMemo'), surveyHidden=document.getElementById('trContractSurveyClause');
+  if(payHidden&&pay)payHidden.value=pay.value||'';
+  if(memoHidden&&memo)memoHidden.value=memo.value||'';
+  if(surveyHidden&&survey)surveyHidden.value=survey.checked?'1':'0';
   try{saveTradeLocal();}catch(e){}
 }
 function closeContractEditor(){var el=document.getElementById('contractOverlay');if(el)el.remove();}
